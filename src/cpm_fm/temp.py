@@ -15,3 +15,5 @@ if ports:
         print(f"  {port.device} - {port.description}")
 else:
     print("\nNo serial ports found.")
+
+
