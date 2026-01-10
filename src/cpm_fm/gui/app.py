@@ -3,12 +3,29 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import os
 from pathlib import Path
+import json
 
 class App:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("CP/M File Manager")
         self.root.geometry("1000x600")
+
+        # Initialize serial configuration defaults
+        self.serial_config = {
+            'terminal_port': 'COM99',      # Default terminal port
+            'transport_port': 'COM1',     # Default transport port (assumed)
+            'speed': 19200,               # Optional: if you plan to add speed later
+            'data': 8,                    # Optional: 7, 8
+            'parity': 'NONE',             # Optional: NONE, EVEN, ODD
+            'stopbits': 1,                # Optional: 1 or 2
+            'flow': 'NONE',               # Optional: NONE, XON/XOFF, RTS/CTS, DSR/DTR
+            'msec_char': 0,               # Optional: character delay in milli-seconds
+            'msec_line': 0,               # Optional: line delay in milli-seconds
+        }
+
+        # Load config from file if it exists
+        self._load_serial_config()
 
         # Initialize variables
         self.serial_connection = None
@@ -74,10 +91,6 @@ class App:
         self._refresh_host_files(dir)
 
         # Button Column (center)
-        #button_label_0 = ttk.Label(main_frame, text="")
-        #button_label_0.grid(row=0, column=1, sticky="w")
-        #button_label_1 = ttk.Label(main_frame, text="")
-        #button_label_1.grid(row=1, column=1, sticky="w")
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=2, column=1, padx=10, pady=(0,0), sticky="ns")
 
@@ -175,16 +188,50 @@ class App:
 
     def _on_load(self):
         file_path = filedialog.askopenfilename(
-            title="Load Project", filetypes=[("JSON files", "*.json")])
+            title="Load Serial Settings",
+            filetypes=[("JSON files", "*.json")]
+        )
         if file_path:
-            messagebox.showinfo("Load", f"Loading: {file_path}")
+            try:
+                with open(file_path, 'r') as f:
+                    loaded_config = json.load(f)
+                    # Validate and update only known keys
+                    for key in self.serial_config.keys():
+                        if key in loaded_config:
+                            self.serial_config[key] = loaded_config[key]
+                    self.set_status(f"Serial settings loaded from: {file_path}")
+            except Exception as e:
+                messagebox.showerror("Load Error", f"Failed to load settings:\n{e}")
 
+    def _load_serial_config(self):
+        """Load serial configuration from file if it exists."""
+        try:
+            config_file = Path.home() / ".cpm_manager" / "serial_config.json"
+            if config_file.exists():
+                with open(config_file, 'r') as f:
+                    loaded = json.load(f)
+                    # Update only known keys to avoid errors
+                    for key in self.serial_config.keys():
+                        if key in loaded:
+                            self.serial_config[key] = loaded[key]
+                self.set_status("Serial configuration loaded from file")
+        except Exception as e:
+            self.set_status(f"Failed to load config: {e}")
+    
     def _on_save(self):
-        file_path = filedialog.asksaveasfilename(defaultextension=".json",
-                                                 title="Save Project",
-                                                 filetypes=[("JSON files", "*.json")])
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".json",
+            title="Save Serial Settings",
+            filetypes=[("JSON files", "*.json")],
+            initialfile="serial_settings.json"  # Default filename
+        )
         if file_path:
-            messagebox.showinfo("Save", f"Saving to: {file_path}")
+            try:
+                with open(file_path, 'w') as f:
+                    json.dump(self.serial_config, f, indent=4)
+                self.set_status(f"Serial settings saved to: {file_path}")
+            except Exception as e:
+                messagebox.showerror("Save Error", f"Failed to save settings:\n{e}")
 
     def run(self):
         self.root.mainloop()
