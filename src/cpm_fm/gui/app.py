@@ -45,7 +45,7 @@ class App:
         file_menu.add_command(label="Load", command=self._on_load)
         file_menu.add_command(label="Save", command=self._on_save)
         file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self.root.quit)
+        file_menu.add_command(label="Exit", command=self._on_exit)
         menubar.add_cascade(label="File", menu=file_menu)
 
         # Config menu
@@ -109,6 +109,10 @@ class App:
         self.refresh_btn = ttk.Button(button_frame, text="Refresh",
                                       command=self._on_refresh, state='disabled')
         self.refresh_btn.pack(pady=10, fill=tk.X)
+
+        self.terminal_btn = ttk.Button(
+            button_frame, text="Terminal", command=self._on_terminal)
+        self.terminal_btn.pack(pady=(0, 10), fill=tk.X)
 
         # Remote Files Listbox (right)
         remote_label = ttk.Label(main_frame, text="Remote Files")
@@ -174,6 +178,12 @@ class App:
         self._refresh_host_files(dir)
         messagebox.showinfo("Refresh", "Refresh button clicked (stub).")
 
+    def _on_terminal(self):
+        """Open Terminal Dialog."""
+        from gui.terminal_dialog import TerminalDialog  # Import locally to avoid circular imports
+        self.terminal_dialog = TerminalDialog(self.root, self)
+        self.root.wait_window(self.terminal_dialog.top)
+
     def _open_serial_config(self):
         """Open Serial Configuration Dialog."""
         from gui.serial_config_dialog import SerialConfigDialog  # Import locally to avoid circular imports
@@ -232,6 +242,10 @@ class App:
                 self.set_status(f"Serial settings saved to: {file_path}")
             except Exception as e:
                 messagebox.showerror("Save Error", f"Failed to save settings:\n{e}")
+
+    def _on_exit(self):
+        self.terminal_dialog.top.destroy()
+        self.root.quit()
 
     def run(self):
         self.root.mainloop()
