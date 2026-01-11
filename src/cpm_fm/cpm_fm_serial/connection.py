@@ -11,13 +11,13 @@ class SerialConnection:
         settings = get_serial_settings()
         try:
             self.connection = serial.Serial(
-                port=settings['comm_port'],
+                port=settings['terminal_port'],      # Updated from 'comm_port' to 'terminal_port'
                 baudrate=int(settings['speed']),
                 bytesize=int(settings['data']),
                 parity=settings['parity'].upper(),
-                stopbits=int(settings['stop_bits']),
-                xonxoff=(settings['flow_control'] == 'XON/XOFF'),
-                rtscts=(settings['flow_control'] == 'RTS/CTS')
+                stopbits=int(settings['stopbits']),  # Updated key: 'stopbits' (not 'stop_bits')
+                xonxoff=(settings['flow'] == 'XON/XOFF'),
+                rtscts=(settings['flow'] == 'RTS/CTS')
             )
             self.is_connected = True
         except serial.SerialException as e:
@@ -32,3 +32,47 @@ class SerialConnection:
         if not self.is_connected:
             raise RuntimeError("Not connected")
         self.connection.write(command.encode())
+
+    def receive_data(self, size=None, timeout=5):
+            """
+            Receive data from the serial port.
+
+            Parameters:
+                size (int, optional): Number of bytes to read. If None, reads all available bytes.
+                timeout (float, optional): Override the default timeout for this read operation only.
+
+            Returns:
+                str: Decoded string from received bytes (UTF-8).
+                    Returns empty string if no data is received or connection is closed.
+
+            Raises:
+                RuntimeError: If not connected.
+                UnicodeDecodeError: If received bytes cannot be decoded as UTF-8.
+            """
+            if not self.is_connected:
+                raise RuntimeError("Not connected")
+
+            # If timeout is specified, temporarily override the port's timeout
+            original_timeout = self.connection.timeout
+            if timeout is not None:
+                self.connection.timeout = timeout
+
+            try:
+                if size is None:
+                    # Read all available bytes (non-blocking)
+                    data = self.connection.read(self.connection.in_waiting or 1)
+                else:
+                    # Read exactly 'size' bytes, or until timeout
+                    data = self.connection.read(size)
+
+                # Decode and return as string
+                if data:
+                    return data.decode('utf-8')
+                else:
+                    return ""  # No data received
+
+            except UnicodeDecodeError as e:
+                raise UnicodeDecodeError(f"Failed to decode serial data: {e}")
+            finally:
+                # Restore original timeout
+                self.connection.timeout = original_timeout

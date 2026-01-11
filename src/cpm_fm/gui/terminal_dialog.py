@@ -1,5 +1,6 @@
 import tkinter as tk
-from tkinter import scrolledtext
+from tkinter import scrolledtext, messagebox
+import os
 
 class TerminalDialog:
     def __init__(self, parent, app):
@@ -53,18 +54,28 @@ class TerminalDialog:
     def send_message(self):
         message = self.entry.get().strip()
         if message:
-            # Enable text area temporarily to insert message
-            self.recv_text.config(state='normal')
-            self.recv_text.insert(tk.END, "You: " + message + "\n")
-            self.recv_text.config(state='disabled')  # Re-disable after insertion
+            # Display sent message in receive text area
+            #self.recv_text.config(state='normal')
+            #self.recv_text.insert(tk.END, message + "\n")
+            #self.recv_text.config(state='disabled')
 
-            # Clear the input field
+            # Clear input field
             self.entry.delete(0, tk.END)
+
+            # Send message via serial port (via main_app's serial connection)
+            if hasattr(self.app, 'serial_port') and self.app.serial_port and self.app.serial_port.is_open:
+                try:
+                    self.app.serial_port.write((message + '\r').encode('ascii'))
+                except Exception as e:
+                    messagebox.showerror("Serial Error", f"Failed to send: {e}")
+            else:
+                messagebox.showwarning("Not Connected", "Serial port is not open.")
 
     def receive_message(self, text):
         """External method to add received messages (e.g., from a server or other source)"""
         self.recv_text.config(state='normal')
-        self.recv_text.insert(tk.END, "Other: " + text + "\n")
+        self.recv_text.insert(tk.END, text + "\n")
+        self.recv_text.see(tk.END)
         self.recv_text.config(state='disabled')
 
     def run(self):

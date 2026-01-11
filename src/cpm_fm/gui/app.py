@@ -1,9 +1,12 @@
 # app.py
+import time
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import os
 from pathlib import Path
 import json
+import threading
+import serial
 
 class App:
     def __init__(self):
@@ -146,12 +149,112 @@ class App:
                 self.host_listbox.insert(tk.END, item)
 
     def _on_connect(self):
-        # Stub: to be implemented with serial connection logic
-        messagebox.showinfo("Connect", "Connect button clicked (stub).")
-        # Enable other buttons after successful connection
-        self.copy_to_remote_btn.config(state='normal')
-        self.copy_to_host_btn.config(state='normal')
-        self.refresh_btn.config(state='normal')
+        match self.serial_config['flow']:
+            case "DSR/DTR":
+                flow_dsrdtr = True
+                flow_rtscts = False
+                flow_xonxoff = False
+            case "NONE":
+                flow_dsrdtr = False
+                flow_rtscts = False
+                flow_xonxoff = False
+            case "RTS/CTS":
+                flow_dsrdtr = False
+                flow_rtscts = True
+                flow_xonxoff = False
+            case "XON/XOFF":
+                flow_dsrdtr = False
+                flow_rtscts = False
+                flow_xonxoff = True
+
+        try:
+            self.serial_port = serial.Serial(
+                port = self.serial_config['terminal_port'],
+                baudrate = int(self.serial_config['speed']),
+                bytesize = int(self.serial_config['data']),
+                parity = self.serial_config['parity'][0],
+                stopbits = float(self.serial_config['stopbits']),
+                timeout = 0,
+                xonxoff = flow_xonxoff,
+                rtscts = flow_rtscts,
+                dsrdtr = flow_dsrdtr,
+            )
+
+            # Start background thread to read incoming data
+            self.read_thread = threading.Thread(target=self._read_serial, daemon=True)
+            self.read_thread.start()
+
+            # Initialize terminal dialog if not already created
+            if not hasattr(self, 'terminal_dialog') or not self.terminal_dialog.top.winfo_exists():
+                from gui.terminal_dialog import TerminalDialog  # Import locally to avoid circular imports
+                self.terminal_dialog = TerminalDialog(self.root, self)  # Pass 'self' (main app) to terminal for serial access
+
+            # Bring the dialog to front if it exists
+            self.terminal_dialog.top.lift()
+            self.terminal_dialog.top.focus_force()
+
+            # Enable other buttons after successful connection
+            self.copy_to_remote_btn.config(state='normal')
+            self.copy_to_host_btn.config(state='normal')
+            self.refresh_btn.config(state='normal')
+
+        except Exception as e:
+            messagebox.showerror("Connection Failed", str(e))
+
+    def _read_serial(self):
+        buffer = b""
+        while True:
+            try:
+                # Read available bytes
+                new_data = self.serial_port.read(self.serial_port.in_waiting)
+                if not new_data:
+                    time.sleep(0.01)  # Small delay to prevent busy-waiting
+
+                    decoded = buffer.decode('ascii', 'backslashreplace')
+                    buffer = b""
+                    if decoded:
+                        if hasattr(self, 'terminal_dialog') and self.terminal_dialog.top.winfo_exists():
+                            self.terminal_dialog.receive_message(decoded)
+                    continue
+
+                buffer += new_data
+
+                # Split on either \n or \r
+                lines = []
+                while b'\n' in buffer or b'\r' in buffer:
+                    # Find the first occurrence of line ending
+                    if b'\n' in buffer:
+                        split_pos = buffer.find(b'\n')
+                        line = buffer[:split_pos]
+                        buffer = buffer[split_pos + 1:]
+                    elif b'\r' in buffer:
+                        split_pos = buffer.find(b'\r')
+                        line = buffer[:split_pos]
+                        buffer = buffer[split_pos + 1:]
+
+                        # If next char is \n, consume it too (CRLF case)
+                        if buffer.startswith(b'\n'):
+                            buffer = buffer[1:]
+                    else:
+                        break
+
+                    decoded = line.decode('ascii', 'backslashreplace')
+                    if decoded:
+                        if hasattr(self, 'terminal_dialog') and self.terminal_dialog.top.winfo_exists():
+                            self.terminal_dialog.receive_message(decoded)
+
+                # Optional: handle trailing \r that might be the last character
+                if buffer.endswith(b'\r'):
+                    line = buffer[:-1]
+                    buffer = b""
+                    decoded = line.decode('ascii', 'backslashreplace')
+                    if decoded:
+                        if hasattr(self, 'terminal_dialog') and self.terminal_dialog.top.winfo_exists():
+                            self.terminal_dialog.receive_message(decoded)
+
+            except Exception as e:
+                print(f"Serial read error: {e}")
+                break
 
     def _on_host_cd(self):
         # Stub: to be implemented with X-Modem logic
