@@ -15,119 +15,167 @@ The GUI shall have a menu bar with the following structure:
     - Serial
     - General
 
-### Main Program Look and Feel
+### Main Program GUI
 The main program shall consist of the following:
 - Menu bar at the top.
 - Status bar at the bottom.
-- The 'Host Files' multi-select widget on the left hand side that displays the files in the current working folder of the host system.
-- The 'Remote Files' multi-select widget on the right hand side that displays the files in the current working folder of the remote system.
-- In between the host and remote widgets shall be the following buttons:
+- The 'Host Files' group on the left hand side consisting of:
+    - Button called 'Change Directory'.
+    - Multi-select widget that shall display on startup the files in the current working folder of the host system.
+- The 'Remote Files' group on the left hand side consisting of:
+    - Button called 'Update'.
+    - Multi-select widget that shall be empty on startup.
+- In between the 'Host Files' and 'Remote Files' groupss shall be the following buttons:
     - Connect
     - Copy to Remote
     - Copy to Host
     - Refresh
+    - Terminal
 
-## Configuration
+### Menu Items
 
-### Serial Configuration
-When the 'Config>Serial' menu option is chosen, a modal dialog shall be presented to enable the user to modify the following items:
-- Comm Port: This shal be a a drop down list.
-    - Enumerate through the installed serial ports on the host and populate the list with the serial ports found.
-- Speed: This shall be a drop down list of the following speeds. The default shall be 115200.
-    - 300
-    - 1200
-    - 2400
-    - 4800
-    - 9600
-    - 14400
-    - 19200
-    - 38400
-    - 57600
-    - 115200
-    - 230400
-    - 460800
-    - 921600
-- Data: This shall be a drop down list of the following data bits. The default shall be 8.
-    - 7
-    - 8
-- Parity: This shall be a drop down list of the following parity. The default shall be none.
-    - none
-    - odd
-    - even
-    - mark
-    - space
-- Stop Bits: This shall be a drop down list of the following stop bits. The default shall be 1.
-    - 1
-    - 2
-- Flow Control: This shall be a drop down list of the following flow control options. The default shall be NONE.
-    - NONE
-    - XON/XOFF
-    - RTS/CTS
-    - DSR/DTR
-- Transmit Delay: This shall be a group of the following items
+#### Load
+The File>Load menu item shall prompt the user via a file select dialog box, defaulting to the file type 'json' for a configuration file to load from. The internal program structures and variables for serial configuration settings and general configuration settings shall be updated with those in the configuration file. Any settings not recognised in the settings file shall be ignored.
+
+#### Save
+The File>Save menu item shall prompt the user via a file select dialog box, defaulting to the file type 'json' for a configuration file to save to. The internal program structures and variables for serial configuration settings and general configuration settings shall be saved to the configuration file in JSON format.
+
+#### Exit
+The File>Exit menu item shall:
+- Close any open com ports.
+- Close all open dialogs and windows.
+
+#### Serial
+When the 'Config>Serial' menu option is chosen, the Serial Configuration Dialog shall be presented to enable the user to modify the serial settings.
+
+#### Serial
+When the 'Config>General' menu option is chosen, the General Configuration Dialog shall be presented to enable the user to modify the general settings.
+
+### Status Bar
+The status bar shall be a single line text label with a maximum of 127 characters.
+
+### Buttons
+#### Change Directory
+This shall be enabled at startup and shall prompt the user via a folder select dialog box for the folder to load into the 'Host Files' multi-select widget.
+
+#### Update
+This shall be enabled at startup and shall interrogate the remote host for the list of files in the current working drive of the remote computer to load into the 'Remote Files' multi-select widget following the process listed in the 'Populating remote file list' requirement
+
+#### Connect
+This shall be enabled at startup and the function that handles the button click shall implement the functionality specified by 'Connecting to the remote system".
+
+#### Disconnect
+This shall be enabled at startup and the function that handles the button click shall implement the functionality specified by 'Disconnecting from the remote system".
+
+#### Copy to Remote
+This shall be enabled at startup and the function that handles the button click shall an empty stub.
+
+#### Copy to Host
+This shall be enabled at startup and the function that handles the button click shall an empty stub.
+
+#### Refresh
+This shall be enabled at startup and the function that handles the button click shall an empty stub.
+
+### Host Files
+This shall be populated with the file contents of the current working directory on the host.
+
+### Remote Files
+This shall be unpopulated at start up.
+
+### Dialogs
+
+#### Serial Configuration Dialog
+The Serial Configuration Dialog is a modal dialog called 'Serial Config' that enables the user to modify the following items:
+- Port Settings: This shall be a group of the following items consisting of 2 columns with setting name left justified in the first column and the setting field right justified in the second column
+    - Terminal Port: This shal be a a drop down list.
+        - Enumerate through the installed serial ports on the host and populate the list with the serial ports found.
+    - Transfer Port: This shal be a a drop down list.
+        - Enumerate through the installed serial ports on the host and populate the list with the serial ports found.
+    - Speed: This shall be a drop down list of the following speeds. The default shall be 115200.
+        - 300
+        - 1200
+        - 2400
+        - 4800
+        - 9600
+        - 14400
+        - 19200
+        - 38400
+        - 57600
+        - 115200
+        - 230400
+        - 460800
+        - 921600
+    - Data: This shall be a drop down list of the following data bits. The default shall be 8.
+        - 7
+        - 8
+    - Parity: This shall be a drop down list of the following parity. The default shall be none.
+        - NONE
+        - ODD
+        - EVEN
+        - MARK
+        - SPACE
+    - Stop Bits: This shall be a drop down list of the following stop bits. The default shall be 1.
+        - 1
+        - 2
+    - Flow Control: This shall be a drop down list of the following flow control options. The default shall be NONE.
+        - NONE
+        - XON/XOFF
+        - RTS/CTS
+        - DSR/DTR
+
+- Transmit Delay: This shall be a group of the following items consisting of 2 columns with setting name left justified in the first column and the setting field right justified in the second column
     - msec/char: This shall be a text field that defaults to 0. It shall be limited to numbers between the values of 0 and 255.
     - msec/line: This shall be a text field that defaults to 0. It shall be limited to numbers between the values of 0 and 255.
 
-### General Configuration
-When the 'Config>General' menu option is chosen, a modal dialog shall be presented to enable the user to modify the following configuration items:
+#### General Configuration Dialog
+The General Configuration Dialog is a modal dialog called 'General Config' that shall enable the user to modify the following items:
 - Commands: This shall be a group of the following items:
     - Receive: This shall be a text field limited to 253 characters.
     - Send: This shall be a text field limited to 253 characters.
 
-## Status Bar
-The status bar shall be a single line text label with a maximum of 127 characters.
+#### Terminal Window
+The terminal window is a non-modal window called 'Terminal' that shall be used to send and receive data from the remote system. The window consists of the following items:
+- Large multi-line text area called 'Receive' for displaying incoming data from the remote system and has the following characteristics:
+    - Auto scrolls the incoming text.
+    - Read only.
+- The following items are positioned below the receive text area:
+    - Button called 'Clear' that is left aligned to the terminal window that clears the contents of the receive text are when pressed.
+    - Check box to enable/disable the autoscroll that is right aligned to the terminal window and is enabled by default. 
+- Below the clear button and the autoscroll checkbox is a group called 'Transmit' that contains the following items:
+    - Single line text field aligned to the left.
+    - 'Send' button aligned to the right in the same row as the text area.
 
-## Buttons
-### Connect
-This shall be enabled at startup and the function that handles the button click shall an empty stub.
+## Functional
+### Connecting to the remote system
+When the 'Connect' button is pressed, the following actions shall occur:
+- If the 'Terminal Port' is not currently open, attempt to open the 'Terminal Port' serial port.
+    - If the serial port cannot be opened, display an error dialog "Terminal port is unable to be opened" and cancel the current workflow.
+- Set the global terminal status flag to connected.
+- Open the 'Terminal Window' if not already open.
+- All received data from the remote 'Terminal Port' is to be displayed in the receive text area of the 'Terminal' window.
+    - If the 'Transport Port' is the same as the 'Terminal Port', set the global transport status flag to connected.
+    - If the 'Transport Port' is different from the 'Terminal Port' and the 'Transport Port' is not currently open, attempt to open the 'Transport Port' serial port.
+        - If the serial port cannot be opened, display an error dialog "Transport port is unable to be opened".
+        - If the serial port can be opened, set the global transport status flag to connected.
 
-### Copy to Remote
-This shall be disabled at startup and the function that handles the button click shall an empty stub.
+### Disconnecting from the remote system
+When the 'Disconnect' button is pressed, the following actions shall occur:
+- If the 'Terminal Port' is currently open, attempt to close the serial port.
+    - If the serial port cannot be closed, display an error dialog "Terminal port is unable to be closed" and cancel the current workflow.
+- Set the global terminal status flag to disconnected.
+    - If the 'Transport Port' is the same as the 'Terminal Port', set the global transport status flag to disconnected.
+    - If the 'Transport Port' is different from the 'Terminal Port' and the 'Transport Port' is currently open, attempt to close the 'Transport Port' serial port.
+        - If the serial port cannot be closed, display an error dialog "Transport port is unable to be closed".
+        - If the serial port can be closed, set the global transport status flag to disconnected.
 
-### Copy to Host
-This shall be disabled at startup and the function that handles the button click shall an empty stub.
+### Populating remote file list
+The global terminal status flag shall be set to connected. If the global termainal status flag is disconnected, display an error dialog "Terminal port is unable to be opened" and cancel the current workflow.
 
-### Refresh
-This shall be disabled at startup and the function that handles the button click shall an empty stub.
 
-## Host Files
-This shall be populated with the file contents of the current working directory on the host.
-
-## Host Files
-This shall be unpopulated at start up.
-
-## File Transfers
+### File Transfers
+File transfers can only occur if both the terminal status flag and the transport status flag are set to connected.
 The file transfers shall be in both directions, i.e., host to remote and remote to host.
 The file transfer protocol shall be X-Modem.
+The serial port to be used for transfers shall be the 'Transfer Port'.
 
-
-## Project Structure
-CPM_FM/
-├── .vscode/
-│   └── settings.json                     # Optional: Python interpreter path, linter settings
-├── src/
-│   ├── cpm_fm/
-│   │   ├── __init__.py                   # Makes it a package
-│   │   ├── main.py                       # Entry point: runs the GUI app
-│   │   ├── gui/
-│   │   │   ├── __init__.py
-│   │   │   └── app.py                    # Contains App class (as above)
-│   │   ├── serial/
-│   │   │   ├── __init__.py
-│   │   │   ├── connection.py             # Serial port handler (to be implemented)
-│   │   │   └── xmodem.py                 # X-Modem protocol implementation (stubbed)
-│   │   ├── config/
-│   │   │   ├── __init__.py
-│   │   │   ├── settings.py               # Loads/saves config from/to JSON file
-│   │   │   └── defaults.py               # Default values for all configuration items
-│   │   └── utils/
-│   │       ├── __init__.py
-│   │       └── file_utils.py             # Helper functions: list files, validate names, etc.
-├── tests/                                # Unit tests (pytest)
-│   ├── __init__.py
-│   ├── test_serial_connection.py
-│   ├── test_xmodem.py
-│   └── test_config.py
-├── requirements.txt                      # Dependencies (e.g., pyserial, tkinter)
-└── README.md                             # Project overview and usage instructions
-
+# Software Architecture
