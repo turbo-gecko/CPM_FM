@@ -1,2 +1,3 @@
 src/cpm_fm/temp.py
 /temp
+*.pyc

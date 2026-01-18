@@ -1,4 +1,4 @@
-# serial_config_dialog.py
+# serial_config_display.py
 import tkinter as tk
 from tkinter import ttk
 import serial.tools.list_ports
@@ -10,8 +10,8 @@ class SerialConfigDialog:
         self.app = app        # App instance (for set_status)
 
         top = self.top = tk.Toplevel(parent)
-        top.title("Serial Configuration")
-        top.geometry("300x350")
+        top.title("Serial Config")  # Updated title as per requirements
+        top.geometry("300x400")
 
         # Port Settings
         port_frame = ttk.LabelFrame(top, text="Port Settings")
@@ -22,7 +22,7 @@ class SerialConfigDialog:
         port_frame.columnconfigure(1, weight=1)  # Entry column
 
         # Terminal Comm Port
-        ttk.Label(port_frame, text="Terminal Comm Port:").grid(
+        ttk.Label(port_frame, text="Terminal Port:").grid(
             row=0, column=0, padx=5, pady=2, sticky="w")
 
         self.term_port_var = tk.StringVar()
@@ -35,7 +35,7 @@ class SerialConfigDialog:
         self.term_port_combo.set(self.app.serial_config['terminal_port'])
 
         # Transfer Comm Port
-        ttk.Label(port_frame, text="Transport Comm Port:").grid(
+        ttk.Label(port_frame, text="Transfer Port:").grid(
             row=1, column=0, padx=5, pady=2, sticky="w")
 
         self.trans_port_var = tk.StringVar()
@@ -68,11 +68,11 @@ class SerialConfigDialog:
         self.data_combo.grid(row=3, column=1, padx=5, pady=2, sticky="e")
         self.data_combo.set(self.app.serial_config['data'])
 
-        # Parity (incomplete in citation — add rest as needed)
+        # Parity - Updated to include all required options
         ttk.Label(port_frame, text="Parity:").grid(
             row=4, column=0, padx=5, pady=2, sticky="w")
         self.parity_var = tk.StringVar()
-        parity_options = ['NONE', 'EVEN', 'ODD']
+        parity_options = ['NONE', 'ODD', 'EVEN', 'MARK', 'SPACE']
         self.parity_combo = ttk.Combobox(port_frame, textvariable=self.parity_var,
                                          values=parity_options, state='readonly')
         self.parity_combo.grid(row=4, column=1, padx=5, pady=2, sticky="e")
@@ -88,7 +88,7 @@ class SerialConfigDialog:
         self.stopbit_combo.grid(row=5, column=1, padx=5, pady=2, sticky="e")
         self.stopbit_combo.set(self.app.serial_config['stopbits'])
 
-        # Flow Control
+        # Flow Control - Updated to include all required options
         ttk.Label(port_frame, text="Flow Control:").grid(
             row=6, column=0, padx=5, pady=2, sticky="w")
         self.flow_var = tk.StringVar()
@@ -110,15 +110,18 @@ class SerialConfigDialog:
                                                        column=0, sticky='w', padx=5, pady=2)
         self.msec_char = tk.StringVar(
             value=self.app.serial_config['msec_char'])
+        # Add validation to ensure it's between 0 and 255
+        validate_cmd = top.register(self.validate_numeric_input)
         ttk.Entry(delay_frame, textvariable=self.msec_char,
-                  width=10).grid(row=0, column=1, padx=5, pady=2, sticky="e")
+                  width=10, validate='key', validatecommand=(validate_cmd, '%P')).grid(row=0, column=1, padx=5, pady=2, sticky="e")
 
         ttk.Label(delay_frame, text="msec/line:").grid(row=1,
                                                        column=0, sticky='w', padx=5, pady=2)
         self.msec_line = tk.StringVar(
             value=self.app.serial_config['msec_line'])
+        # Add validation to ensure it's between 0 and 255
         ttk.Entry(delay_frame, textvariable=self.msec_line,
-                  width=10).grid(row=1, column=1, padx=5, pady=2, sticky="e")
+                  width=10, validate='key', validatecommand=(validate_cmd, '%P')).grid(row=1, column=1, padx=5, pady=2, sticky="e")
 
         # Buttons
         btn_frame = ttk.Frame(top)
@@ -129,6 +132,16 @@ class SerialConfigDialog:
         cancel_btn = ttk.Button(
             btn_frame, text="Cancel", command=self.on_cancel)
         cancel_btn.grid(row=0, column=1, padx=5)
+
+    def validate_numeric_input(self, value):
+        """Validate that input is a number between 0 and 255"""
+        if value == "":
+            return True
+        try:
+            num = int(value)
+            return 0 <= num <= 255
+        except ValueError:
+            return False
 
     def on_ok(self):
         # Here you would save the selected settings to self.top.result or similar

@@ -27,17 +27,62 @@ class App:
             'msec_line': 0,               # Optional: line delay in milli-seconds
         }
 
+        # Initialize general configuration defaults
+        self.general_settings = {
+            'list_files': 'DIR',
+            'change_disk': '',
+            'receive_from_remote': 'PCPUT $1',
+            'send_to_remote': 'PCGET $1',
+            'end_of_line': 'CR'
+        }
+
+        # Program state flags
+        self.terminal_connected = False
+        self.transport_connected = False
+
         # Load config from file if it exists
         self._load_serial_config()
+        self._load_general_config()
 
         # Initialize variables
         self.serial_connection = None
         self.remote_files = []  # Will be populated after connection
+        self.received_data_buffer = ""  # Buffer for collecting serial data
 
         # Setup GUI components
         self._setup_menu_bar()
         self._setup_status_bar()
         self._setup_main_layout()
+
+    def _load_serial_config(self):
+        """Load serial configuration from file if it exists."""
+        try:
+            config_file = Path.home() / ".cpm_manager" / "serial_config.json"
+            if config_file.exists():
+                with open(config_file, 'r') as f:
+                    loaded = json.load(f)
+                    # Update only known keys to avoid errors
+                    for key in self.serial_config.keys():
+                        if key in loaded:
+                            self.serial_config[key] = loaded[key]
+                self.set_status("Serial configuration loaded from file")
+        except Exception as e:
+            self.set_status(f"Failed to load config: {e}")
+    
+    def _load_general_config(self):
+        """Load general configuration from file if it exists."""
+        try:
+            config_file = Path.home() / ".cpm_manager" / "general_config.json"
+            if config_file.exists():
+                with open(config_file, 'r') as f:
+                    loaded = json.load(f)
+                    # Update only known keys to avoid errors
+                    for key in self.general_settings.keys():
+                        if key in loaded:
+                            self.general_settings[key] = loaded[key]
+                self.set_status("General configuration loaded from file")
+        except Exception as e:
+            self.set_status(f"Failed to load general config: {e}")
 
     def _setup_menu_bar(self):
         menubar = tk.Menu(self.root)
@@ -149,36 +194,41 @@ class App:
                 self.host_listbox.insert(tk.END, item)
 
     def _on_connect(self):
-        match self.serial_config['flow']:
-            case "DSR/DTR":
-                flow_dsrdtr = True
-                flow_rtscts = False
-                flow_xonxoff = False
-            case "NONE":
-                flow_dsrdtr = False
-                flow_rtscts = False
-                flow_xonxoff = False
-            case "RTS/CTS":
-                flow_dsrdtr = False
-                flow_rtscts = True
-                flow_xonxoff = False
-            case "XON/XOFF":
-                flow_dsrdtr = False
-                flow_rtscts = False
-                flow_xonxoff = True
-
+        # Handle connection according to specification
         try:
+            # Open terminal port first
+            match self.serial_config['flow']:
+                case "DSR/DTR":
+                    flow_dsrdtr = True
+                    flow_rtscts = False
+                    flow_xonxoff = False
+                case "NONE":
+                    flow_dsrdtr = False
+                    flow_rtscts = False
+                    flow_xonxoff = False
+                case "RTS/CTS":
+                    flow_dsrdtr = False
+                    flow_rtscts = True
+                    flow_xonxoff = False
+                case "XON/XOFF":
+                    flow_dsrdtr = False
+                    flow_rtscts = False
+                    flow_xonxoff = True
+
             self.serial_port = serial.Serial(
-                port = self.serial_config['terminal_port'],
-                baudrate = int(self.serial_config['speed']),
-                bytesize = int(self.serial_config['data']),
-                parity = self.serial_config['parity'][0],
-                stopbits = float(self.serial_config['stopbits']),
-                timeout = 0,
-                xonxoff = flow_xonxoff,
-                rtscts = flow_rtscts,
-                dsrdtr = flow_dsrdtr,
+                port=self.serial_config['terminal_port'],
+                baudrate=int(self.serial_config['speed']),
+                bytesize=int(self.serial_config['data']),
+                parity=self.serial_config['parity'][0],
+                stopbits=float(self.serial_config['stopbits']),
+                timeout=0,
+                xonxoff=flow_xonxoff,
+                rtscts=flow_rtscts,
+                dsrdtr=flow_dsrdtr,
             )
+
+            # Set terminal connected flag
+            self.terminal_connected = True
 
             # Start background thread to read incoming data
             self.read_thread = threading.Thread(target=self._read_serial, daemon=True)
@@ -198,8 +248,52 @@ class App:
             self.copy_to_host_btn.config(state='normal')
             self.refresh_btn.config(state='normal')
 
+            self.set_status("Terminal port open")
+
+            # Check if transport port is different from terminal port
+            if self.serial_config['transport_port'] != self.serial_config['terminal_port']:
+                # Try to open transport port
+                try:
+                    self.transport_port = serial.Serial(
+                        port=self.serial_config['transport_port'],
+                        baudrate=int(self.serial_config['speed']),
+                        bytesize=int(self.serial_config['data']),
+                        parity=self.serial_config['parity'][0],
+                        stopbits=float(self.serial_config['stopbits']),
+                        timeout=1,
+                        xonxoff=flow_xonxoff,
+                        rtscts=flow_rtscts,
+                        dsrdtr=flow_dsrdtr,
+                    )
+                    self.transport_connected = True
+                except Exception as e:
+                    messagebox.showerror("Transport Port Error", f"Transport port is unable to be opened:\n{e}")
+            else:
+                # Same port for both, so transport is connected too
+                self.transport_connected = True
+
         except Exception as e:
             messagebox.showerror("Connection Failed", str(e))
+
+    def _on_disconnect(self):
+        """Handle disconnection according to specification."""
+        try:
+            if self.serial_port and self.serial_port.is_open:
+                self.serial_port.close()
+                self.terminal_connected = False
+            else:
+                self.set_status("Terminal port already closed")
+
+            # Check if transport port is different from terminal port and needs closing
+            if (self.serial_config['transport_port'] != self.serial_config['terminal_port'] and 
+                hasattr(self, 'transport_port') and self.transport_port.is_open):
+                self.transport_port.close()
+                self.transport_connected = False
+
+            self.set_status("Terminal port closed")
+
+        except Exception as e:
+            messagebox.showerror("Disconnection Error", f"Transport port is unable to be closed:\n{e}")
 
     def _read_serial(self):
         buffer = b""
@@ -215,6 +309,8 @@ class App:
                     if decoded:
                         if hasattr(self, 'terminal_dialog') and self.terminal_dialog.top.winfo_exists():
                             self.terminal_dialog.receive_message(decoded)
+                        # Store received data for processing later
+                        self.received_data_buffer += decoded
                     continue
 
                 buffer += new_data
@@ -242,6 +338,8 @@ class App:
                     if decoded:
                         if hasattr(self, 'terminal_dialog') and self.terminal_dialog.top.winfo_exists():
                             self.terminal_dialog.receive_message(decoded)
+                        # Store received data for processing later
+                        self.received_data_buffer += decoded
 
                 # Optional: handle trailing \r that might be the last character
                 if buffer.endswith(b'\r'):
@@ -251,6 +349,8 @@ class App:
                     if decoded:
                         if hasattr(self, 'terminal_dialog') and self.terminal_dialog.top.winfo_exists():
                             self.terminal_dialog.receive_message(decoded)
+                        # Store received data for processing later
+                        self.received_data_buffer += decoded
 
             except Exception as e:
                 print(f"Serial read error: {e}")
@@ -276,10 +376,116 @@ class App:
         # Stub: to be implemented with X-Modem logic
         messagebox.showinfo("Copy to Host", "Copy to Host clicked (stub).")
 
+    def _extract_remote_filenames(self, data):
+        """
+        Extract remote filenames from CP/M directory listing using the algorithm
+        specified in CPM_FM.md.
+        
+        Args:
+            data (str): Raw text output from CP/M directory command
+            
+        Returns:
+            dict: Dictionary with filenames as keys and True as values
+        """
+        if not data:
+            return {}
+            
+        # Split into lines
+        lines = data.strip().split('\n')
+        
+        # Process each line according to the algorithm
+        filenames = {}
+        
+        for line in lines:
+            # Ignore non-file lines
+            if not line.strip() or line.startswith('C>') or 'NO FILE' in line:
+                continue
+                
+            # Identify file listing lines (start with drive letter followed by colon)
+            if not line.startswith(('A:', 'B:', 'C:', 'D:', 'E:', 'F:', 'G:', 'H:', 
+                                  'I:', 'J:', 'K:', 'L:', 'M:', 'N:', 'O:', 'P:', 
+                                  'Q:', 'R:', 'S:', 'T:', 'U:', 'V:', 'W:', 'X:', 
+                                  'Y:', 'Z:')):
+                continue
+                
+            # Strip drive identifier
+            if ':' in line:
+                colon_pos = line.find(':')
+                line = line[colon_pos + 1:].strip()
+            
+            # Split into file entries using " : " as delimiter
+            if ' : ' not in line:
+                continue
+                
+            entries = line.split(' : ')
+            
+            for entry in entries:
+                entry = entry.strip()
+                if not entry:
+                    continue
+                    
+                # Normalize whitespace and parse filename and extension
+                tokens = entry.split()
+                
+                # Skip malformed entries with fewer than two tokens
+                if len(tokens) < 2:
+                    continue
+                
+                # Treat the last token as extension, others as filename base
+                extension = tokens[-1]
+                filename_base = ' '.join(tokens[:-1])
+                
+                # Construct full filename
+                if filename_base and extension:
+                    filename = f"{filename_base}.{extension}"
+                    filenames[filename] = True
+                elif extension:
+                    # Handle case where there's only an extension (no base name)
+                    filenames[extension] = True
+                    
+        return filenames
+
     def _on_refresh(self):
-        dir = os.listdir(os.getcwd())
-        self._refresh_host_files(dir)
-        messagebox.showinfo("Refresh", "Refresh button clicked (stub).")
+        # Check if terminal is connected before attempting refresh
+        if not self.terminal_connected:
+            self.set_status("Terminal port not open - cannot read file list")
+            self.remote_listbox.delete(0, tk.END)
+            return
+
+        try:
+            # Clear the received data buffer to start fresh
+            self.received_data_buffer = ""
+            
+            # Send command to remote system
+            cmd = self.general_settings['list_files'] + "\r"
+            self.serial_port.write(cmd.encode())
+            
+            # Wait for response with a more robust approach
+            time.sleep(0.5)  # Give time for response
+            
+            # Try to read any available data that might have arrived
+            remaining_data = self.serial_port.read(self.serial_port.in_waiting)
+            if remaining_data:
+                decoded = remaining_data.decode('ascii', 'backslashreplace')
+                self.received_data_buffer += decoded
+            
+            # Process the received data
+            if self.received_data_buffer:
+                filenames = self._extract_remote_filenames(self.received_data_buffer)
+                
+                # Update the remote files listbox
+                self.remote_listbox.delete(0, tk.END)
+                for filename in sorted(filenames.keys()):
+                    self.remote_listbox.insert(tk.END, filename)
+                
+                self.set_status("Remote file list updated")
+            else:
+                # No data received, clear the listbox
+                self.remote_listbox.delete(0, tk.END)
+                self.set_status("No remote files found or connection error")
+            
+        except Exception as e:
+            messagebox.showerror("Refresh Error", f"Failed to refresh remote files:\n{e}")
 
     def _on_terminal(self):
         """Open Terminal Dialog."""
@@ -312,42 +518,71 @@ class App:
                     for key in self.serial_config.keys():
                         if key in loaded_config:
                             self.serial_config[key] = loaded_config[key]
-                    self.set_status(f"Serial settings loaded from: {file_path}")
+                    # Also load general settings if present
+                    if 'general_settings' in loaded_config:
+                        for key in self.general_settings.keys():
+                            if key in loaded_config['general_settings']:
+                                self.general_settings[key] = loaded_config['general_settings'][key]
+                    self.set_status(f"Settings loaded from: {file_path}")
             except Exception as e:
                 messagebox.showerror("Load Error", f"Failed to load settings:\n{e}")
 
-    def _load_serial_config(self):
-        """Load serial configuration from file if it exists."""
-        try:
-            config_file = Path.home() / ".cpm_manager" / "serial_config.json"
-            if config_file.exists():
-                with open(config_file, 'r') as f:
-                    loaded = json.load(f)
-                    # Update only known keys to avoid errors
-                    for key in self.serial_config.keys():
-                        if key in loaded:
-                            self.serial_config[key] = loaded[key]
-                self.set_status("Serial configuration loaded from file")
-        except Exception as e:
-            self.set_status(f"Failed to load config: {e}")
-    
     def _on_save(self):
         file_path = filedialog.asksaveasfilename(
             defaultextension=".json",
-            title="Save Serial Settings",
+            title="Save Settings",
             filetypes=[("JSON files", "*.json")],
-            initialfile="serial_settings.json"  # Default filename
+            initialfile="cpm_settings.json"  # Default filename
         )
         if file_path:
             try:
+                # Create complete config dict including both serial and general settings
+                full_config = {
+                    **self.serial_config,
+                    'general_settings': self.general_settings
+                }
+                
                 with open(file_path, 'w') as f:
-                    json.dump(self.serial_config, f, indent=4)
-                self.set_status(f"Serial settings saved to: {file_path}")
+                    json.dump(full_config, f, indent=4)
+                self.set_status(f"Settings saved to: {file_path}")
             except Exception as e:
                 messagebox.showerror("Save Error", f"Failed to save settings:\n{e}")
 
     def _on_exit(self):
-        self.terminal_dialog.top.destroy()
+        # Save configurations before exiting
+        try:
+            # Ensure the config directory exists
+            config_dir = Path.home() / ".cpm_manager"
+            config_dir.mkdir(exist_ok=True)
+            
+            # Save serial config
+            serial_config_file = config_dir / "serial_config.json"
+            with open(serial_config_file, 'w') as f:
+                json.dump(self.serial_config, f, indent=4)
+                
+            # Save general config
+            general_config_file = config_dir / "general_config.json"
+            with open(general_config_file, 'w') as f:
+                json.dump(self.general_settings, f, indent=4)
+                
+        except Exception as e:
+            messagebox.showerror("Save Error", f"Failed to save configuration on exit:\n{e}")
+        
+        # Close any open ports
+        if hasattr(self, 'serial_port') and self.serial_port.is_open:
+            self.serial_port.close()
+        if (hasattr(self, 'transport_port') and 
+            hasattr(self.transport_port, 'is_open') and 
+            self.transport_port.is_open):
+            self.transport_port.close()
+            
+        # Close terminal dialog
+        if hasattr(self, 'terminal_dialog'):
+            try:
+                self.terminal_dialog.top.destroy()
+            except:
+                pass
+        
         self.root.quit()
 
     def run(self):
