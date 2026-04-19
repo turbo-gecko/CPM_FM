@@ -1,0 +1,11 @@
+{
+    "terminal_port": "COM99",
+    "transport_port": "COM1",
+    "speed": "19200",
+    "data": "8",
+    "parity": "NONE",
+    "stopbits": "1",
+    "flow": "NONE",
+    "msec_char": "0",
+    "msec_line": "0"
+}
