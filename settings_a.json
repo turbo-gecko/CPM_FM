@@ -1,0 +1,20 @@
+{
+  "serial": {
+    "terminal_port": "COM4",
+    "transfer_port": "COM4",
+    "speed": "230400",
+    "data_bits": 8,
+    "parity": "NONE",
+    "stop_bits": "1",
+    "flow_control": "RTS/CTS",
+    "transmit_delay_char": 0,
+    "transmit_delay_line": 0
+  },
+  "general": {
+    "list_files_command": "DIR",
+    "change_disk_command": "",
+    "receive_from_remote_command": "PCPUT $1",
+    "send_to_remote_command": "PCGET $1",
+    "end_of_line": "CR"
+  }
+}

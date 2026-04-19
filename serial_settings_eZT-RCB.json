@@ -1,0 +1,18 @@
+{
+    "terminal_port": "COM4",
+    "transport_port": "COM5",
+    "speed": "230400",
+    "data": "8",
+    "parity": "NONE",
+    "stopbits": "1",
+    "flow": "RTS/CTS",
+    "msec_char": "0",
+    "msec_line": "0",
+    "general_settings": {
+        "list_files": "DIR",
+        "change_disk": "",
+        "receive_from_remote": "PCPUT $1",
+        "send_to_remote": "PCGET $1",
+        "end_of_line": "CR"
+    }
+}
