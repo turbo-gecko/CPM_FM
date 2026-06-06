@@ -1,21 +1,23 @@
 import tkinter as tk
 from tkinter import scrolledtext
 
+
 class TerminalWindow(tk.Toplevel):
     """
     Non-modal Terminal window as per App_Requirements.md.
     """
+
     def __init__(self, parent, send_callback):
         super().__init__(parent)
         self.title("Terminal")
         self.send_callback = send_callback
-        
+
         self.create_widgets()
         self.protocol("WM_DELETE_WINDOW", self.hide_window)
 
     def create_widgets(self):
         # Receive Area
-        self.receive_area = scrolledtext.ScrolledText(self, state='disabled', wrap=tk.WORD)
+        self.receive_area = scrolledtext.ScrolledText(self, state="disabled", wrap=tk.WORD)
         self.receive_area.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
         # Control Frame
@@ -30,7 +32,9 @@ class TerminalWindow(tk.Toplevel):
         self.chk_echo.pack(side=tk.LEFT, expand=True)
 
         self.var_autoscroll = tk.BooleanVar(value=True)
-        self.chk_scroll = tk.Checkbutton(ctrl_frame, text="Autoscroll", variable=self.var_autoscroll)
+        self.chk_scroll = tk.Checkbutton(
+            ctrl_frame, text="Autoscroll", variable=self.var_autoscroll
+        )
         self.chk_scroll.pack(side=tk.RIGHT)
 
         # Transmit Frame
@@ -45,9 +49,9 @@ class TerminalWindow(tk.Toplevel):
         self.btn_send.pack(side=tk.RIGHT)
 
     def clear_text(self):
-        self.receive_area.configure(state='normal')
-        self.receive_area.delete('1.0', tk.END)
-        self.receive_area.configure(state='disabled')
+        self.receive_area.configure(state="normal")
+        self.receive_area.delete("1.0", tk.END)
+        self.receive_area.configure(state="disabled")
 
     def send_text(self):
         text = self.tx_entry.get()
@@ -57,11 +61,11 @@ class TerminalWindow(tk.Toplevel):
 
     def write_text(self, text):
         """Appends text to the receive area."""
-        self.receive_area.configure(state='normal')
+        self.receive_area.configure(state="normal")
         self.receive_area.insert(tk.END, text)
         if self.var_autoscroll.get():
             self.receive_area.see(tk.END)
-        self.receive_area.configure(state='disabled')
+        self.receive_area.configure(state="disabled")
 
     def hide_window(self):
         # Requirements say non-modal, often these stay alive in background
