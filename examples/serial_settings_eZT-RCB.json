@@ -19,5 +19,6 @@
     "change_disk_cmd": "",
     "recv_remote_cmd": "B:PCPUT $1",
     "send_remote_cmd": "B:PCGET $1",
-    "eol": "CR"
+    "eol": "CR",
+    "xfer_launch_delay": "3"
 }
