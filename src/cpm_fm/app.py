@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
     QGroupBox,
+    QHBoxLayout,
     QListWidget,
     QMainWindow,
     QMessageBox,
@@ -140,9 +141,6 @@ class MainWindow(QMainWindow):
         actions = [
             ("Connect", Pix.SP_DialogApplyButton, self.do_connect),
             ("Disconnect", Pix.SP_DialogCancelButton, self.do_disconnect),
-            ("Copy to Remote", Pix.SP_ArrowRight, self.do_copy_to_remote),
-            ("Copy to Host", Pix.SP_ArrowLeft, self.do_copy_to_host),
-            ("Refresh", Pix.SP_BrowserReload, self.refresh_all),
             ("Terminal", Pix.SP_ComputerIcon, self.show_terminal),
         ]
         for text, pixmap, handler in actions:
@@ -160,6 +158,13 @@ class MainWindow(QMainWindow):
         self.host_list = QListWidget()
         self.host_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         host_layout.addWidget(self.host_list)
+
+        # Host buttons row
+        host_btns = QHBoxLayout()
+        host_btns.addWidget(QPushButton("Refresh Host", clicked=self.refresh_all))
+        host_btns.addWidget(QPushButton("Copy to Remote", clicked=self.do_copy_to_remote))
+        host_layout.addLayout(host_btns)
+
         splitter.addWidget(host_group)
 
         # Right Side: Remote Files
@@ -169,6 +174,12 @@ class MainWindow(QMainWindow):
         self.remote_list = QListWidget()
         self.remote_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         remote_layout.addWidget(self.remote_list)
+
+        # Remote buttons row
+        remote_btns = QHBoxLayout()
+        remote_btns.addWidget(QPushButton("Copy to Host", clicked=self.do_copy_to_host))
+        remote_layout.addLayout(remote_btns)
+
         splitter.addWidget(remote_group)
 
         splitter.setSizes([450, 450])
