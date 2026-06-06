@@ -1,33 +1,75 @@
+from __future__ import annotations
+
 import os
+import sys
 import threading
 import time
-import tkinter as tk
-from tkinter import filedialog, messagebox
+from typing import cast
+
+import serial.tools.list_ports
+from PySide6.QtCore import Signal
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QApplication,
+    QFileDialog,
+    QGroupBox,
+    QListWidget,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QSplitter,
+    QStyle,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 from cpm_fm.gui.config_dialogs import GeneralConfigDialog, SerialConfigDialog
 from cpm_fm.gui.terminal_window import TerminalWindow
+from cpm_fm.gui.theme import apply_theme
 from cpm_fm.terminal.cpm_parser import CPMParser
 from cpm_fm.terminal.serial_manager import SerialManager
 from cpm_fm.terminal.xmodem import XModem
 from cpm_fm.utils.config_handler import ConfigHandler
 
+EOL_MAP = {"CR": "\r", "LF": "\n", "CRLF": "\r\n"}
 
-class MainApplication(tk.Tk):
+
+class MainWindow(QMainWindow):
+    """Main application window (SRS docs/cpm_fm_requirements.md).
+
+    All GUI updates originating from background threads (serial reads, file
+    transfers, the remote-list capture worker) are delivered to the Qt GUI
+    thread exclusively via the signals below, which are connected with the
+    implicitly-queued cross-thread default (NFR-001, NFR-004). No widget is
+    touched directly from a worker thread.
+    """
+
+    # Cross-thread GUI marshalling signals (NFR-004).
+    status_changed = Signal(str)
+    term_write = Signal(str)
+    remote_files_ready = Signal(dict)
+    error_raised = Signal(str, str)
+
     def __init__(self):
         super().__init__()
-        self.title("CP/M File Manager")
-        self.geometry("800x500")
+        self.setWindowTitle("CP/M File Manager")
+        self.resize(900, 560)
 
         # Core Components
         self.serial_mgr = SerialManager()
         self.config_handler = ConfigHandler()
-        self.settings = {}
+        self.settings: dict = {}
 
         # UI State
-        self.terminal_win = None
+        self.terminal_win: TerminalWindow | None = None
         self.host_dir = os.getcwd()
         self._remote_capture_buffer = ""
         self._capture_active = False
+        # Cached Local Echo state so worker threads read a plain bool rather
+        # than touching the checkbox widget (NFR-004).
+        self._local_echo = False
 
         # FR-090/FR-092: receive and transmit data buffers, retained until
         # explicitly cleared via the Terminal Window Clear button (FR-095).
@@ -35,137 +77,213 @@ class MainApplication(tk.Tk):
         self._tx_buffer = ""
 
         self.setup_menu()
+        self.setup_toolbar()
         self.setup_layout()
         self.setup_status_bar()
+        self._connect_signals()
+
+        # FR-090 / FR-074: capture received data regardless of whether the
+        # Terminal Window has been opened (the window may not exist yet).
+        self.serial_mgr.on_data_received = self.handle_terminal_recv
+
+        self.refresh_host_files()
 
         # Start unconfigured. Load settings via File > Load (see examples/ for sample configs).
 
+    # ------------------------------------------------------------------ setup
+
+    def _connect_signals(self):
+        self.status_changed.connect(self._on_status_changed)
+        self.term_write.connect(self._on_term_write)
+        self.remote_files_ready.connect(self._update_remote_list_ui)
+        self.error_raised.connect(self._on_error_raised)
+
     def setup_menu(self):
-        menubar = tk.Menu(self)
+        menubar = self.menuBar()
 
-        file_menu = tk.Menu(menubar, tearoff=0)
-        file_menu.add_command(label="Load", command=self.menu_load)
-        file_menu.add_command(label="Save", command=self.menu_save)
-        file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self.quit_app)
-        menubar.add_cascade(label="File", menu=file_menu)
+        file_menu = menubar.addMenu("File")
+        file_menu.addAction(QAction("Load", self, triggered=self.menu_load))
+        file_menu.addAction(QAction("Save", self, triggered=self.menu_save))
+        file_menu.addSeparator()
+        file_menu.addAction(QAction("Exit", self, triggered=self.close))
 
-        config_menu = tk.Menu(menubar, tearoff=0)
-        config_menu.add_command(label="Serial", command=self.menu_serial_config)
-        config_menu.add_command(label="General", command=self.menu_general_config)
-        menubar.add_cascade(label="Config", menu=config_menu)
+        config_menu = menubar.addMenu("Config")
+        config_menu.addAction(QAction("Serial", self, triggered=self.menu_serial_config))
+        config_menu.addAction(QAction("General", self, triggered=self.menu_general_config))
 
-        self.config(menu=menubar)
+    def setup_toolbar(self):
+        # UIR-013/UIR-071: the main-window actions are presented as a top toolbar.
+        toolbar = QToolBar("Actions")
+        toolbar.setToolButtonStyle(toolbar.toolButtonStyle().ToolButtonTextBesideIcon)
+        toolbar.setMovable(False)
+        self.addToolBar(toolbar)
+
+        sp = self.style().standardIcon
+        Pix = QStyle.StandardPixmap
+        actions = [
+            ("Connect", Pix.SP_DialogApplyButton, self.do_connect),
+            ("Disconnect", Pix.SP_DialogCancelButton, self.do_disconnect),
+            ("Copy to Remote", Pix.SP_ArrowRight, self.do_copy_to_remote),
+            ("Copy to Host", Pix.SP_ArrowLeft, self.do_copy_to_host),
+            ("Refresh", Pix.SP_BrowserReload, self.refresh_all),
+            ("Terminal", Pix.SP_ComputerIcon, self.show_terminal),
+        ]
+        for text, pixmap, handler in actions:
+            action = QAction(sp(pixmap), text, self, triggered=handler)
+            toolbar.addAction(action)
 
     def setup_layout(self):
-        main_frame = tk.Frame(self)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # UIR-072: Host and Remote panes separated by a user-draggable splitter.
+        splitter = QSplitter()
 
         # Left Side: Host Files
-        host_frame = tk.LabelFrame(main_frame, text="Host Files")
-        host_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5)
-
-        tk.Button(host_frame, text="Change Directory", command=self.change_host_dir).pack(fill=tk.X)
-        self.host_list = tk.Listbox(host_frame, selectmode=tk.MULTIPLE)
-        self.host_list.pack(fill=tk.BOTH, expand=True)
-        self.refresh_host_files()
-
-        # Middle: Action Buttons
-        btn_frame = tk.Frame(main_frame)
-        btn_frame.pack(side=tk.LEFT, padx=10)
-
-        self.btn_connect = tk.Button(btn_frame, text="Connect", command=self.do_connect)
-        self.btn_connect.pack(fill=tk.X, pady=2)
-
-        self.btn_disconnect = tk.Button(btn_frame, text="Disconnect", command=self.do_disconnect)
-        self.btn_disconnect.pack(fill=tk.X, pady=2)
-
-        tk.Button(btn_frame, text="Copy to Remote", command=self.do_copy_to_remote).pack(
-            fill=tk.X, pady=2
-        )
-        tk.Button(btn_frame, text="Copy to Host", command=self.do_copy_to_host).pack(
-            fill=tk.X, pady=2
-        )
-        tk.Button(btn_frame, text="Refresh", command=self.refresh_all).pack(fill=tk.X, pady=2)
-        tk.Button(btn_frame, text="Terminal", command=self.show_terminal).pack(fill=tk.X, pady=2)
+        host_group = QGroupBox("Host Files")
+        host_layout = QVBoxLayout(host_group)
+        host_layout.addWidget(QPushButton("Change Directory", clicked=self.change_host_dir))
+        self.host_list = QListWidget()
+        self.host_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        host_layout.addWidget(self.host_list)
+        splitter.addWidget(host_group)
 
         # Right Side: Remote Files
-        remote_frame = tk.LabelFrame(main_frame, text="Remote Files")
-        remote_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5)
+        remote_group = QGroupBox("Remote Files")
+        remote_layout = QVBoxLayout(remote_group)
+        remote_layout.addWidget(QPushButton("Update", clicked=self.refresh_remote_files))
+        self.remote_list = QListWidget()
+        self.remote_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        remote_layout.addWidget(self.remote_list)
+        splitter.addWidget(remote_group)
 
-        tk.Button(remote_frame, text="Update", command=self.refresh_remote_files).pack(fill=tk.X)
-        self.remote_list = tk.Listbox(remote_frame, selectmode=tk.MULTIPLE)
-        self.remote_list.pack(fill=tk.BOTH, expand=True)
+        splitter.setSizes([450, 450])
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.addWidget(splitter)
+        self.setCentralWidget(container)
 
     def setup_status_bar(self):
-        self.status_var = tk.StringVar(value="Ready")
-        self.status_bar = tk.Label(
-            self, textvariable=self.status_var, bd=1, relief=tk.SUNKEN, anchor="w"
-        )
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+        # UIR-010/UIR-014: single-line status bar; UIR-074: connection indicators.
+        self.term_indicator = self._make_indicator("Terminal")
+        self.trans_indicator = self._make_indicator("Transport")
+        self.statusBar().addPermanentWidget(self.term_indicator)
+        self.statusBar().addPermanentWidget(self.trans_indicator)
+        self._update_indicators()
+        self.set_status("Ready")
+
+    @staticmethod
+    def _make_indicator(name: str):
+        from PySide6.QtWidgets import QLabel
+
+        label = QLabel()
+        label.setProperty("indicator_name", name)
+        return label
+
+    def _update_indicators(self):
+        # UIR-074: distinct visual state for connected vs not-connected.
+        for label, connected in (
+            (self.term_indicator, self.serial_mgr.terminal_connected),
+            (self.trans_indicator, self.serial_mgr.transport_connected),
+        ):
+            name = label.property("indicator_name")
+            color = "#4caf50" if connected else "#9e9e9e"
+            label.setText(f"● {name}")
+            label.setStyleSheet(f"color: {color};")
+
+    # ----------------------------------------------------------------- status
 
     def set_status(self, text: str):
-        self.status_var.set(text[:127])
+        # UIR-014: truncate to 127 characters. Emitting (rather than setting
+        # directly) makes set_status safe to call from any thread (NFR-004).
+        self.status_changed.emit(text[:127])
+
+    def _on_status_changed(self, text: str):
+        self.statusBar().showMessage(text)
+
+    def _on_term_write(self, text: str):
+        # Single GUI-thread sink for all receive-area writes: incoming serial
+        # data, local echo (FR-093), and transfer byte echo (FR-086). It never
+        # touches the data buffers, so local-echo/hex text stays out of them.
+        if self.terminal_win:
+            self.terminal_win.write_text(text)
+
+    def _on_error_raised(self, title: str, message: str):
+        QMessageBox.critical(self, title, message)
+
+    # ------------------------------------------------------------- host files
 
     def refresh_host_files(self):
-        self.host_list.delete(0, tk.END)
+        self.host_list.clear()
         try:
             files = [
                 f
                 for f in os.listdir(self.host_dir)
                 if os.path.isfile(os.path.join(self.host_dir, f))
             ]
-            for f in files:
-                self.host_list.insert(tk.END, f)
+            self.host_list.addItems(files)
         except Exception as e:
             self.set_status(f"Error reading host files: {e}")
 
     def change_host_dir(self):
-        path = filedialog.askdirectory(initialdir=self.host_dir)
+        path = QFileDialog.getExistingDirectory(self, "Change Directory", self.host_dir)
         if path:
             self.host_dir = path
             self.refresh_host_files()
+
+    # -------------------------------------------------------------- terminal
 
     def show_terminal(self):
         if not self.terminal_win:
             self.terminal_win = TerminalWindow(
                 self, self.handle_terminal_send, self.clear_terminal_buffers
             )
-            self.serial_mgr.on_data_received = self.handle_terminal_recv
+            self.terminal_win.chk_echo.toggled.connect(self._set_local_echo)
         else:
-            self.terminal_win.deiconify()
+            self.terminal_win.showNormal()
+        self.terminal_win.show()
+        self.terminal_win.raise_()
+        self.terminal_win.activateWindow()
+
+    def _set_local_echo(self, enabled: bool):
+        self._local_echo = enabled
 
     def handle_terminal_send(self, text):
-        if self.serial_mgr.terminal_connected:
-            # Append EOL based on settings
-            eol = self.settings.get("eol", "CR")
-            eol_char = {"CR": "\r", "LF": "\n", "CRLF": "\r\n"}.get(eol, "\r")
-
-            # Prevent double-terminators if already appended (e.g. in _do_refresh_remote_logic)
-            if not text.endswith(eol_char):
-                text += eol_char
-
-            self.serial_mgr.send_data("terminal", text)
-            # FR-092: store transmitted data (with EOL) in the transmit buffer.
-            self._tx_buffer += text
-            if self.terminal_win and self.terminal_win.var_local_echo.get():
-                self.terminal_win.write_text(f"\n{text}")
-        else:
+        # May be called from the GUI thread (Send button) or a worker thread
+        # (the remote-list refresh). Sends data and buffers it directly; the
+        # local-echo display is marshalled to the GUI thread via term_write.
+        if not self.serial_mgr.terminal_connected:
             self.set_status("Terminal port not open - cannot send")
+            return
+
+        eol = self.settings.get("eol", "CR")
+        eol_char = EOL_MAP.get(eol, "\r")
+
+        # Prevent double-terminators if already appended (e.g. in _do_refresh_remote_logic)
+        if not text.endswith(eol_char):
+            text += eol_char
+
+        self.serial_mgr.send_data("terminal", text)
+        # FR-092: store transmitted data (with EOL) in the transmit buffer.
+        self._tx_buffer += text
+        # FR-093: local echo copies transmitted data to the receive area only.
+        if self._local_echo:
+            self.term_write.emit(f"\n{text}")
 
     def handle_terminal_recv(self, text):
+        # Runs on the serial read daemon thread. Buffer bookkeeping happens here
+        # (plain strings, not widgets); the display write is marshalled via the
+        # term_write signal (NFR-004).
         # FR-090: store all received data in the receive buffer.
         self._rx_buffer += text
-        if self.terminal_win:
-            self.terminal_win.write_text(text)
         if self._capture_active:
             self._remote_capture_buffer += text
+        self.term_write.emit(text)
 
     def clear_terminal_buffers(self):
         # FR-090/FR-092: the Clear button is the explicit-clear trigger for
         # both the receive and transmit data buffers.
         self._rx_buffer = ""
         self._tx_buffer = ""
+
+    # ----------------------------------------------------------- connect/disc
 
     def do_connect(self):
         if self.serial_mgr.open_port("terminal", self.settings):
@@ -174,11 +292,12 @@ class MainApplication(tk.Tk):
             trans_port = self.settings.get("transport_port")
             if term_port != trans_port:
                 if not self.serial_mgr.open_port("transport", self.settings):
-                    messagebox.showerror("Error", "Transport port is unable to be opened")
+                    QMessageBox.critical(self, "Error", "Transport port is unable to be opened")
             else:
                 self.serial_mgr.transport_connected = True
         else:
-            messagebox.showerror("Error", "Terminal port is unable to be opened")
+            QMessageBox.critical(self, "Error", "Terminal port is unable to be opened")
+        self._update_indicators()
 
     def do_disconnect(self):
         term_port = self.settings.get("terminal_port")
@@ -188,7 +307,8 @@ class MainApplication(tk.Tk):
         # error dialog and cancel the current workflow.
         if self.serial_mgr.terminal_connected:
             if not self.serial_mgr.close_terminal_port():
-                messagebox.showerror("Error", "Terminal port is unable to be closed")
+                QMessageBox.critical(self, "Error", "Terminal port is unable to be closed")
+                self._update_indicators()
                 return
             # FR-052 (flag cleared by close_terminal_port) / FR-053 (status text).
             self.set_status("Terminal port closed")
@@ -199,8 +319,13 @@ class MainApplication(tk.Tk):
         # FR-055/FR-056/FR-057: different port — close it if open.
         elif self.serial_mgr.transport_connected:
             if not self.serial_mgr.close_transport_port():
-                messagebox.showerror("Error", "Transport port is unable to be closed")
+                QMessageBox.critical(self, "Error", "Transport port is unable to be closed")
+                self._update_indicators()
                 return
+
+        self._update_indicators()
+
+    # ----------------------------------------------------------- remote files
 
     def refresh_all(self):
         # FR-063: the central Refresh button refreshes both lists; the Update
@@ -211,7 +336,7 @@ class MainApplication(tk.Tk):
     def refresh_remote_files(self):
         if not self.serial_mgr.terminal_connected:
             self.set_status("Terminal port not open - cannot read file list")
-            self.remote_list.delete(0, tk.END)
+            self.remote_list.clear()
             return
         threading.Thread(target=self._do_refresh_remote_logic, daemon=True).start()
 
@@ -221,7 +346,7 @@ class MainApplication(tk.Tk):
         self._capture_active = True
         cmd = self.settings.get("list_files_cmd", "DIR")
         eol = self.settings.get("eol", "CR")
-        eol_char = {"CR": "\r", "LF": "\n", "CRLF": "\r\n"}.get(eol, "\r")
+        eol_char = EOL_MAP.get(eol, "\r")
         self.handle_terminal_send(cmd + eol_char)
         # FR-076: wait at least one second for output to start accumulating,
         # then wait for the receive buffer to time out (no new data within the
@@ -238,38 +363,41 @@ class MainApplication(tk.Tk):
                 break
         self._capture_active = False
         files_dict = CPMParser.parse_dir_output(self._remote_capture_buffer)
-        self.after(0, self._update_remote_list_ui, files_dict)
+        self.remote_files_ready.emit(files_dict)
 
     def _update_remote_list_ui(self, files_dict):
-        self.remote_list.delete(0, tk.END)
-        for filename in sorted(files_dict.keys()):
-            self.remote_list.insert(tk.END, filename)
+        self.remote_list.clear()
+        self.remote_list.addItems(sorted(files_dict.keys()))
         self.set_status("Remote file list updated")
+
+    # -------------------------------------------------------------- transfers
+
+    def _selected_filename(self, list_widget) -> str | None:
+        items = list_widget.selectedItems()
+        return items[0].text() if items else None
 
     def do_copy_to_remote(self):
         # FR-080: a transfer is permitted only when both the Terminal and
         # Transport status flags are true.
         if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
-            messagebox.showerror("Error", "Transport port not connected")
+            QMessageBox.critical(self, "Error", "Transport port not connected")
             return
 
-        selection = self.host_list.curselection()
-        if not selection:
-            messagebox.showwarning("Warning", "Please select a file to upload")
+        filename = self._selected_filename(self.host_list)
+        if not filename:
+            QMessageBox.warning(self, "Warning", "Please select a file to upload")
             return
 
-        filename = self.host_list.get(selection[0])
         filepath = os.path.join(self.host_dir, filename)
-
         threading.Thread(target=self._transfer_to_remote, args=(filepath,), daemon=True).start()
 
     def _on_transfer_bytes(self, direction, data):
-        # FR-086: echo transfer bytes to the Terminal Window as hex tokens
-        # of the form <HH>. Marshalled onto the Tk main thread (NFR-001).
-        if not self.terminal_win:
-            return
+        # FR-086: echo transfer bytes to the Terminal Window as hex tokens of
+        # the form <HH>. Runs on the transfer worker thread; the display write
+        # is marshalled to the GUI thread via term_write (NFR-004). The slot
+        # no-ops when the Terminal Window does not exist.
         hex_text = "".join(f"<{b:02X}>" for b in data)
-        self.after(0, self.terminal_win.write_text, hex_text)
+        self.term_write.emit(hex_text)
 
     def _transfer_to_remote(self, filepath):
         self.set_status(f"Uploading {os.path.basename(filepath)}...")
@@ -277,30 +405,25 @@ class MainApplication(tk.Tk):
             ser = self.serial_mgr.transport_port
             xm = XModem(ser, monitor=self._on_transfer_bytes)
             if xm.send_file(filepath):
-                self.after(
-                    0,
-                    lambda: self.set_status(f"Successfully uploaded {os.path.basename(filepath)}"),
-                )
+                self.set_status(f"Successfully uploaded {os.path.basename(filepath)}")
             else:
-                self.after(0, lambda: messagebox.showerror("X-Modem Error", "Transfer failed"))
+                self.error_raised.emit("X-Modem Error", "Transfer failed")
         except Exception as e:
-            self.after(0, lambda e=e: messagebox.showerror("Error", str(e)))
+            self.error_raised.emit("Error", str(e))
 
     def do_copy_to_host(self):
         # FR-080: a transfer is permitted only when both the Terminal and
         # Transport status flags are true.
         if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
-            messagebox.showerror("Error", "Transport port not connected")
+            QMessageBox.critical(self, "Error", "Transport port not connected")
             return
 
-        selection = self.remote_list.curselection()
-        if not selection:
-            messagebox.showwarning("Warning", "Please select a file to download")
+        filename = self._selected_filename(self.remote_list)
+        if not filename:
+            QMessageBox.warning(self, "Warning", "Please select a file to download")
             return
 
-        filename = self.remote_list.get(selection[0])
         save_path = os.path.join(self.host_dir, filename)
-
         threading.Thread(target=self._transfer_to_host, args=(save_path,), daemon=True).start()
 
     def _transfer_to_host(self, save_path):
@@ -309,36 +432,34 @@ class MainApplication(tk.Tk):
             ser = self.serial_mgr.transport_port
             xm = XModem(ser, monitor=self._on_transfer_bytes)
             if xm.receive_file(save_path):
-                self.after(
-                    0,
-                    lambda: self.set_status(
-                        f"Successfully downloaded {os.path.basename(save_path)}"
-                    ),
-                )
+                self.set_status(f"Successfully downloaded {os.path.basename(save_path)}")
             else:
-                self.after(0, lambda: messagebox.showerror("X-Modem Error", "Transfer failed"))
+                self.error_raised.emit("X-Modem Error", "Transfer failed")
         except Exception as e:
-            self.after(0, lambda e=e: messagebox.showerror("Error", str(e)))
+            self.error_raised.emit("Error", str(e))
+
+    # ------------------------------------------------------------------ config
 
     def load_config(self, filename):
         self.settings = self.config_handler.load_json(filename)
         self.set_status(f"Loaded config: {filename}")
 
     def menu_load(self):
-        path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
+        path, _ = QFileDialog.getOpenFileName(self, "Load Config", "", "JSON files (*.json)")
         if path:
             self.load_config(path)
 
     def menu_save(self):
-        path = filedialog.asksaveasfilename(
-            defaultextension=".json", filetypes=[("JSON files", "*.json")]
-        )
+        path, _ = QFileDialog.getSaveFileName(self, "Save Config", "", "JSON files (*.json)")
         if path:
+            if not path.endswith(".json"):
+                path += ".json"
             if self.config_handler.save_json(path, self.settings):
                 self.set_status(f"Saved config to {path}")
 
     def menu_serial_config(self):
-        ports = ["COM1", "COM2", "COM3", "COM4", "COM5", "COM99"]
+        # IFR-003 / UIR-022 / UIR-023: enumerate the host's serial ports.
+        ports = [p.device for p in serial.tools.list_ports.comports()]
 
         def update_settings(new_set):
             self.settings.update(new_set)
@@ -353,14 +474,22 @@ class MainApplication(tk.Tk):
 
         GeneralConfigDialog(self, self.settings, update_settings)
 
-    def quit_app(self):
+    # ------------------------------------------------------------------- exit
+
+    def closeEvent(self, event):
+        # FR-015: close any open COM ports. FR-016: close all open windows.
         self.serial_mgr.close_ports()
-        self.destroy()
+        if self.terminal_win:
+            self.terminal_win.close()
+        event.accept()
 
 
 def main() -> None:
-    app = MainApplication()
-    app.mainloop()
+    app = cast(QApplication, QApplication.instance() or QApplication(sys.argv))
+    apply_theme(app)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
