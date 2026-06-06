@@ -64,7 +64,12 @@ Three layers, intentionally decoupled from the GUI so they are unit-testable wit
 
 ## Design docs and workflows
 
-`docs/App_Requirements.md` and `docs/App_Design.md` are the authoritative spec; parser and dialog
-behavior reference them directly in comments. `Workflows/` holds repo-specific multi-agent workflow
-definitions (`requirements-check`, `code-requirements-align`, `defect-investigator`) for checking
-code against those docs.
+`docs/cpm_fm_requirements.md` is the **authoritative requirements specification** going forward — an
+ISO/IEC/IEEE 29148 SRS with uniquely identified, traceable requirements (`FR-`/`UIR-`/`DR-`/`CR-`/
+`NFR-` etc.). Cite requirement IDs when referencing behavior. `docs/legacy/App_Requirements.md` and
+`docs/legacy/App_Design.md` are the original source documents it was consolidated from; they are
+**archived** for history but are **superseded** where they conflict (e.g. they call Copy to Remote/Host
+empty stubs, but the SRS and code implement working X-Modem transfers — see `FR-080`–`FR-085`,
+`CR-010`).
+`Workflows/` holds repo-specific multi-agent workflow definitions (`requirements-check`,
+`code-requirements-align`, `defect-investigator`) for checking code against the SRS.
