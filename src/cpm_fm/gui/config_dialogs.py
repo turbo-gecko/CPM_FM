@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from PySide6.QtGui import QIntValidator
 from PySide6.QtWidgets import (
@@ -11,6 +11,9 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QVBoxLayout,
 )
+
+if TYPE_CHECKING:
+    from cpm_fm.gui.window_state import WindowState
 
 
 class ConfigDialog(QDialog):
@@ -29,6 +32,8 @@ class ConfigDialog(QDialog):
         settings: dict[str, Any],
         fields: list,
         callback,
+        window_state: WindowState | None = None,
+        state_key: str | None = None,
     ):
         super().__init__(parent)
         self.setWindowTitle(title)
@@ -37,10 +42,22 @@ class ConfigDialog(QDialog):
         self.fields = fields
         self.callback = callback
         self.result_settings: dict[str, Any] | None = None
+        # FR-004: optional geometry persistence for this dialog.
+        self._window_state = window_state
+        self._state_key = state_key
 
         self.create_widgets()
+        if window_state is not None and state_key is not None:
+            window_state.restore_geometry(state_key, self)
         # UIR-020/UIR-040: modal dialog.
         self.exec()
+
+    def done(self, result: int) -> None:
+        # FR-004: save geometry on every close path (Save, Cancel, window close,
+        # which all funnel through done()) before the modal exec() returns.
+        if self._window_state is not None and self._state_key is not None:
+            self._window_state.save_geometry(self._state_key, self)
+        super().done(result)
 
     def create_widgets(self):
         layout = QVBoxLayout(self)
@@ -93,7 +110,7 @@ class SerialConfigDialog(ConfigDialog):
     (SRS docs/cpm_fm_requirements.md, UIR-020 through UIR-031).
     """
 
-    def __init__(self, parent, settings, current_ports, callback):
+    def __init__(self, parent, settings, current_ports, callback, window_state=None):
         # Define fields based on Requirements
         fields = [
             {
@@ -175,7 +192,9 @@ class SerialConfigDialog(ConfigDialog):
                 "int_range": (0, 255),
             },
         ]
-        super().__init__(parent, "Serial Config", settings, fields, callback)
+        super().__init__(
+            parent, "Serial Config", settings, fields, callback, window_state, "serial_config"
+        )
 
 
 class GeneralConfigDialog(ConfigDialog):
@@ -184,7 +203,7 @@ class GeneralConfigDialog(ConfigDialog):
     (SRS docs/cpm_fm_requirements.md, UIR-040 through UIR-048).
     """
 
-    def __init__(self, parent, settings, callback):
+    def __init__(self, parent, settings, callback, window_state=None):
         # UIR-042..046: command text fields limited to 79 characters.
         fields = [
             {
@@ -241,4 +260,6 @@ class GeneralConfigDialog(ConfigDialog):
                 "default": "OFF",
             },
         ]
-        super().__init__(parent, "General Config", settings, fields, callback)
+        super().__init__(
+            parent, "General Config", settings, fields, callback, window_state, "general_config"
+        )

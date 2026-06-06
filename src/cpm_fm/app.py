@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 from cpm_fm.gui.config_dialogs import GeneralConfigDialog, SerialConfigDialog
 from cpm_fm.gui.terminal_window import TerminalWindow
 from cpm_fm.gui.theme import apply_theme
+from cpm_fm.gui.window_state import APP, ORG, WindowState
 from cpm_fm.terminal.cpm_parser import CPMParser
 from cpm_fm.terminal.serial_manager import SerialManager
 from cpm_fm.terminal.xmodem import XModem
@@ -55,7 +56,7 @@ class MainWindow(QMainWindow):
     # list is refreshed on the GUI thread ("host" or "remote").
     transfer_completed = Signal(str)
 
-    def __init__(self):
+    def __init__(self, window_state: WindowState | None = None):
         super().__init__()
         self.setWindowTitle("CP/M File Manager")
         self.resize(900, 560)
@@ -63,6 +64,9 @@ class MainWindow(QMainWindow):
         # Core Components
         self.serial_mgr = SerialManager()
         self.config_handler = ConfigHandler()
+        # FR-004/FR-005: persisted window geometry and last-used config file.
+        # Injectable so tests can isolate the store from the host's real settings.
+        self.window_state = window_state if window_state is not None else WindowState()
         self.settings: dict = {}
 
         # UI State
@@ -91,7 +95,16 @@ class MainWindow(QMainWindow):
 
         self.refresh_host_files()
 
-        # Start unconfigured. Load settings via File > Load (see examples/ for sample configs).
+        # FR-004: restore the main window's saved size/position (overrides the
+        # default resize above when a prior session stored geometry).
+        self.window_state.restore_geometry("main", self)
+
+        # FR-005: reload and apply the last-used configuration file. If none is
+        # remembered, or it no longer exists, the app starts unconfigured
+        # (FR-003) and settings come from File > Load or the config dialogs.
+        last = self.window_state.last_config
+        if last and os.path.exists(last):
+            self.load_config(last)
 
     # ------------------------------------------------------------------ setup
 
@@ -249,6 +262,8 @@ class MainWindow(QMainWindow):
                 self, self.handle_terminal_send, self.clear_terminal_buffers
             )
             self.terminal_win.chk_echo.toggled.connect(self._set_local_echo)
+            # FR-004: restore the Terminal Window's saved geometry on first open.
+            self.window_state.restore_geometry("terminal", self.terminal_win)
         else:
             self.terminal_win.showNormal()
         self.terminal_win.show()
@@ -532,6 +547,8 @@ class MainWindow(QMainWindow):
 
     def load_config(self, filename):
         self.settings = self.config_handler.load_json(filename)
+        # FR-005: remember this file so it is reloaded on the next startup.
+        self.window_state.last_config = filename
         self.set_status(f"Loaded config: {filename}")
 
     def menu_load(self):
@@ -545,6 +562,8 @@ class MainWindow(QMainWindow):
             if not path.endswith(".json"):
                 path += ".json"
             if self.config_handler.save_json(path, self.settings):
+                # FR-005: the saved file becomes the last-used config to reload.
+                self.window_state.last_config = path
                 self.set_status(f"Saved config to {path}")
 
     def menu_serial_config(self):
@@ -555,18 +574,24 @@ class MainWindow(QMainWindow):
             self.settings.update(new_set)
             self.set_status("Serial settings updated")
 
-        SerialConfigDialog(self, self.settings, ports, update_settings)
+        SerialConfigDialog(self, self.settings, ports, update_settings, self.window_state)
 
     def menu_general_config(self):
         def update_settings(new_set):
             self.settings.update(new_set)
             self.set_status("General settings updated")
 
-        GeneralConfigDialog(self, self.settings, update_settings)
+        GeneralConfigDialog(self, self.settings, update_settings, self.window_state)
 
     # ------------------------------------------------------------------- exit
 
     def closeEvent(self, event):
+        # FR-004: persist window geometry on exit. The Terminal Window persists
+        # in the background when the user closes it (it hides rather than
+        # destroys), so it still exists here and its current geometry is saved.
+        self.window_state.save_geometry("main", self)
+        if self.terminal_win:
+            self.window_state.save_geometry("terminal", self.terminal_win)
         # FR-015: close any open COM ports. FR-016: close all open windows.
         self.serial_mgr.close_ports()
         if self.terminal_win:
@@ -576,6 +601,9 @@ class MainWindow(QMainWindow):
 
 def main() -> None:
     app = cast(QApplication, QApplication.instance() or QApplication(sys.argv))
+    # FR-004/FR-005: identity for QSettings-backed persistence (see WindowState).
+    app.setOrganizationName(ORG)
+    app.setApplicationName(APP)
     apply_theme(app)
     window = MainWindow()
     window.show()
