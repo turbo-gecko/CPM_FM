@@ -92,6 +92,39 @@ class SerialManager:
         self.terminal_connected = False
         self.transport_connected = False
 
+    def close_terminal_port(self) -> bool:
+        """
+        Closes the Terminal Port and stops the read thread (FR-050-FR-053).
+        Returns True if the port was closed (or was already closed), False if
+        the close attempt raised an error.
+        """
+        try:
+            self._stop_event.set()
+            if self._read_thread:
+                self._read_thread.join(timeout=1.0)
+                self._read_thread = None
+            if self.terminal_port and self.terminal_port.is_open:
+                self.terminal_port.close()
+            self.terminal_connected = False
+            return True
+        except Exception as e:
+            print(f"Failed to close terminal port: {e}")
+            return False
+
+    def close_transport_port(self) -> bool:
+        """
+        Closes the Transport Port (FR-055-FR-057). Returns True on success
+        (or if already closed), False if the close attempt raised an error.
+        """
+        try:
+            if self.transport_port and self.transport_port.is_open:
+                self.transport_port.close()
+            self.transport_connected = False
+            return True
+        except Exception as e:
+            print(f"Failed to close transport port: {e}")
+            return False
+
     def send_data(self, port_type: str, data: str) -> bool:
         """Sends data through the specified port."""
         port = self.terminal_port if port_type == "terminal" else self.transport_port

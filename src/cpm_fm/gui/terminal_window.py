@@ -8,10 +8,13 @@ class TerminalWindow(tk.Toplevel):
     receive/transmit behaviour FR-090-FR-098).
     """
 
-    def __init__(self, parent, send_callback):
+    def __init__(self, parent, send_callback, clear_callback=None):
         super().__init__(parent)
         self.title("Terminal")
         self.send_callback = send_callback
+        # Invoked when the Clear button is pressed, so the owner can clear the
+        # receive/transmit data buffers alongside the display (FR-090/FR-092).
+        self.clear_callback = clear_callback
 
         self.create_widgets()
         self.protocol("WM_DELETE_WINDOW", self.hide_window)
@@ -53,6 +56,8 @@ class TerminalWindow(tk.Toplevel):
         self.receive_area.configure(state="normal")
         self.receive_area.delete("1.0", tk.END)
         self.receive_area.configure(state="disabled")
+        if self.clear_callback:
+            self.clear_callback()
 
     def send_text(self):
         text = self.tx_entry.get()
