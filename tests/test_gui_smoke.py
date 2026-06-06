@@ -13,16 +13,26 @@ import pytest
 
 pytest.importorskip("PySide6")
 
+from PySide6.QtCore import QSettings  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
 from cpm_fm.app import MainWindow  # noqa: E402
 from cpm_fm.gui.terminal_window import TerminalWindow  # noqa: E402
+from cpm_fm.gui.window_state import WindowState  # noqa: E402
 
 
 @pytest.fixture(scope="module")
 def qapp():
     app = QApplication.instance() or QApplication([])
     yield app
+
+
+@pytest.fixture
+def state(tmp_path):
+    # Isolated WindowState backed by a temp INI file so tests never read or
+    # write the host's real QSettings (registry on Windows).
+    settings = QSettings(str(tmp_path / "state.ini"), QSettings.Format.IniFormat)
+    return WindowState(settings)
 
 
 class _FakeSerial:
@@ -60,9 +70,9 @@ def _arm_transfer(win, monkeypatch, success=True):
     monkeypatch.setattr("cpm_fm.app.XModem", _fake_xmodem_cls(success))
 
 
-def test_copy_to_host_refreshes_host_list(qapp, monkeypatch):
+def test_copy_to_host_refreshes_host_list(qapp, monkeypatch, state):
     # Bug 1: a successful remote->host transfer must refresh the Host Files list.
-    win = MainWindow()
+    win = MainWindow(state)
     try:
         calls = []
         monkeypatch.setattr(win, "refresh_host_files", lambda: calls.append("host"))
@@ -74,9 +84,9 @@ def test_copy_to_host_refreshes_host_list(qapp, monkeypatch):
         win.close()
 
 
-def test_copy_to_remote_refreshes_remote_list(qapp, monkeypatch):
+def test_copy_to_remote_refreshes_remote_list(qapp, monkeypatch, state):
     # Bug 2: a successful host->remote transfer must refresh the Remote Files list.
-    win = MainWindow()
+    win = MainWindow(state)
     try:
         calls = []
         monkeypatch.setattr(win, "refresh_remote_files", lambda: calls.append("remote"))
@@ -88,9 +98,9 @@ def test_copy_to_remote_refreshes_remote_list(qapp, monkeypatch):
         win.close()
 
 
-def test_failed_transfer_does_not_refresh(qapp, monkeypatch):
+def test_failed_transfer_does_not_refresh(qapp, monkeypatch, state):
     # A failed transfer must not trigger a refresh (no false "it worked" signal).
-    win = MainWindow()
+    win = MainWindow(state)
     try:
         calls = []
         monkeypatch.setattr(win, "refresh_host_files", lambda: calls.append("host"))
@@ -105,8 +115,8 @@ def test_failed_transfer_does_not_refresh(qapp, monkeypatch):
         win.close()
 
 
-def test_main_window_constructs(qapp):
-    win = MainWindow()
+def test_main_window_constructs(qapp, state):
+    win = MainWindow(state)
     try:
         # Lists start consistent (FR-060 host populated lazily; FR-070 remote empty).
         assert win.host_list is not None
@@ -132,3 +142,28 @@ def test_terminal_window_write_and_clear(qapp):
         assert cleared == [1]  # FR-095: Clear invokes the buffer-clear callback.
     finally:
         term.deleteLater()
+
+
+def test_geometry_and_last_config_persist_across_sessions(qapp, state, tmp_path):
+    # FR-004/FR-005: a session's main-window geometry and last-used config file
+    # are saved on close and applied to a fresh session sharing the same store.
+    cfg = tmp_path / "serial.json"
+    cfg.write_text('{"terminal_port": "COM3", "speed": "9600"}')
+
+    first = MainWindow(state)
+    try:
+        first.resize(742, 503)
+        first.load_config(str(cfg))  # FR-005: records the path as last_config.
+        first.close()  # closeEvent saves geometry (FR-004).
+    finally:
+        first.deleteLater()
+    assert state.last_config == str(cfg)
+
+    # A new window built from the same store restores both.
+    second = MainWindow(state)
+    try:
+        assert (second.width(), second.height()) == (742, 503)
+        assert second.settings == {"terminal_port": "COM3", "speed": "9600"}
+    finally:
+        second.close()
+        second.deleteLater()
