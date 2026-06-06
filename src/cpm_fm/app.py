@@ -51,6 +51,9 @@ class MainWindow(QMainWindow):
     term_write = Signal(str)
     remote_files_ready = Signal(dict)
     error_raised = Signal(str, str)
+    # Emitted from a transfer worker thread on success so the destination file
+    # list is refreshed on the GUI thread ("host" or "remote").
+    transfer_completed = Signal(str)
 
     def __init__(self):
         super().__init__()
@@ -97,6 +100,7 @@ class MainWindow(QMainWindow):
         self.term_write.connect(self._on_term_write)
         self.remote_files_ready.connect(self._update_remote_list_ui)
         self.error_raised.connect(self._on_error_raised)
+        self.transfer_completed.connect(self._on_transfer_completed)
 
     def setup_menu(self):
         menubar = self.menuBar()
@@ -207,6 +211,15 @@ class MainWindow(QMainWindow):
 
     def _on_error_raised(self, title: str, message: str):
         QMessageBox.critical(self, title, message)
+
+    def _on_transfer_completed(self, direction: str):
+        # Runs on the GUI thread (queued from the transfer worker). After a
+        # successful transfer the destination list is otherwise stale until the
+        # user manually refreshes it, so refresh the affected pane here.
+        if direction == "host":
+            self.refresh_host_files()
+        elif direction == "remote":
+            self.refresh_remote_files()
 
     # ------------------------------------------------------------- host files
 
@@ -464,6 +477,8 @@ class MainWindow(QMainWindow):
             xm = XModem(ser, monitor=self._on_transfer_bytes)
             if xm.send_file(filepath):
                 self.set_status(f"Successfully uploaded {os.path.basename(filepath)}")
+                # Refresh the Remote Files list so the newly uploaded file shows.
+                self.transfer_completed.emit("remote")
             else:
                 self.error_raised.emit("X-Modem Error", "Transfer failed")
         except Exception as e:
@@ -505,6 +520,8 @@ class MainWindow(QMainWindow):
             xm = XModem(ser, monitor=self._on_transfer_bytes)
             if xm.receive_file(save_path):
                 self.set_status(f"Successfully downloaded {os.path.basename(save_path)}")
+                # Refresh the Host Files list so the newly downloaded file shows.
+                self.transfer_completed.emit("host")
             else:
                 self.error_raised.emit("X-Modem Error", "Transfer failed")
         except Exception as e:

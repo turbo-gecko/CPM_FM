@@ -52,16 +52,23 @@ class CPMParser:
                 # 6 & 7. Parse filename and extension
                 # Split by whitespace; last token is extension, others are base
                 tokens = normalized.split()
-                if len(tokens) < 2:
-                    # Skip malformed entries with fewer than two tokens
+                if not tokens:
+                    # Skip empty entries
                     continue
 
-                extension = tokens[-1]
-                # Concatenate all preceding tokens without spaces for the base
-                filename_base = "".join(tokens[:-1])
+                if len(tokens) == 1:
+                    # A file with no extension (e.g. LICENCE): CP/M pads the
+                    # extension field with spaces, leaving a single token after
+                    # whitespace normalisation. List it as-is, with no trailing
+                    # dot, so the name matches the host file (DR-013/DR-023).
+                    full_filename = tokens[0]
+                else:
+                    extension = tokens[-1]
+                    # Concatenate all preceding tokens without spaces for the base
+                    filename_base = "".join(tokens[:-1])
 
-                # 8. Construct full filename
-                full_filename = f"{filename_base}.{extension}"
+                    # 8. Construct full filename
+                    full_filename = f"{filename_base}.{extension}"
 
                 # 9. Store in dictionary (duplicates are overwritten)
                 filenames[full_filename] = True
