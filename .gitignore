@@ -1,3 +1,17 @@
-src/cpm_fm/temp.py
-/temp
-*.pyc
+# Virtual environments
+.venv/
+venv/
+
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+
+# Build / packaging artifacts
+build/
+dist/
+*.egg-info/
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

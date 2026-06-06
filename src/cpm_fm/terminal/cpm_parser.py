@@ -1,15 +1,13 @@
-from typing import Dict
-
 class CPMParser:
     """
-    Implements the algorithm for extracting remote file names from the 
+    Implements the algorithm for extracting remote file names from the
     standard CP/M 2.2 4-column DIR output format as specified in App_Design.md.
     """
 
     @staticmethod
-    def parse_dir_output(text: str) -> Dict[str, bool]:
+    def parse_dir_output(text: str) -> dict[str, bool]:
         """
-        Parses the raw text output of a CP/M DIR command and returns a 
+        Parses the raw text output of a CP/M DIR command and returns a
         dictionary where keys are filenames in 'NAME.EXT' format.
         """
         filenames = {}
@@ -20,28 +18,28 @@ class CPMParser:
             line = line.strip()
             if not line:
                 continue
-            
+
             # Ignore lines starting with drive prompts (e.g., C>)
-            if len(line) > 1 and line[0].isalpha() and line[1] == '>':
+            if len(line) > 1 and line[0].isalpha() and line[1] == ">":
                 continue
-            
+
             # Ignore lines containing "NO FILE"
             if "NO FILE" in line.upper():
                 continue
 
             # 2. Identify file listing lines
             # Must start with drive identifier (e.g., 'C:') and contain ' : '
-            if not (len(line) > 1 and line[0].isalpha() and line[1] == ':'):
+            if not (len(line) > 1 and line[0].isalpha() and line[1] == ":"):
                 continue
-            
-            if ' : ' not in line:
+
+            if " : " not in line:
                 continue
 
             # 3. Strip drive identifier (e.g., remove 'C:')
             content = line[2:].strip()
 
             # 4. Split file entries using the delimiter ' : '
-            entries = content.split(' : ')
+            entries = content.split(" : ")
 
             for entry in entries:
                 # 5. Normalise whitespace
