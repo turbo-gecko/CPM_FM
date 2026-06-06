@@ -1,7 +1,8 @@
 class CPMParser:
     """
     Implements the algorithm for extracting remote file names from the
-    standard CP/M 2.2 4-column DIR output format as specified in App_Design.md.
+    standard CP/M 2.2 4-column DIR output format (SRS docs/cpm_fm_requirements.md,
+    DR-001 through DR-032).
     """
 
     @staticmethod

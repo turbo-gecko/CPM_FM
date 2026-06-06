@@ -4,7 +4,8 @@ from tkinter import scrolledtext
 
 class TerminalWindow(tk.Toplevel):
     """
-    Non-modal Terminal window as per App_Requirements.md.
+    Non-modal Terminal window (SRS docs/cpm_fm_requirements.md, UIR-060-UIR-067;
+    receive/transmit behaviour FR-090-FR-098).
     """
 
     def __init__(self, parent, send_callback):

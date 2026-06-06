@@ -8,7 +8,8 @@ import serial
 class SerialManager:
     """
     Manages serial communication for both Terminal and Transport ports.
-    As per App_Design.md, handles the lifecycle and status flags of the ports.
+    Handles the port lifecycle and status flags (SRS docs/cpm_fm_requirements.md,
+    FR-001/FR-002 status flags, FR-030-FR-057 connect/disconnect, NFR-001/NFR-002).
     """
 
     def __init__(self):

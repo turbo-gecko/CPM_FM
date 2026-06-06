@@ -53,7 +53,8 @@ class ConfigDialog(tk.Toplevel):
 
 class SerialConfigDialog(ConfigDialog):
     """
-    Specialized dialog for Serial Configuration as per App_Requirements.md.
+    Specialized dialog for Serial Configuration
+    (SRS docs/cpm_fm_requirements.md, UIR-020 through UIR-031).
     """
 
     def __init__(self, parent, settings, current_ports, callback):
@@ -130,7 +131,8 @@ class SerialConfigDialog(ConfigDialog):
 
 class GeneralConfigDialog(ConfigDialog):
     """
-    Specialized dialog for General Configuration as per App_Requirements.md.
+    Specialized dialog for General Configuration
+    (SRS docs/cpm_fm_requirements.md, UIR-040 through UIR-048).
     """
 
     def __init__(self, parent, settings, callback):
