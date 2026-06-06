@@ -25,6 +25,86 @@ def qapp():
     yield app
 
 
+class _FakeSerial:
+    """Minimal stand-in for a pyserial port used by the transfer workers."""
+
+    is_open = False  # so SerialManager.close_ports() skips closing it on teardown
+
+    def reset_input_buffer(self):
+        pass
+
+
+def _fake_xmodem_cls(success):
+    class _FakeXModem:
+        def __init__(self, ser, monitor=None):
+            pass
+
+        def send_file(self, path):
+            return success
+
+        def receive_file(self, path):
+            return success
+
+    return _FakeXModem
+
+
+def _arm_transfer(win, monkeypatch, success=True):
+    # Put the window in a state where the transfer workers can run without real
+    # serial hardware or sleeps: both flags connected, a fake transport port,
+    # no launch delay, send_data and XModem stubbed.
+    win.settings = {"xfer_launch_delay": 0}
+    win.serial_mgr.terminal_connected = True
+    win.serial_mgr.transport_connected = True
+    win.serial_mgr.transport_port = _FakeSerial()
+    monkeypatch.setattr(win.serial_mgr, "send_data", lambda *a, **k: None)
+    monkeypatch.setattr("cpm_fm.app.XModem", _fake_xmodem_cls(success))
+
+
+def test_copy_to_host_refreshes_host_list(qapp, monkeypatch):
+    # Bug 1: a successful remote->host transfer must refresh the Host Files list.
+    win = MainWindow()
+    try:
+        calls = []
+        monkeypatch.setattr(win, "refresh_host_files", lambda: calls.append("host"))
+        _arm_transfer(win, monkeypatch)
+        win._transfer_to_host(os.path.join(win.host_dir, "FOO.TXT"))
+        qapp.processEvents()
+        assert calls == ["host"]
+    finally:
+        win.close()
+
+
+def test_copy_to_remote_refreshes_remote_list(qapp, monkeypatch):
+    # Bug 2: a successful host->remote transfer must refresh the Remote Files list.
+    win = MainWindow()
+    try:
+        calls = []
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: calls.append("remote"))
+        _arm_transfer(win, monkeypatch)
+        win._transfer_to_remote(os.path.join(win.host_dir, "FOO.TXT"))
+        qapp.processEvents()
+        assert calls == ["remote"]
+    finally:
+        win.close()
+
+
+def test_failed_transfer_does_not_refresh(qapp, monkeypatch):
+    # A failed transfer must not trigger a refresh (no false "it worked" signal).
+    win = MainWindow()
+    try:
+        calls = []
+        monkeypatch.setattr(win, "refresh_host_files", lambda: calls.append("host"))
+        # A failed transfer reports via QMessageBox.critical; stub it so the
+        # offscreen test does not block on a modal dialog.
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: None)
+        _arm_transfer(win, monkeypatch, success=False)
+        win._transfer_to_host(os.path.join(win.host_dir, "FOO.TXT"))
+        qapp.processEvents()
+        assert calls == []
+    finally:
+        win.close()
+
+
 def test_main_window_constructs(qapp):
     win = MainWindow()
     try:

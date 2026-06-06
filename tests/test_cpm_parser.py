@@ -23,3 +23,14 @@ def test_parse_dir_output_extracts_filenames():
 def test_parse_dir_output_ignores_prompts_and_empty():
     # Drive prompts ("C>"), "NO FILE" responses, and blank lines yield no entries.
     assert CPMParser.parse_dir_output("\nC>\nA: NO FILE FOUND\n\n") == {}
+
+
+def test_parse_dir_output_includes_extensionless_files():
+    # Bug 3: a file with no extension (e.g. LICENCE) is shown by CP/M DIR with a
+    # blank, space-padded extension field, so after whitespace normalisation the
+    # entry is a single token. It must still be listed (DR-013/DR-021/DR-023).
+    mock_output = "C: LICENCE      : PIP      COM\n"
+    assert CPMParser.parse_dir_output(mock_output) == {
+        "LICENCE": True,
+        "PIP.COM": True,
+    }
