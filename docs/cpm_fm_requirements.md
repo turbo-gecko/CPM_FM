@@ -4,7 +4,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 1.1 |
+| Version | 1.2 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
@@ -91,8 +91,8 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
 | FR-010 | The File > Load menu item shall present a file-select dialog defaulting to the JSON file type for selecting a configuration file to load. | Mandatory | D | App_Requirements §Load |
-| FR-011 | On loading a configuration file, the application shall update its internal serial configuration and general configuration settings with the values contained in the file. | Mandatory | T | App_Requirements §Load |
-| FR-012 | On loading a configuration file, the application shall ignore any settings that are not recognised. | Mandatory | T | App_Requirements §Load |
+| FR-011 | On loading a configuration file, the application shall replace its entire internal settings store with the contents of the file (a full replace, not a per-key merge). | Mandatory | T | impl. `app.py:load_config` |
+| FR-012 | Settings keys present in a loaded file that are not consumed by the application shall be retained verbatim in the settings store but shall not alter application behaviour; the application shall not reject a file on account of unrecognised keys. | Mandatory | T | impl. `app.py:load_config` |
 | FR-013 | The File > Save menu item shall present a file-select dialog defaulting to the JSON file type for selecting a configuration file to save to. | Mandatory | D | App_Requirements §Save |
 | FR-014 | On saving, the application shall write the internal serial configuration and general configuration settings to the selected file in JSON format. | Mandatory | T | App_Requirements §Save |
 | FR-015 | The File > Exit menu item shall close any open COM ports. | Mandatory | D | App_Requirements §Exit |
@@ -114,7 +114,7 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | FR-032 | If the Terminal Port is successfully opened, the application shall set the Terminal status flag to true. | Mandatory | T | App_Design §Connecting |
 | FR-033 | If the Terminal Port cannot be opened, the application shall set the Terminal status flag to false. | Mandatory | T | App_Design §Connecting |
 | FR-034 | When the Terminal Port is opened, the application shall display the text "Terminal port open" in the status bar. | Mandatory | D | App_Requirements §Connecting |
-| FR-035 | When the Connect button is pressed, the application shall open the Terminal Window if it is not already open. | Mandatory | D | App_Requirements §Connecting |
+| FR-035 | *Removed in v1.2.* (Was: "When the Connect button is pressed, the application shall open the Terminal Window.") The Terminal Window is opened exclusively via the Terminal button (FR-097); the Connect action does not open it. See §10 OI-10. | — | — | superseded by FR-097 |
 | FR-036 | The application shall display data received from the Terminal Port in the receive text area of the Terminal Window. | Mandatory | T | App_Requirements §Connecting |
 | FR-037 | On connect, if the Transport Port is the same as the Terminal Port, the application shall set the Transport status flag to connected. | Mandatory | T | App_Design §Connecting |
 | FR-038 | On connect, if the Transport Port is different from the Terminal Port and is not currently open, the application shall attempt to open the Transport Port. | Mandatory | T | App_Design §Connecting |
@@ -141,6 +141,7 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | FR-060 | On startup, the application shall populate the Host Files list with the files in the current working directory of the host system. | Mandatory | T | App_Requirements §Host Files |
 | FR-061 | The Change Directory button shall be enabled at startup. | Mandatory | I | App_Requirements §Change Directory |
 | FR-062 | When the Change Directory button is pressed, the application shall present a folder-select dialog for the user to choose the folder whose contents are loaded into the Host Files list. | Mandatory | D | App_Requirements §Change Directory |
+| FR-063 | When the Refresh button (between the Host Files and Remote Files groups) is pressed, the application shall refresh the Host Files list from the current host directory and then populate the Remote Files list following the "Populating remote file list" process (FR-074–FR-079). The Refresh button thus acts on both lists, whereas the Update button (FR-073) acts on the Remote Files list only. | Mandatory | T | impl. `app.py:refresh_all` |
 
 ### 3.7 Remote file listing
 
@@ -149,10 +150,10 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | FR-070 | The Remote Files list shall be empty (unpopulated) at startup. | Mandatory | T | App_Requirements §Remote Files |
 | FR-071 | The Update button shall be enabled at startup. | Mandatory | I | App_Requirements §Update |
 | FR-072 | The Refresh button shall be enabled at startup. | Mandatory | I | App_Requirements §Refresh |
-| FR-073 | When the Update or Refresh button is pressed, the application shall populate the Remote Files list following the "Populating remote file list" process. | Mandatory | T | App_Requirements §Update, §Refresh |
+| FR-073 | When the Update button (in the Remote Files group) is pressed, the application shall populate the Remote Files list following the "Populating remote file list" process (FR-074–FR-079). It shall not affect the Host Files list. | Mandatory | T | App_Requirements §Update; impl. `app.py:refresh_remote_files` |
 | FR-074 | If the Terminal Port is not open when populating the remote file list, the application shall set the status bar text to "Terminal port not open - cannot read file list" and clear the Remote Files list. | Mandatory | T | App_Requirements §Populating remote file list |
 | FR-075 | If the Terminal status flag is true, the application shall send the configured List Files command followed by the configured EOL character(s) to the Terminal Port and to the receive text area. | Mandatory | T | App_Design §Populating remote file list |
-| FR-076 | After sending the List Files command, the application shall wait for at least one second and then wait for the receive buffer to time out before processing the received text. | Mandatory | T | App_Design §Populating remote file list |
+| FR-076 | After sending the List Files command, the application shall wait at least one second for output to begin accumulating, then continue waiting until the remote capture buffer has received no new data within an idle window of 0.5 s (the buffer "times out"), bounded by a maximum total wait of 10 s, before processing the received text. | Mandatory | T | App_Design §Populating remote file list; impl. `app.py:_do_refresh_remote_logic` |
 | FR-077 | The application shall process the captured remote output into a dictionary of filenames using the CP/M 4-column DIR parsing algorithm (see §6). | Mandatory | T | App_Design §Populating remote file list |
 | FR-078 | The application shall populate the Remote Files list with the entries produced by the parsing algorithm, displaying the dictionary keys (filenames) sorted in ascending alphabetical order. | Mandatory | T | App_Design §Populating remote file list; impl. `app.py:_update_remote_list_ui` |
 | FR-079 | On successful population of the remote file list, the application shall update the status bar with the text "Remote file list updated". | Mandatory | D | App_Requirements §Populating remote file list |
@@ -165,19 +166,20 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | FR-081 | The application shall support file transfers in both directions: host-to-remote and remote-to-host. | Mandatory | T | App_Requirements §File Transfers |
 | FR-082 | The application shall use the X-Modem protocol for all file transfers. | Mandatory | T | App_Requirements §File Transfers |
 | FR-083 | The application shall use the Transport (Transfer) Port for all file transfers. | Mandatory | T | App_Requirements §File Transfers |
-| FR-084 | The Copy to Remote button shall be enabled at startup. *(Note: the current handler is specified as an empty stub — see CR-010.)* | Mandatory | I | App_Requirements §Copy to Remote |
-| FR-085 | The Copy to Host button shall be enabled at startup. *(Note: the current handler is specified as an empty stub — see CR-010.)* | Mandatory | I | App_Requirements §Copy to Host |
+| FR-084 | The Copy to Remote button shall be enabled at startup. | Mandatory | I | App_Requirements §Copy to Remote |
+| FR-085 | The Copy to Host button shall be enabled at startup. | Mandatory | I | App_Requirements §Copy to Host |
+| FR-086 | During an X-Modem file transfer (either direction), the application shall echo every byte sent to or received from the Transport Port to the Terminal Window Receive area, formatted as a hexadecimal byte token of the form `<HH>`, where `HH` is the byte value as two uppercase hexadecimal digits (e.g. byte 0xB5 is displayed as `<B5>`). This echo shall occur only while the Terminal Window exists. | Mandatory | D | impl. `app.py:_on_transfer_bytes`, `xmodem.py` monitor hook |
 
 ### 3.9 Terminal window — receive and transmit
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| FR-090 | Data received from the Terminal Port shall be stored in a receive data buffer until explicitly cleared. | Mandatory | T | App_Design §Receiving data |
+| FR-090 | All data received from the Terminal Port shall be accumulated in a receive data buffer that is retained until explicitly cleared by the Terminal Window Clear button (FR-095). Local-echo text (FR-093) is not received data and shall not enter this buffer. | Mandatory | T | App_Design §Receiving data; impl. `app.py:handle_terminal_recv`, `_rx_buffer` |
 | FR-091 | All data received from the Terminal Port shall be displayed in the receive text area of the Terminal Window. | Mandatory | T | App_Design §Receiving data |
-| FR-092 | Data transmitted to the Terminal Port shall be stored in a transmit data buffer until explicitly cleared. | Mandatory | T | App_Design §Sending data |
+| FR-092 | All data transmitted to the Terminal Port (including the appended EOL, FR-094) shall be accumulated in a transmit data buffer that is retained until explicitly cleared by the Terminal Window Clear button (FR-095). | Mandatory | T | App_Design §Sending data; impl. `app.py:handle_terminal_send`, `_tx_buffer` |
 | FR-093 | When the Local Echo checkbox is enabled, transmitted data shall be copied to the receive text area of the Terminal Window. | Mandatory | T | App_Design §Sending data |
 | FR-094 | Transmitted data shall have the configured EOL character(s) appended before being sent. | Mandatory | T | App_Design §Sending data |
-| FR-095 | When the Clear button in the Terminal Window is pressed, the receive text area shall be cleared. | Mandatory | D | App_Requirements §Terminal Window |
+| FR-095 | When the Clear button in the Terminal Window is pressed, the receive text area shall be cleared, and the receive and transmit data buffers (FR-090, FR-092) shall be cleared. | Mandatory | T | App_Requirements §Terminal Window; impl. `terminal_window.py:clear_text`, `app.py:clear_terminal_buffers` |
 | FR-096 | When the Send button in the Terminal Window is pressed, the contents of the transmit text field shall be sent to the Terminal Port. | Mandatory | T | App_Requirements §Terminal Window |
 | FR-097 | When the Terminal button in the main window is pressed, the application shall open the Terminal Window if it is not already open, or restore (de-iconify) it if it is hidden. This action shall be independent of the Connect action and shall not require an open Terminal Port. | Mandatory | D | App_Requirements §Main Program GUI; impl. `app.py:show_terminal` |
 | FR-098 | If the Terminal Port is not open when the user attempts to send data from the Terminal Window, the application shall set the status bar text to "Terminal port not open - cannot send" and not transmit. | Mandatory | T | impl. `app.py:handle_terminal_send` |
@@ -315,15 +317,15 @@ The following requirements define the algorithm for extracting remote file names
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
 | CR-001 | All source files shall reside under a `src` folder at the project root. | Mandatory | I | App_Design §Project Structure |
-| CR-002 | There shall be a `main.py` entry-point source file within the source tree. | Mandatory | I | App_Design §Project Structure |
+| CR-002 | The package shall provide a runnable module entry point at `src/cpm_fm/__main__.py` that invokes `cpm_fm.app:main()`, enabling `python -m cpm_fm`. | Mandatory | I | App_Design §Project Structure; impl. `src/cpm_fm/__main__.py` |
 | CR-003 | All GUI-related source files shall reside in a `gui` folder within the source tree. | Mandatory | I | App_Design §Project Structure |
 | CR-004 | All serial and terminal related source files shall reside in a `terminal` folder within the source tree. | Mandatory | I | App_Design §Project Structure |
 | CR-005 | All other source files shall reside in a `utils` folder within the source tree. | Mandatory | I | App_Design §Project Structure |
-| CR-006 | There shall be a `resources` folder at the project root for icons, images, and other non-Python files. | Mandatory | I | App_Design §Project Structure |
-| CR-007 | Each class shall have its own source file. | Mandatory | I | App_Design §Class Files |
-| CR-008 | Each class source file shall be named the same as the class it contains. | Mandatory | I | App_Design §Class Files |
+| CR-006 | A `resources` folder shall be provided at the project root for icons, images, and other non-Python files **if and when** such assets are introduced. *(Deferred: no non-Python assets exist in the current baseline, so the folder is not present.)* | Desirable | I | App_Design §Project Structure |
+| CR-007 | Source files shall be organised as cohesive modules, one module per logical component (serial management, X-Modem, parser, configuration, each GUI window/dialog family). A module may contain more than one closely related class (e.g. `gui/config_dialogs.py` holds `ConfigDialog` and its subclasses). | Mandatory | I | App_Design §Class Files (relaxed in v1.2 to as-built) |
+| CR-008 | Source files shall be named in `snake_case` after the component they implement (e.g. `serial_manager.py`, `cpm_parser.py`), not necessarily identically to a contained class name. | Mandatory | I | App_Design §Class Files (relaxed in v1.2 to as-built) |
 | CR-009 | All Python source files shall adhere to the PEP 8 standard. | Mandatory | T | App_Design §Code Quality |
-| CR-010 | The Copy to Remote and Copy to Host actions shall be guarded so that a transfer is only attempted when the Transport status flag is connected; otherwise an error dialog "Transport port not connected" shall be shown. *(Note: although App_Requirements specifies empty stubs, the implementation provides working X-Modem transfer handlers — see FR-080–FR-085.)* | Mandatory | T | App_Requirements §Copy to Remote, §Copy to Host; impl. `app.py` |
+| CR-010 | The Copy to Remote and Copy to Host actions shall be guarded so that a transfer is only attempted when **both** the Terminal status flag and the Transport status flag are true (consistent with FR-080); otherwise an error dialog with the body text "Transport port not connected" shall be shown and the transfer shall not proceed. | Mandatory | T | App_Requirements §Copy to Remote, §Copy to Host; impl. `app.py:do_copy_to_remote`, `do_copy_to_host` |
 | CR-011 | The following settings are persisted but their behaviour is deferred to a future release and is not implemented in the current baseline: `change_disk_cmd` (UIR-043), `msec_char` (UIR-030), `msec_line` (UIR-031), `recv_remote_cmd` (UIR-045), and `send_remote_cmd` (UIR-046). | Mandatory | I | impl. survey of `app.py` |
 
 ---
@@ -334,7 +336,7 @@ The following requirements define the algorithm for extracting remote file names
 |----|-------------|----------|--------------|--------|
 | NFR-001 | The application shall remain responsive during serial reads and file transfers. Serial reads shall run on a background daemon thread; each file transfer shall run on its own background daemon thread; and all GUI updates originating from those threads shall be marshalled onto the Tk main thread via `self.after(0, ...)`. | Mandatory | T | impl. `serial_manager.py:_read_loop`, `app.py` transfer threads |
 | NFR-002 | The application shall support both the flat and nested JSON configuration file shapes for serial settings, normalising an outer `serial` sub-dict and falling back across the alternative key names (e.g. `transport_port`/`transfer_port`, `data`/`data_bits`, `stopbits`/`stop_bits`). | Mandatory | T | CLAUDE.md §Two config JSON formats; impl. `serial_manager.py:open_port` |
-| NFR-003 | The X-Modem implementation shall use 128-byte packets framed with SOH (0x01) in checksum mode, where the checksum is the arithmetic sum of the 128 data bytes modulo 256. | Mandatory | T | impl. `xmodem.py` |
+| NFR-003 | The X-Modem implementation shall use 128-byte packets framed with SOH (0x01) in checksum mode, where the checksum is the arithmetic sum of the 128 data bytes modulo 256. The final packet shall be padded to a full 128-byte data field using the pad byte 0x1A (SUB / Ctrl-Z, the CP/M end-of-file convention), and the checksum shall be computed over the padded 128-byte field. | Mandatory | T | impl. `xmodem.py:send_file` |
 
 ---
 
@@ -346,11 +348,11 @@ The following requirements define the algorithm for extracting remote file names
 | App_Requirements §Look and Feel / Main Program GUI | UIR-001 – UIR-015 |
 | App_Requirements §Load / Save / Exit | FR-010 – FR-016 |
 | App_Requirements §Serial / General (menu) | FR-020, FR-021 |
-| App_Requirements / App_Design §Connecting | FR-030 – FR-040 |
+| App_Requirements / App_Design §Connecting | FR-030 – FR-040 (FR-035 removed in v1.2) |
 | App_Requirements / App_Design §Disconnecting | FR-050 – FR-057 |
-| App_Requirements §Host Files / Change Directory | FR-060 – FR-062 |
+| App_Requirements §Host Files / Change Directory / Refresh | FR-060 – FR-063 |
 | App_Requirements / App_Design §Populating remote file list | FR-070 – FR-079 |
-| App_Requirements / App_Design §File Transfers | FR-080 – FR-085, FR-082→NFR-003 |
+| App_Requirements / App_Design §File Transfers | FR-080 – FR-086, FR-082→NFR-003, FR-086 impl. |
 | App_Design §Receiving / Sending data | FR-090 – FR-098 |
 | App_Requirements §Main Program GUI (Terminal/Disconnect buttons) | UIR-016, FR-097 |
 | App_Requirements §Serial Configuration Dialog | UIR-020 – UIR-031, IFR-002, IFR-003 |
@@ -366,7 +368,10 @@ The following requirements define the algorithm for extracting remote file names
 ## 10. Issue Resolution Log
 
 The ambiguities and gaps identified during the initial consolidation (v1.0) were resolved in v1.1 by
-inspecting the authoritative implementation under `src/cpm_fm/`. All issues are now closed.
+inspecting the authoritative implementation under `src/cpm_fm/`. A v1.2 requirements review (multi-agent
+check against the as-built code) surfaced further code/spec discrepancies; the stakeholder decided each
+direction (code-follows-spec or spec-follows-code), recorded as OI-09–OI-19 below. All issues are now
+closed.
 
 | ID | Issue | Resolution | Evidence | Affected requirements |
 |----|-------|------------|----------|-----------------------|
@@ -378,12 +383,21 @@ inspecting the authoritative implementation under `src/cpm_fm/`. All issues are 
 | OI-06 | Mapping between parser dictionary and displayed list. | **Resolved.** The dictionary keys are displayed sorted in ascending alphabetical order. Updated FR-078. | `app.py:194` (`sorted(files_dict.keys())`) | FR-077, FR-078, DR-021 |
 | OI-07 | Behaviour of the Terminal button independent of Connect. | **Resolved.** The Terminal button opens or restores the Terminal Window without requiring an open port. Added FR-097. | `app.py:87, 126-131` (`show_terminal`) | UIR-013, FR-097 |
 | OI-08 | How Transmit Delay settings affect transmission. | **Resolved.** `msec_char`/`msec_line` are stored settings only; they are not applied during transmission in the current baseline. Updated UIR-030/031 and added CR-011. | No use site in `serial_manager.py`/`app.py` | UIR-030, UIR-031, CR-011 |
+| OI-09 | Whether Load merges settings and filters unrecognised keys, or fully replaces the store. | **Resolved (spec-follows-code).** Load is a full replace; unrecognised keys are retained verbatim but never alter behaviour. Reworded FR-011/FR-012. | `app.py:load_config` (`self.settings = load_json(...)`) | FR-011, FR-012 |
+| OI-10 | Whether Connect opens the Terminal Window. | **Resolved (spec-follows-code).** Connect does not open the window; it opens exclusively via the Terminal button (FR-097). Removed FR-035. | `app.py:do_connect` (no window open) | FR-035, FR-097 |
+| OI-11 | Whether a transfer requires both status flags or only Transport. | **Resolved (code-follows-spec).** A transfer now requires **both** the Terminal and Transport flags. Updated the guards in `do_copy_to_remote`/`do_copy_to_host` and aligned CR-010 with FR-080. | `app.py:do_copy_to_remote`, `do_copy_to_host` (both-flag guard) | FR-080, CR-010 |
+| OI-12 | Whether the final X-Modem packet is padded to 128 bytes. | **Resolved (code-follows-spec).** The final packet is padded to 128 bytes with 0x1A (Ctrl-Z) before checksum; NFR-003 updated to specify the pad byte. | `xmodem.py:send_file` (PAD = 0x1A) | NFR-003 |
+| OI-13 | The remote-list capture wait mechanism (fixed sleep vs. buffer timeout). | **Resolved (code-follows-spec).** Implemented a ≥1 s initial wait followed by a 0.5 s idle-timeout on the capture buffer (max 10 s); FR-076 reworded to this precise mechanism. | `app.py:_do_refresh_remote_logic` | FR-076 |
+| OI-14 | Whether Update and Refresh differ functionally. | **Resolved.** Update (Remote Files group) refreshes the remote list only; the central Refresh refreshes both Host and Remote lists. Reworded FR-073; added FR-063. | `app.py:refresh_remote_files`, `refresh_all` | FR-063, FR-073 |
+| OI-15 | Behaviour on a shared physical port / visibility of transfer traffic. | **Resolved.** Transfer bytes (both directions) are echoed to the Terminal Window as hex tokens `<HH>`; added FR-086 and a monitor hook in `XModem`. | `app.py:_on_transfer_bytes`; `xmodem.py` monitor | FR-086 |
+| OI-16 | Project-structure constraints contradicted the as-built tree (no `main.py`, no `resources/`, multi-class module, snake_case file names). | **Resolved (spec-follows-code).** CR-002 restated to `__main__.py`; CR-006 marked deferred/Desirable; CR-007/CR-008 relaxed to the as-built module/naming convention. | `find src -name '*.py'`; no `main.py`/`resources/` | CR-002, CR-006, CR-007, CR-008 |
+| OI-17 | Stale "empty stub" notes on FR-084/FR-085. | **Resolved.** The transfer handlers work; removed the stale stub notes. | `app.py:do_copy_to_remote`, `do_copy_to_host` | FR-084, FR-085 |
+| OI-18 | FR-050–FR-057 disconnect sequence (conditional close, per-port failure dialogs, workflow cancellation) was not implemented; `do_disconnect` did an unconditional `close_ports()`. | **Resolved (code-follows-spec).** Added `close_terminal_port`/`close_transport_port` (returning success) and reimplemented `do_disconnect` to close the Terminal Port (abort with "Terminal port is unable to be closed" on failure), clear the Transport flag for a shared port, and otherwise close the Transport Port (error "Transport port is unable to be closed" on failure). | `app.py:do_disconnect`; `serial_manager.py:close_terminal_port`, `close_transport_port` | FR-050–FR-057 |
+| OI-19 | FR-090/FR-092 mandated receive/transmit data buffers that did not exist. | **Resolved (code-follows-spec).** Added `_rx_buffer`/`_tx_buffer`, populated in `handle_terminal_recv`/`handle_terminal_send`; the Terminal Window Clear button now clears both buffers via a `clear_callback`. Reworded FR-090/FR-092 and extended FR-095. | `app.py:_rx_buffer`/`_tx_buffer`, `clear_terminal_buffers`; `terminal_window.py:clear_text` | FR-090, FR-092, FR-095 |
 
-> During resolution, the implementation also revealed a discrepancy with the original specification:
-> App_Requirements specifies Copy to Remote / Copy to Host as *empty stubs*, but the implementation
-> provides working X-Modem transfer handlers guarded by the Transport status flag. This is captured in
-> the functional requirements FR-080–FR-085 and design constraint CR-010, which now reflect the
-> as-built behaviour rather than the stub specification.
+> Historical note (v1.1): App_Requirements specified Copy to Remote / Copy to Host as *empty stubs*, but
+> the implementation provides working X-Modem transfer handlers. This is captured in FR-080–FR-086 and
+> CR-010, which reflect the as-built behaviour; the stale stub notes were removed in v1.2 (OI-17).
 
 ---
 
@@ -393,3 +407,4 @@ inspecting the authoritative implementation under `src/cpm_fm/`. All issues are 
 |---------|------|--------|-------------|
 | 1.0 | 2026-06-06 | Requirements Checker | Initial baseline. Consolidated and restructured all requirements from `docs/App_Requirements.md` and `docs/App_Design.md` into an ISO/IEC/IEEE 29148-conformant SRS. Assigned unique IDs across STR/FR/UIR/IFR/DR/CR/NFR categories (STR-001–003, FR-001–096, UIR-001–067, IFR-001–004, DR-001–032, CR-001–010, NFR-001–003). Added verification methods, priorities, source traceability, a traceability summary (§9), and an open-issues log (§10, OI-01–OI-08). |
 | 1.1 | 2026-06-06 | Requirements Checker | Resolved all open issues (OI-01–OI-08) by inspecting the implementation under `src/cpm_fm/`. **Added:** UIR-016 (Disconnect button), FR-097 (Terminal button behaviour), FR-098 (send-with-port-closed status), CR-011 (deferred settings). **Modified:** UIR-013 (added Disconnect to button set), UIR-014 (127-char truncation behaviour), UIR-030/UIR-031 (transmit-delay stored-only note), UIR-043 (Change Disk stored-only note), FR-078 (sorted remote-list display), CR-010 (as-built transfer guarding vs. stub spec), NFR-001 (measurable threading criteria), NFR-002 (key-name normalisation detail), NFR-003 (SOH/checksum X-Modem detail). Converted §10 from an open-issues list to a closed issue-resolution log. Updated §9 traceability. Status advanced from Draft to Reviewed. |
+| 1.2 | 2026-06-06 | Requirements Checker | Reconciled code/spec discrepancies found by a multi-agent requirements review, per stakeholder decisions (OI-09–OI-17). **Added:** FR-063 (Refresh refreshes both lists), FR-086 (X-Modem transfer bytes echoed to the Terminal Window as hex `<HH>` tokens). **Removed:** FR-035 (Connect no longer opens the Terminal Window; superseded by FR-097). **Modified:** FR-011/FR-012 (Load is a full replace; unrecognised keys retained but inert), FR-073 (Update is Remote-list-only), FR-076 (≥1 s wait then 0.5 s buffer idle-timeout, max 10 s), FR-080/CR-010 (transfer requires **both** status flags), FR-084/FR-085 (removed stale "empty stub" notes), NFR-003 (final packet padded to 128 bytes with 0x1A), CR-002 (`__main__.py` entry point), CR-006 (resources folder deferred, Desirable), CR-007/CR-008 (relaxed to as-built cohesive-module / snake_case naming). Also resolved OI-18 (implemented the FR-050–FR-057 disconnect sequence with per-port failure dialogs and workflow cancellation) and OI-19 (implemented real receive/transmit data buffers cleared by the Clear button); **modified** FR-090/FR-092 (concrete buffers) and FR-095 (clears buffers too). **Code changes:** `app.py` (both-flag transfer guard, buffer idle-timeout, `refresh_all`, `_on_transfer_bytes` hex echo, full `do_disconnect` sequence, `_rx_buffer`/`_tx_buffer` + `clear_terminal_buffers`), `xmodem.py` (final-packet padding, monitor hook on all reads/writes), `serial_manager.py` (`close_terminal_port`/`close_transport_port`), `terminal_window.py` (Clear `clear_callback`). All v1.2 issues (OI-09–OI-19) closed. Updated §9 traceability and §10 issue log. |

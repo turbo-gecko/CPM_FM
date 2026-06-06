@@ -29,6 +29,11 @@ class MainApplication(tk.Tk):
         self._remote_capture_buffer = ""
         self._capture_active = False
 
+        # FR-090/FR-092: receive and transmit data buffers, retained until
+        # explicitly cleared via the Terminal Window Clear button (FR-095).
+        self._rx_buffer = ""
+        self._tx_buffer = ""
+
         self.setup_menu()
         self.setup_layout()
         self.setup_status_bar()
@@ -81,9 +86,7 @@ class MainApplication(tk.Tk):
         tk.Button(btn_frame, text="Copy to Host", command=self.do_copy_to_host).pack(
             fill=tk.X, pady=2
         )
-        tk.Button(btn_frame, text="Refresh", command=self.refresh_remote_files).pack(
-            fill=tk.X, pady=2
-        )
+        tk.Button(btn_frame, text="Refresh", command=self.refresh_all).pack(fill=tk.X, pady=2)
         tk.Button(btn_frame, text="Terminal", command=self.show_terminal).pack(fill=tk.X, pady=2)
 
         # Right Side: Remote Files
@@ -125,7 +128,9 @@ class MainApplication(tk.Tk):
 
     def show_terminal(self):
         if not self.terminal_win:
-            self.terminal_win = TerminalWindow(self, self.handle_terminal_send)
+            self.terminal_win = TerminalWindow(
+                self, self.handle_terminal_send, self.clear_terminal_buffers
+            )
             self.serial_mgr.on_data_received = self.handle_terminal_recv
         else:
             self.terminal_win.deiconify()
@@ -141,16 +146,26 @@ class MainApplication(tk.Tk):
                 text += eol_char
 
             self.serial_mgr.send_data("terminal", text)
+            # FR-092: store transmitted data (with EOL) in the transmit buffer.
+            self._tx_buffer += text
             if self.terminal_win and self.terminal_win.var_local_echo.get():
                 self.terminal_win.write_text(f"\n{text}")
         else:
             self.set_status("Terminal port not open - cannot send")
 
     def handle_terminal_recv(self, text):
+        # FR-090: store all received data in the receive buffer.
+        self._rx_buffer += text
         if self.terminal_win:
             self.terminal_win.write_text(text)
         if self._capture_active:
             self._remote_capture_buffer += text
+
+    def clear_terminal_buffers(self):
+        # FR-090/FR-092: the Clear button is the explicit-clear trigger for
+        # both the receive and transmit data buffers.
+        self._rx_buffer = ""
+        self._tx_buffer = ""
 
     def do_connect(self):
         if self.serial_mgr.open_port("terminal", self.settings):
@@ -166,8 +181,32 @@ class MainApplication(tk.Tk):
             messagebox.showerror("Error", "Terminal port is unable to be opened")
 
     def do_disconnect(self):
-        self.serial_mgr.close_ports()
-        self.set_status("Terminal port closed")
+        term_port = self.settings.get("terminal_port")
+        trans_port = self.settings.get("transport_port")
+
+        # FR-050/FR-051: close the Terminal Port if open; on failure show an
+        # error dialog and cancel the current workflow.
+        if self.serial_mgr.terminal_connected:
+            if not self.serial_mgr.close_terminal_port():
+                messagebox.showerror("Error", "Terminal port is unable to be closed")
+                return
+            # FR-052 (flag cleared by close_terminal_port) / FR-053 (status text).
+            self.set_status("Terminal port closed")
+
+        # FR-054: same physical port — clear the Transport flag, no separate close.
+        if trans_port == term_port:
+            self.serial_mgr.transport_connected = False
+        # FR-055/FR-056/FR-057: different port — close it if open.
+        elif self.serial_mgr.transport_connected:
+            if not self.serial_mgr.close_transport_port():
+                messagebox.showerror("Error", "Transport port is unable to be closed")
+                return
+
+    def refresh_all(self):
+        # FR-063: the central Refresh button refreshes both lists; the Update
+        # button (Remote Files group) refreshes the remote list only (FR-073).
+        self.refresh_host_files()
+        self.refresh_remote_files()
 
     def refresh_remote_files(self):
         if not self.serial_mgr.terminal_connected:
@@ -184,7 +223,19 @@ class MainApplication(tk.Tk):
         eol = self.settings.get("eol", "CR")
         eol_char = {"CR": "\r", "LF": "\n", "CRLF": "\r\n"}.get(eol, "\r")
         self.handle_terminal_send(cmd + eol_char)
-        time.sleep(1.5)
+        # FR-076: wait at least one second for output to start accumulating,
+        # then wait for the receive buffer to time out (no new data within the
+        # idle window) before processing, bounded by a safety maximum.
+        time.sleep(1.0)
+        idle_window = 0.5
+        max_wait = 10.0
+        waited = 1.0
+        while waited < max_wait:
+            prev_len = len(self._remote_capture_buffer)
+            time.sleep(idle_window)
+            waited += idle_window
+            if len(self._remote_capture_buffer) == prev_len:
+                break
         self._capture_active = False
         files_dict = CPMParser.parse_dir_output(self._remote_capture_buffer)
         self.after(0, self._update_remote_list_ui, files_dict)
@@ -196,7 +247,9 @@ class MainApplication(tk.Tk):
         self.set_status("Remote file list updated")
 
     def do_copy_to_remote(self):
-        if not self.serial_mgr.transport_connected:
+        # FR-080: a transfer is permitted only when both the Terminal and
+        # Transport status flags are true.
+        if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
             messagebox.showerror("Error", "Transport port not connected")
             return
 
@@ -210,11 +263,19 @@ class MainApplication(tk.Tk):
 
         threading.Thread(target=self._transfer_to_remote, args=(filepath,), daemon=True).start()
 
+    def _on_transfer_bytes(self, direction, data):
+        # FR-086: echo transfer bytes to the Terminal Window as hex tokens
+        # of the form <HH>. Marshalled onto the Tk main thread (NFR-001).
+        if not self.terminal_win:
+            return
+        hex_text = "".join(f"<{b:02X}>" for b in data)
+        self.after(0, self.terminal_win.write_text, hex_text)
+
     def _transfer_to_remote(self, filepath):
         self.set_status(f"Uploading {os.path.basename(filepath)}...")
         try:
             ser = self.serial_mgr.transport_port
-            xm = XModem(ser)
+            xm = XModem(ser, monitor=self._on_transfer_bytes)
             if xm.send_file(filepath):
                 self.after(
                     0,
@@ -226,7 +287,9 @@ class MainApplication(tk.Tk):
             self.after(0, lambda e=e: messagebox.showerror("Error", str(e)))
 
     def do_copy_to_host(self):
-        if not self.serial_mgr.transport_connected:
+        # FR-080: a transfer is permitted only when both the Terminal and
+        # Transport status flags are true.
+        if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
             messagebox.showerror("Error", "Transport port not connected")
             return
 
@@ -244,7 +307,7 @@ class MainApplication(tk.Tk):
         self.set_status(f"Downloading {os.path.basename(save_path)}...")
         try:
             ser = self.serial_mgr.transport_port
-            xm = XModem(ser)
+            xm = XModem(ser, monitor=self._on_transfer_bytes)
             if xm.receive_file(save_path):
                 self.after(
                     0,
