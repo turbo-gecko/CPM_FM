@@ -1,78 +1,98 @@
-import tkinter as tk
-from tkinter import scrolledtext
+from __future__ import annotations
+
+from PySide6.QtGui import QFont, QTextCursor
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QHBoxLayout,
+    QLineEdit,
+    QMainWindow,
+    QPlainTextEdit,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 
-class TerminalWindow(tk.Toplevel):
+class TerminalWindow(QMainWindow):
     """
     Non-modal Terminal window (SRS docs/cpm_fm_requirements.md, UIR-060-UIR-067;
     receive/transmit behaviour FR-090-FR-098).
     """
 
     def __init__(self, parent, send_callback, clear_callback=None):
-        super().__init__(parent)
-        self.title("Terminal")
+        # No Qt parent, so this is an independent non-modal top-level window
+        # (UIR-060). The owning MainWindow keeps a reference to it.
+        super().__init__()
+        self.setWindowTitle("Terminal")
+        self.resize(600, 400)
         self.send_callback = send_callback
         # Invoked when the Clear button is pressed, so the owner can clear the
         # receive/transmit data buffers alongside the display (FR-090/FR-092).
         self.clear_callback = clear_callback
 
         self.create_widgets()
-        self.protocol("WM_DELETE_WINDOW", self.hide_window)
 
     def create_widgets(self):
-        # Receive Area
-        self.receive_area = scrolledtext.ScrolledText(self, state="disabled", wrap=tk.WORD)
-        self.receive_area.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        central = QWidget()
+        self.setCentralWidget(central)
+        layout = QVBoxLayout(central)
 
-        # Control Frame
-        ctrl_frame = tk.Frame(self)
-        ctrl_frame.pack(fill=tk.X, padx=10, pady=5)
+        # Receive Area — read-only, monospaced (UIR-061/UIR-063).
+        self.receive_area = QPlainTextEdit()
+        self.receive_area.setReadOnly(True)
+        mono = QFont("Courier New")
+        mono.setStyleHint(QFont.StyleHint.Monospace)
+        self.receive_area.setFont(mono)
+        layout.addWidget(self.receive_area)
 
-        self.btn_clear = tk.Button(ctrl_frame, text="Clear", command=self.clear_text)
-        self.btn_clear.pack(side=tk.LEFT)
+        # Control Frame: Clear (left), Local Echo (centre), Autoscroll (right).
+        ctrl_layout = QHBoxLayout()
+        self.btn_clear = QPushButton("Clear", clicked=self.clear_text)
+        ctrl_layout.addWidget(self.btn_clear)
+        ctrl_layout.addStretch()
 
-        self.var_local_echo = tk.BooleanVar(value=False)
-        self.chk_echo = tk.Checkbutton(ctrl_frame, text="Local Echo", variable=self.var_local_echo)
-        self.chk_echo.pack(side=tk.LEFT, expand=True)
+        self.chk_echo = QCheckBox("Local Echo")  # UIR-065: disabled by default.
+        self.chk_echo.setChecked(False)
+        ctrl_layout.addWidget(self.chk_echo)
+        ctrl_layout.addStretch()
 
-        self.var_autoscroll = tk.BooleanVar(value=True)
-        self.chk_scroll = tk.Checkbutton(
-            ctrl_frame, text="Autoscroll", variable=self.var_autoscroll
-        )
-        self.chk_scroll.pack(side=tk.RIGHT)
+        self.chk_scroll = QCheckBox("Autoscroll")  # UIR-066: enabled by default.
+        self.chk_scroll.setChecked(True)
+        ctrl_layout.addWidget(self.chk_scroll)
+        layout.addLayout(ctrl_layout)
 
-        # Transmit Frame
-        tx_frame = tk.Frame(self)
-        tx_frame.pack(fill=tk.X, padx=10, pady=10)
-
-        self.tx_entry = tk.Entry(tx_frame)
-        self.tx_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
-        self.tx_entry.bind("<Return>", lambda e: self.send_text())
-
-        self.btn_send = tk.Button(tx_frame, text="Send", command=self.send_text)
-        self.btn_send.pack(side=tk.RIGHT)
+        # Transmit Frame: text field (left) + Send button (right) (UIR-067).
+        tx_layout = QHBoxLayout()
+        self.tx_entry = QLineEdit()
+        self.tx_entry.returnPressed.connect(self.send_text)
+        tx_layout.addWidget(self.tx_entry)
+        self.btn_send = QPushButton("Send", clicked=self.send_text)
+        tx_layout.addWidget(self.btn_send)
+        layout.addLayout(tx_layout)
 
     def clear_text(self):
-        self.receive_area.configure(state="normal")
-        self.receive_area.delete("1.0", tk.END)
-        self.receive_area.configure(state="disabled")
+        self.receive_area.clear()
         if self.clear_callback:
             self.clear_callback()
 
     def send_text(self):
-        text = self.tx_entry.get()
+        text = self.tx_entry.text()
         if text:
             self.send_callback(text)
-            self.tx_entry.delete(0, tk.END)
+            self.tx_entry.clear()
 
     def write_text(self, text):
         """Appends text to the receive area."""
-        self.receive_area.configure(state="normal")
-        self.receive_area.insert(tk.END, text)
-        if self.var_autoscroll.get():
-            self.receive_area.see(tk.END)
-        self.receive_area.configure(state="disabled")
+        # insertPlainText preserves existing content and does not add newlines.
+        cursor = self.receive_area.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        cursor.insertText(text)
+        if self.chk_scroll.isChecked():  # UIR-062: autoscroll when enabled.
+            self.receive_area.moveCursor(QTextCursor.MoveOperation.End)
+            self.receive_area.ensureCursorVisible()
 
-    def hide_window(self):
-        # Requirements say non-modal, often these stay alive in background
-        self.withdraw()
+    def closeEvent(self, event):
+        # Non-modal window persists in the background when closed by the user;
+        # FR-097 reopens/restores the same instance via the Terminal button.
+        event.ignore()
+        self.hide()

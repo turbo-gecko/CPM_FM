@@ -1,54 +1,90 @@
-import tkinter as tk
+from __future__ import annotations
+
 from typing import Any
 
+from PySide6.QtGui import QIntValidator
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QLineEdit,
+    QVBoxLayout,
+)
 
-class ConfigDialog(tk.Toplevel):
-    """
-    Base class for Configuration Dialogs.
+
+class ConfigDialog(QDialog):
+    """Base class for the modal Configuration Dialogs.
+
+    Builds a two-column form (UIR-021) from a declarative field list. Each
+    field is a dict with keys: ``key``, ``label``, ``type`` ("dropdown" or
+    "text"), ``default``, and optionally ``options`` (dropdown), ``maxlength``
+    (text) and ``int_range`` (text, an inclusive ``(lo, hi)`` tuple).
     """
 
-    def __init__(self, parent, title: str, settings: dict[str, Any], fields: list, callback):
+    def __init__(
+        self,
+        parent,
+        title: str,
+        settings: dict[str, Any],
+        fields: list,
+        callback,
+    ):
         super().__init__(parent)
-        self.title(title)
+        self.setWindowTitle(title)
+        self.setModal(True)
         self.settings = settings
         self.fields = fields
         self.callback = callback
-        self.result = None
+        self.result_settings: dict[str, Any] | None = None
 
-        self.grid_columnconfigure(1, weight=1)
         self.create_widgets()
-
-        self.transient(parent)
-        self.grab_set()
-        parent.wait_window(self)
+        # UIR-020/UIR-040: modal dialog.
+        self.exec()
 
     def create_widgets(self):
-        self.entries = {}
-        for i, field in enumerate(self.fields):
-            lbl = tk.Label(self, text=field["label"], anchor="w")
-            lbl.grid(row=i, column=0, padx=10, pady=5, sticky="w")
+        layout = QVBoxLayout(self)
+        form = QFormLayout()
+        self.entries: dict[str, Any] = {}
+
+        for field in self.fields:
+            key = field["key"]
+            current = str(self.settings.get(key, field["default"]))
 
             if field["type"] == "dropdown":
-                var = tk.StringVar(value=self.settings.get(field["key"], field["default"]))
-                widget = tk.OptionMenu(self, var, *field["options"])
-                self.entries[field["key"]] = var
+                widget = QComboBox()
+                widget.addItems([str(o) for o in field["options"]])
+                widget.setCurrentText(current)
             else:
-                var = tk.StringVar(value=self.settings.get(field["key"], field["default"]))
-                widget = tk.Entry(self, textvariable=var)
-                self.entries[field["key"]] = var
+                widget = QLineEdit(current)
+                if "maxlength" in field:
+                    widget.setMaxLength(field["maxlength"])
+                if "int_range" in field:
+                    lo, hi = field["int_range"]
+                    widget.setValidator(QIntValidator(lo, hi, widget))
 
-            widget.grid(row=i, column=1, padx=10, pady=5, sticky="e")
+            self.entries[key] = widget
+            form.addRow(field["label"], widget)
 
-        btn_frame = tk.Frame(self)
-        btn_frame.grid(row=len(self.fields), column=0, columnspan=2, pady=15)
+        layout.addLayout(form)
 
-        tk.Button(btn_frame, text="Save", command=self.save).pack(side=tk.LEFT, padx=5)
-        tk.Button(btn_frame, text="Cancel", command=self.destroy).pack(side=tk.LEFT, padx=5)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.accepted.connect(self.save)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def _value(self, widget) -> str:
+        if isinstance(widget, QComboBox):
+            return widget.currentText()
+        return widget.text()
 
     def save(self):
-        new_settings = {key: var.get() for key, var in self.entries.items()}
+        new_settings = {key: self._value(w) for key, w in self.entries.items()}
+        self.result_settings = new_settings
         self.callback(new_settings)
-        self.destroy()
+        self.accept()
 
 
 class SerialConfigDialog(ConfigDialog):
@@ -123,8 +159,21 @@ class SerialConfigDialog(ConfigDialog):
                 "options": ["NONE", "XON/XOFF", "RTS/CTS", "DSR/DTR"],
                 "default": "NONE",
             },
-            {"key": "msec_char", "label": "msec/char", "type": "text", "default": "0"},
-            {"key": "msec_line", "label": "msec/line", "type": "text", "default": "0"},
+            # UIR-030/UIR-031: integer 0..255 inclusive.
+            {
+                "key": "msec_char",
+                "label": "msec/char",
+                "type": "text",
+                "default": "0",
+                "int_range": (0, 255),
+            },
+            {
+                "key": "msec_line",
+                "label": "msec/line",
+                "type": "text",
+                "default": "0",
+                "int_range": (0, 255),
+            },
         ]
         super().__init__(parent, "Serial Config", settings, fields, callback)
 
@@ -136,20 +185,35 @@ class GeneralConfigDialog(ConfigDialog):
     """
 
     def __init__(self, parent, settings, callback):
+        # UIR-042..046: command text fields limited to 79 characters.
         fields = [
-            {"key": "list_files_cmd", "label": "List Files", "type": "text", "default": "DIR"},
-            {"key": "change_disk_cmd", "label": "Change Disk", "type": "text", "default": ""},
+            {
+                "key": "list_files_cmd",
+                "label": "List Files",
+                "type": "text",
+                "default": "DIR",
+                "maxlength": 79,
+            },
+            {
+                "key": "change_disk_cmd",
+                "label": "Change Disk",
+                "type": "text",
+                "default": "",
+                "maxlength": 79,
+            },
             {
                 "key": "recv_remote_cmd",
                 "label": "Receive from Remote",
                 "type": "text",
                 "default": "PCPUT $1",
+                "maxlength": 79,
             },
             {
                 "key": "send_remote_cmd",
                 "label": "Send to Remote",
                 "type": "text",
                 "default": "PCGET $1",
+                "maxlength": 79,
             },
             {
                 "key": "eol",

@@ -4,9 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`cpm-fm` is a Tkinter desktop app that transfers files between a modern host and legacy
-[CP/M](https://en.wikipedia.org/wiki/CP/M) systems over a serial link using X-Modem. Despite
-`wxPython` being present in `.venv`, the GUI is pure **Tkinter** (`import tkinter as tk`) — ignore wx.
+`cpm-fm` is a **PySide6 (Qt for Python)** desktop app that transfers files between a modern host and
+legacy [CP/M](https://en.wikipedia.org/wiki/CP/M) systems over a serial link using X-Modem. The GUI
+applies a Material Design theme via the `qt-material` package (set centrally at start-up in
+`gui/theme.py`; the light/dark variant follows the host OS — UIR-070/UIR-073). As of v1.3 the UI was
+migrated from Tkinter to PySide6; there is no remaining `tkinter` code, and the stray `wxPython` in
+`.venv` is unused (ignore it).
 
 ## Commands
 
@@ -25,10 +28,12 @@ Test / lint / type-check (CI runs all of these on Python 3.12, see `.github/work
 
 ## Architecture
 
-`src/`-layout package under `src/cpm_fm/`. `app.py:MainApplication` (a `tk.Tk` subclass) is the hub
-that owns all components and wires UI events to them. `main()` is the entry point for both launchers.
+`src/`-layout package under `src/cpm_fm/`. `app.py:MainWindow` (a `QMainWindow` subclass) is the hub
+that owns all components and wires UI events to them. `main()` creates the `QApplication`, applies the
+theme, shows the window, and runs `app.exec()`; it is the entry point for both launchers.
 
-Three layers, intentionally decoupled from the GUI so they are unit-testable without Tk:
+Three layers, intentionally decoupled from the GUI so they are unit-testable without a running Qt app
+(CR-014 forbids GUI-toolkit imports in `terminal/` and `utils/`):
 - `terminal/serial_manager.py` — `SerialManager` owns two `pyserial` ports: a **terminal** port (for
   CP/M commands) and a **transport** port (for X-Modem transfers). They may be the same physical port.
   A background daemon thread (`_read_loop`) polls the terminal port and pushes received text to the
@@ -38,15 +43,18 @@ Three layers, intentionally decoupled from the GUI so they are unit-testable wit
 - `terminal/cpm_parser.py` — `CPMParser.parse_dir_output` is a pure static method that scrapes
   filenames from CP/M 2.2 four-column `DIR` text output. This is the most-tested logic.
 - `utils/config_handler.py` — `ConfigHandler` loads/saves settings as JSON.
-- `gui/` — `terminal_window.py` (`TerminalWindow`, a non-modal `Toplevel` serial console) and
-  `config_dialogs.py` (`ConfigDialog` base + `SerialConfigDialog`/`GeneralConfigDialog`, which build
-  forms from declarative field lists).
+- `gui/` — `theme.py` (`apply_theme`, the central `qt-material` setup), `terminal_window.py`
+  (`TerminalWindow`, a non-modal `QMainWindow` serial console) and `config_dialogs.py` (`ConfigDialog`
+  base `QDialog` + `SerialConfigDialog`/`GeneralConfigDialog`, which build `QFormLayout` forms from
+  declarative field lists).
 
 ### Key cross-cutting behaviors
 
-- **Threading model:** Serial reads, and both transfer directions, run off the Tk main thread
-  (daemon threads). Any UI update from those threads must go through `self.after(0, ...)` — follow
-  this pattern when adding background work, or Tk will misbehave.
+- **Threading model:** Serial reads, and both transfer directions, run off the Qt GUI thread (daemon
+  threads). Any UI update from those threads must be marshalled onto the GUI thread by **emitting a Qt
+  signal** (`MainWindow` defines `status_changed`, `term_write`, `remote_files_ready`, `error_raised`;
+  cross-thread emits are auto-queued) — never touch a widget directly from a worker thread (NFR-004).
+  Follow this signal pattern when adding background work, or Qt will crash/misbehave.
 - **Remote file listing is capture-based, not request/response:** `_do_refresh_remote_logic` sets a
   `_capture_active` flag, sends the list command (default `DIR`), `time.sleep(1.5)` to let output
   accumulate in `_remote_capture_buffer` via the read callback, then parses it. There is no end

@@ -4,7 +4,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 1.2 |
+| Version | 1.3 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
@@ -25,7 +25,9 @@ into a single, uniquely identified and traceable requirement set conforming to I
 `cpm-fm` is a cross-platform desktop GUI application written in Python that transfers files between a
 modern host system and a legacy CP/M system over a serial communications link using the X-Modem
 protocol. The application provides a graphical file manager, a serial terminal, and serial/general
-configuration management.
+configuration management. As of v1.3 the graphical user interface is implemented with **PySide6
+(Qt for Python)** using a Material Design visual theme (see CR-012, CR-013, UIR-070–UIR-073); prior
+baselines used Tkinter.
 
 ### 1.3 Product overview
 The product presents a host file list and a remote file list side by side, with controls to connect
@@ -42,6 +44,9 @@ non-modal terminal window enables direct serial interaction with the remote syst
 | EOL | End of Line terminator character(s): CR, LF, or CR/LF. |
 | X-Modem | The 128-byte, checksum-mode serial file transfer protocol used by this product. |
 | SRS | Software Requirements Specification. |
+| Qt / PySide6 | The Qt 6 GUI toolkit and its official Python bindings (PySide6), used to implement the GUI from v1.3 onward. |
+| QSS | Qt Style Sheets — the CSS-like styling mechanism Qt uses for theming. |
+| Material | The Material Design visual theme applied to the Qt widgets (via the `qt-material` stylesheet). |
 
 ### 1.5 Requirement identification scheme
 Requirements are uniquely identified using the prefixes below. Each requirement is atomic, verifiable,
@@ -71,7 +76,7 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
 | STR-001 | The product shall enable the transfer of files between the host system and a remote CP/M system over a serial communications link. | Mandatory | D | App_Design §Purpose |
-| STR-002 | The product shall provide a graphical user interface implemented in Python. | Mandatory | I | App_Design §Purpose |
+| STR-002 | The product shall provide a graphical user interface implemented in Python, using the PySide6 (Qt for Python) toolkit (see CR-012). | Mandatory | I | App_Design §Purpose; v1.3 UI migration |
 | STR-003 | The product shall be cross-platform. | Desirable | A | App_Design §Purpose |
 
 ---
@@ -203,7 +208,7 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | UIR-010 | The main window shall contain a status bar at the bottom. | Mandatory | I | App_Requirements §Main Program GUI |
 | UIR-011 | The main window shall contain a "Host Files" group containing a "Change Directory" button and a multi-select widget. | Mandatory | I | App_Requirements §Main Program GUI |
 | UIR-012 | The main window shall contain a "Remote Files" group containing an "Update" button and a multi-select widget. | Mandatory | I | App_Requirements §Main Program GUI |
-| UIR-013 | The main window shall present, between the Host Files and Remote Files groups, the buttons: Connect, Disconnect, Copy to Remote, Copy to Host, Refresh, and Terminal. | Mandatory | I | App_Requirements §Main Program GUI; impl. `app.py` |
+| UIR-013 | The main window shall provide the actions Connect, Disconnect, Copy to Remote, Copy to Host, Refresh, and Terminal. From v1.3 these are presented as a top toolbar above the file panes (see UIR-071) rather than a central button column. | Mandatory | I | App_Requirements §Main Program GUI; impl. `app.py`; v1.3 UI migration |
 | UIR-014 | The status bar shall be a single-line text label. When a status message exceeds 127 characters, the application shall truncate it to the first 127 characters before display. | Mandatory | T | App_Requirements §Status Bar; impl. `app.py:set_status` |
 | UIR-015 | The Connect button shall be enabled at startup. | Mandatory | I | App_Requirements §Connect |
 | UIR-016 | The main window shall provide a separate Disconnect button, enabled at startup, that invokes the disconnect behaviour (FR-050–FR-057). | Mandatory | I | App_Requirements §Disconnect; impl. `app.py` |
@@ -251,6 +256,16 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | UIR-065 | The Terminal Window shall provide a "Local Echo" checkbox, centred, that is disabled by default. | Mandatory | T | App_Requirements §Terminal Window |
 | UIR-066 | The Terminal Window shall provide an "Autoscroll" checkbox, right-aligned, that is enabled by default. | Mandatory | T | App_Requirements §Terminal Window |
 | UIR-067 | The Terminal Window shall provide a "Transmit" group containing a single-line text field aligned left and a "Send" button aligned right in the same row. | Mandatory | I | App_Requirements §Terminal Window |
+
+### 4.6 Visual theme and modern layout (v1.3)
+
+| ID | Requirement | Priority | Verification | Source |
+|----|-------------|----------|--------------|--------|
+| UIR-070 | The GUI shall apply a modern Material Design visual theme to all windows, dialogs, and widgets (via the `qt-material` stylesheet over PySide6 widgets), in place of the platform-default Tk appearance. | Mandatory | D | v1.3 UI migration |
+| UIR-071 | The main window shall present the actions of UIR-013 as a toolbar at the top of the window (above the file panes), with each action shown as a labelled, icon-bearing button. | Mandatory | I | v1.3 UI migration |
+| UIR-072 | The Host Files and Remote Files panes shall be separated by a user-draggable splitter that lets the user re-apportion horizontal space between the two panes; the split position is not required to persist between sessions. | Mandatory | D | v1.3 UI migration |
+| UIR-073 | The application shall, at startup, detect the host operating system's light/dark colour-scheme preference and apply the corresponding (light or dark) variant of the Material theme. If the preference cannot be determined, the application shall default to the dark variant. | Mandatory | T | v1.3 UI migration |
+| UIR-074 | The status bar (UIR-010) shall display two connection indicators — one for the Terminal status flag (FR-001) and one for the Transport status flag (FR-002) — each rendering a distinct visual state for connected versus not-connected. | Desirable | D | v1.3 UI migration |
 
 ---
 
@@ -327,6 +342,9 @@ The following requirements define the algorithm for extracting remote file names
 | CR-009 | All Python source files shall adhere to the PEP 8 standard. | Mandatory | T | App_Design §Code Quality |
 | CR-010 | The Copy to Remote and Copy to Host actions shall be guarded so that a transfer is only attempted when **both** the Terminal status flag and the Transport status flag are true (consistent with FR-080); otherwise an error dialog with the body text "Transport port not connected" shall be shown and the transfer shall not proceed. | Mandatory | T | App_Requirements §Copy to Remote, §Copy to Host; impl. `app.py:do_copy_to_remote`, `do_copy_to_host` |
 | CR-011 | The following settings are persisted but their behaviour is deferred to a future release and is not implemented in the current baseline: `change_disk_cmd` (UIR-043), `msec_char` (UIR-030), `msec_line` (UIR-031), `recv_remote_cmd` (UIR-045), and `send_remote_cmd` (UIR-046). | Mandatory | I | impl. survey of `app.py` |
+| CR-012 | The graphical user interface shall be implemented with **PySide6 (Qt for Python)**. Tkinter shall not be used for any GUI component. PySide6 shall be declared as a runtime dependency in `pyproject.toml`. | Mandatory | I | v1.3 UI migration |
+| CR-013 | The Material Design visual theme (UIR-070) shall be supplied by the `qt-material` package, declared as a runtime dependency in `pyproject.toml`. The theme shall be applied centrally at application start-up (not per-widget), so that all current and future windows inherit it. | Mandatory | I | v1.3 UI migration |
+| CR-014 | The GUI, serial/terminal (`terminal/`), and configuration (`utils/`) layers shall remain decoupled such that the `terminal/` and `utils/` modules contain no PySide6 (or other GUI-toolkit) imports and remain unit-testable without a running Qt application. | Mandatory | T | CLAUDE.md §Architecture; v1.3 UI migration |
 
 ---
 
@@ -334,9 +352,10 @@ The following requirements define the algorithm for extracting remote file names
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| NFR-001 | The application shall remain responsive during serial reads and file transfers. Serial reads shall run on a background daemon thread; each file transfer shall run on its own background daemon thread; and all GUI updates originating from those threads shall be marshalled onto the Tk main thread via `self.after(0, ...)`. | Mandatory | T | impl. `serial_manager.py:_read_loop`, `app.py` transfer threads |
+| NFR-001 | The application shall remain responsive during serial reads and file transfers. Serial reads shall run on a background daemon thread; each file transfer shall run on its own background thread; and all GUI updates originating from those threads shall be marshalled onto the Qt GUI (main) thread via the Qt signal/slot mechanism (queued connections) — see NFR-004. *(Prior to v1.3 this marshalling was performed with Tkinter's `self.after(0, ...)`.)* | Mandatory | T | impl. `serial_manager.py:_read_loop`, `app.py` transfer threads; v1.3 UI migration |
 | NFR-002 | The application shall support both the flat and nested JSON configuration file shapes for serial settings, normalising an outer `serial` sub-dict and falling back across the alternative key names (e.g. `transport_port`/`transfer_port`, `data`/`data_bits`, `stopbits`/`stop_bits`). | Mandatory | T | CLAUDE.md §Two config JSON formats; impl. `serial_manager.py:open_port` |
 | NFR-003 | The X-Modem implementation shall use 128-byte packets framed with SOH (0x01) in checksum mode, where the checksum is the arithmetic sum of the 128 data bytes modulo 256. The final packet shall be padded to a full 128-byte data field using the pad byte 0x1A (SUB / Ctrl-Z, the CP/M end-of-file convention), and the checksum shall be computed over the padded 128-byte field. | Mandatory | T | impl. `xmodem.py:send_file` |
+| NFR-004 | No Qt widget shall be created or mutated from any thread other than the Qt GUI (main) thread. Cross-thread UI updates (serial receive callbacks, transfer progress/results, transfer byte echo) shall be delivered to the GUI thread exclusively via Qt signals connected with `Qt.QueuedConnection` (or the implicitly-queued cross-thread default), satisfying NFR-001. | Mandatory | T | v1.3 UI migration |
 
 ---
 
@@ -358,6 +377,7 @@ The following requirements define the algorithm for extracting remote file names
 | App_Requirements §Serial Configuration Dialog | UIR-020 – UIR-031, IFR-002, IFR-003 |
 | App_Requirements §General Configuration Dialog | UIR-040 – UIR-048 |
 | App_Requirements §Terminal Window | UIR-060 – UIR-067 |
+| v1.3 UI migration (PySide6 + Material) | UIR-070 – UIR-074, CR-012 – CR-014, NFR-004; revises STR-002, UIR-013, NFR-001 |
 | App_Design §DIR parsing algorithm | DR-001 – DR-032 |
 | App_Design §Project Structure / Class Files / Code Quality | CR-001 – CR-009 |
 | Deferred / as-built constraints (impl. survey) | CR-010, CR-011, NFR-001 – NFR-003 |
@@ -407,4 +427,5 @@ closed.
 |---------|------|--------|-------------|
 | 1.0 | 2026-06-06 | Requirements Checker | Initial baseline. Consolidated and restructured all requirements from `docs/App_Requirements.md` and `docs/App_Design.md` into an ISO/IEC/IEEE 29148-conformant SRS. Assigned unique IDs across STR/FR/UIR/IFR/DR/CR/NFR categories (STR-001–003, FR-001–096, UIR-001–067, IFR-001–004, DR-001–032, CR-001–010, NFR-001–003). Added verification methods, priorities, source traceability, a traceability summary (§9), and an open-issues log (§10, OI-01–OI-08). |
 | 1.1 | 2026-06-06 | Requirements Checker | Resolved all open issues (OI-01–OI-08) by inspecting the implementation under `src/cpm_fm/`. **Added:** UIR-016 (Disconnect button), FR-097 (Terminal button behaviour), FR-098 (send-with-port-closed status), CR-011 (deferred settings). **Modified:** UIR-013 (added Disconnect to button set), UIR-014 (127-char truncation behaviour), UIR-030/UIR-031 (transmit-delay stored-only note), UIR-043 (Change Disk stored-only note), FR-078 (sorted remote-list display), CR-010 (as-built transfer guarding vs. stub spec), NFR-001 (measurable threading criteria), NFR-002 (key-name normalisation detail), NFR-003 (SOH/checksum X-Modem detail). Converted §10 from an open-issues list to a closed issue-resolution log. Updated §9 traceability. Status advanced from Draft to Reviewed. |
+| 1.3 | 2026-06-06 | UI Migration | Specified migration of the GUI from Tkinter to **PySide6 (Qt for Python)** with a Material Design theme, per stakeholder decision (framework: PySide6; theme: `qt-material`; default theme mode: follow OS; full requirement traceability requested). **Added:** UIR-070 (Material theme), UIR-071 (top toolbar), UIR-072 (draggable splitter between panes), UIR-073 (OS-following light/dark default, dark fallback), UIR-074 (status-bar connection indicators, Desirable), CR-012 (PySide6 mandated, no Tkinter), CR-013 (`qt-material` theme applied centrally at start-up), CR-014 (GUI/`terminal`/`utils` decoupling — no GUI imports in non-GUI layers), NFR-004 (Qt signal/slot thread-safety). **Modified:** §1.2 Scope and §1.4 Definitions (Qt/PySide6/QSS/Material added), STR-002 (PySide6 noted), UIR-013 (actions presented as a toolbar from v1.3), NFR-001 (cross-thread GUI updates via Qt signals/slots, replacing `self.after`). The X-Modem, serial-management, CP/M parsing, and configuration layers (`terminal/`, `utils/`) and all of §3 functional behaviour are unchanged by this migration. Status remains Reviewed; the new requirements are approved for implementation but not yet implemented. |
 | 1.2 | 2026-06-06 | Requirements Checker | Reconciled code/spec discrepancies found by a multi-agent requirements review, per stakeholder decisions (OI-09–OI-17). **Added:** FR-063 (Refresh refreshes both lists), FR-086 (X-Modem transfer bytes echoed to the Terminal Window as hex `<HH>` tokens). **Removed:** FR-035 (Connect no longer opens the Terminal Window; superseded by FR-097). **Modified:** FR-011/FR-012 (Load is a full replace; unrecognised keys retained but inert), FR-073 (Update is Remote-list-only), FR-076 (≥1 s wait then 0.5 s buffer idle-timeout, max 10 s), FR-080/CR-010 (transfer requires **both** status flags), FR-084/FR-085 (removed stale "empty stub" notes), NFR-003 (final packet padded to 128 bytes with 0x1A), CR-002 (`__main__.py` entry point), CR-006 (resources folder deferred, Desirable), CR-007/CR-008 (relaxed to as-built cohesive-module / snake_case naming). Also resolved OI-18 (implemented the FR-050–FR-057 disconnect sequence with per-port failure dialogs and workflow cancellation) and OI-19 (implemented real receive/transmit data buffers cleared by the Clear button); **modified** FR-090/FR-092 (concrete buffers) and FR-095 (clears buffers too). **Code changes:** `app.py` (both-flag transfer guard, buffer idle-timeout, `refresh_all`, `_on_transfer_bytes` hex echo, full `do_disconnect` sequence, `_rx_buffer`/`_tx_buffer` + `clear_terminal_buffers`), `xmodem.py` (final-packet padding, monitor hook on all reads/writes), `serial_manager.py` (`close_terminal_port`/`close_transport_port`), `terminal_window.py` (Clear `clear_callback`). All v1.2 issues (OI-09–OI-19) closed. Updated §9 traceability and §10 issue log. |

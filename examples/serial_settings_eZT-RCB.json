@@ -14,5 +14,10 @@
         "receive_from_remote": "PCPUT $1",
         "send_to_remote": "PCGET $1",
         "end_of_line": "CR"
-    }
+    },
+    "list_files_cmd": "DIR",
+    "change_disk_cmd": "",
+    "recv_remote_cmd": "B:PCPUT $1",
+    "send_remote_cmd": "B:PCGET $1",
+    "eol": "CR"
 }
