@@ -215,12 +215,30 @@ class GeneralConfigDialog(ConfigDialog):
                 "default": "PCGET $1",
                 "maxlength": 79,
             },
+            # UIR-049: seconds to wait after launching PCPUT/PCGET before the
+            # X-Modem handshake starts, so prompts do not overrun the remote
+            # UART during its start-up (FR-087). Integer 0..60 inclusive.
+            {
+                "key": "xfer_launch_delay",
+                "label": "Xfer Launch Delay (s)",
+                "type": "text",
+                "default": "3",
+                "int_range": (0, 60),
+            },
             {
                 "key": "eol",
                 "label": "End of Line",
                 "type": "dropdown",
                 "options": ["CR", "LF", "CRLF"],
                 "default": "CR",
+            },
+            # UIR-050: gate verbose transfer debug output to stdout (FR-088).
+            {
+                "key": "debug_logging",
+                "label": "Debug Logging",
+                "type": "dropdown",
+                "options": ["OFF", "ON"],
+                "default": "OFF",
             },
         ]
         super().__init__(parent, "General Config", settings, fields, callback)

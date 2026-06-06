@@ -396,19 +396,78 @@ class MainWindow(QMainWindow):
         # the form <HH>. Runs on the transfer worker thread; the display write
         # is marshalled to the GUI thread via term_write (NFR-004). The slot
         # no-ops when the Terminal Window does not exist.
+        # Direction-tagged, timestamped trace to stdout (visible via
+        # `python -m cpm_fm`) so transfers can be debugged without conflating
+        # sent and received bytes, and so prompt/response timing is visible.
+        # Gated by the debug_logging setting (FR-088).
+        if self._debug_enabled():
+            print(f"[xfer {direction} {time.time():.2f}] {data.hex(' ')}", flush=True)
         hex_text = "".join(f"<{b:02X}>" for b in data)
         self.term_write.emit(hex_text)
+
+    def _issue_remote_cmd(self, cmd_key: str, default: str, filename: str) -> None:
+        # Implements recv_remote_cmd / send_remote_cmd (UIR-045/UIR-046): the
+        # configured command is sent on the Terminal Port to launch the CP/M
+        # side of the transfer (PCPUT/PCGET), with "$1" replaced by the
+        # filename. Runs on the transfer worker thread; handle_terminal_send is
+        # safe to call from there (it marshals its display write via a signal).
+        template = self.settings.get(cmd_key, default)
+        if not template:
+            return
+        self.handle_terminal_send(template.replace("$1", filename))
+
+    def _launch_delay(self) -> float:
+        # Seconds to wait after launching the CP/M side (PCPUT/PCGET) before
+        # starting the X-Modem handshake. This must exceed the remote program's
+        # start-up time: while it prints its banner and opens the file it is not
+        # reading its UART, and any start-character prompts we send during that
+        # window pile up and overrun its (FIFO-less) UART. Tunable via the
+        # `xfer_launch_delay` setting; default 3s.
+        try:
+            return max(0.0, float(self.settings.get("xfer_launch_delay", 3.0)))
+        except (TypeError, ValueError):
+            return 3.0
+
+    def _debug_enabled(self) -> bool:
+        # FR-088: verbose transfer debug output is emitted to stdout only when
+        # the `debug_logging` setting holds an affirmative value (default off).
+        return str(self.settings.get("debug_logging", "OFF")).strip().upper() in (
+            "ON",
+            "TRUE",
+            "1",
+            "YES",
+        )
+
+    def _debug(self, msg: str) -> None:
+        if self._debug_enabled():
+            print(msg, flush=True)
 
     def _transfer_to_remote(self, filepath):
         self.set_status(f"Uploading {os.path.basename(filepath)}...")
         try:
             ser = self.serial_mgr.transport_port
+            delay = self._launch_delay()
+            self._debug(
+                f"[copy-to-remote] start file={os.path.basename(filepath)} "
+                f"cmd={self.settings.get('send_remote_cmd', 'PCGET $1')!r} "
+                f"launch_delay={delay}s transport={ser}"
+            )
+            # Clear stale bytes, then launch the CP/M receiver (PCGET) on the
+            # Terminal Port so its start character lands on a clean transport
+            # buffer that send_file does not flush.
+            if ser:
+                ser.reset_input_buffer()
+            self._issue_remote_cmd("send_remote_cmd", "PCGET $1", os.path.basename(filepath))
+            self._debug(f"[copy-to-remote] launched PCGET; waiting {delay}s before handshake")
+            time.sleep(delay)
+            self._debug("[copy-to-remote] starting X-Modem send")
             xm = XModem(ser, monitor=self._on_transfer_bytes)
             if xm.send_file(filepath):
                 self.set_status(f"Successfully uploaded {os.path.basename(filepath)}")
             else:
                 self.error_raised.emit("X-Modem Error", "Transfer failed")
         except Exception as e:
+            self._debug(f"[copy-to-remote] EXCEPTION: {e!r}")
             self.error_raised.emit("Error", str(e))
 
     def do_copy_to_host(self):
@@ -430,12 +489,26 @@ class MainWindow(QMainWindow):
         self.set_status(f"Downloading {os.path.basename(save_path)}...")
         try:
             ser = self.serial_mgr.transport_port
+            delay = self._launch_delay()
+            self._debug(
+                f"[copy-to-host] start file={os.path.basename(save_path)} "
+                f"cmd={self.settings.get('recv_remote_cmd', 'PCPUT $1')!r} "
+                f"launch_delay={delay}s transport={ser}"
+            )
+            # Launch the CP/M sender (PCPUT) on the Terminal Port, then receive.
+            # receive_file drives the handshake (polls with 'C'), so it tolerates
+            # PCPUT taking several seconds to arm.
+            self._issue_remote_cmd("recv_remote_cmd", "PCPUT $1", os.path.basename(save_path))
+            self._debug(f"[copy-to-host] launched PCPUT; waiting {delay}s before handshake")
+            time.sleep(delay)
+            self._debug("[copy-to-host] starting X-Modem receive")
             xm = XModem(ser, monitor=self._on_transfer_bytes)
             if xm.receive_file(save_path):
                 self.set_status(f"Successfully downloaded {os.path.basename(save_path)}")
             else:
                 self.error_raised.emit("X-Modem Error", "Transfer failed")
         except Exception as e:
+            self._debug(f"[copy-to-host] EXCEPTION: {e!r}")
             self.error_raised.emit("Error", str(e))
 
     # ------------------------------------------------------------------ config
