@@ -12,6 +12,7 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
+    QComboBox,
     QFileDialog,
     QGroupBox,
     QHBoxLayout,
@@ -29,6 +30,7 @@ from PySide6.QtWidgets import (
 from cpm_fm.gui.config_dialogs import GeneralConfigDialog, SerialConfigDialog
 from cpm_fm.gui.terminal_window import TerminalWindow
 from cpm_fm.gui.theme import apply_theme
+from cpm_fm.gui.transfer_dialog import TransferProgressDialog
 from cpm_fm.gui.window_state import APP, ORG, WindowState
 from cpm_fm.terminal.cpm_parser import CPMParser
 from cpm_fm.terminal.serial_manager import SerialManager
@@ -56,6 +58,16 @@ class MainWindow(QMainWindow):
     # Emitted from a transfer worker thread on success so the destination file
     # list is refreshed on the GUI thread ("host" or "remote").
     transfer_completed = Signal(str)
+    # FR-105: emitted from the transfer worker thread to drive the modal
+    # transfer-progress dialog on the GUI thread (NFR-004). transfer_started
+    # carries (filename, total_bytes, direction); transfer_progress carries
+    # (blocks, bytes_done) and fires once per transferred block.
+    transfer_started = Signal(str, int, str)
+    transfer_progress = Signal(int, int)
+    # FR-103: emitted (with the selected drive letter) from the drive-change
+    # worker thread when the drive's prompt does not appear, so the "Drive not
+    # found" dialog and the list-clear run on the GUI thread (NFR-004).
+    drive_not_found = Signal(str)
 
     def __init__(self, window_state: WindowState | None = None):
         super().__init__()
@@ -72,6 +84,9 @@ class MainWindow(QMainWindow):
 
         # UI State
         self.terminal_win: TerminalWindow | None = None
+        # FR-105: the modal transfer-progress dialog, live only for the duration
+        # of a transfer. Owned and torn down on the GUI thread.
+        self._transfer_dialog: TransferProgressDialog | None = None
         self.host_dir = os.getcwd()
         self._remote_capture_buffer = ""
         self._capture_active = False
@@ -115,6 +130,9 @@ class MainWindow(QMainWindow):
         self.remote_files_ready.connect(self._update_remote_list_ui)
         self.error_raised.connect(self._on_error_raised)
         self.transfer_completed.connect(self._on_transfer_completed)
+        self.transfer_started.connect(self._on_transfer_started)
+        self.transfer_progress.connect(self._on_transfer_progress)
+        self.drive_not_found.connect(self._on_drive_not_found)
 
     def setup_menu(self):
         menubar = self.menuBar()
@@ -170,7 +188,22 @@ class MainWindow(QMainWindow):
         # Right Side: Remote Files
         remote_group = QGroupBox("Remote Files")
         remote_layout = QVBoxLayout(remote_group)
-        remote_layout.addWidget(QPushButton("Update", clicked=self.refresh_remote_files))
+
+        # UIR-012/UIR-017: a drive-selection drop-down (A:–P:) followed by the
+        # Update button. `activated` fires only on a user selection, never on
+        # programmatic changes, so it cannot trigger a drive change spuriously.
+        remote_top = QHBoxLayout()
+        self.drive_combo = QComboBox()
+        self.drive_combo.addItems([f"{chr(c)}:" for c in range(ord("A"), ord("P") + 1)])
+        # Widen the drop-down so the selected drive (e.g. "B:") is never clipped.
+        self.drive_combo.setMinimumContentsLength(4)
+        self.drive_combo.setMinimumWidth(80)
+        self.drive_combo.activated.connect(self.change_drive)
+        remote_top.addWidget(self.drive_combo)
+        remote_top.addWidget(QPushButton("Update", clicked=self.refresh_remote_files))
+        remote_top.addStretch()
+        remote_layout.addLayout(remote_top)
+
         self.remote_list = QListWidget()
         self.remote_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         remote_layout.addWidget(self.remote_list)
@@ -234,16 +267,43 @@ class MainWindow(QMainWindow):
             self.terminal_win.write_text(text)
 
     def _on_error_raised(self, title: str, message: str):
+        # FR-105: a failed transfer closes the progress dialog before the error
+        # dialog is shown.
+        self._close_transfer_dialog()
         QMessageBox.critical(self, title, message)
 
     def _on_transfer_completed(self, direction: str):
         # Runs on the GUI thread (queued from the transfer worker). After a
         # successful transfer the destination list is otherwise stale until the
         # user manually refreshes it, so refresh the affected pane here.
+        # FR-105: close the progress dialog now the transfer has completed.
+        self._close_transfer_dialog()
         if direction == "host":
             self.refresh_host_files()
         elif direction == "remote":
             self.refresh_remote_files()
+
+    def _on_transfer_started(self, filename: str, total_bytes: int, direction: str):
+        # FR-105: runs on the GUI thread (queued from the transfer worker).
+        # Build and show the modal progress dialog. total_bytes is the file
+        # size for sends, or 0 for receives (length is unknown -> indeterminate).
+        self._close_transfer_dialog()  # defensive: never leak a prior dialog
+        self._transfer_dialog = TransferProgressDialog(
+            self, direction, filename, total_bytes or None
+        )
+        self._transfer_dialog.show()
+
+    def _on_transfer_progress(self, blocks: int, bytes_done: int):
+        # FR-105: runs on the GUI thread (queued per transferred block).
+        if self._transfer_dialog is not None:
+            self._transfer_dialog.update_progress(blocks, bytes_done)
+
+    def _close_transfer_dialog(self):
+        # FR-105: tear down the progress dialog on the GUI thread, if present.
+        if self._transfer_dialog is not None:
+            self._transfer_dialog.close()
+            self._transfer_dialog.deleteLater()
+            self._transfer_dialog = None
 
     # ------------------------------------------------------------- host files
 
@@ -379,17 +439,17 @@ class MainWindow(QMainWindow):
             return
         threading.Thread(target=self._do_refresh_remote_logic, daemon=True).start()
 
-    def _do_refresh_remote_logic(self):
-        self.set_status("Updating remote file list...")
-        self._remote_capture_buffer = ""
-        self._capture_active = True
-        cmd = self.settings.get("list_files_cmd", "DIR")
-        eol = self.settings.get("eol", "CR")
-        eol_char = EOL_MAP.get(eol, "\r")
-        self.handle_terminal_send(cmd + eol_char)
+    def _capture_terminal_response(self, command: str) -> str:
+        # Send `command` (with the configured EOL appended) on the Terminal Port
+        # and capture the echoed output into the capture buffer until it idles
+        # out, returning the captured text. Runs on a worker thread.
         # FR-076: wait at least one second for output to start accumulating,
         # then wait for the receive buffer to time out (no new data within the
         # idle window) before processing, bounded by a safety maximum.
+        self._remote_capture_buffer = ""
+        self._capture_active = True
+        eol_char = EOL_MAP.get(self.settings.get("eol", "CR"), "\r")
+        self.handle_terminal_send(command + eol_char)
         time.sleep(1.0)
         idle_window = 0.5
         max_wait = 10.0
@@ -401,8 +461,43 @@ class MainWindow(QMainWindow):
             if len(self._remote_capture_buffer) == prev_len:
                 break
         self._capture_active = False
-        files_dict = CPMParser.parse_dir_output(self._remote_capture_buffer)
+        return self._remote_capture_buffer
+
+    def _do_refresh_remote_logic(self):
+        self.set_status("Updating remote file list...")
+        cmd = self.settings.get("list_files_cmd", "DIR")
+        text = self._capture_terminal_response(cmd)
+        files_dict = CPMParser.parse_dir_output(text)
         self.remote_files_ready.emit(files_dict)
+
+    def change_drive(self, index):
+        # FR-100/FR-104: switch the remote drive to the selected letter. Mirror
+        # FR-074 and refuse when the Terminal Port is closed.
+        if not self.serial_mgr.terminal_connected:
+            self.set_status("Terminal port not open - cannot read file list")
+            self.remote_list.clear()
+            return
+        drive = self.drive_combo.itemText(index)[0]  # 'A'..'P'
+        threading.Thread(target=self._do_change_drive_logic, args=(drive,), daemon=True).start()
+
+    def _do_change_drive_logic(self, drive):
+        # FR-100/FR-101: send "<letter>:" and capture the response. FR-102: if
+        # the new "<letter>>" drive prompt appears, populate the Remote Files
+        # list exactly as the Update button would (FR-073). FR-103: otherwise
+        # clear the list and report "Drive not found". Runs on a worker thread,
+        # so calling _do_refresh_remote_logic directly is correct (it marshals
+        # its UI update via the remote_files_ready signal).
+        self.set_status(f"Changing to drive {drive}:...")
+        text = self._capture_terminal_response(f"{drive}:")
+        if CPMParser.has_drive_prompt(text, drive):
+            self._do_refresh_remote_logic()
+        else:
+            self.drive_not_found.emit(drive)
+
+    def _on_drive_not_found(self, drive):
+        # FR-103: runs on the GUI thread (queued from the drive-change worker).
+        self.remote_list.clear()
+        QMessageBox.warning(self, "Drive not found", f"Drive {drive}: not found")
 
     def _update_remote_list_ui(self, files_dict):
         self.remote_list.clear()
@@ -443,6 +538,12 @@ class MainWindow(QMainWindow):
             print(f"[xfer {direction} {time.time():.2f}] {data.hex(' ')}", flush=True)
         hex_text = "".join(f"<{b:02X}>" for b in data)
         self.term_write.emit(hex_text)
+
+    def _on_transfer_progress_cb(self, blocks, bytes_done, total):
+        # FR-105: XModem progress hook. Runs on the transfer worker thread; the
+        # dialog update is marshalled to the GUI thread via transfer_progress
+        # (NFR-004). total is unused here (the dialog captured it at start).
+        self.transfer_progress.emit(blocks, bytes_done)
 
     def _issue_remote_cmd(self, cmd_key: str, default: str, filename: str) -> None:
         # Implements recv_remote_cmd / send_remote_cmd (UIR-045/UIR-046): the
@@ -500,7 +601,17 @@ class MainWindow(QMainWindow):
             self._debug(f"[copy-to-remote] launched PCGET; waiting {delay}s before handshake")
             time.sleep(delay)
             self._debug("[copy-to-remote] starting X-Modem send")
-            xm = XModem(ser, monitor=self._on_transfer_bytes)
+            # FR-105: show a progress dialog for the duration of the transfer.
+            try:
+                total_bytes = os.path.getsize(filepath)
+            except OSError:
+                total_bytes = 0
+            self.transfer_started.emit(os.path.basename(filepath), total_bytes, "remote")
+            xm = XModem(
+                ser,
+                monitor=self._on_transfer_bytes,
+                progress=self._on_transfer_progress_cb,
+            )
             if xm.send_file(filepath):
                 self.set_status(f"Successfully uploaded {os.path.basename(filepath)}")
                 # Refresh the Remote Files list so the newly uploaded file shows.
@@ -543,7 +654,14 @@ class MainWindow(QMainWindow):
             self._debug(f"[copy-to-host] launched PCPUT; waiting {delay}s before handshake")
             time.sleep(delay)
             self._debug("[copy-to-host] starting X-Modem receive")
-            xm = XModem(ser, monitor=self._on_transfer_bytes)
+            # FR-105: show a progress dialog. The X-Modem stream carries no
+            # length, so total_bytes is 0 (indeterminate progress bar).
+            self.transfer_started.emit(os.path.basename(save_path), 0, "host")
+            xm = XModem(
+                ser,
+                monitor=self._on_transfer_bytes,
+                progress=self._on_transfer_progress_cb,
+            )
             if xm.receive_file(save_path):
                 self.set_status(f"Successfully downloaded {os.path.basename(save_path)}")
                 # Refresh the Host Files list so the newly downloaded file shows.

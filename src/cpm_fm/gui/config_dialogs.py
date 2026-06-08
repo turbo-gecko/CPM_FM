@@ -214,13 +214,6 @@ class GeneralConfigDialog(ConfigDialog):
                 "maxlength": 79,
             },
             {
-                "key": "change_disk_cmd",
-                "label": "Change Disk",
-                "type": "text",
-                "default": "",
-                "maxlength": 79,
-            },
-            {
                 "key": "recv_remote_cmd",
                 "label": "Receive from Remote",
                 "type": "text",
