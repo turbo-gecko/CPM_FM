@@ -237,6 +237,17 @@ class GeneralConfigDialog(ConfigDialog):
                 "default": "3",
                 "int_range": (0, 60),
             },
+            # UIR-052: seconds to settle, after the terminal output goes idle,
+            # between files in a multi-file batch before the next launch command
+            # is sent, so its leading characters are not lost while CP/M is
+            # returning to the prompt (FR-109). Integer 0..60 inclusive.
+            {
+                "key": "xfer_interfile_delay",
+                "label": "Xfer Inter-file Delay (s)",
+                "type": "text",
+                "default": "2",
+                "int_range": (0, 60),
+            },
             {
                 "key": "eol",
                 "label": "End of Line",

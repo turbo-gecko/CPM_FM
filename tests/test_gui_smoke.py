@@ -44,7 +44,12 @@ class _FakeSerial:
         pass
 
 
-def _fake_xmodem_cls(success):
+def _fake_xmodem_cls(success=True, calls=None):
+    # success may be a single bool applied to every file, or a list/tuple of
+    # per-call booleans consumed in order (so a batch test can fail file N).
+    # calls, if given, records each transferred path so order/count is assertable.
+    seq = iter(success) if isinstance(success, (list, tuple)) else None
+
     class _FakeXModem:
         def __init__(self, ser, monitor=None, progress=None):
             self.progress = progress
@@ -55,18 +60,25 @@ def _fake_xmodem_cls(success):
             if self.progress:
                 self.progress(1, 128, 128)
 
+        def _result(self):
+            return next(seq) if seq is not None else success
+
         def send_file(self, path):
+            if calls is not None:
+                calls.append(path)
             self._report()
-            return success
+            return self._result()
 
         def receive_file(self, path):
+            if calls is not None:
+                calls.append(path)
             self._report()
-            return success
+            return self._result()
 
     return _FakeXModem
 
 
-def _arm_transfer(win, monkeypatch, success=True):
+def _arm_transfer(win, monkeypatch, success=True, calls=None):
     # Put the window in a state where the transfer workers can run without real
     # serial hardware or sleeps: both flags connected, a fake transport port,
     # no launch delay, send_data and XModem stubbed.
@@ -75,7 +87,10 @@ def _arm_transfer(win, monkeypatch, success=True):
     win.serial_mgr.transport_connected = True
     win.serial_mgr.transport_port = _FakeSerial()
     monkeypatch.setattr(win.serial_mgr, "send_data", lambda *a, **k: None)
-    monkeypatch.setattr("cpm_fm.app.XModem", _fake_xmodem_cls(success))
+    monkeypatch.setattr("cpm_fm.app.XModem", _fake_xmodem_cls(success, calls))
+    # Neutralise worker-thread sleeps (launch delay, FR-109 inter-file idle/settle)
+    # so batch tests run fast while still exercising the real wait logic.
+    monkeypatch.setattr("cpm_fm.app.time.sleep", lambda *a, **k: None)
 
 
 def test_copy_to_host_refreshes_host_list(qapp, monkeypatch, state):
@@ -85,7 +100,7 @@ def test_copy_to_host_refreshes_host_list(qapp, monkeypatch, state):
         calls = []
         monkeypatch.setattr(win, "refresh_host_files", lambda: calls.append("host"))
         _arm_transfer(win, monkeypatch)
-        win._transfer_to_host(os.path.join(win.host_dir, "FOO.TXT"))
+        win._transfer_to_host_batch([os.path.join(win.host_dir, "FOO.TXT")])
         qapp.processEvents()
         assert calls == ["host"]
     finally:
@@ -99,7 +114,7 @@ def test_copy_to_remote_refreshes_remote_list(qapp, monkeypatch, state):
         calls = []
         monkeypatch.setattr(win, "refresh_remote_files", lambda: calls.append("remote"))
         _arm_transfer(win, monkeypatch)
-        win._transfer_to_remote(os.path.join(win.host_dir, "FOO.TXT"))
+        win._transfer_to_remote_batch([os.path.join(win.host_dir, "FOO.TXT")])
         qapp.processEvents()
         assert calls == ["remote"]
     finally:
@@ -116,7 +131,7 @@ def test_failed_transfer_does_not_refresh(qapp, monkeypatch, state):
         # offscreen test does not block on a modal dialog.
         monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: None)
         _arm_transfer(win, monkeypatch, success=False)
-        win._transfer_to_host(os.path.join(win.host_dir, "FOO.TXT"))
+        win._transfer_to_host_batch([os.path.join(win.host_dir, "FOO.TXT")])
         qapp.processEvents()
         assert calls == []
     finally:
@@ -124,11 +139,12 @@ def test_failed_transfer_does_not_refresh(qapp, monkeypatch, state):
 
 
 def test_progress_dialog_started_and_updates(qapp, state):
-    # FR-105/UIR-051: transfer_started builds the modal dialog naming the file;
-    # transfer_progress updates the blocks/bytes label.
+    # FR-105/UIR-051: batch_started builds the modal dialog; transfer_file_started
+    # names the file; transfer_progress updates the blocks/bytes label.
     win = MainWindow(state)
     try:
-        win._on_transfer_started("FOO.TXT", 256, "remote")
+        win._on_batch_started("remote", 1)
+        win._on_transfer_file_started("FOO.TXT", 256, 1)
         dlg = win._transfer_dialog
         assert dlg is not None
         assert dlg.windowTitle() == "Sending File"
@@ -144,7 +160,8 @@ def test_progress_dialog_title_for_receive(qapp, state):
     # UIR-051: the host (receive) direction titles the dialog "Receiving File".
     win = MainWindow(state)
     try:
-        win._on_transfer_started("BAR.TXT", 0, "host")
+        win._on_batch_started("host", 1)
+        win._on_transfer_file_started("BAR.TXT", 0, 1)
         assert win._transfer_dialog is not None
         assert win._transfer_dialog.windowTitle() == "Receiving File"
     finally:
@@ -156,7 +173,8 @@ def test_progress_dialog_closes_on_completion(qapp, monkeypatch, state):
     win = MainWindow(state)
     try:
         monkeypatch.setattr(win, "refresh_remote_files", lambda: None)
-        win._on_transfer_started("FOO.TXT", 128, "remote")
+        win._on_batch_started("remote", 1)
+        win._on_transfer_file_started("FOO.TXT", 128, 1)
         assert win._transfer_dialog is not None
         win._on_transfer_completed("remote")
         assert win._transfer_dialog is None
@@ -169,7 +187,8 @@ def test_progress_dialog_closes_on_error(qapp, monkeypatch, state):
     win = MainWindow(state)
     try:
         monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: None)
-        win._on_transfer_started("FOO.TXT", 128, "remote")
+        win._on_batch_started("remote", 1)
+        win._on_transfer_file_started("FOO.TXT", 128, 1)
         assert win._transfer_dialog is not None
         win._on_error_raised("X-Modem Error", "Transfer failed")
         assert win._transfer_dialog is None
@@ -184,9 +203,119 @@ def test_transfer_run_leaves_no_progress_dialog(qapp, monkeypatch, state):
     try:
         monkeypatch.setattr(win, "refresh_remote_files", lambda: None)
         _arm_transfer(win, monkeypatch)
-        win._transfer_to_remote(os.path.join(win.host_dir, "FOO.TXT"))
+        win._transfer_to_remote_batch([os.path.join(win.host_dir, "FOO.TXT")])
         qapp.processEvents()
         assert win._transfer_dialog is None
+    finally:
+        win.close()
+
+
+def test_selected_filenames_returns_display_order(qapp, state):
+    # FR-106/FR-107: every selected file is returned in list display order,
+    # regardless of the order rows were clicked.
+    win = MainWindow(state)
+    try:
+        win.host_list.clear()
+        win.host_list.addItems(["A.TXT", "B.TXT", "C.TXT", "D.TXT"])
+        # Select rows 2 then 0 (out of display order) and row 3.
+        for row in (2, 0, 3):
+            win.host_list.item(row).setSelected(True)
+        assert win._selected_filenames(win.host_list) == ["A.TXT", "C.TXT", "D.TXT"]
+    finally:
+        win.close()
+
+
+def test_copy_to_remote_transfers_all_selected(qapp, monkeypatch, state):
+    # FR-106/FR-107: a multi-file Copy to Remote transfers every selected file
+    # sequentially and refreshes the remote list once at the end.
+    win = MainWindow(state)
+    try:
+        refreshes = []
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: refreshes.append(1))
+        calls = []
+        _arm_transfer(win, monkeypatch, calls=calls)
+        paths = [os.path.join(win.host_dir, n) for n in ("A.TXT", "B.TXT", "C.TXT")]
+        win._transfer_to_remote_batch(paths)
+        qapp.processEvents()
+        assert [os.path.basename(p) for p in calls] == ["A.TXT", "B.TXT", "C.TXT"]
+        assert refreshes == [1]  # FR-099: one refresh for the whole batch.
+    finally:
+        win.close()
+
+
+def test_copy_to_host_transfers_all_selected(qapp, monkeypatch, state):
+    # FR-106/FR-107: symmetric multi-file Copy to Host.
+    win = MainWindow(state)
+    try:
+        refreshes = []
+        monkeypatch.setattr(win, "refresh_host_files", lambda: refreshes.append(1))
+        calls = []
+        _arm_transfer(win, monkeypatch, calls=calls)
+        paths = [os.path.join(win.host_dir, n) for n in ("A.TXT", "B.TXT")]
+        win._transfer_to_host_batch(paths)
+        qapp.processEvents()
+        assert [os.path.basename(p) for p in calls] == ["A.TXT", "B.TXT"]
+        assert refreshes == [1]
+    finally:
+        win.close()
+
+
+def test_batch_aborts_on_failure(qapp, monkeypatch, state):
+    # FR-108: when a file fails mid-batch, the remaining files are skipped, an
+    # error names the failed file, and the destination refreshes once because an
+    # earlier file succeeded.
+    win = MainWindow(state)
+    try:
+        refreshes = []
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: refreshes.append(1))
+        errors = []
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:]))
+        calls = []
+        # First file succeeds, second fails -> third is never attempted.
+        _arm_transfer(win, monkeypatch, success=[True, False], calls=calls)
+        paths = [os.path.join(win.host_dir, n) for n in ("A.TXT", "B.TXT", "C.TXT")]
+        win._transfer_to_remote_batch(paths)
+        qapp.processEvents()
+        assert [os.path.basename(p) for p in calls] == ["A.TXT", "B.TXT"]
+        assert refreshes == [1]  # partial success still refreshes (FR-108).
+        assert errors == [("X-Modem Error", "Transfer of B.TXT failed; remaining files skipped")]
+    finally:
+        win.close()
+
+
+def test_batch_waits_for_prompt_between_files(qapp, monkeypatch, state):
+    # FR-109: the inter-file prompt wait runs before each file after the first,
+    # and never before the first file.
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: None)
+        waits = []
+        monkeypatch.setattr(win, "_wait_for_terminal_idle", lambda: waits.append(1))
+        _arm_transfer(win, monkeypatch)
+        paths = [os.path.join(win.host_dir, n) for n in ("A.TXT", "B.TXT", "C.TXT")]
+        win._transfer_to_remote_batch(paths)
+        qapp.processEvents()
+        assert len(waits) == 2  # before files 2 and 3 only
+    finally:
+        win.close()
+
+
+def test_batch_progress_dialog_shows_file_position(qapp, state):
+    # FR-105/UIR-051: one dialog serves the batch; transfer_file_started switches
+    # it between files on the SAME instance, showing "File i of N".
+    win = MainWindow(state)
+    try:
+        win._on_batch_started("remote", 2)
+        dlg = win._transfer_dialog
+        assert dlg is not None
+        win._on_transfer_file_started("A.TXT", 128, 1)
+        assert dlg.batch_label.text() == "File 1 of 2"
+        assert "A.TXT" in dlg.file_label.text()
+        win._on_transfer_file_started("B.TXT", 128, 2)
+        # Same dialog instance, not recreated.
+        assert win._transfer_dialog is dlg
+        assert dlg.batch_label.text() == "File 2 of 2"
+        assert "B.TXT" in dlg.file_label.text()
     finally:
         win.close()
 
