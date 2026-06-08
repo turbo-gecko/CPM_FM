@@ -177,11 +177,13 @@ class XModem:
     def receive_file(self, save_path: str) -> bool:
         """Receives a file from Remote to Host (e.g. from CP/M PCPUT).
 
-        Like a standard X-Modem receiver, we request CRC first by polling with
-        'C'; if the sender does not respond we fall back to checksum mode and
-        poll with NAK (NFR-003). The mode is fixed by whichever prompt the
-        sender answers. SOH frames carry 128 data bytes; STX frames carry 1024
-        (XMODEM-1K), so the 1K sender variants are accepted too.
+        The CP/M-side senders (PCPUT V1.0) speak **checksum** X-Modem and do not
+        understand the CRC start character 'C' — sending it makes them abort
+        with "Unknown response from host". So we poll with NAK (checksum) first
+        and only fall back to 'C' (CRC) if the sender does not answer NAK at all
+        (NFR-003; "checksum mode, not CRC"). The mode is fixed by whichever
+        prompt the sender answers. SOH frames carry 128 data bytes; STX frames
+        carry 1024 (XMODEM-1K), so the 1K sender variants are accepted too.
         """
         received_data = bytearray()
         expected_packet = 1
@@ -191,12 +193,13 @@ class XModem:
         # so the first frame byte we read is genuinely the start of a packet.
         self.ser.reset_input_buffer()
 
-        # 1. Establish the connection and the trailer mode. Try CRC ('C') then
-        #    checksum (NAK), waiting for the first frame byte (SOH/STX data, or
-        #    EOT for an empty transfer).
+        # 1. Establish the connection and the trailer mode. Try checksum (NAK)
+        #    then CRC ('C'), waiting for the first frame byte (SOH/STX data, or
+        #    EOT for an empty transfer). NAK is tried first because the CP/M
+        #    senders are checksum-only and abort on a stray 'C'.
         char = b""
-        crc_mode = True
-        for prompt, is_crc in ((b"C", True), (self.NAK, False)):
+        crc_mode = False
+        for prompt, is_crc in ((self.NAK, False), (b"C", True)):
             for _ in range(6):
                 self._write(prompt)
                 char = self._read_byte(timeout=3.0)

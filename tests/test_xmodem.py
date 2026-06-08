@@ -12,6 +12,7 @@ from cpm_fm.terminal.xmodem import XModem
 ACK = b"\x06"
 SOH = b"\x01"
 EOT = b"\x04"
+NAK = b"\x15"
 
 
 class _FakeSerial:
@@ -57,19 +58,21 @@ def test_send_file_reports_progress_per_packet(tmp_path):
     assert calls == [(1, 128, 300), (2, 256, 300), (3, 300, 300)]
 
 
+def _checksum_packet(helper: XModem, seq: int, payload: bytes) -> bytes:
+    # A checksum-mode SOH packet: SOH + seq + ~seq + 128 data + 1-byte checksum.
+    chk = helper._calculate_checksum(payload)
+    return SOH + bytes([seq, 255 - seq]) + payload + bytes([chk])
+
+
 def test_receive_file_reports_progress_with_unknown_total(tmp_path):
     save = tmp_path / "DOWN.TXT"
 
-    # Build two valid CRC-mode SOH packets using the implementation's own CRC.
+    # Build two valid checksum-mode SOH packets (the mode the CP/M senders use).
     helper = XModem(_FakeSerial())
     p1 = bytes(range(128))
     p2 = bytes([0xAA]) * 128
 
-    def packet(seq: int, payload: bytes) -> bytes:
-        crc = helper._crc16(payload)
-        return SOH + bytes([seq, 255 - seq]) + payload + bytes([(crc >> 8) & 0xFF, crc & 0xFF])
-
-    fake = _FakeSerial(packet(1, p1) + packet(2, p2) + EOT)
+    fake = _FakeSerial(_checksum_packet(helper, 1, p1) + _checksum_packet(helper, 2, p2) + EOT)
     calls: list[tuple[int, int, int | None]] = []
     xm = XModem(fake, progress=lambda b, n, t: calls.append((b, n, t)))
 
@@ -77,3 +80,19 @@ def test_receive_file_reports_progress_with_unknown_total(tmp_path):
     # One callback per accepted packet; total is None (length not carried).
     assert calls == [(1, 128, None), (2, 256, None)]
     assert save.read_bytes() == p1 + p2
+
+
+def test_receive_file_polls_checksum_not_crc_first(tmp_path):
+    # Regression: the CP/M senders (PCPUT V1.0) are checksum-only and abort on a
+    # stray 'C' ("Unknown response from host"). The receiver must lead with NAK,
+    # never 'C'. Seed one checksum packet so the handshake locks checksum mode.
+    save = tmp_path / "DOWN.TXT"
+    helper = XModem(_FakeSerial())
+    payload = bytes(range(128))
+    fake = _FakeSerial(_checksum_packet(helper, 1, payload) + EOT)
+    xm = XModem(fake)
+
+    assert xm.receive_file(str(save)) is True
+    assert b"C" not in fake.written  # never poll with the CRC start character
+    assert fake.written[:1] == NAK  # first poll is checksum (NAK)
+    assert save.read_bytes() == payload

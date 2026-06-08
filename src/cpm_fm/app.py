@@ -58,11 +58,14 @@ class MainWindow(QMainWindow):
     # Emitted from a transfer worker thread on success so the destination file
     # list is refreshed on the GUI thread ("host" or "remote").
     transfer_completed = Signal(str)
-    # FR-105: emitted from the transfer worker thread to drive the modal
-    # transfer-progress dialog on the GUI thread (NFR-004). transfer_started
-    # carries (filename, total_bytes, direction); transfer_progress carries
+    # FR-105/FR-106: emitted from the transfer worker thread to drive the single
+    # modal transfer-progress dialog on the GUI thread (NFR-004). batch_started
+    # carries (direction, file_count) and builds the dialog once for the whole
+    # batch; transfer_file_started carries (filename, total_bytes, file_index)
+    # and switches the dialog to the next file; transfer_progress carries
     # (blocks, bytes_done) and fires once per transferred block.
-    transfer_started = Signal(str, int, str)
+    batch_started = Signal(str, int)
+    transfer_file_started = Signal(str, int, int)
     transfer_progress = Signal(int, int)
     # FR-103: emitted (with the selected drive letter) from the drive-change
     # worker thread when the drive's prompt does not appear, so the "Drive not
@@ -130,7 +133,8 @@ class MainWindow(QMainWindow):
         self.remote_files_ready.connect(self._update_remote_list_ui)
         self.error_raised.connect(self._on_error_raised)
         self.transfer_completed.connect(self._on_transfer_completed)
-        self.transfer_started.connect(self._on_transfer_started)
+        self.batch_started.connect(self._on_batch_started)
+        self.transfer_file_started.connect(self._on_transfer_file_started)
         self.transfer_progress.connect(self._on_transfer_progress)
         self.drive_not_found.connect(self._on_drive_not_found)
 
@@ -283,15 +287,21 @@ class MainWindow(QMainWindow):
         elif direction == "remote":
             self.refresh_remote_files()
 
-    def _on_transfer_started(self, filename: str, total_bytes: int, direction: str):
-        # FR-105: runs on the GUI thread (queued from the transfer worker).
-        # Build and show the modal progress dialog. total_bytes is the file
-        # size for sends, or 0 for receives (length is unknown -> indeterminate).
+    def _on_batch_started(self, direction: str, file_count: int):
+        # FR-105/FR-106: runs on the GUI thread (queued from the transfer
+        # worker). Build and show the single modal progress dialog that serves
+        # the whole batch. transfer_file_started then switches it to each file.
         self._close_transfer_dialog()  # defensive: never leak a prior dialog
-        self._transfer_dialog = TransferProgressDialog(
-            self, direction, filename, total_bytes or None
-        )
+        self._transfer_dialog = TransferProgressDialog(self, direction, file_count)
         self._transfer_dialog.show()
+
+    def _on_transfer_file_started(self, filename: str, total_bytes: int, file_index: int):
+        # FR-105/FR-107: runs on the GUI thread (queued from the transfer
+        # worker). Switch the existing batch dialog to the file at 1-based
+        # position file_index. total_bytes is the file size for sends, or 0 for
+        # receives (length is unknown -> indeterminate).
+        if self._transfer_dialog is not None:
+            self._transfer_dialog.set_file(filename, total_bytes or None, file_index)
 
     def _on_transfer_progress(self, blocks: int, bytes_done: int):
         # FR-105: runs on the GUI thread (queued per transferred block).
@@ -506,9 +516,15 @@ class MainWindow(QMainWindow):
 
     # -------------------------------------------------------------- transfers
 
-    def _selected_filename(self, list_widget) -> str | None:
-        items = list_widget.selectedItems()
-        return items[0].text() if items else None
+    def _selected_filenames(self, list_widget) -> list[str]:
+        # FR-106/FR-107: every selected file, in list display order (top to
+        # bottom). selectedItems() does not guarantee display order, so iterate
+        # the rows and keep those that are selected.
+        return [
+            list_widget.item(row).text()
+            for row in range(list_widget.count())
+            if list_widget.item(row).isSelected()
+        ]
 
     def do_copy_to_remote(self):
         # FR-080: a transfer is permitted only when both the Terminal and
@@ -517,13 +533,16 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", "Transport port not connected")
             return
 
-        filename = self._selected_filename(self.host_list)
-        if not filename:
-            QMessageBox.warning(self, "Warning", "Please select a file to upload")
+        # FR-106: transfer every selected file; warn when none is selected.
+        filenames = self._selected_filenames(self.host_list)
+        if not filenames:
+            QMessageBox.warning(self, "Warning", "Please select one or more files to upload")
             return
 
-        filepath = os.path.join(self.host_dir, filename)
-        threading.Thread(target=self._transfer_to_remote, args=(filepath,), daemon=True).start()
+        filepaths = [os.path.join(self.host_dir, name) for name in filenames]
+        threading.Thread(
+            target=self._transfer_to_remote_batch, args=(filepaths,), daemon=True
+        ).start()
 
     def _on_transfer_bytes(self, direction, data):
         # FR-086: echo transfer bytes to the Terminal Window as hex tokens of
@@ -568,6 +587,38 @@ class MainWindow(QMainWindow):
         except (TypeError, ValueError):
             return 3.0
 
+    def _interfile_delay(self) -> float:
+        # FR-109: extra settle time after the terminal output goes idle between
+        # files in a batch, before the next launch command is sent. Tunable via
+        # the `xfer_interfile_delay` setting (UIR-052); default 2s.
+        try:
+            return max(0.0, float(self.settings.get("xfer_interfile_delay", 2.0)))
+        except (TypeError, ValueError):
+            return 2.0
+
+    def _wait_for_terminal_idle(self) -> None:
+        # FR-109: between files in a batch, wait for the previous CP/M transfer
+        # program to finish and the CCP command prompt to return before issuing
+        # the next launch command. Without this, the prior PCPUT/PCGET is still
+        # closing its file and returning to the CCP — and therefore not yet
+        # servicing its (FIFO-less) UART — so the leading characters of the next
+        # command are lost (e.g. "PCPUT X" arriving as "CPUT X"). Mirrors the
+        # idle-detection of _capture_terminal_response: an initial wait for the
+        # completion text to start, then wait for the receive buffer to stop
+        # growing, bounded by a safety maximum, then a final settle. Runs on the
+        # transfer worker thread; it only reads the plain `_rx_buffer` string.
+        idle_window = 0.5
+        max_wait = 8.0
+        time.sleep(1.0)
+        waited = 1.0
+        while waited < max_wait:
+            prev_len = len(self._rx_buffer)
+            time.sleep(idle_window)
+            waited += idle_window
+            if len(self._rx_buffer) == prev_len:
+                break
+        time.sleep(self._interfile_delay())
+
     def _debug_enabled(self) -> bool:
         # FR-088: verbose transfer debug output is emitted to stdout only when
         # the `debug_logging` setting holds an affirmative value (default off).
@@ -582,45 +633,71 @@ class MainWindow(QMainWindow):
         if self._debug_enabled():
             print(msg, flush=True)
 
-    def _transfer_to_remote(self, filepath):
-        self.set_status(f"Uploading {os.path.basename(filepath)}...")
-        try:
-            ser = self.serial_mgr.transport_port
-            delay = self._launch_delay()
-            self._debug(
-                f"[copy-to-remote] start file={os.path.basename(filepath)} "
-                f"cmd={self.settings.get('send_remote_cmd', 'PCGET $1')!r} "
-                f"launch_delay={delay}s transport={ser}"
-            )
-            # Clear stale bytes, then launch the CP/M receiver (PCGET) on the
-            # Terminal Port so its start character lands on a clean transport
-            # buffer that send_file does not flush.
-            if ser:
-                ser.reset_input_buffer()
-            self._issue_remote_cmd("send_remote_cmd", "PCGET $1", os.path.basename(filepath))
-            self._debug(f"[copy-to-remote] launched PCGET; waiting {delay}s before handshake")
-            time.sleep(delay)
-            self._debug("[copy-to-remote] starting X-Modem send")
-            # FR-105: show a progress dialog for the duration of the transfer.
+    def _transfer_to_remote_batch(self, filepaths):
+        # FR-106/FR-107: transfer each selected file sequentially over the
+        # single Transport Port. Runs on a worker thread. FR-105: one progress
+        # dialog serves the whole batch. FR-108: abort on the first failure.
+        count = len(filepaths)
+        self.batch_started.emit("remote", count)
+        succeeded = 0
+        for index, filepath in enumerate(filepaths, start=1):
+            name = os.path.basename(filepath)
+            # FR-109: let CP/M return to its prompt before the next command.
+            if index > 1:
+                self._wait_for_terminal_idle()
+            self.set_status(f"Uploading {name} ({index}/{count})...")
             try:
                 total_bytes = os.path.getsize(filepath)
             except OSError:
                 total_bytes = 0
-            self.transfer_started.emit(os.path.basename(filepath), total_bytes, "remote")
-            xm = XModem(
-                ser,
-                monitor=self._on_transfer_bytes,
-                progress=self._on_transfer_progress_cb,
-            )
-            if xm.send_file(filepath):
-                self.set_status(f"Successfully uploaded {os.path.basename(filepath)}")
-                # Refresh the Remote Files list so the newly uploaded file shows.
-                self.transfer_completed.emit("remote")
-            else:
-                self.error_raised.emit("X-Modem Error", "Transfer failed")
-        except Exception as e:
-            self._debug(f"[copy-to-remote] EXCEPTION: {e!r}")
-            self.error_raised.emit("Error", str(e))
+            self.transfer_file_started.emit(name, total_bytes, index)
+            try:
+                ok = self._send_one_to_remote(filepath)
+            except Exception as e:
+                self._debug(f"[copy-to-remote] EXCEPTION: {e!r}")
+                if succeeded:
+                    self.transfer_completed.emit("remote")
+                self.error_raised.emit("Error", str(e))
+                return
+            if not ok:
+                # FR-108: abort the batch and refresh if anything got through.
+                if succeeded:
+                    self.transfer_completed.emit("remote")
+                self.error_raised.emit(
+                    "X-Modem Error", f"Transfer of {name} failed; remaining files skipped"
+                )
+                return
+            succeeded += 1
+        self.set_status(f"Successfully uploaded {succeeded} file(s)")
+        # FR-099: refresh the Remote Files list so the uploaded files show.
+        self.transfer_completed.emit("remote")
+
+    def _send_one_to_remote(self, filepath) -> bool:
+        # Launch the CP/M receiver (PCGET) and send one file over X-Modem.
+        # Returns True on success. Runs on the batch worker thread; it does not
+        # touch the progress dialog or refresh (the batch driver owns those).
+        ser = self.serial_mgr.transport_port
+        delay = self._launch_delay()
+        self._debug(
+            f"[copy-to-remote] start file={os.path.basename(filepath)} "
+            f"cmd={self.settings.get('send_remote_cmd', 'PCGET $1')!r} "
+            f"launch_delay={delay}s transport={ser}"
+        )
+        # Clear stale bytes, then launch the CP/M receiver (PCGET) on the
+        # Terminal Port so its start character lands on a clean transport
+        # buffer that send_file does not flush.
+        if ser:
+            ser.reset_input_buffer()
+        self._issue_remote_cmd("send_remote_cmd", "PCGET $1", os.path.basename(filepath))
+        self._debug(f"[copy-to-remote] launched PCGET; waiting {delay}s before handshake")
+        time.sleep(delay)
+        self._debug("[copy-to-remote] starting X-Modem send")
+        xm = XModem(
+            ser,
+            monitor=self._on_transfer_bytes,
+            progress=self._on_transfer_progress_cb,
+        )
+        return xm.send_file(filepath)
 
     def do_copy_to_host(self):
         # FR-080: a transfer is permitted only when both the Terminal and
@@ -629,48 +706,78 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", "Transport port not connected")
             return
 
-        filename = self._selected_filename(self.remote_list)
-        if not filename:
-            QMessageBox.warning(self, "Warning", "Please select a file to download")
+        # FR-106: transfer every selected file; warn when none is selected.
+        filenames = self._selected_filenames(self.remote_list)
+        if not filenames:
+            QMessageBox.warning(self, "Warning", "Please select one or more files to download")
             return
 
-        save_path = os.path.join(self.host_dir, filename)
-        threading.Thread(target=self._transfer_to_host, args=(save_path,), daemon=True).start()
+        save_paths = [os.path.join(self.host_dir, name) for name in filenames]
+        threading.Thread(
+            target=self._transfer_to_host_batch, args=(save_paths,), daemon=True
+        ).start()
 
-    def _transfer_to_host(self, save_path):
-        self.set_status(f"Downloading {os.path.basename(save_path)}...")
-        try:
-            ser = self.serial_mgr.transport_port
-            delay = self._launch_delay()
-            self._debug(
-                f"[copy-to-host] start file={os.path.basename(save_path)} "
-                f"cmd={self.settings.get('recv_remote_cmd', 'PCPUT $1')!r} "
-                f"launch_delay={delay}s transport={ser}"
-            )
-            # Launch the CP/M sender (PCPUT) on the Terminal Port, then receive.
-            # receive_file drives the handshake (polls with 'C'), so it tolerates
-            # PCPUT taking several seconds to arm.
-            self._issue_remote_cmd("recv_remote_cmd", "PCPUT $1", os.path.basename(save_path))
-            self._debug(f"[copy-to-host] launched PCPUT; waiting {delay}s before handshake")
-            time.sleep(delay)
-            self._debug("[copy-to-host] starting X-Modem receive")
-            # FR-105: show a progress dialog. The X-Modem stream carries no
-            # length, so total_bytes is 0 (indeterminate progress bar).
-            self.transfer_started.emit(os.path.basename(save_path), 0, "host")
-            xm = XModem(
-                ser,
-                monitor=self._on_transfer_bytes,
-                progress=self._on_transfer_progress_cb,
-            )
-            if xm.receive_file(save_path):
-                self.set_status(f"Successfully downloaded {os.path.basename(save_path)}")
-                # Refresh the Host Files list so the newly downloaded file shows.
-                self.transfer_completed.emit("host")
-            else:
-                self.error_raised.emit("X-Modem Error", "Transfer failed")
-        except Exception as e:
-            self._debug(f"[copy-to-host] EXCEPTION: {e!r}")
-            self.error_raised.emit("Error", str(e))
+    def _transfer_to_host_batch(self, save_paths):
+        # FR-106/FR-107: receive each selected file sequentially over the single
+        # Transport Port. Runs on a worker thread. FR-105: one progress dialog
+        # serves the whole batch. FR-108: abort on the first failure.
+        count = len(save_paths)
+        self.batch_started.emit("host", count)
+        succeeded = 0
+        for index, save_path in enumerate(save_paths, start=1):
+            name = os.path.basename(save_path)
+            # FR-109: let CP/M return to its prompt before the next command.
+            if index > 1:
+                self._wait_for_terminal_idle()
+            self.set_status(f"Downloading {name} ({index}/{count})...")
+            # The X-Modem stream carries no length, so total_bytes is 0
+            # (indeterminate progress bar).
+            self.transfer_file_started.emit(name, 0, index)
+            try:
+                ok = self._recv_one_to_host(save_path)
+            except Exception as e:
+                self._debug(f"[copy-to-host] EXCEPTION: {e!r}")
+                if succeeded:
+                    self.transfer_completed.emit("host")
+                self.error_raised.emit("Error", str(e))
+                return
+            if not ok:
+                # FR-108: abort the batch and refresh if anything got through.
+                if succeeded:
+                    self.transfer_completed.emit("host")
+                self.error_raised.emit(
+                    "X-Modem Error", f"Transfer of {name} failed; remaining files skipped"
+                )
+                return
+            succeeded += 1
+        self.set_status(f"Successfully downloaded {succeeded} file(s)")
+        # FR-099: refresh the Host Files list so the downloaded files show.
+        self.transfer_completed.emit("host")
+
+    def _recv_one_to_host(self, save_path) -> bool:
+        # Launch the CP/M sender (PCPUT) and receive one file over X-Modem.
+        # Returns True on success. Runs on the batch worker thread; it does not
+        # touch the progress dialog or refresh (the batch driver owns those).
+        ser = self.serial_mgr.transport_port
+        delay = self._launch_delay()
+        self._debug(
+            f"[copy-to-host] start file={os.path.basename(save_path)} "
+            f"cmd={self.settings.get('recv_remote_cmd', 'PCPUT $1')!r} "
+            f"launch_delay={delay}s transport={ser}"
+        )
+        # Launch the CP/M sender (PCPUT) on the Terminal Port, then receive.
+        # receive_file drives the handshake (polls with 'C'), so it tolerates
+        # PCPUT taking several seconds to arm.
+        self._issue_remote_cmd("recv_remote_cmd", "PCPUT $1", os.path.basename(save_path))
+        self._debug(f"[copy-to-host] launched PCPUT; waiting {delay}s before handshake")
+        time.sleep(delay)
+        self._debug("[copy-to-host] starting X-Modem receive")
+        xm = XModem(
+            ser,
+            monitor=self._on_transfer_bytes,
+            progress=self._on_transfer_progress_cb,
+        )
+        return xm.receive_file(save_path)
 
     # ------------------------------------------------------------------ config
 
