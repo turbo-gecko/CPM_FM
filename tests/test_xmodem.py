@@ -1,0 +1,79 @@
+"""Unit tests for the X-Modem progress hook (FR-105).
+
+These drive ``XModem.send_file`` / ``receive_file`` against an in-memory fake
+serial port — no hardware, no real sleeps — and assert that the ``progress``
+callback fires once per transferred block with correctly accumulating block and
+byte counts, and the right ``total_bytes`` (file size on send, ``None`` on
+receive, since X-Modem carries no length).
+"""
+
+from cpm_fm.terminal.xmodem import XModem
+
+ACK = b"\x06"
+SOH = b"\x01"
+EOT = b"\x04"
+
+
+class _FakeSerial:
+    """Minimal in-memory serial: reads pop from a pre-seeded byte queue,
+    writes are captured. ``reset_input_buffer`` is a no-op so seeded receive
+    data is not discarded by ``receive_file``'s initial flush (in a real port
+    the bytes would arrive from the remote after the flush)."""
+
+    def __init__(self, to_read: bytes = b""):
+        self._inbuf = bytearray(to_read)
+        self.written = bytearray()
+
+    @property
+    def in_waiting(self) -> int:
+        return len(self._inbuf)
+
+    def read(self, n: int = 1) -> bytes:
+        chunk = bytes(self._inbuf[:n])
+        del self._inbuf[:n]
+        return chunk
+
+    def write(self, data: bytes) -> int:
+        self.written += data
+        return len(data)
+
+    def reset_input_buffer(self) -> None:
+        pass
+
+
+def test_send_file_reports_progress_per_packet(tmp_path):
+    # 300 bytes -> three 128-byte packets (128, 128, 44 real bytes).
+    path = tmp_path / "UP.TXT"
+    path.write_bytes(bytes(range(256)) + bytes(44))  # 300 bytes
+
+    # Receiver answers: 'C' (request CRC mode) then one ACK per packet + EOT ACK.
+    fake = _FakeSerial(b"C" + ACK * 4)
+    calls: list[tuple[int, int, int | None]] = []
+    xm = XModem(fake, progress=lambda b, n, t: calls.append((b, n, t)))
+
+    assert xm.send_file(str(path)) is True
+    # One callback per data packet (not for the EOT), cumulative byte counts,
+    # total_bytes == file size throughout.
+    assert calls == [(1, 128, 300), (2, 256, 300), (3, 300, 300)]
+
+
+def test_receive_file_reports_progress_with_unknown_total(tmp_path):
+    save = tmp_path / "DOWN.TXT"
+
+    # Build two valid CRC-mode SOH packets using the implementation's own CRC.
+    helper = XModem(_FakeSerial())
+    p1 = bytes(range(128))
+    p2 = bytes([0xAA]) * 128
+
+    def packet(seq: int, payload: bytes) -> bytes:
+        crc = helper._crc16(payload)
+        return SOH + bytes([seq, 255 - seq]) + payload + bytes([(crc >> 8) & 0xFF, crc & 0xFF])
+
+    fake = _FakeSerial(packet(1, p1) + packet(2, p2) + EOT)
+    calls: list[tuple[int, int, int | None]] = []
+    xm = XModem(fake, progress=lambda b, n, t: calls.append((b, n, t)))
+
+    assert xm.receive_file(str(save)) is True
+    # One callback per accepted packet; total is None (length not carried).
+    assert calls == [(1, 128, None), (2, 256, None)]
+    assert save.read_bytes() == p1 + p2

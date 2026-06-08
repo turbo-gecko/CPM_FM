@@ -1,0 +1,11 @@
+{
+    "terminal_port": "COM7",
+    "transport_port": "COM7",
+    "speed": "115200",
+    "data": "8",
+    "parity": "NONE",
+    "stopbits": "1",
+    "flow": "RTS/CTS",
+    "msec_char": "0",
+    "msec_line": "0"
+}

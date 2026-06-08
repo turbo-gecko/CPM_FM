@@ -29,17 +29,18 @@ class CPMParser:
                 continue
 
             # 2. Identify file listing lines
-            # Must start with drive identifier (e.g., 'C:') and contain ' : '
+            # Must start with a drive identifier (e.g., 'C:'). The ' : ' sequence
+            # is only the delimiter *between* multiple entries on a line, so a
+            # directory containing a single file has no ' : ' — such lines must
+            # still be processed (DR-004/DR-005, DR-011).
             if not (len(line) > 1 and line[0].isalpha() and line[1] == ":"):
-                continue
-
-            if " : " not in line:
                 continue
 
             # 3. Strip drive identifier (e.g., remove 'C:')
             content = line[2:].strip()
 
-            # 4. Split file entries using the delimiter ' : '
+            # 4. Split file entries using the delimiter ' : ' (a single-file line
+            # has no delimiter and yields one entry).
             entries = content.split(" : ")
 
             for entry in entries:
@@ -74,3 +75,21 @@ class CPMParser:
                 filenames[full_filename] = True
 
         return filenames
+
+    @staticmethod
+    def has_drive_prompt(text: str, drive: str) -> bool:
+        """Return True if a CP/M drive prompt for ``drive`` (e.g. ``A>``)
+        appears on any non-blank line of ``text`` (DR-033).
+
+        After a drive-change command (``<letter>:``) CP/M responds with a new
+        drive prompt — the drive letter followed by ``>``. Blank lines returned
+        by the terminal are ignored. Matching is case-insensitive.
+        """
+        target = f"{drive.upper()}>"
+        for line in text.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            if line.upper().startswith(target):
+                return True
+        return False

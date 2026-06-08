@@ -23,12 +23,18 @@ class XModem:
         serial_conn: serial.Serial,
         timeout: float = 1.0,
         monitor: Optional[Callable[[str, bytes], None]] = None,
+        progress: Optional[Callable[[int, int, Optional[int]], None]] = None,
     ):
         self.ser = serial_conn
         self.timeout = timeout
         # FR-086: optional observer invoked with ("tx"|"rx", data) for every
         # byte sent or received, so callers can echo the transfer to a display.
         self.monitor = monitor
+        # FR-105: optional observer invoked once per accepted data packet with
+        # (blocks, bytes_done, total_bytes) so callers can drive a progress
+        # dialog. total_bytes is the file size when known (send_file) or None
+        # when the protocol does not carry it (receive_file).
+        self.progress = progress
 
     def _write(self, data: bytes) -> None:
         """Write bytes to the port, reporting them to the monitor (FR-086)."""
@@ -120,7 +126,10 @@ class XModem:
             return False
         crc_mode = start == b"C"
 
+        total = len(data)
         packet_num = 1  # X-Modem data packets are numbered from 1.
+        blocks = 0
+        bytes_done = 0
         offset = 0
 
         while offset < len(data):
@@ -128,8 +137,9 @@ class XModem:
             # NFR-003: the final short chunk is padded to a full 128-byte data
             # field with the PAD byte before the trailer is computed.
             chunk = data[offset : offset + 128]
-            if len(chunk) < 128:
-                chunk = chunk + bytes([self.PAD]) * (128 - len(chunk))
+            real_len = len(chunk)  # bytes from the file, before padding
+            if real_len < 128:
+                chunk = chunk + bytes([self.PAD]) * (128 - real_len)
 
             packet = (
                 self.SOH
@@ -147,6 +157,12 @@ class XModem:
                     break
             else:
                 return False  # Too many NAKs/timeouts
+
+            # FR-105: report progress once the packet is acknowledged.
+            blocks += 1
+            bytes_done += real_len
+            if self.progress:
+                self.progress(blocks, bytes_done, total)
 
             offset += 128
             packet_num = (packet_num + 1) % 256
@@ -169,6 +185,7 @@ class XModem:
         """
         received_data = bytearray()
         expected_packet = 1
+        blocks = 0  # FR-105: count of accepted data packets, for progress
 
         # Drop any stale bytes (e.g. a CAN left from a previous aborted run)
         # so the first frame byte we read is genuinely the start of a packet.
@@ -222,6 +239,12 @@ class XModem:
                 if header[0] == expected_packet:
                     received_data.extend(payload)
                     expected_packet = (expected_packet + 1) % 256
+                    # FR-105: report progress for each newly stored packet. The
+                    # X-Modem stream carries no length, so total_bytes is None;
+                    # bytes_done counts received payload (incl. EOF padding).
+                    blocks += 1
+                    if self.progress:
+                        self.progress(blocks, len(received_data), None)
                 self._write(self.ACK)
 
             char = self._read_byte(timeout=10.0)

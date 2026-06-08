@@ -46,13 +46,21 @@ class _FakeSerial:
 
 def _fake_xmodem_cls(success):
     class _FakeXModem:
-        def __init__(self, ser, monitor=None):
-            pass
+        def __init__(self, ser, monitor=None, progress=None):
+            self.progress = progress
+
+        def _report(self):
+            # FR-105: exercise the progress hook so the transfer_progress signal
+            # path runs during the smoke test.
+            if self.progress:
+                self.progress(1, 128, 128)
 
         def send_file(self, path):
+            self._report()
             return success
 
         def receive_file(self, path):
+            self._report()
             return success
 
     return _FakeXModem
@@ -111,6 +119,143 @@ def test_failed_transfer_does_not_refresh(qapp, monkeypatch, state):
         win._transfer_to_host(os.path.join(win.host_dir, "FOO.TXT"))
         qapp.processEvents()
         assert calls == []
+    finally:
+        win.close()
+
+
+def test_progress_dialog_started_and_updates(qapp, state):
+    # FR-105/UIR-051: transfer_started builds the modal dialog naming the file;
+    # transfer_progress updates the blocks/bytes label.
+    win = MainWindow(state)
+    try:
+        win._on_transfer_started("FOO.TXT", 256, "remote")
+        dlg = win._transfer_dialog
+        assert dlg is not None
+        assert dlg.windowTitle() == "Sending File"
+        assert "FOO.TXT" in dlg.file_label.text()
+
+        win._on_transfer_progress(2, 256)
+        assert dlg.count_label.text() == "Blocks: 2    Bytes: 256"
+    finally:
+        win.close()
+
+
+def test_progress_dialog_title_for_receive(qapp, state):
+    # UIR-051: the host (receive) direction titles the dialog "Receiving File".
+    win = MainWindow(state)
+    try:
+        win._on_transfer_started("BAR.TXT", 0, "host")
+        assert win._transfer_dialog is not None
+        assert win._transfer_dialog.windowTitle() == "Receiving File"
+    finally:
+        win.close()
+
+
+def test_progress_dialog_closes_on_completion(qapp, monkeypatch, state):
+    # FR-105: a successful transfer auto-closes the progress dialog.
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: None)
+        win._on_transfer_started("FOO.TXT", 128, "remote")
+        assert win._transfer_dialog is not None
+        win._on_transfer_completed("remote")
+        assert win._transfer_dialog is None
+    finally:
+        win.close()
+
+
+def test_progress_dialog_closes_on_error(qapp, monkeypatch, state):
+    # FR-105: a failed transfer auto-closes the progress dialog before the error.
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: None)
+        win._on_transfer_started("FOO.TXT", 128, "remote")
+        assert win._transfer_dialog is not None
+        win._on_error_raised("X-Modem Error", "Transfer failed")
+        assert win._transfer_dialog is None
+    finally:
+        win.close()
+
+
+def test_transfer_run_leaves_no_progress_dialog(qapp, monkeypatch, state):
+    # FR-105: end-to-end through a stubbed transfer, the dialog is opened then
+    # closed, leaving no leaked dialog once the queued signals are delivered.
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: None)
+        _arm_transfer(win, monkeypatch)
+        win._transfer_to_remote(os.path.join(win.host_dir, "FOO.TXT"))
+        qapp.processEvents()
+        assert win._transfer_dialog is None
+    finally:
+        win.close()
+
+
+def test_drive_combo_lists_a_to_p(qapp, state):
+    # UIR-017: the drive-selection drop-down lists A: through P: (16 drives).
+    win = MainWindow(state)
+    try:
+        items = [win.drive_combo.itemText(i) for i in range(win.drive_combo.count())]
+        assert items == [f"{chr(c)}:" for c in range(ord("A"), ord("P") + 1)]
+    finally:
+        win.close()
+
+
+def test_change_drive_success_refreshes_remote_list(qapp, monkeypatch, state):
+    # FR-102: when the "<letter>>" prompt appears, the remote list is populated
+    # exactly as Update does. Stub the capture to avoid real serial/sleeps.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        monkeypatch.setattr(win, "_capture_terminal_response", lambda cmd: "B:\nB>\n")
+        calls = []
+        monkeypatch.setattr(win, "_do_refresh_remote_logic", lambda: calls.append("refresh"))
+        win._do_change_drive_logic("B")
+        assert calls == ["refresh"]
+    finally:
+        win.close()
+
+
+def test_change_drive_not_found_clears_list_and_warns(qapp, monkeypatch, state):
+    # FR-103: no "<letter>>" prompt -> clear the remote list and warn the user.
+    win = MainWindow(state)
+    try:
+        win.remote_list.addItem("STALE.TXT")
+        win.serial_mgr.terminal_connected = True
+        monkeypatch.setattr(win, "_capture_terminal_response", lambda cmd: "\nnot ready\n")
+        warned = []
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.warning", lambda *a, **k: warned.append(a[1:]))
+        win._do_change_drive_logic("B")
+        qapp.processEvents()  # deliver the queued drive_not_found signal
+        assert win.remote_list.count() == 0
+        assert warned == [("Drive not found", "Drive B: not found")]
+    finally:
+        win.close()
+
+
+def test_change_drive_requires_open_terminal(qapp, monkeypatch, state):
+    # FR-104: selecting a drive with the Terminal Port closed clears the list,
+    # sets the status, and starts no worker thread.
+    win = MainWindow(state)
+    try:
+        win.remote_list.addItem("STALE.TXT")
+        win.serial_mgr.terminal_connected = False
+        started = []
+
+        class _RecordingThread:
+            def __init__(self, *a, **k):
+                started.append(a)
+
+            def start(self):
+                pass
+
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win.drive_combo.setCurrentIndex(1)  # "B:"
+        win.change_drive(1)
+        qapp.processEvents()
+        assert started == []
+        assert win.remote_list.count() == 0
+        assert win.statusBar().currentMessage() == "Terminal port not open - cannot read file list"
     finally:
         win.close()
 

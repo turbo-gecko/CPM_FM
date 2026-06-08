@@ -4,11 +4,11 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 1.4 |
+| Version | 1.5 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
-| Date | 2026-06-06 |
+| Date | 2026-06-08 |
 | Source documents | `docs/legacy/App_Requirements.md`, `docs/legacy/App_Design.md` (archived) |
 
 ---
@@ -165,6 +165,16 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | FR-078 | The application shall populate the Remote Files list with the entries produced by the parsing algorithm, displaying the dictionary keys (filenames) sorted in ascending alphabetical order. | Mandatory | T | App_Design §Populating remote file list; impl. `app.py:_update_remote_list_ui` |
 | FR-079 | On successful population of the remote file list, the application shall update the status bar with the text "Remote file list updated". | Mandatory | D | App_Requirements §Populating remote file list |
 
+### 3.7.1 Remote drive selection
+
+| ID | Requirement | Priority | Verification | Source |
+|----|-------------|----------|--------------|--------|
+| FR-100 | When a drive letter is selected from the drive-selection drop-down (UIR-017), the application shall send that drive letter followed by `:` and the configured EOL character(s) to the Terminal Port and to the receive text area. | Mandatory | T | impl. `app.py:change_drive`, `_do_change_drive_logic`, `_capture_terminal_response` |
+| FR-101 | After sending the drive-change command, the application shall capture the Terminal Port response using the same wait mechanism as FR-076, ignoring any blank lines returned by the terminal. | Mandatory | T | impl. `app.py:_capture_terminal_response`; `cpm_parser.py:has_drive_prompt` |
+| FR-102 | If a drive prompt of the form `<letter>>` (the selected drive letter followed by `>`) appears in the captured response, the application shall populate the Remote Files list following the "Populating remote file list" process (FR-074–FR-079), as if the Update button had been pressed. | Mandatory | T | impl. `app.py:_do_change_drive_logic`, `_do_refresh_remote_logic` |
+| FR-103 | If the `<letter>>` drive prompt does not appear in the captured response, the application shall clear the Remote Files list and display a modal dialog with an OK button whose message names the selected drive, of the form "Drive `<letter>`: not found" (e.g. "Drive B: not found"). | Mandatory | T | impl. `app.py:_do_change_drive_logic`, `_on_drive_not_found`, `drive_not_found` signal |
+| FR-104 | If the Terminal Port is not open when a drive is selected, the application shall set the status bar text to "Terminal port not open - cannot read file list" and clear the Remote Files list (consistent with FR-074). | Mandatory | T | impl. `app.py:change_drive` |
+
 ### 3.8 File transfers
 
 | ID | Requirement | Priority | Verification | Source |
@@ -180,6 +190,7 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | FR-088 | The application shall emit verbose transfer debug output (per-byte X-Modem trace and transfer flow messages) to standard output only when the `debug_logging` setting holds an affirmative value (`ON`/`TRUE`/`1`/`YES`, case-insensitive); the default is off. | Mandatory | T | impl. `app.py:_debug`, `_debug_enabled`, `_on_transfer_bytes`; UIR-050 |
 | FR-089 | After launching the CP/M side of a transfer (FR-087), the application shall wait `xfer_launch_delay` seconds (default 3) before sending the first X-Modem start character, so that start-character prompts do not arrive while the remote program is still starting up and not yet servicing its UART. | Mandatory | T | impl. `app.py:_launch_delay`; UIR-049 |
 | FR-099 | On a **successful** file transfer the application shall automatically refresh the destination file list so the transferred file appears without manual intervention: after a successful Copy to Host it shall refresh the Host Files list (per FR-060), and after a successful Copy to Remote it shall refresh the Remote Files list (per the FR-074–FR-079 process). A failed transfer shall not trigger a refresh. *(v1.3.2: fixes the defect where a transferred file did not appear in the destination list until manually refreshed.)* | Mandatory | T | impl. `app.py:_on_transfer_completed`, `transfer_completed` signal, `_transfer_to_remote`, `_transfer_to_host` |
+| FR-105 | While an X-Modem file transfer (either direction) is in progress, the application shall display a modal progress dialog (UIR-051) showing the name of the file being transferred and the cumulative number of blocks and bytes transferred. The blocks/bytes count shall be updated after each block is transferred (each acknowledged 128-byte packet on send; each accepted packet on receive). The application shall close the dialog automatically when the transfer completes, on both success and failure. Progress updates originate on the transfer worker thread and shall be delivered to the GUI thread via Qt signals (NFR-004). *(v1.5.)* | Mandatory | T | impl. `xmodem.py` progress hook; `gui/transfer_dialog.py`; `app.py:_on_transfer_started`, `_on_transfer_progress`, `_close_transfer_dialog`, `_on_transfer_progress_cb`, `transfer_started`/`transfer_progress` signals |
 
 ### 3.9 Terminal window — receive and transmit
 
@@ -213,11 +224,12 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 |----|-------------|----------|--------------|--------|
 | UIR-010 | The main window shall contain a status bar at the bottom. | Mandatory | I | App_Requirements §Main Program GUI |
 | UIR-011 | The main window shall contain a "Host Files" group containing a "Change Directory" button, a multi-select widget, and a row underneath the widget containing "Refresh Host" and "Copy to Remote" buttons. | Mandatory | I | App_Requirements §Main Program GUI |
-| UIR-012 | The main window shall contain a "Remote Files" group containing an "Update" button, a multi-select widget, and a row underneath the widget containing the "Copy to Host" button. | Mandatory | I | App_Requirements §Main Program GUI |
+| UIR-012 | The main window shall contain a "Remote Files" group containing a drive-selection drop-down (UIR-017) followed by an "Update" button, a multi-select widget, and a row underneath the widget containing the "Copy to Host" button. | Mandatory | I | App_Requirements §Main Program GUI |
 | UIR-013 | The main window shall provide the actions Connect, Disconnect, Copy to Remote, Copy to Host, Refresh Host, and Terminal. From v1.3 these are presented as a top toolbar (see UIR-071) or within the file panes rather than a central button column. | Mandatory | I | App_Requirements §Main Program GUI; impl. `app.py`; v1.3 UI migration |
 | UIR-014 | The status bar shall be a single-line text label. When a status message exceeds 127 characters, the application shall truncate it to the first 127 characters before display. | Mandatory | T | App_Requirements §Status Bar; impl. `app.py:set_status` |
 | UIR-015 | The Connect button shall be enabled at startup. | Mandatory | I | App_Requirements §Connect |
 | UIR-016 | The main window shall provide a separate Disconnect button, enabled at startup, that invokes the disconnect behaviour (FR-050–FR-057). | Mandatory | I | App_Requirements §Disconnect; impl. `app.py` |
+| UIR-017 | The Remote Files group shall contain a drive-selection drop-down, positioned immediately before the Update button, listing the drive letters `A:` through `P:`. The drop-down shall be wide enough to display the selected drive without clipping. Selecting an item triggers the remote drive-change behaviour (FR-100–FR-104). | Mandatory | I | impl. `app.py:setup_layout`, `change_drive` |
 
 ### 4.3 Serial Configuration Dialog
 
@@ -243,7 +255,7 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | UIR-040 | The General Configuration Dialog shall be a modal dialog titled "General Config". | Mandatory | I | App_Requirements §General Configuration Dialog |
 | UIR-041 | The dialog shall present a "Terminal Commands" group laid out in two columns as in UIR-021. | Mandatory | I | App_Requirements §General Configuration Dialog |
 | UIR-042 | The dialog shall provide a "List Files" text field limited to 79 characters with a default value of "DIR". | Mandatory | T | App_Requirements §General Configuration Dialog |
-| UIR-043 | The dialog shall provide a "Change Disk" text field limited to 79 characters with an empty default value, persisted as the `change_disk_cmd` setting. *(The command is stored for future use; no current functional requirement sends it to the remote — see CR-011.)* | Mandatory | T | App_Requirements §General Configuration Dialog |
+| UIR-043 | *Withdrawn.* Formerly a "Change Disk" text field persisted as `change_disk_cmd`. Removed because the command was never sent to the remote and the drive-change behaviour is now provided by the Remote Files drive drop-down (FR-100–FR-104, UIR-017). The field and setting are no longer present in the dialog or config files. | — | — | — |
 | UIR-044 | The dialog shall present an "Xmodem Commands" group laid out in two columns as in UIR-021. | Mandatory | I | App_Requirements §General Configuration Dialog |
 | UIR-045 | The dialog shall provide a "Receive from Remote" text field limited to 79 characters with a default value of "PCPUT $1". | Mandatory | T | App_Requirements §General Configuration Dialog |
 | UIR-046 | The dialog shall provide a "Send to Remote" text field limited to 79 characters with a default value of "PCGET $1". | Mandatory | T | App_Requirements §General Configuration Dialog |
@@ -275,6 +287,12 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | UIR-073 | The application shall, at startup, detect the host operating system's light/dark colour-scheme preference and apply the corresponding (light or dark) variant of the Material theme. If the preference cannot be determined, the application shall default to the dark variant. | Mandatory | T | v1.3 UI migration |
 | UIR-074 | The status bar (UIR-010) shall display two connection indicators — one for the Terminal status flag (FR-001) and one for the Transport status flag (FR-002) — each rendering a distinct visual state for connected versus not-connected. | Desirable | D | v1.3 UI migration |
 
+### 4.7 Transfer Progress Dialog
+
+| ID | Requirement | Priority | Verification | Source |
+|----|-------------|----------|--------------|--------|
+| UIR-051 | The Transfer Progress Dialog (FR-105) shall be a modal dialog titled "Sending File" (Copy to Remote) or "Receiving File" (Copy to Host). It shall display a label naming the file being transferred, a label showing the running "Blocks" and "Bytes" counts, and a progress bar. When the total size is known (sends) the progress bar shall track bytes transferred against the file size; when the total is unknown (receives) the progress bar shall be indeterminate. The dialog shall not present a manual close control — its lifetime is owned by the transfer (FR-105). *(v1.5.)* | Mandatory | T | impl. `gui/transfer_dialog.py:TransferProgressDialog`; FR-105 |
+
 ---
 
 ## 5. External Interface Requirements
@@ -301,7 +319,7 @@ The following requirements define the algorithm for extracting remote file names
 | DR-002 | The parser shall ignore lines that begin with a shell prompt of the form `C>` where `C` may be any drive letter. | Mandatory | T | App_Design §Ignore non-file lines |
 | DR-003 | The parser shall ignore lines that contain the substring "NO FILE". | Mandatory | T | App_Design §Ignore non-file lines |
 | DR-004 | The parser shall process only lines that start with the literal prefix `C:` (where `C` may be any drive letter). | Mandatory | T | App_Design §Identify file listing lines |
-| DR-005 | The parser shall process only lines that contain at least one occurrence of the separator sequence space-colon-space (" : "). | Mandatory | T | App_Design §Identify file listing lines |
+| DR-005 | The parser shall process every line that starts with the drive prefix (DR-004), whether or not it contains the separator sequence space-colon-space (" : "). The separator only delimits multiple file entries on a line (DR-011); a directory containing a single file produces a line with no separator, which shall still be processed. *(v1.3.3: fixes the defect where a directory with a single file showed no entries because the separator was wrongly required as a line filter.)* | Mandatory | T | App_Design §Identify file listing lines; impl. `cpm_parser.py:parse_dir_output` |
 
 ### 6.2 Entry extraction
 
@@ -324,6 +342,7 @@ The following requirements define the algorithm for extracting remote file names
 | DR-024 | The parser shall not raise exceptions for invalid or unexpected input. | Mandatory | T | App_Design §Handle edge cases |
 | DR-025 | The parser shall return an empty dictionary if no valid file entries are found. | Mandatory | T | App_Design §Handle edge cases |
 | DR-026 | The parser shall tolerate irregular spacing, extra colons within filenames, and mixed line endings (`\n`, `\r\n`). | Mandatory | T | App_Design §Input robustness |
+| DR-033 | The drive-prompt detection routine shall report a drive prompt for drive `X` as present when any non-blank line of the captured terminal text, after stripping surrounding whitespace and comparing case-insensitively, starts with `X>`. Blank lines shall be ignored. | Mandatory | T | impl. `cpm_parser.py:has_drive_prompt`; FR-101, FR-102 |
 
 ### 6.4 Parser constraints
 
@@ -349,7 +368,7 @@ The following requirements define the algorithm for extracting remote file names
 | CR-008 | Source files shall be named in `snake_case` after the component they implement (e.g. `serial_manager.py`, `cpm_parser.py`), not necessarily identically to a contained class name. | Mandatory | I | App_Design §Class Files (relaxed in v1.2 to as-built) |
 | CR-009 | All Python source files shall adhere to the PEP 8 standard. | Mandatory | T | App_Design §Code Quality |
 | CR-010 | The Copy to Remote and Copy to Host actions shall be guarded so that a transfer is only attempted when **both** the Terminal status flag and the Transport status flag are true (consistent with FR-080); otherwise an error dialog with the body text "Transport port not connected" shall be shown and the transfer shall not proceed. | Mandatory | T | App_Requirements §Copy to Remote, §Copy to Host; impl. `app.py:do_copy_to_remote`, `do_copy_to_host` |
-| CR-011 | The following settings are persisted but their behaviour is deferred to a future release and is not implemented in the current baseline: `change_disk_cmd` (UIR-043), `msec_char` (UIR-030), and `msec_line` (UIR-031). *(v1.3.1: `recv_remote_cmd`/`send_remote_cmd` are no longer deferred — see FR-087.)* | Mandatory | I | impl. survey of `app.py` |
+| CR-011 | The following settings are persisted but their behaviour is deferred to a future release and is not implemented in the current baseline: `msec_char` (UIR-030) and `msec_line` (UIR-031). *(v1.3.1: `recv_remote_cmd`/`send_remote_cmd` are no longer deferred — see FR-087. Later: `change_disk_cmd` was removed entirely rather than deferred — see UIR-043 (Withdrawn), FR-100–FR-104.)* | Mandatory | I | impl. survey of `app.py` |
 | CR-012 | The graphical user interface shall be implemented with **PySide6 (Qt for Python)**. Tkinter shall not be used for any GUI component. PySide6 shall be declared as a runtime dependency in `pyproject.toml`. | Mandatory | I | v1.3 UI migration |
 | CR-013 | The Material Design visual theme (UIR-070) shall be supplied by the `qt-material` package, declared as a runtime dependency in `pyproject.toml`. The theme shall be applied centrally at application start-up (not per-widget), so that all current and future windows inherit it. | Mandatory | I | v1.3 UI migration |
 | CR-014 | The GUI, serial/terminal (`terminal/`), and configuration (`utils/`) layers shall remain decoupled such that the `terminal/` and `utils/` modules contain no PySide6 (or other GUI-toolkit) imports and remain unit-testable without a running Qt application. | Mandatory | T | CLAUDE.md §Architecture; v1.3 UI migration |
@@ -405,7 +424,7 @@ closed.
 |----|-------|------------|----------|-----------------------|
 | OI-01 | Whether a separate Disconnect control exists alongside Connect. | **Resolved.** A separate Disconnect button exists and is enabled at startup; Connect does not toggle. Added UIR-016 and updated UIR-013. | `app.py:75` (`btn_disconnect`) | UIR-013, UIR-016, FR-050–FR-057 |
 | OI-02 | Behaviour when a status message exceeds 127 characters. | **Resolved.** The application truncates the message to its first 127 characters. Updated UIR-014. | `app.py:105` (`text[:127]`) | UIR-014 |
-| OI-03 | When/how the "Change Disk" command is sent. | **Resolved.** The command is stored as `change_disk_cmd` but is not sent in the current baseline; behaviour is deferred. Updated UIR-043 and added CR-011. | No send site in `app.py` | UIR-043, CR-011 |
+| OI-03 | When/how the "Change Disk" command is sent. | **Resolved.** The deferred `change_disk_cmd` setting and its "Change Disk" field were removed; remote drive changes are now performed via the Remote Files drive drop-down. UIR-043 withdrawn. | `app.py:change_drive`, `_do_change_drive_logic` | UIR-043, FR-100–FR-104, UIR-017 |
 | OI-04 | NFR-001 lacked a measurable acceptance criterion. | **Resolved.** NFR-001 rewritten with concrete criteria: background daemon thread for reads, per-transfer daemon threads, GUI updates via `self.after(0, ...)`. | `serial_manager.py:_read_loop`; `app.py` transfer threads | NFR-001 |
 | OI-05 | X-Modem mode and packet size unconfirmed. | **Resolved.** 128-byte packets, SOH framing, checksum mode (sum mod 256). NFR-003 firmed up. | `xmodem.py:36-38, 63-69` | NFR-003, FR-082 |
 | OI-06 | Mapping between parser dictionary and displayed list. | **Resolved.** The dictionary keys are displayed sorted in ascending alphabetical order. Updated FR-078. | `app.py:194` (`sorted(files_dict.keys())`) | FR-077, FR-078, DR-021 |
@@ -437,4 +456,5 @@ closed.
 | 1.1 | 2026-06-06 | Requirements Checker | Resolved all open issues (OI-01–OI-08) by inspecting the implementation under `src/cpm_fm/`. **Added:** UIR-016 (Disconnect button), FR-097 (Terminal button behaviour), FR-098 (send-with-port-closed status), CR-011 (deferred settings). **Modified:** UIR-013 (added Disconnect to button set), UIR-014 (127-char truncation behaviour), UIR-030/UIR-031 (transmit-delay stored-only note), UIR-043 (Change Disk stored-only note), FR-078 (sorted remote-list display), CR-010 (as-built transfer guarding vs. stub spec), NFR-001 (measurable threading criteria), NFR-002 (key-name normalisation detail), NFR-003 (SOH/checksum X-Modem detail). Converted §10 from an open-issues list to a closed issue-resolution log. Updated §9 traceability. Status advanced from Draft to Reviewed. |
 | 1.3 | 2026-06-06 | UI Migration | Specified migration of the GUI from Tkinter to **PySide6 (Qt for Python)** with a Material Design theme, per stakeholder decision (framework: PySide6; theme: `qt-material`; default theme mode: follow OS; full requirement traceability requested). **Added:** UIR-070 (Material theme), UIR-071 (top toolbar), UIR-072 (draggable splitter between panes), UIR-073 (OS-following light/dark default, dark fallback), UIR-074 (status-bar connection indicators, Desirable), CR-012 (PySide6 mandated, no Tkinter), CR-013 (`qt-material` theme applied centrally at start-up), CR-014 (GUI/`terminal`/`utils` decoupling — no GUI imports in non-GUI layers), NFR-004 (Qt signal/slot thread-safety). **Modified:** §1.2 Scope and §1.4 Definitions (Qt/PySide6/QSS/Material added), STR-002 (PySide6 noted), UIR-013 (actions presented as a toolbar from v1.3), NFR-001 (cross-thread GUI updates via Qt signals/slots, replacing `self.after`). The X-Modem, serial-management, CP/M parsing, and configuration layers (`terminal/`, `utils/`) and all of §3 functional behaviour are unchanged by this migration. Status remains Reviewed; the new requirements are approved for implementation but not yet implemented. |
 | 1.4 | 2026-06-06 | Requirements Checker | Updated GUI layout requirements to reflect the move of transfer and refresh buttons from the toolbar to rows beneath their respective file lists. Renamed 'Refresh' to 'Refresh Host'. Affected IDs: FR-063, FR-072, UIR-011, UIR-012, UIR-013, UIR-071. |
+| 1.5 | 2026-06-08 | Requirements Checker | Added a transfer-progress dialog shown for the duration of every X-Modem transfer. **Added:** FR-105 (modal progress dialog: filename + cumulative blocks/bytes, updated per block, auto-closed on success or failure), UIR-051 (dialog contents/layout, new §4.7). **Code changes:** `xmodem.py` (per-packet `progress` hook in `send_file`/`receive_file`), new `gui/transfer_dialog.py:TransferProgressDialog`, `app.py` (`transfer_started`/`transfer_progress` signals, `_on_transfer_started`/`_on_transfer_progress`/`_close_transfer_dialog`/`_on_transfer_progress_cb`, dialog teardown in `_on_transfer_completed`/`_on_error_raised`). Progress is marshalled worker→GUI thread via Qt signals (NFR-004). |
 | 1.2 | 2026-06-06 | Requirements Checker | Reconciled code/spec discrepancies found by a multi-agent requirements review, per stakeholder decisions (OI-09–OI-17). **Added:** FR-063 (Refresh refreshes both lists), FR-086 (X-Modem transfer bytes echoed to the Terminal Window as hex `<HH>` tokens). **Removed:** FR-035 (Connect no longer opens the Terminal Window; superseded by FR-097). **Modified:** FR-011/FR-012 (Load is a full replace; unrecognised keys retained but inert), FR-073 (Update is Remote-list-only), FR-076 (≥1 s wait then 0.5 s buffer idle-timeout, max 10 s), FR-080/CR-010 (transfer requires **both** status flags), FR-084/FR-085 (removed stale "empty stub" notes), NFR-003 (final packet padded to 128 bytes with 0x1A), CR-002 (`__main__.py` entry point), CR-006 (resources folder deferred, Desirable), CR-007/CR-008 (relaxed to as-built cohesive-module / snake_case naming). Also resolved OI-18 (implemented the FR-050–FR-057 disconnect sequence with per-port failure dialogs and workflow cancellation) and OI-19 (implemented real receive/transmit data buffers cleared by the Clear button); **modified** FR-090/FR-092 (concrete buffers) and FR-095 (clears buffers too). **Code changes:** `app.py` (both-flag transfer guard, buffer idle-timeout, `refresh_all`, `_on_transfer_bytes` hex echo, full `do_disconnect` sequence, `_rx_buffer`/`_tx_buffer` + `clear_terminal_buffers`), `xmodem.py` (final-packet padding, monitor hook on all reads/writes), `serial_manager.py` (`close_terminal_port`/`close_transport_port`), `terminal_window.py` (Clear `clear_callback`). All v1.2 issues (OI-09–OI-19) closed. Updated §9 traceability and §10 issue log. |

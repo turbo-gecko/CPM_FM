@@ -12,7 +12,6 @@
   },
   "general": {
     "list_files_command": "DIR",
-    "change_disk_command": "",
     "receive_from_remote_command": "PCPUT $1",
     "send_to_remote_command": "PCGET $1",
     "end_of_line": "CR"
