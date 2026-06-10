@@ -389,6 +389,53 @@ def test_change_drive_requires_open_terminal(qapp, monkeypatch, state):
         win.close()
 
 
+def test_disconnect_clears_remote_list(qapp, monkeypatch, state):
+    # FR-058: a successful disconnect clears the (now-stale) Remote Files list.
+    win = MainWindow(state)
+    try:
+        win.settings = {"terminal_port": "COM3", "transport_port": "COM3"}
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+        monkeypatch.setattr(win.serial_mgr, "close_terminal_port", lambda: True)
+        win.remote_list.addItems(["STALE.TXT", "OLD.COM"])
+        win.do_disconnect()
+        qapp.processEvents()
+        assert win.remote_list.count() == 0
+    finally:
+        win.close()
+
+
+def test_disconnect_keeps_remote_list_when_close_fails(qapp, monkeypatch, state):
+    # FR-058/FR-051: if the Terminal Port cannot be closed the disconnect is
+    # cancelled and the Remote Files list is left untouched.
+    win = MainWindow(state)
+    try:
+        win.settings = {"terminal_port": "COM3", "transport_port": "COM3"}
+        win.serial_mgr.terminal_connected = True
+        monkeypatch.setattr(win.serial_mgr, "close_terminal_port", lambda: False)
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: None)
+        win.remote_list.addItems(["STALE.TXT"])
+        win.do_disconnect()
+        qapp.processEvents()
+        assert win.remote_list.count() == 1
+    finally:
+        win.close()
+
+
+def test_load_config_clears_remote_list(qapp, state, tmp_path):
+    # FR-017: loading a configuration file clears the (now-stale) Remote Files list.
+    win = MainWindow(state)
+    try:
+        cfg = tmp_path / "serial.json"
+        cfg.write_text('{"terminal_port": "COM3"}')
+        win.remote_list.addItems(["STALE.TXT", "OLD.COM"])
+        win.load_config(str(cfg))
+        qapp.processEvents()
+        assert win.remote_list.count() == 0
+    finally:
+        win.close()
+
+
 def test_main_window_constructs(qapp, state):
     win = MainWindow(state)
     try:

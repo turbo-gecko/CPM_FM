@@ -104,6 +104,7 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | FR-014 | On saving, the application shall write the internal serial configuration and general configuration settings to the selected file in JSON format. | Mandatory | T | App_Requirements §Save |
 | FR-015 | The File > Exit menu item shall close any open COM ports. | Mandatory | D | App_Requirements §Exit |
 | FR-016 | The File > Exit menu item shall close all open dialogs and windows. | Mandatory | D | App_Requirements §Exit |
+| FR-017 | On loading a configuration file, the application shall clear the Remote Files list. The previously displayed remote listing was captured under the prior configuration (potentially a different port, drive, or system) and is no longer valid (consistent with the empty-at-startup state, FR-070). | Mandatory | T | impl. `app.py:load_config` |
 
 ### 3.3 Config menu
 
@@ -140,6 +141,7 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | FR-055 | On disconnect, if the Transport Port is different from the Terminal Port and is currently open, the application shall attempt to close the Transport Port. | Mandatory | T | App_Design §Disconnecting |
 | FR-056 | If the Transport Port cannot be closed, the application shall display an error dialog containing the text "Transport port is unable to be closed". | Mandatory | T | App_Design §Disconnecting |
 | FR-057 | If the Transport Port is successfully closed, the application shall set the Transport status flag to false. | Mandatory | T | App_Design §Disconnecting |
+| FR-058 | On disconnect, once the Terminal Port has been successfully closed, the application shall clear the Remote Files list. The listing was read over the now-closed Terminal Port and reflects the disconnected system, so it is no longer valid (consistent with the empty-at-startup state, FR-070). The list shall not be cleared if the Terminal Port could not be closed and the disconnect was cancelled (FR-051). | Mandatory | T | impl. `app.py:do_disconnect` |
 
 ### 3.6 Host file management
 
@@ -325,6 +327,7 @@ The following requirements define the algorithm for extracting remote file names
 | DR-003 | The parser shall ignore lines that contain the substring "NO FILE". | Mandatory | T | App_Design §Ignore non-file lines |
 | DR-004 | The parser shall process only lines that start with the literal prefix `C:` (where `C` may be any drive letter). | Mandatory | T | App_Design §Identify file listing lines |
 | DR-005 | The parser shall process every line that starts with the drive prefix (DR-004), whether or not it contains the separator sequence space-colon-space (" : "). The separator only delimits multiple file entries on a line (DR-011); a directory containing a single file produces a line with no separator, which shall still be processed. *(v1.3.3: fixes the defect where a directory with a single file showed no entries because the separator was wrongly required as a line filter.)* | Mandatory | T | App_Design §Identify file listing lines; impl. `cpm_parser.py:parse_dir_output` |
+| DR-006 | The parser shall additionally process file listing lines produced by CP/M variants (e.g. ZCPR/ZSDOS) that use the vertical bar `\|` as both the entry separator and a leading line marker, in place of the drive prefix and the space-colon-space delimiter. Such a line begins (after trimming) with `\|`, has no drive prefix, separates entries with `\|`, and presents each entry with a literal dot between the space-padded filename base and extension (e.g. `\|  ASM     .COM  \|  FILEATTR.COM`). Both this format and the standard drive-prefix format (DR-004/DR-005) shall be supported. | Mandatory | T | impl. `cpm_parser.py:parse_dir_output` |
 
 ### 6.2 Entry extraction
 
@@ -335,6 +338,7 @@ The following requirements define the algorithm for extracting remote file names
 | DR-012 | For each file entry, the parser shall replace any sequence of one or more consecutive spaces with a single space and trim leading and trailing whitespace. | Mandatory | T | App_Design §Normalise whitespace |
 | DR-013 | For each normalised entry, the parser shall split into tokens by whitespace. If two or more tokens are present, the last token is the file extension and all preceding tokens are the filename base concatenated without spaces. If exactly one token is present, it is a filename with no extension (CP/M leaves the space-padded extension field blank, e.g. `LICENCE`). | Mandatory | T | App_Design §Parse filename and extension |
 | DR-014 | The parser shall construct each canonical filename in the format `<filename_base>.<extension>`, except for an extensionless entry (DR-013) which is constructed as `<filename_base>` with no trailing dot, so the listed name matches the host filename. | Mandatory | T | App_Design §Construct full filename |
+| DR-015 | For vertical-bar format lines (DR-006), where the dot delimiting the extension is already present in the output, the parser shall construct each canonical filename by removing all internal whitespace from the entry (the filename base is space-padded), yielding `<filename_base>.<extension>`. A trailing dot left by an empty extension field shall be removed so the result matches the extensionless convention of DR-014. | Mandatory | T | impl. `cpm_parser.py:parse_dir_output` |
 
 ### 6.3 Output and robustness
 

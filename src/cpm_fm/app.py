@@ -421,6 +421,9 @@ class MainWindow(QMainWindow):
                 return
             # FR-052 (flag cleared by close_terminal_port) / FR-053 (status text).
             self.set_status("Terminal port closed")
+            # FR-058: the remote listing was read over the now-closed Terminal
+            # Port, so it is stale — clear it.
+            self.remote_list.clear()
 
         # FR-054: same physical port — clear the Transport flag, no separate close.
         if trans_port == term_port:
@@ -785,6 +788,9 @@ class MainWindow(QMainWindow):
         self.settings = self.config_handler.load_json(filename)
         # FR-005: remember this file so it is reloaded on the next startup.
         self.window_state.last_config = filename
+        # FR-017: the prior remote listing was captured under the previous
+        # configuration and is no longer valid — clear it.
+        self.remote_list.clear()
         self.set_status(f"Loaded config: {filename}")
 
     def menu_load(self):

@@ -28,7 +28,26 @@ class CPMParser:
             if "NO FILE" in line.upper():
                 continue
 
-            # 2. Identify file listing lines
+            # 2a. Vertical-bar format (DR-006): CP/M variants such as ZCPR/ZSDOS
+            # emit listing lines that begin with '|', use '|' as the entry
+            # delimiter, and have no drive prefix. The dot before the extension
+            # is already present in the output (e.g. "ASM     .COM"), so each
+            # entry only needs its internal whitespace removed (DR-015).
+            if line.startswith("|"):
+                for entry in line.split("|"):
+                    # Remove all internal whitespace; the base is space-padded.
+                    full_filename = "".join(entry.split())
+                    if not full_filename:
+                        continue
+                    # An empty extension field leaves a trailing dot; drop it so
+                    # the result matches the extensionless convention (DR-015).
+                    full_filename = full_filename.rstrip(".")
+                    if not full_filename:
+                        continue
+                    filenames[full_filename] = True
+                continue
+
+            # 2b. Identify file listing lines
             # Must start with a drive identifier (e.g., 'C:'). The ' : ' sequence
             # is only the delimiter *between* multiple entries on a line, so a
             # directory containing a single file has no ' : ' — such lines must
