@@ -49,6 +49,35 @@ def test_parse_dir_output_single_extensionless_file():
     assert CPMParser.parse_dir_output("A: LICENCE\n") == {"LICENCE": True}
 
 
+def test_parse_dir_output_vertical_bar_format():
+    # DR-006/DR-015: ZCPR/ZSDOS-style DIR uses '|' as a leading line marker and
+    # entry separator (no drive prefix), with a literal dot before the extension.
+    mock_output = """
+    C>DIR
+
+      |  ASM     .COM  |  CLRDIR  .COM  |  COMPARE .COM  |  COPY    .CFG
+      |  FILEATTR.COM  |  CPM     .SYS  |  ZSYS    .SYS
+    """
+    assert CPMParser.parse_dir_output(mock_output) == {
+        "ASM.COM": True,
+        "CLRDIR.COM": True,
+        "COMPARE.COM": True,
+        "COPY.CFG": True,
+        "FILEATTR.COM": True,
+        "CPM.SYS": True,
+        "ZSYS.SYS": True,
+    }
+
+
+def test_parse_dir_output_vertical_bar_extensionless():
+    # DR-015: an empty extension field leaves a trailing dot, which is stripped
+    # so the name matches the extensionless convention (DR-014).
+    assert CPMParser.parse_dir_output("|  LICENCE  .    |  PIP     .COM\n") == {
+        "LICENCE": True,
+        "PIP.COM": True,
+    }
+
+
 def test_has_drive_prompt_detects_prompt():
     # FR-102/DR-033: after "B:" the terminal answers with a "B>" prompt.
     assert CPMParser.has_drive_prompt("B>", "B") is True
