@@ -788,6 +788,13 @@ class MainWindow(QMainWindow):
         self.settings = self.config_handler.load_json(filename)
         # FR-005: remember this file so it is reloaded on the next startup.
         self.window_state.last_config = filename
+        
+        # Restore host directory if specified in config
+        host_dir = self.settings.get("host_directory")
+        if host_dir:
+            self.host_dir = host_dir
+            self.refresh_host_files()
+            
         # FR-017: the prior remote listing was captured under the previous
         # configuration and is no longer valid — clear it.
         self.remote_list.clear()
@@ -803,6 +810,10 @@ class MainWindow(QMainWindow):
         if path:
             if not path.endswith(".json"):
                 path += ".json"
+            
+            # Persist the current host directory in the settings before saving
+            self.settings["host_directory"] = self.host_dir
+            
             if self.config_handler.save_json(path, self.settings):
                 # FR-005: the saved file becomes the last-used config to reload.
                 self.window_state.last_config = path
@@ -821,8 +832,16 @@ class MainWindow(QMainWindow):
     def menu_general_config(self):
         def update_settings(new_set):
             self.settings.update(new_set)
+            
+            # If the default host directory was changed, apply it immediately
+            if "host_directory" in new_set:
+                path = new_set["host_directory"]
+                if path:
+                    self.host_dir = path
+                    self.refresh_host_files()
+                    
             self.set_status("General settings updated")
-
+ 
         GeneralConfigDialog(self, self.settings, update_settings, self.window_state)
 
     # ------------------------------------------------------------------- exit

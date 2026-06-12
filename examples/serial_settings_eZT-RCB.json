@@ -19,5 +19,6 @@
     "send_remote_cmd": "B:PCGET $1",
     "eol": "CR",
     "xfer_launch_delay": "3",
-    "debug_logging": "OFF"
+    "debug_logging": "OFF",
+    "host_directory": "D:/Old_Skool/CPM/Files"
 }
