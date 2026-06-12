@@ -7,11 +7,16 @@ class ConfigHandler:
     """
     Handles loading and saving of configuration files for the CP/M File Manager.
     Supports both the simple serial_settings.json and the structured settings_a.json formats.
+
+    Satisfies: IFR-004.
     """
 
     @staticmethod
     def load_json(filepath: str) -> dict[str, Any]:
-        """Loads a JSON file and returns its content as a dictionary."""
+        """Loads a JSON file and returns its content as a dictionary.
+
+        Satisfies: FR-011, FR-012, IFR-004.
+        """
         if not os.path.exists(filepath):
             return {}
         try:
@@ -23,7 +28,10 @@ class ConfigHandler:
 
     @staticmethod
     def save_json(filepath: str, data: dict[str, Any]) -> bool:
-        """Saves a dictionary to a JSON file."""
+        """Saves a dictionary to a JSON file.
+
+        Satisfies: FR-014, IFR-004.
+        """
         try:
             with open(filepath, "w") as f:
                 json.dump(data, f, indent=4)
@@ -31,4 +39,3 @@ class ConfigHandler:
         except OSError as e:
             print(f"Error saving config file {filepath}: {e}")
             return False
-

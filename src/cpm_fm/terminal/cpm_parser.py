@@ -3,6 +3,8 @@ class CPMParser:
     Implements the algorithm for extracting remote file names from the
     standard CP/M 2.2 4-column DIR output format (SRS docs/cpm_fm_requirements.md,
     DR-001 through DR-032).
+
+    Satisfies: DR-001-DR-032.
     """
 
     @staticmethod
@@ -10,6 +12,8 @@ class CPMParser:
         """
         Parses the raw text output of a CP/M DIR command and returns a
         dictionary where keys are filenames in 'NAME.EXT' format.
+
+        Satisfies: FR-077, DR-001-DR-006, DR-010-DR-015, DR-020-DR-026.
         """
         filenames = {}
         lines = text.splitlines()
@@ -103,6 +107,8 @@ class CPMParser:
         After a drive-change command (``<letter>:``) CP/M responds with a new
         drive prompt — the drive letter followed by ``>``. Blank lines returned
         by the terminal are ignored. Matching is case-insensitive.
+
+        Satisfies: DR-033, FR-101, FR-102.
         """
         target = f"{drive.upper()}>"
         for line in text.splitlines():

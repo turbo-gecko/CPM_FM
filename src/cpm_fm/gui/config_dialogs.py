@@ -9,10 +9,11 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFileDialog,
     QFormLayout,
-    QLineEdit,
-    QVBoxLayout,
     QHBoxLayout,
+    QLineEdit,
     QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
 
 if TYPE_CHECKING:
@@ -26,6 +27,8 @@ class ConfigDialog(QDialog):
     field is a dict with keys: ``key``, ``label``, ``type`` ("dropdown" or
     "text"), ``default``, and optionally ``options`` (dropdown), ``maxlength``
     (text) and ``int_range`` (text, an inclusive ``(lo, hi)`` tuple).
+
+    Satisfies: UIR-021.
     """
 
     def __init__(
@@ -38,6 +41,7 @@ class ConfigDialog(QDialog):
         window_state: WindowState | None = None,
         state_key: str | None = None,
     ):
+        """Satisfies: FR-004, UIR-020, UIR-040."""
         super().__init__(parent)
         self.setWindowTitle(title)
         self.setModal(True)
@@ -56,6 +60,7 @@ class ConfigDialog(QDialog):
         self.exec()
 
     def done(self, result: int) -> None:
+        """Satisfies: FR-004."""
         # FR-004: save geometry on every close path (Save, Cancel, window close,
         # which all funnel through done()) before the modal exec() returns.
         if self._window_state is not None and self._state_key is not None:
@@ -63,14 +68,15 @@ class ConfigDialog(QDialog):
         super().done(result)
 
     def create_widgets(self):
+        """Satisfies: UIR-021, UIR-053."""
         layout = QVBoxLayout(self)
         form = QFormLayout()
         self.entries: dict[str, Any] = {}
- 
+
         for field in self.fields:
             key = field["key"]
             current = str(self.settings.get(key, field["default"]))
- 
+
             if field["type"] == "dropdown":
                 widget = QComboBox()
                 widget.addItems([str(o) for o in field["options"]])
@@ -81,24 +87,31 @@ class ConfigDialog(QDialog):
                 dir_layout = QHBoxLayout(dir_container)
                 dir_layout.setContentsMargins(0, 0, 0, 0)
                 dir_layout.setSpacing(5)
-                
+
                 line_edit = QLineEdit(current)
                 btn_browse = QPushButton("...")
                 btn_browse.setFixedWidth(40)
-                
-                def on_browse():
-                    path = QFileDialog.getExistingDirectory(self, "Select Directory", line_edit.text())
+
+                # `line_edit` is bound as a default argument so each browse
+                # handler captures its own field's widget (the loop rebinds
+                # `line_edit` every iteration); `checked` absorbs the bool the
+                # clicked signal passes.
+                def on_browse(checked=False, line_edit=line_edit):
+                    """Satisfies: UIR-053."""
+                    path = QFileDialog.getExistingDirectory(
+                        self, "Select Directory", line_edit.text()
+                    )
                     if path:
                         line_edit.setText(path)
-                
+
                 btn_browse.clicked.connect(on_browse)
                 dir_layout.addWidget(line_edit)
                 dir_layout.addWidget(btn_browse)
-                
+
                 widget = dir_container
                 # We must be able to retrieve the value from the laout
                 # Overriding _value to handle the context
-                self.entries[key] = line_edit 
+                self.entries[key] = line_edit
             else:
                 widget = QLineEdit(current)
                 if "maxlength" in field:
@@ -106,7 +119,7 @@ class ConfigDialog(QDialog):
                 if "int_range" in field:
                     lo, hi = field["int_range"]
                     widget.setValidator(QIntValidator(lo, hi, widget))
- 
+
             if field["type"] != "directory":
                 self.entries[key] = widget
                 form.addRow(field["label"], widget)
@@ -115,7 +128,7 @@ class ConfigDialog(QDialog):
                 form.addRow(field["label"], dir_container)
                 # The entry for value retrieval is the line edit
                 self.entries[key] = line_edit
-                
+
         layout.addLayout(form)
 
         buttons = QDialogButtonBox(
@@ -131,6 +144,7 @@ class ConfigDialog(QDialog):
         return widget.text()
 
     def save(self):
+        """Satisfies: FR-020, FR-021."""
         new_settings = {key: self._value(w) for key, w in self.entries.items()}
         self.result_settings = new_settings
         self.callback(new_settings)
@@ -141,9 +155,12 @@ class SerialConfigDialog(ConfigDialog):
     """
     Specialized dialog for Serial Configuration
     (SRS docs/cpm_fm_requirements.md, UIR-020 through UIR-031).
+
+    Satisfies: UIR-020-UIR-031, IFR-002.
     """
 
     def __init__(self, parent, settings, current_ports, callback, window_state=None):
+        """Satisfies: UIR-022-UIR-031."""
         # Define fields based on Requirements
         fields = [
             {
@@ -234,9 +251,14 @@ class GeneralConfigDialog(ConfigDialog):
     """
     Specialized dialog for General Configuration
     (SRS docs/cpm_fm_requirements.md, UIR-040 through UIR-048).
+
+    Satisfies: UIR-040-UIR-053.
     """
 
     def __init__(self, parent, settings, callback, window_state=None):
+        """Satisfies: UIR-042, UIR-045, UIR-046, UIR-047, UIR-048, UIR-049,
+        UIR-050, UIR-052, UIR-053.
+        """
         # UIR-042..046: command text fields limited to 79 characters.
         fields = [
             {
