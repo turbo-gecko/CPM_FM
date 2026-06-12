@@ -32,13 +32,3 @@ class ConfigHandler:
             print(f"Error saving config file {filepath}: {e}")
             return False
 
-    @staticmethod
-    def validate_serial_settings(settings: dict[str, Any]) -> bool:
-        """
-        Basic validation for serial settings.
-        Checks for required keys based on the design document.
-        """
-        required_keys = ["terminal_port", "transport_port", "speed"]
-        # Support both flat and nested structures
-        data = settings.get("serial", settings) if "serial" in settings else settings
-        return all(key in data for key in required_keys)

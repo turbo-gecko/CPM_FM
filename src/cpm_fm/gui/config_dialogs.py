@@ -7,9 +7,12 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QFormLayout,
     QLineEdit,
     QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
 )
 
 if TYPE_CHECKING:
@@ -63,15 +66,39 @@ class ConfigDialog(QDialog):
         layout = QVBoxLayout(self)
         form = QFormLayout()
         self.entries: dict[str, Any] = {}
-
+ 
         for field in self.fields:
             key = field["key"]
             current = str(self.settings.get(key, field["default"]))
-
+ 
             if field["type"] == "dropdown":
                 widget = QComboBox()
                 widget.addItems([str(o) for o in field["options"]])
                 widget.setCurrentText(current)
+            elif field["type"] == "directory":
+                # Create a horizontal layout for the path and the browse button
+                dir_container = QWidget()
+                dir_layout = QHBoxLayout(dir_container)
+                dir_layout.setContentsMargins(0, 0, 0, 0)
+                dir_layout.setSpacing(5)
+                
+                line_edit = QLineEdit(current)
+                btn_browse = QPushButton("...")
+                btn_browse.setFixedWidth(40)
+                
+                def on_browse():
+                    path = QFileDialog.getExistingDirectory(self, "Select Directory", line_edit.text())
+                    if path:
+                        line_edit.setText(path)
+                
+                btn_browse.clicked.connect(on_browse)
+                dir_layout.addWidget(line_edit)
+                dir_layout.addWidget(btn_browse)
+                
+                widget = dir_container
+                # We must be able to retrieve the value from the laout
+                # Overriding _value to handle the context
+                self.entries[key] = line_edit 
             else:
                 widget = QLineEdit(current)
                 if "maxlength" in field:
@@ -79,10 +106,16 @@ class ConfigDialog(QDialog):
                 if "int_range" in field:
                     lo, hi = field["int_range"]
                     widget.setValidator(QIntValidator(lo, hi, widget))
-
-            self.entries[key] = widget
-            form.addRow(field["label"], widget)
-
+ 
+            if field["type"] != "directory":
+                self.entries[key] = widget
+                form.addRow(field["label"], widget)
+            else:
+                # For directory type, widget is the container
+                form.addRow(field["label"], dir_container)
+                # The entry for value retrieval is the line edit
+                self.entries[key] = line_edit
+                
         layout.addLayout(form)
 
         buttons = QDialogButtonBox(
@@ -262,6 +295,12 @@ class GeneralConfigDialog(ConfigDialog):
                 "type": "dropdown",
                 "options": ["OFF", "ON"],
                 "default": "OFF",
+            },
+            {
+                "key": "host_directory",
+                "label": "Default Host Directory",
+                "type": "directory",
+                "default": "",
             },
         ]
         super().__init__(
