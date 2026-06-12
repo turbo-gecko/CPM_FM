@@ -23,9 +23,12 @@ class TransferProgressDialog(QDialog):
     is shown; for receives, where X-Modem carries no length, the bar is left
     indeterminate. The owning MainWindow closes the dialog when the batch
     completes (success or failure) — it does not close itself.
+
+    Satisfies: FR-105, UIR-051.
     """
 
     def __init__(self, parent, direction: str, file_count: int):
+        """Satisfies: FR-105, UIR-051."""
         super().__init__(parent)
         self._file_count = max(1, file_count)
         self._total_bytes: int | None = None
@@ -63,6 +66,8 @@ class TransferProgressDialog(QDialog):
         Updates the batch-position and filename labels, resets the blocks/bytes
         count, and reconfigures the progress bar: determinate against the file
         size when known (sends), indeterminate when not (receives).
+
+        Satisfies: FR-105, FR-107, UIR-051.
         """
         self._total_bytes = total_bytes if total_bytes and total_bytes > 0 else None
         if self._file_count > 1:
@@ -77,7 +82,10 @@ class TransferProgressDialog(QDialog):
             self.progress_bar.setRange(0, 0)
 
     def update_progress(self, blocks: int, bytes_done: int) -> None:
-        """Refresh the blocks/bytes display after a transferred block (FR-105)."""
+        """Refresh the blocks/bytes display after a transferred block (FR-105).
+
+        Satisfies: FR-105.
+        """
         self.count_label.setText(f"Blocks: {blocks}    Bytes: {bytes_done}")
         if self._total_bytes is not None:
             self.progress_bar.setValue(min(bytes_done, self._total_bytes))

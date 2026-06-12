@@ -9,6 +9,8 @@ class XModem:
     """
     Implements the X-Modem protocol for file transfer.
     Supports both sending (Host -> Remote) and receiving (Remote -> Host).
+
+    Satisfies: FR-082, NFR-003.
     """
 
     SOH = b"\x01"  # Start of Header
@@ -37,13 +39,19 @@ class XModem:
         self.progress = progress
 
     def _write(self, data: bytes) -> None:
-        """Write bytes to the port, reporting them to the monitor (FR-086)."""
+        """Write bytes to the port, reporting them to the monitor (FR-086).
+
+        Satisfies: FR-086.
+        """
         self.ser.write(data)
         if self.monitor and data:
             self.monitor("tx", data)
 
     def _read(self, n: int) -> bytes:
-        """Read up to n bytes from the port, reporting them to the monitor."""
+        """Read up to n bytes from the port, reporting them to the monitor.
+
+        Satisfies: FR-086.
+        """
         data = self.ser.read(n)
         if self.monitor and data:
             self.monitor("rx", data)
@@ -72,12 +80,18 @@ class XModem:
         return b""
 
     def _calculate_checksum(self, data: bytes) -> int:
-        """Standard X-Modem checksum (sum of bytes, modulo 256)."""
+        """Standard X-Modem checksum (sum of bytes, modulo 256).
+
+        Satisfies: NFR-003.
+        """
         return sum(data) & 0xFF
 
     def _crc16(self, data: bytes) -> int:
         """CRC-16/XMODEM (poly 0x1021, init 0x0000), used by CRC-mode senders
-        such as PCGET/PCPUT. Transmitted big-endian as the 2-byte trailer."""
+        such as PCGET/PCPUT. Transmitted big-endian as the 2-byte trailer.
+
+        Satisfies: NFR-003.
+        """
         crc = 0
         for byte in data:
             crc ^= byte << 8
@@ -88,14 +102,20 @@ class XModem:
 
     def _trailer(self, chunk: bytes, crc_mode: bool) -> bytes:
         """Build the packet trailer: 2-byte CRC-16 (CRC mode) or 1-byte
-        checksum (checksum mode)."""
+        checksum (checksum mode).
+
+        Satisfies: NFR-003.
+        """
         if crc_mode:
             crc = self._crc16(chunk)
             return bytes([(crc >> 8) & 0xFF, crc & 0xFF])
         return bytes([self._calculate_checksum(chunk)])
 
     def _trailer_ok(self, payload: bytes, trailer: bytes, crc_mode: bool) -> bool:
-        """Validate a received packet trailer against the payload."""
+        """Validate a received packet trailer against the payload.
+
+        Satisfies: NFR-003.
+        """
         if crc_mode:
             return len(trailer) == 2 and ((trailer[0] << 8) | trailer[1]) == self._crc16(payload)
         return len(trailer) == 1 and trailer[0] == self._calculate_checksum(payload)
@@ -107,6 +127,8 @@ class XModem:
         character before transmitting. That character also selects the mode —
         'C' (0x43) requests CRC, NAK (0x15) requests checksum — and we frame
         the trailer to match (NFR-003). 128-byte SOH packets either way.
+
+        Satisfies: FR-081, FR-082, FR-083, FR-086, FR-105, NFR-003.
         """
         if not os.path.exists(filepath):
             return False
@@ -184,6 +206,8 @@ class XModem:
         (NFR-003; "checksum mode, not CRC"). The mode is fixed by whichever
         prompt the sender answers. SOH frames carry 128 data bytes; STX frames
         carry 1024 (XMODEM-1K), so the 1K sender variants are accepted too.
+
+        Satisfies: FR-081, FR-082, FR-083, FR-105, NFR-003.
         """
         received_data = bytearray()
         expected_packet = 1

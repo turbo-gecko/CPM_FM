@@ -22,16 +22,23 @@ class WindowState:
 
     A :class:`QSettings` instance may be injected (tests pass an isolated,
     temporary store so they do not touch the host's real settings).
+
+    Satisfies: FR-004, FR-005.
     """
 
     def __init__(self, settings: QSettings | None = None) -> None:
+        """Satisfies: FR-004, FR-005."""
         self._settings = settings if settings is not None else QSettings(ORG, APP)
 
     def save_geometry(self, name: str, widget: QWidget) -> None:
+        """Satisfies: FR-004."""
         self._settings.setValue(f"geometry/{name}", widget.saveGeometry())
 
     def restore_geometry(self, name: str, widget: QWidget) -> bool:
-        """Restore ``widget``'s saved geometry; return True if any was applied."""
+        """Restore ``widget``'s saved geometry; return True if any was applied.
+
+        Satisfies: FR-004.
+        """
         value = self._settings.value(f"geometry/{name}")
         if isinstance(value, QByteArray) and not value.isEmpty():
             return widget.restoreGeometry(value)
@@ -39,10 +46,14 @@ class WindowState:
 
     @property
     def last_config(self) -> str:
-        """Path of the most recently loaded/saved config file ("" if none)."""
+        """Path of the most recently loaded/saved config file ("" if none).
+
+        Satisfies: FR-005.
+        """
         value = self._settings.value("last_config", "")
         return value if isinstance(value, str) else ""
 
     @last_config.setter
     def last_config(self, path: str) -> None:
+        """Satisfies: FR-005."""
         self._settings.setValue("last_config", path)

@@ -10,9 +10,12 @@ class SerialManager:
     Manages serial communication for both Terminal and Transport ports.
     Handles the port lifecycle and status flags (SRS docs/cpm_fm_requirements.md,
     FR-001/FR-002 status flags, FR-030-FR-057 connect/disconnect, NFR-001/NFR-002).
+
+    Satisfies: IFR-001, IFR-002.
     """
 
     def __init__(self):
+        """Satisfies: FR-001, FR-002."""
         self.terminal_port: Optional[serial.Serial] = None
         self.transport_port: Optional[serial.Serial] = None
 
@@ -27,6 +30,8 @@ class SerialManager:
         """
         Opens a serial port.
         port_type: 'terminal' or 'transport'
+
+        Satisfies: FR-030, FR-032, FR-038, FR-040, NFR-002.
         """
         try:
             # Map settings to pyserial parameters
@@ -79,7 +84,10 @@ class SerialManager:
             return False
 
     def close_ports(self):
-        """Closes both serial ports and stops the read thread."""
+        """Closes both serial ports and stops the read thread.
+
+        Satisfies: FR-015.
+        """
         self._stop_event.set()
         if self._read_thread:
             self._read_thread.join(timeout=1.0)
@@ -97,6 +105,8 @@ class SerialManager:
         Closes the Terminal Port and stops the read thread (FR-050-FR-053).
         Returns True if the port was closed (or was already closed), False if
         the close attempt raised an error.
+
+        Satisfies: FR-050, FR-052.
         """
         try:
             self._stop_event.set()
@@ -115,6 +125,8 @@ class SerialManager:
         """
         Closes the Transport Port (FR-055-FR-057). Returns True on success
         (or if already closed), False if the close attempt raised an error.
+
+        Satisfies: FR-055, FR-057.
         """
         try:
             if self.transport_port and self.transport_port.is_open:
@@ -126,7 +138,10 @@ class SerialManager:
             return False
 
     def send_data(self, port_type: str, data: str) -> bool:
-        """Sends data through the specified port."""
+        """Sends data through the specified port.
+
+        Satisfies: FR-096.
+        """
         port = self.terminal_port if port_type == "terminal" else self.transport_port
         if port and port.is_open:
             try:
@@ -137,7 +152,10 @@ class SerialManager:
         return False
 
     def _read_loop(self):
-        """Background thread to read data from the terminal port."""
+        """Background thread to read data from the terminal port.
+
+        Satisfies: FR-036, FR-091, NFR-001.
+        """
         while not self._stop_event.is_set():
             if self.terminal_port and self.terminal_port.is_open:
                 try:

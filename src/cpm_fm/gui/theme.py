@@ -19,6 +19,8 @@ def prefers_dark(app: QApplication) -> bool:
 
     UIR-073: follow the OS light/dark preference; default to dark when the
     preference cannot be determined.
+
+    Satisfies: UIR-073.
     """
     try:
         scheme = app.styleHints().colorScheme()
@@ -35,6 +37,8 @@ def apply_theme(app: QApplication) -> str:
 
     CR-013: the stylesheet is applied centrally to the QApplication so every
     current and future window inherits it.
+
+    Satisfies: UIR-070, UIR-073, CR-013.
     """
     from qt_material import apply_stylesheet
 

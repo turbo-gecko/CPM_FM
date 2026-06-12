@@ -17,9 +17,12 @@ class TerminalWindow(QMainWindow):
     """
     Non-modal Terminal window (SRS docs/cpm_fm_requirements.md, UIR-060-UIR-067;
     receive/transmit behaviour FR-090-FR-098).
+
+    Satisfies: UIR-060-UIR-067.
     """
 
     def __init__(self, parent, send_callback, clear_callback=None):
+        """Satisfies: UIR-060."""
         # No Qt parent, so this is an independent non-modal top-level window
         # (UIR-060). The owning MainWindow keeps a reference to it.
         super().__init__()
@@ -33,6 +36,7 @@ class TerminalWindow(QMainWindow):
         self.create_widgets()
 
     def create_widgets(self):
+        """Satisfies: UIR-061-UIR-067."""
         central = QWidget()
         self.setCentralWidget(central)
         layout = QVBoxLayout(central)
@@ -71,18 +75,23 @@ class TerminalWindow(QMainWindow):
         layout.addLayout(tx_layout)
 
     def clear_text(self):
+        """Satisfies: FR-095, UIR-064."""
         self.receive_area.clear()
         if self.clear_callback:
             self.clear_callback()
 
     def send_text(self):
+        """Satisfies: FR-096."""
         text = self.tx_entry.text()
         if text:
             self.send_callback(text)
             self.tx_entry.clear()
 
     def write_text(self, text):
-        """Appends text to the receive area."""
+        """Appends text to the receive area.
+
+        Satisfies: FR-091, UIR-062.
+        """
         # insertPlainText preserves existing content and does not add newlines.
         cursor = self.receive_area.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
@@ -92,6 +101,7 @@ class TerminalWindow(QMainWindow):
             self.receive_area.ensureCursorVisible()
 
     def closeEvent(self, event):
+        """Satisfies: FR-097."""
         # Non-modal window persists in the background when closed by the user;
         # FR-097 reopens/restores the same instance via the Terminal button.
         event.ignore()
