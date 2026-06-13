@@ -76,7 +76,7 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
 | STR-001 | The product shall enable the transfer of files between the host system and a remote CP/M system over a serial communications link. | Mandatory | D | App_Design §Purpose |
-| STR-002 | The product shall provide a graphical user interface implemented in Python, using the PySide6 (Qt for Python) toolkit (see CR-012). | Mandatory | I | App_Design §Purpose; v1.3 UI migration |
+| STR-002 | The product shall provide a graphical user interface implemented in Python, using the PySide6 (Qt for Python) toolkit (see CR-012). | Mandatory | I | App_Design §Purpose; v1.3 UI migration; impl. `app.py:MainWindow`, `app.py:main` |
 | STR-003 | The product shall be cross-platform. | Desirable | A | App_Design §Purpose |
 
 ---
@@ -87,69 +87,69 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| FR-001 | The application shall maintain a Terminal status flag indicating whether the Terminal Port is open and available for communication. The default value at startup shall be *not set* (false). | Mandatory | T | App_Design §Program state |
-| FR-002 | The application shall maintain a Transport status flag indicating whether the Transport Port is open and available for communication. The default value at startup shall be *not set* (false). | Mandatory | T | App_Design §Program state |
-| FR-003 | The application shall start in an unconfigured state, with serial and general settings populated only via File > Load, the configuration dialogs, or the automatic reload of the last-used configuration file (FR-005). When no last-used configuration file is remembered, or the remembered file no longer exists or cannot be parsed, the application shall start unconfigured. | Mandatory | T | App_Design §Program state; CLAUDE.md |
-| FR-004 | On exit, the application shall persist the size and position (geometry) of each of its windows and dialogs — the main window, the Terminal Window, and the Serial and General Configuration Dialogs — to host-native persistent storage, and shall restore each window's saved geometry the next time that window is shown. The Host/Remote splitter position is excluded (UIR-072). Geometry is stored via `QSettings` under organisation `turbo-gecko`, application `cpm-fm`. | Mandatory | D | impl. `gui/window_state.py`, `app.py`, `gui/config_dialogs.py` |
+| FR-001 | The application shall maintain a Terminal status flag indicating whether the Terminal Port is open and available for communication. The default value at startup shall be *not set* (false). | Mandatory | T | App_Design §Program state; impl. `serial_manager.py:__init__` |
+| FR-002 | The application shall maintain a Transport status flag indicating whether the Transport Port is open and available for communication. The default value at startup shall be *not set* (false). | Mandatory | T | App_Design §Program state; impl. `serial_manager.py:__init__` |
+| FR-003 | The application shall start in an unconfigured state, with serial and general settings populated only via File > Load, the configuration dialogs, or the automatic reload of the last-used configuration file (FR-005). When no last-used configuration file is remembered, or the remembered file no longer exists or cannot be parsed, the application shall start unconfigured. | Mandatory | T | App_Design §Program state; CLAUDE.md; impl. `app.py:__init__` |
+| FR-004 | On exit, the application shall persist the size and position (geometry) of each of its windows and dialogs — the main window, the Terminal Window, and the Serial and General Configuration Dialogs — to host-native persistent storage, and shall restore each window's saved geometry the next time that window is shown. The Host/Remote splitter position is excluded (UIR-072). Geometry is stored via `QSettings` under organisation `turbo-gecko`, application `cpm-fm`. | Mandatory | D | impl. `app.py:__init__`, `app.py:closeEvent`, `config_dialogs.py:__init__`, `config_dialogs.py:done`, `window_state.py:WindowState`, `window_state.py:__init__`, `window_state.py:save_geometry`, `window_state.py:restore_geometry` |
 | FR-005 | The application shall remember the filesystem path of the most recently loaded (FR-010) or saved (FR-013) configuration file and, on the next startup, automatically reload and apply that file (subject to FR-003). The remembered path is persisted via `QSettings` alongside the window geometry (FR-004). | Mandatory | T | impl. `app.py:load_config`, `menu_save` |
 
 ### 3.2 File menu
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| FR-010 | The File > Load menu item shall present a file-select dialog defaulting to the JSON file type for selecting a configuration file to load. | Mandatory | D | App_Requirements §Load |
+| FR-010 | The File > Load menu item shall present a file-select dialog defaulting to the JSON file type for selecting a configuration file to load. | Mandatory | D | App_Requirements §Load; impl. `app.py:menu_load` |
 | FR-011 | On loading a configuration file, the application shall replace its entire internal settings store with the contents of the file (a full replace, not a per-key merge). | Mandatory | T | impl. `app.py:load_config` |
 | FR-012 | Settings keys present in a loaded file that are not consumed by the application shall be retained verbatim in the settings store but shall not alter application behaviour; the application shall not reject a file on account of unrecognised keys. | Mandatory | T | impl. `app.py:load_config` |
-| FR-013 | The File > Save menu item shall present a file-select dialog defaulting to the JSON file type for selecting a configuration file to save to. | Mandatory | D | App_Requirements §Save |
-| FR-014 | On saving, the application shall write the internal serial configuration and general configuration settings to the selected file in JSON format. | Mandatory | T | App_Requirements §Save |
-| FR-015 | The File > Exit menu item shall close any open COM ports. | Mandatory | D | App_Requirements §Exit |
-| FR-016 | The File > Exit menu item shall close all open dialogs and windows. | Mandatory | D | App_Requirements §Exit |
+| FR-013 | The File > Save menu item shall present a file-select dialog defaulting to the JSON file type for selecting a configuration file to save to. | Mandatory | D | App_Requirements §Save; impl. `app.py:menu_save` |
+| FR-014 | On saving, the application shall write the internal serial configuration and general configuration settings to the selected file in JSON format. | Mandatory | T | App_Requirements §Save; impl. `app.py:menu_save`, `config_handler.py:save_json` |
+| FR-015 | The File > Exit menu item shall close any open COM ports. | Mandatory | D | App_Requirements §Exit; impl. `app.py:closeEvent`, `serial_manager.py:close_ports` |
+| FR-016 | The File > Exit menu item shall close all open dialogs and windows. | Mandatory | D | App_Requirements §Exit; impl. `app.py:closeEvent` |
 | FR-017 | On loading a configuration file, the application shall clear the Remote Files list. The previously displayed remote listing was captured under the prior configuration (potentially a different port, drive, or system) and is no longer valid (consistent with the empty-at-startup state, FR-070). | Mandatory | T | impl. `app.py:load_config` |
 
 ### 3.3 Config menu
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| FR-020 | When the Config > Serial menu option is selected, the application shall present the Serial Configuration Dialog to allow the user to modify the serial settings. | Mandatory | D | App_Requirements §Serial |
-| FR-021 | When the Config > General menu option is selected, the application shall present the General Configuration Dialog to allow the user to modify the general settings. | Mandatory | D | App_Requirements §General |
+| FR-020 | When the Config > Serial menu option is selected, the application shall present the Serial Configuration Dialog to allow the user to modify the serial settings. | Mandatory | D | App_Requirements §Serial; impl. `app.py:menu_serial_config`, `config_dialogs.py:save` |
+| FR-021 | When the Config > General menu option is selected, the application shall present the General Configuration Dialog to allow the user to modify the general settings. | Mandatory | D | App_Requirements §General; impl. `app.py:menu_general_config`, `config_dialogs.py:save` |
 
 ### 3.4 Connecting to the remote system
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| FR-030 | When the Connect button is pressed, the application shall open the Terminal Port serial port if it is not already open. | Mandatory | T | App_Requirements §Connecting |
-| FR-031 | If the Terminal Port cannot be opened, the application shall display an error dialog containing the text "Terminal port is unable to be opened" and cancel the current workflow. | Mandatory | T | App_Requirements §Connecting |
-| FR-032 | If the Terminal Port is successfully opened, the application shall set the Terminal status flag to true. | Mandatory | T | App_Design §Connecting |
+| FR-030 | When the Connect button is pressed, the application shall open the Terminal Port serial port if it is not already open. | Mandatory | T | App_Requirements §Connecting; impl. `app.py:do_connect`, `serial_manager.py:open_port` |
+| FR-031 | If the Terminal Port cannot be opened, the application shall display an error dialog containing the text "Terminal port is unable to be opened" and cancel the current workflow. | Mandatory | T | App_Requirements §Connecting; impl. `app.py:do_connect` |
+| FR-032 | If the Terminal Port is successfully opened, the application shall set the Terminal status flag to true. | Mandatory | T | App_Design §Connecting; impl. `app.py:do_connect`, `serial_manager.py:open_port` |
 | FR-033 | If the Terminal Port cannot be opened, the application shall set the Terminal status flag to false. | Mandatory | T | App_Design §Connecting |
-| FR-034 | When the Terminal Port is opened, the application shall display the text "Terminal port open" in the status bar. | Mandatory | D | App_Requirements §Connecting |
+| FR-034 | When the Terminal Port is opened, the application shall display the text "Terminal port open" in the status bar. | Mandatory | D | App_Requirements §Connecting; impl. `app.py:do_connect` |
 | FR-035 | *Removed in v1.2.* (Was: "When the Connect button is pressed, the application shall open the Terminal Window.") The Terminal Window is opened exclusively via the Terminal button (FR-097); the Connect action does not open it. See §10 OI-10. | — | — | superseded by FR-097 |
-| FR-036 | The application shall display data received from the Terminal Port in the receive text area of the Terminal Window. | Mandatory | T | App_Requirements §Connecting |
-| FR-037 | On connect, if the Transport Port is the same as the Terminal Port, the application shall set the Transport status flag to connected. | Mandatory | T | App_Design §Connecting |
-| FR-038 | On connect, if the Transport Port is different from the Terminal Port and is not currently open, the application shall attempt to open the Transport Port. | Mandatory | T | App_Design §Connecting |
-| FR-039 | If the Transport Port cannot be opened, the application shall display an error dialog containing the text "Transport port is unable to be opened". | Mandatory | T | App_Design §Connecting |
-| FR-040 | If the Transport Port is successfully opened, the application shall set the Transport status flag to connected. | Mandatory | T | App_Design §Connecting |
+| FR-036 | The application shall display data received from the Terminal Port in the receive text area of the Terminal Window. | Mandatory | T | App_Requirements §Connecting; impl. `serial_manager.py:_read_loop` |
+| FR-037 | On connect, if the Transport Port is the same as the Terminal Port, the application shall set the Transport status flag to connected. | Mandatory | T | App_Design §Connecting; impl. `app.py:do_connect` |
+| FR-038 | On connect, if the Transport Port is different from the Terminal Port and is not currently open, the application shall attempt to open the Transport Port. | Mandatory | T | App_Design §Connecting; impl. `app.py:do_connect`, `serial_manager.py:open_port` |
+| FR-039 | If the Transport Port cannot be opened, the application shall display an error dialog containing the text "Transport port is unable to be opened". | Mandatory | T | App_Design §Connecting; impl. `app.py:do_connect` |
+| FR-040 | If the Transport Port is successfully opened, the application shall set the Transport status flag to connected. | Mandatory | T | App_Design §Connecting; impl. `app.py:do_connect`, `serial_manager.py:open_port` |
 
 ### 3.5 Disconnecting from the remote system
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| FR-050 | When the Disconnect button is pressed, if the Terminal Port is currently open, the application shall attempt to close the Terminal Port serial port. | Mandatory | T | App_Requirements §Disconnecting |
-| FR-051 | If the Terminal Port cannot be closed, the application shall display an error dialog containing the text "Terminal port is unable to be closed" and cancel the current workflow. | Mandatory | T | App_Requirements §Disconnecting |
-| FR-052 | When the Terminal Port is closed, the application shall set the Terminal status flag to false. | Mandatory | T | App_Design §Disconnecting |
-| FR-053 | When the Terminal Port is closed, the application shall display the text "Terminal port closed" in the status bar. | Mandatory | D | App_Requirements §Disconnecting |
-| FR-054 | On disconnect, if the Transport Port is the same as the Terminal Port, the application shall set the Transport status flag to false. | Mandatory | T | App_Design §Disconnecting |
-| FR-055 | On disconnect, if the Transport Port is different from the Terminal Port and is currently open, the application shall attempt to close the Transport Port. | Mandatory | T | App_Design §Disconnecting |
-| FR-056 | If the Transport Port cannot be closed, the application shall display an error dialog containing the text "Transport port is unable to be closed". | Mandatory | T | App_Design §Disconnecting |
-| FR-057 | If the Transport Port is successfully closed, the application shall set the Transport status flag to false. | Mandatory | T | App_Design §Disconnecting |
+| FR-050 | When the Disconnect button is pressed, if the Terminal Port is currently open, the application shall attempt to close the Terminal Port serial port. | Mandatory | T | App_Requirements §Disconnecting; impl. `app.py:do_disconnect`, `serial_manager.py:close_terminal_port` |
+| FR-051 | If the Terminal Port cannot be closed, the application shall display an error dialog containing the text "Terminal port is unable to be closed" and cancel the current workflow. | Mandatory | T | App_Requirements §Disconnecting; impl. `app.py:do_disconnect` |
+| FR-052 | When the Terminal Port is closed, the application shall set the Terminal status flag to false. | Mandatory | T | App_Design §Disconnecting; impl. `app.py:do_disconnect`, `serial_manager.py:close_terminal_port` |
+| FR-053 | When the Terminal Port is closed, the application shall display the text "Terminal port closed" in the status bar. | Mandatory | D | App_Requirements §Disconnecting; impl. `app.py:do_disconnect` |
+| FR-054 | On disconnect, if the Transport Port is the same as the Terminal Port, the application shall set the Transport status flag to false. | Mandatory | T | App_Design §Disconnecting; impl. `app.py:do_disconnect` |
+| FR-055 | On disconnect, if the Transport Port is different from the Terminal Port and is currently open, the application shall attempt to close the Transport Port. | Mandatory | T | App_Design §Disconnecting; impl. `app.py:do_disconnect`, `serial_manager.py:close_transport_port` |
+| FR-056 | If the Transport Port cannot be closed, the application shall display an error dialog containing the text "Transport port is unable to be closed". | Mandatory | T | App_Design §Disconnecting; impl. `app.py:do_disconnect` |
+| FR-057 | If the Transport Port is successfully closed, the application shall set the Transport status flag to false. | Mandatory | T | App_Design §Disconnecting; impl. `app.py:do_disconnect`, `serial_manager.py:close_transport_port` |
 | FR-058 | On disconnect, once the Terminal Port has been successfully closed, the application shall clear the Remote Files list. The listing was read over the now-closed Terminal Port and reflects the disconnected system, so it is no longer valid (consistent with the empty-at-startup state, FR-070). The list shall not be cleared if the Terminal Port could not be closed and the disconnect was cancelled (FR-051). | Mandatory | T | impl. `app.py:do_disconnect` |
 
 ### 3.6 Host file management
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| FR-060 | On startup, the application shall populate the Host Files list with the files in the host directory specified in the loaded configuration file; if no configuration is loaded or no path is specified, it shall default to the current working directory of the host system. | Mandatory | T | App_Requirements §Host Files |
+| FR-060 | On startup, the application shall populate the Host Files list with the files in the host directory specified in the loaded configuration file; if no configuration is loaded or no path is specified, it shall default to the current working directory of the host system. | Mandatory | T | App_Requirements §Host Files; impl. `app.py:refresh_host_files`, `app.py:load_config` |
 | FR-061 | The Change Directory button shall be enabled at startup. | Mandatory | I | App_Requirements §Change Directory |
-| FR-062 | When the Change Directory button is pressed, the application shall present a folder-select dialog for the user to choose the folder whose contents are loaded into the Host Files list. This action updates the active session directory but does not persist the change to the configuration file until File > Save is invoked. | Mandatory | D | App_Requirements §Change Directory |
+| FR-062 | When the Change Directory button is pressed, the application shall present a folder-select dialog for the user to choose the folder whose contents are loaded into the Host Files list. This action updates the active session directory but does not persist the change to the configuration file until File > Save is invoked. | Mandatory | D | App_Requirements §Change Directory; impl. `app.py:change_host_dir` |
 | FR-063 | When the Refresh Host button (underneath the Host Files list) is pressed, the application shall refresh the Host Files list from the current host directory and then populate the Remote Files list following the "Populating remote file list" process (FR-074–FR-079). The Refresh Host button thus acts on both lists, whereas the Update button (FR-073) acts on the Remote Files list only. | Mandatory | T | impl. `app.py:refresh_all` |
 
 ### 3.7 Remote file listing
@@ -160,12 +160,12 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | FR-071 | The Update button shall be enabled at startup. | Mandatory | I | App_Requirements §Update |
 | FR-072 | The Refresh Host button shall be enabled at startup. | Mandatory | I | App_Requirements §Refresh |
 | FR-073 | When the Update button (in the Remote Files group) is pressed, the application shall populate the Remote Files list following the "Populating remote file list" process (FR-074–FR-079). It shall not affect the Host Files list. | Mandatory | T | App_Requirements §Update; impl. `app.py:refresh_remote_files` |
-| FR-074 | If the Terminal Port is not open when populating the remote file list, the application shall set the status bar text to "Terminal port not open - cannot read file list" and clear the Remote Files list. | Mandatory | T | App_Requirements §Populating remote file list |
-| FR-075 | If the Terminal status flag is true, the application shall send the configured List Files command followed by the configured EOL character(s) to the Terminal Port. The command is reflected in the receive text area by the remote's echo of the command over the serial link (or, if enabled, by local echo — FR-093); the application does not write the command to the receive area itself. *(v1.7.1: reworded to the as-built echo behaviour — see §10 OI-21.)* | Mandatory | T | App_Design §Populating remote file list; impl. `app.py:handle_terminal_send` |
-| FR-076 | After sending the List Files command, the application shall wait at least one second for output to begin accumulating, then continue waiting until the remote capture buffer has received no new data within an idle window of 0.5 s (the buffer "times out"), bounded by a maximum total wait of 10 s, before processing the received text. | Mandatory | T | App_Design §Populating remote file list; impl. `app.py:_do_refresh_remote_logic` |
-| FR-077 | The application shall process the captured remote output into a dictionary of filenames using the CP/M 4-column DIR parsing algorithm (see §6). | Mandatory | T | App_Design §Populating remote file list |
+| FR-074 | If the Terminal Port is not open when populating the remote file list, the application shall set the status bar text to "Terminal port not open - cannot read file list" and clear the Remote Files list. | Mandatory | T | App_Requirements §Populating remote file list; impl. `app.py:refresh_remote_files` |
+| FR-075 | If the Terminal status flag is true, the application shall send the configured List Files command followed by the configured EOL character(s) to the Terminal Port. The command is reflected in the receive text area by the remote's echo of the command over the serial link (or, if enabled, by local echo — FR-093); the application does not write the command to the receive area itself. *(v1.7.1: reworded to the as-built echo behaviour — see §10 OI-21.)* | Mandatory | T | App_Design §Populating remote file list; impl. `app.py:_capture_terminal_response` |
+| FR-076 | After sending the List Files command, the application shall wait at least one second for output to begin accumulating, then continue waiting until the remote capture buffer has received no new data within an idle window of 0.5 s (the buffer "times out"), bounded by a maximum total wait of 10 s, before processing the received text. | Mandatory | T | App_Design §Populating remote file list; impl. `app.py:_capture_terminal_response` |
+| FR-077 | The application shall process the captured remote output into a dictionary of filenames using the CP/M 4-column DIR parsing algorithm (see §6). | Mandatory | T | App_Design §Populating remote file list; impl. `app.py:_do_refresh_remote_logic`, `cpm_parser.py:parse_dir_output` |
 | FR-078 | The application shall populate the Remote Files list with the entries produced by the parsing algorithm, displaying the dictionary keys (filenames) sorted in ascending alphabetical order. | Mandatory | T | App_Design §Populating remote file list; impl. `app.py:_update_remote_list_ui` |
-| FR-079 | On successful population of the remote file list, the application shall update the status bar with the text "Remote file list updated". | Mandatory | D | App_Requirements §Populating remote file list |
+| FR-079 | On successful population of the remote file list, the application shall update the status bar with the text "Remote file list updated". | Mandatory | D | App_Requirements §Populating remote file list; impl. `app.py:_do_refresh_remote_logic`, `app.py:_update_remote_list_ui` |
 
 ### 3.7.1 Remote drive selection
 
@@ -181,12 +181,12 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| FR-080 | A file transfer shall be permitted only when both the Terminal status flag and the Transport status flag are set to connected. | Mandatory | T | App_Requirements §File Transfers; App_Design §File Transfers |
-| FR-081 | The application shall support file transfers in both directions: host-to-remote and remote-to-host. | Mandatory | T | App_Requirements §File Transfers |
-| FR-082 | The application shall use the X-Modem protocol for all file transfers. | Mandatory | T | App_Requirements §File Transfers |
-| FR-083 | The application shall use the Transport (Transfer) Port for all file transfers. | Mandatory | T | App_Requirements §File Transfers |
-| FR-084 | The Copy to Remote button shall be enabled at startup. | Mandatory | I | App_Requirements §Copy to Remote |
-| FR-085 | The Copy to Host button shall be enabled at startup. | Mandatory | I | App_Requirements §Copy to Host |
+| FR-080 | A file transfer shall be permitted only when both the Terminal status flag and the Transport status flag are set to connected. | Mandatory | T | App_Requirements §File Transfers; App_Design §File Transfers; impl. `app.py:do_copy_to_remote`, `app.py:do_copy_to_host` |
+| FR-081 | The application shall support file transfers in both directions: host-to-remote and remote-to-host. | Mandatory | T | App_Requirements §File Transfers; impl. `app.py:_send_one_to_remote`, `app.py:_recv_one_to_host`, `xmodem.py:send_file`, `xmodem.py:receive_file` |
+| FR-082 | The application shall use the X-Modem protocol for all file transfers. | Mandatory | T | App_Requirements §File Transfers; impl. `app.py:_send_one_to_remote`, `app.py:_recv_one_to_host`, `xmodem.py:XModem`, `xmodem.py:send_file`, `xmodem.py:receive_file` |
+| FR-083 | The application shall use the Transport (Transfer) Port for all file transfers. | Mandatory | T | App_Requirements §File Transfers; impl. `app.py:_send_one_to_remote`, `app.py:_recv_one_to_host`, `xmodem.py:send_file`, `xmodem.py:receive_file` |
+| FR-084 | The Copy to Remote button shall be enabled at startup. | Mandatory | I | App_Requirements §Copy to Remote; impl. `app.py:do_copy_to_remote` |
+| FR-085 | The Copy to Host button shall be enabled at startup. | Mandatory | I | App_Requirements §Copy to Host; impl. `app.py:do_copy_to_host` |
 | FR-086 | During an X-Modem file transfer (either direction), the application shall echo every byte sent to or received from the Transport Port to the Terminal Window Receive area, formatted as a hexadecimal byte token of the form `<HH>`, where `HH` is the byte value as two uppercase hexadecimal digits (e.g. byte 0xB5 is displayed as `<B5>`). This echo shall occur only while the Terminal Window exists. | Mandatory | D | impl. `app.py:_on_transfer_bytes`, `xmodem.py` monitor hook |
 | FR-087 | Before starting the X-Modem transfer, the application shall launch the CP/M side of the transfer by sending a command on the Terminal Port: `send_remote_cmd` (default `PCGET $1`) for Copy to Remote, and `recv_remote_cmd` (default `PCPUT $1`) for Copy to Host, with the token `$1` replaced by the transferred file's name as shown in the file list. After sending the command the application shall wait the configured launch delay (FR-089) before beginning the X-Modem handshake. The transfer shall then proceed on the Transport Port (FR-083). If the configured command is empty, no command is sent. *(v1.3.1: supersedes the CR-011 deferral of these two settings.)* | Mandatory | T | impl. `app.py:_issue_remote_cmd`, `_transfer_to_remote`, `_transfer_to_host`; UIR-045/UIR-046 |
 | FR-088 | The application shall emit verbose transfer debug output (per-byte X-Modem trace and transfer flow messages) to standard output only when the `debug_logging` setting holds an affirmative value (`ON`/`TRUE`/`1`/`YES`, case-insensitive); the default is off. | Mandatory | T | impl. `app.py:_debug`, `_debug_enabled`, `_on_transfer_bytes`; UIR-050 |
@@ -203,12 +203,12 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
 | FR-090 | All data received from the Terminal Port shall be accumulated in a receive data buffer that is retained until explicitly cleared by the Terminal Window Clear button (FR-095). Local-echo text (FR-093) is not received data and shall not enter this buffer. | Mandatory | T | App_Design §Receiving data; impl. `app.py:handle_terminal_recv`, `_rx_buffer` |
-| FR-091 | All data received from the Terminal Port shall be displayed in the receive text area of the Terminal Window. | Mandatory | T | App_Design §Receiving data |
+| FR-091 | All data received from the Terminal Port shall be displayed in the receive text area of the Terminal Window. | Mandatory | T | App_Design §Receiving data; impl. `app.py:_on_term_write`, `app.py:handle_terminal_recv`, `terminal_window.py:write_text`, `serial_manager.py:_read_loop` |
 | FR-092 | All data transmitted to the Terminal Port (including the appended EOL, FR-094) shall be accumulated in a transmit data buffer that is retained until explicitly cleared by the Terminal Window Clear button (FR-095). | Mandatory | T | App_Design §Sending data; impl. `app.py:handle_terminal_send`, `_tx_buffer` |
-| FR-093 | When the Local Echo checkbox is enabled, transmitted data shall be copied to the receive text area of the Terminal Window. | Mandatory | T | App_Design §Sending data |
-| FR-094 | Transmitted data shall have the configured EOL character(s) appended before being sent. | Mandatory | T | App_Design §Sending data |
+| FR-093 | When the Local Echo checkbox is enabled, transmitted data shall be copied to the receive text area of the Terminal Window. | Mandatory | T | App_Design §Sending data; impl. `app.py:_on_term_write`, `app.py:_set_local_echo`, `app.py:handle_terminal_send` |
+| FR-094 | Transmitted data shall have the configured EOL character(s) appended before being sent. | Mandatory | T | App_Design §Sending data; impl. `app.py:handle_terminal_send` |
 | FR-095 | When the Clear button in the Terminal Window is pressed, the receive text area shall be cleared, and the receive and transmit data buffers (FR-090, FR-092) shall be cleared. | Mandatory | T | App_Requirements §Terminal Window; impl. `terminal_window.py:clear_text`, `app.py:clear_terminal_buffers` |
-| FR-096 | When the Send button in the Terminal Window is pressed, the contents of the transmit text field shall be sent to the Terminal Port. | Mandatory | T | App_Requirements §Terminal Window |
+| FR-096 | When the Send button in the Terminal Window is pressed, the contents of the transmit text field shall be sent to the Terminal Port. | Mandatory | T | App_Requirements §Terminal Window; impl. `terminal_window.py:send_text`, `serial_manager.py:send_data` |
 | FR-097 | When the Terminal button in the main window is pressed, the application shall open the Terminal Window if it is not already open, or restore (de-iconify) it if it is hidden. This action shall be independent of the Connect action and shall not require an open Terminal Port. | Mandatory | D | App_Requirements §Main Program GUI; impl. `app.py:show_terminal` |
 | FR-098 | If the Terminal Port is not open when the user attempts to send data from the Terminal Window, the application shall set the status bar text to "Terminal port not open - cannot send" and not transmit. | Mandatory | T | impl. `app.py:handle_terminal_send` |
 
@@ -220,18 +220,18 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| UIR-001 | The GUI shall present a menu bar at the top of the main window. | Mandatory | I | App_Requirements §Look and Feel, §Main Program GUI |
-| UIR-002 | The menu bar shall contain a File menu with the items Load, Save, and Exit. | Mandatory | I | App_Requirements §Look and Feel |
-| UIR-003 | The menu bar shall contain a Config menu with the items Serial and General. | Mandatory | I | App_Requirements §Look and Feel |
+| UIR-001 | The GUI shall present a menu bar at the top of the main window. | Mandatory | I | App_Requirements §Look and Feel, §Main Program GUI; impl. `app.py:setup_menu` |
+| UIR-002 | The menu bar shall contain a File menu with the items Load, Save, and Exit. | Mandatory | I | App_Requirements §Look and Feel; impl. `app.py:setup_menu` |
+| UIR-003 | The menu bar shall contain a Config menu with the items Serial and General. | Mandatory | I | App_Requirements §Look and Feel; impl. `app.py:setup_menu` |
 
 ### 4.2 Main window layout
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| UIR-010 | The main window shall contain a status bar at the bottom. | Mandatory | I | App_Requirements §Main Program GUI |
-| UIR-011 | The main window shall contain a "Host Files" group containing a "Change Directory" button, a multi-select widget, and a row underneath the widget containing "Refresh Host" and "Copy to Remote" buttons. | Mandatory | I | App_Requirements §Main Program GUI |
-| UIR-012 | The main window shall contain a "Remote Files" group containing a drive-selection drop-down (UIR-017) followed by an "Update" button, a multi-select widget, and a row underneath the widget containing the "Copy to Host" button. | Mandatory | I | App_Requirements §Main Program GUI |
-| UIR-013 | The main window shall provide the actions Connect, Disconnect, Copy to Remote, Copy to Host, Refresh Host, and Terminal. From v1.3 these are presented as a top toolbar (see UIR-071) or within the file panes rather than a central button column. | Mandatory | I | App_Requirements §Main Program GUI; impl. `app.py`; v1.3 UI migration |
+| UIR-010 | The main window shall contain a status bar at the bottom. | Mandatory | I | App_Requirements §Main Program GUI; impl. `app.py:setup_status_bar`, `app.py:_on_status_changed` |
+| UIR-011 | The main window shall contain a "Host Files" group containing a "Change Directory" button, a multi-select widget, and a row underneath the widget containing "Refresh Host" and "Copy to Remote" buttons. | Mandatory | I | App_Requirements §Main Program GUI; impl. `app.py:setup_layout` |
+| UIR-012 | The main window shall contain a "Remote Files" group containing a drive-selection drop-down (UIR-017) followed by an "Update" button, a multi-select widget, and a row underneath the widget containing the "Copy to Host" button. | Mandatory | I | App_Requirements §Main Program GUI; impl. `app.py:setup_layout` |
+| UIR-013 | The main window shall provide the actions Connect, Disconnect, Copy to Remote, Copy to Host, Refresh Host, and Terminal. From v1.3 these are presented as a top toolbar (see UIR-071) or within the file panes rather than a central button column. | Mandatory | I | App_Requirements §Main Program GUI; impl. `app.py:setup_toolbar` |
 | UIR-014 | The status bar shall be a single-line text label. When a status message exceeds 127 characters, the application shall truncate it to the first 127 characters before display. | Mandatory | T | App_Requirements §Status Bar; impl. `app.py:set_status` |
 | UIR-015 | The Connect button shall be enabled at startup. | Mandatory | I | App_Requirements §Connect |
 | UIR-016 | The main window shall provide a separate Disconnect button, enabled at startup, that invokes the disconnect behaviour (FR-050–FR-057). | Mandatory | I | App_Requirements §Disconnect; impl. `app.py` |
@@ -241,59 +241,59 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| UIR-020 | The Serial Configuration Dialog shall be a modal dialog titled "Serial Config". | Mandatory | I | App_Requirements §Serial Configuration Dialog |
-| UIR-021 | The dialog shall present a "Port Settings" group laid out in two columns, with the setting name left-justified in the first column and the setting field right-justified in the second column. | Mandatory | I | App_Requirements §Serial Configuration Dialog |
-| UIR-022 | The dialog shall provide a Terminal Port drop-down list populated by enumerating the serial ports installed on the host. | Mandatory | T | App_Requirements §Serial Configuration Dialog |
-| UIR-023 | The dialog shall provide a Transfer Port drop-down list populated by enumerating the serial ports installed on the host. | Mandatory | T | App_Requirements §Serial Configuration Dialog |
-| UIR-024 | The dialog shall provide a Speed drop-down list with the values 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 230400, 460800, and 921600; the default shall be 115200. | Mandatory | T | App_Requirements §Serial Configuration Dialog |
-| UIR-025 | The dialog shall provide a Data drop-down list with the values 7 and 8; the default shall be 8. | Mandatory | T | App_Requirements §Serial Configuration Dialog |
-| UIR-026 | The dialog shall provide a Parity drop-down list with the values NONE, ODD, EVEN, MARK, and SPACE; the default shall be NONE. | Mandatory | T | App_Requirements §Serial Configuration Dialog |
-| UIR-027 | The dialog shall provide a Stop Bits drop-down list with the values 1 and 2; the default shall be 1. | Mandatory | T | App_Requirements §Serial Configuration Dialog |
+| UIR-020 | The Serial Configuration Dialog shall be a modal dialog titled "Serial Config". | Mandatory | I | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:__init__`, `config_dialogs.py:SerialConfigDialog` |
+| UIR-021 | The dialog shall present a "Port Settings" group laid out in two columns, with the setting name left-justified in the first column and the setting field right-justified in the second column. | Mandatory | I | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:ConfigDialog`, `config_dialogs.py:create_widgets`, `config_dialogs.py:SerialConfigDialog` |
+| UIR-022 | The dialog shall provide a Terminal Port drop-down list populated by enumerating the serial ports installed on the host. | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `config_dialogs.py:__init__` |
+| UIR-023 | The dialog shall provide a Transfer Port drop-down list populated by enumerating the serial ports installed on the host. | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `config_dialogs.py:__init__` |
+| UIR-024 | The dialog shall provide a Speed drop-down list with the values 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 230400, 460800, and 921600; the default shall be 115200. | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `config_dialogs.py:__init__` |
+| UIR-025 | The dialog shall provide a Data drop-down list with the values 7 and 8; the default shall be 8. | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `config_dialogs.py:__init__` |
+| UIR-026 | The dialog shall provide a Parity drop-down list with the values NONE, ODD, EVEN, MARK, and SPACE; the default shall be NONE. | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `config_dialogs.py:__init__` |
+| UIR-027 | The dialog shall provide a Stop Bits drop-down list with the values 1 and 2; the default shall be 1. | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `config_dialogs.py:__init__` |
 | UIR-028 | The dialog shall provide a Flow Control drop-down list with the values NONE, XON/XOFF, RTS/CTS, and DSR/DTR; the default shall be NONE. The selected value shall be applied to the serial port when it is opened, mapping XON/XOFF, RTS/CTS, and DSR/DTR onto the corresponding software/hardware handshake (NONE disables all). *(v1.7.1: flow control is now applied at port open — see §10 OI-20.)* | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `serial_manager.py:open_port` |
-| UIR-029 | The dialog shall present a "Transmit Delay" group laid out in two columns, formatted as in UIR-021. | Mandatory | I | App_Requirements §Serial Configuration Dialog |
-| UIR-030 | The dialog shall provide an "msec/char" text field that defaults to 0 and is limited to integer values between 0 and 255 inclusive. The value shall be persisted as the `msec_char` setting. *(Inter-character transmission delay is a stored setting only; it is not yet applied during transmission — see CR-011.)* | Mandatory | T | App_Requirements §Serial Configuration Dialog |
-| UIR-031 | The dialog shall provide an "msec/line" text field that defaults to 0 and is limited to integer values between 0 and 255 inclusive. The value shall be persisted as the `msec_line` setting. *(Inter-line transmission delay is a stored setting only; it is not yet applied during transmission — see CR-011.)* | Mandatory | T | App_Requirements §Serial Configuration Dialog |
+| UIR-029 | The dialog shall present a "Transmit Delay" group laid out in two columns, formatted as in UIR-021. | Mandatory | I | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `config_dialogs.py:__init__` |
+| UIR-030 | The dialog shall provide an "msec/char" text field that defaults to 0 and is limited to integer values between 0 and 255 inclusive. The value shall be persisted as the `msec_char` setting. *(Inter-character transmission delay is a stored setting only; it is not yet applied during transmission — see CR-011.)* | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `config_dialogs.py:__init__` |
+| UIR-031 | The dialog shall provide an "msec/line" text field that defaults to 0 and is limited to integer values between 0 and 255 inclusive. The value shall be persisted as the `msec_line` setting. *(Inter-line transmission delay is a stored setting only; it is not yet applied during transmission — see CR-011.)* | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `config_dialogs.py:__init__` |
 
 ### 4.4 General Configuration Dialog
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| UIR-040 | The General Configuration Dialog shall be a modal dialog titled "General Config". | Mandatory | I | App_Requirements §General Configuration Dialog |
-| UIR-041 | The dialog shall present a "Terminal Commands" group laid out in two columns as in UIR-021. | Mandatory | I | App_Requirements §General Configuration Dialog |
-| UIR-042 | The dialog shall provide a "List Files" text field limited to 79 characters with a default value of "DIR". | Mandatory | T | App_Requirements §General Configuration Dialog |
-| UIR-043 | *Withdrawn.* Formerly a "Change Disk" text field persisted as `change_disk_cmd`. Removed because the command was never sent to the remote and the drive-change behaviour is now provided by the Remote Files drive drop-down (FR-100–FR-104, UIR-017). The field and setting are no longer present in the dialog or config files. | — | — | — |
-| UIR-044 | The dialog shall present an "Xmodem Commands" group laid out in two columns as in UIR-021. | Mandatory | I | App_Requirements §General Configuration Dialog |
-| UIR-045 | The dialog shall provide a "Receive from Remote" text field limited to 79 characters with a default value of "PCPUT $1". | Mandatory | T | App_Requirements §General Configuration Dialog |
-| UIR-046 | The dialog shall provide a "Send to Remote" text field limited to 79 characters with a default value of "PCGET $1". | Mandatory | T | App_Requirements §General Configuration Dialog |
-| UIR-047 | The dialog shall present an "End of Line" group of mutually exclusive radio buttons: Carriage Return (CR), Line Feed (LF), and Carriage Return/Line Feed (CR/LF). | Mandatory | I | App_Requirements §General Configuration Dialog |
-| UIR-048 | The Carriage Return (CR) radio button shall be the default selection. | Mandatory | T | App_Requirements §General Configuration Dialog |
-| UIR-049 | The dialog shall provide an "Xfer Launch Delay (s)" integer field (0..60 inclusive) with a default value of 3, setting the seconds to wait after launching the remote transfer program (FR-087) before the X-Modem handshake begins. *(v1.3.1.)* | Mandatory | T | impl. `gui/config_dialogs.py`; FR-087, FR-089, `app.py:_launch_delay` |
-| UIR-050 | The dialog shall provide a "Debug Logging" dropdown (`OFF`/`ON`, default `OFF`) controlling the verbose transfer debug output of FR-088. *(v1.3.1.)* | Mandatory | T | impl. `gui/config_dialogs.py`; FR-088, `app.py:_debug_enabled` |
-| UIR-052 | The dialog shall provide an "Xfer Inter-file Delay (s)" integer field (0..60 inclusive) with a default value of 2, setting the additional settle time waited between files in a multi-file batch after the terminal output goes idle and before the next launch command is sent (FR-109). *(v1.6.1.)* | Mandatory | T | impl. `gui/config_dialogs.py`; FR-109, `app.py:_interfile_delay` |
-| UIR-053 | The dialog shall provide a "Default Host Directory" text field and an associated browse button to specify the host directory used at startup (FR-060). This value is persisted in the configuration JSON file. | Mandatory | T | App_Requirements §General Configuration Dialog |
+| UIR-040 | The General Configuration Dialog shall be a modal dialog titled "General Config". | Mandatory | I | App_Requirements §General Configuration Dialog; impl. `config_dialogs.py:__init__`, `config_dialogs.py:GeneralConfigDialog` |
+| UIR-041 | The dialog shall present a "Terminal Commands" group laid out in two columns as in UIR-021. | Mandatory | I | App_Requirements §General Configuration Dialog; impl. `config_dialogs.py:GeneralConfigDialog` |
+| UIR-042 | The dialog shall provide a "List Files" text field limited to 79 characters with a default value of "DIR". | Mandatory | T | App_Requirements §General Configuration Dialog; impl. `config_dialogs.py:GeneralConfigDialog`, `config_dialogs.py:__init__` |
+| UIR-043 | *Withdrawn.* Formerly a "Change Disk" text field persisted as `change_disk_cmd`. Removed because the command was never sent to the remote and the drive-change behaviour is now provided by the Remote Files drive drop-down (FR-100–FR-104, UIR-017). The field and setting are no longer present in the dialog or config files. | — | — | impl. `config_dialogs.py:GeneralConfigDialog` |
+| UIR-044 | The dialog shall present an "Xmodem Commands" group laid out in two columns as in UIR-021. | Mandatory | I | App_Requirements §General Configuration Dialog; impl. `config_dialogs.py:GeneralConfigDialog` |
+| UIR-045 | The dialog shall provide a "Receive from Remote" text field limited to 79 characters with a default value of "PCPUT $1". | Mandatory | T | App_Requirements §General Configuration Dialog; impl. `config_dialogs.py:GeneralConfigDialog`, `config_dialogs.py:__init__` |
+| UIR-046 | The dialog shall provide a "Send to Remote" text field limited to 79 characters with a default value of "PCGET $1". | Mandatory | T | App_Requirements §General Configuration Dialog; impl. `config_dialogs.py:GeneralConfigDialog`, `config_dialogs.py:__init__` |
+| UIR-047 | The dialog shall present an "End of Line" group of mutually exclusive radio buttons: Carriage Return (CR), Line Feed (LF), and Carriage Return/Line Feed (CR/LF). | Mandatory | I | App_Requirements §General Configuration Dialog; impl. `config_dialogs.py:GeneralConfigDialog`, `config_dialogs.py:__init__` |
+| UIR-048 | The Carriage Return (CR) radio button shall be the default selection. | Mandatory | T | App_Requirements §General Configuration Dialog; impl. `config_dialogs.py:GeneralConfigDialog`, `config_dialogs.py:__init__` |
+| UIR-049 | The dialog shall provide an "Xfer Launch Delay (s)" integer field (0..60 inclusive) with a default value of 3, setting the seconds to wait after launching the remote transfer program (FR-087) before the X-Modem handshake begins. *(v1.3.1.)* | Mandatory | T | impl. `config_dialogs.py:GeneralConfigDialog`, `config_dialogs.py:__init__` |
+| UIR-050 | The dialog shall provide a "Debug Logging" dropdown (`OFF`/`ON`, default `OFF`) controlling the verbose transfer debug output of FR-088. *(v1.3.1.)* | Mandatory | T | impl. `config_dialogs.py:GeneralConfigDialog` |
+| UIR-052 | The dialog shall provide an "Xfer Inter-file Delay (s)" integer field (0..60 inclusive) with a default value of 2, setting the additional settle time waited between files in a multi-file batch after the terminal output goes idle and before the next launch command is sent (FR-109). *(v1.6.1.)* | Mandatory | T | impl. `config_dialogs.py:GeneralConfigDialog` |
+| UIR-053 | The dialog shall provide a "Default Host Directory" text field and an associated browse button to specify the host directory used at startup (FR-060). This value is persisted in the configuration JSON file. | Mandatory | T | App_Requirements §General Configuration Dialog; impl. `config_dialogs.py:create_widgets`, `config_dialogs.py:on_browse`, `config_dialogs.py:GeneralConfigDialog` |
 
 ### 4.5 Terminal Window
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| UIR-060 | The Terminal Window shall be a non-modal window titled "Terminal". | Mandatory | I | App_Requirements §Terminal Window |
-| UIR-061 | The Terminal Window shall contain a large multi-line text area named "Receive" for displaying incoming data. | Mandatory | I | App_Requirements §Terminal Window |
-| UIR-062 | The Receive text area shall auto-scroll incoming text (subject to the Autoscroll control). | Mandatory | D | App_Requirements §Terminal Window |
-| UIR-063 | The Receive text area shall be read-only. | Mandatory | T | App_Requirements §Terminal Window |
-| UIR-064 | The Terminal Window shall provide a "Clear" button, left-aligned, below the Receive text area. | Mandatory | I | App_Requirements §Terminal Window |
-| UIR-065 | The Terminal Window shall provide a "Local Echo" checkbox, centred, that is disabled by default. | Mandatory | T | App_Requirements §Terminal Window |
-| UIR-066 | The Terminal Window shall provide an "Autoscroll" checkbox, right-aligned, that is enabled by default. | Mandatory | T | App_Requirements §Terminal Window |
-| UIR-067 | The Terminal Window shall provide a "Transmit" group containing a single-line text field aligned left and a "Send" button aligned right in the same row. | Mandatory | I | App_Requirements §Terminal Window |
+| UIR-060 | The Terminal Window shall be a non-modal window titled "Terminal". | Mandatory | I | App_Requirements §Terminal Window; impl. `terminal_window.py:TerminalWindow`, `terminal_window.py:__init__` |
+| UIR-061 | The Terminal Window shall contain a large multi-line text area named "Receive" for displaying incoming data. | Mandatory | I | App_Requirements §Terminal Window; impl. `terminal_window.py:TerminalWindow`, `terminal_window.py:create_widgets` |
+| UIR-062 | The Receive text area shall auto-scroll incoming text (subject to the Autoscroll control). | Mandatory | D | App_Requirements §Terminal Window; impl. `terminal_window.py:TerminalWindow`, `terminal_window.py:create_widgets`, `terminal_window.py:write_text` |
+| UIR-063 | The Receive text area shall be read-only. | Mandatory | T | App_Requirements §Terminal Window; impl. `terminal_window.py:TerminalWindow`, `terminal_window.py:create_widgets` |
+| UIR-064 | The Terminal Window shall provide a "Clear" button, left-aligned, below the Receive text area. | Mandatory | I | App_Requirements §Terminal Window; impl. `terminal_window.py:TerminalWindow`, `terminal_window.py:create_widgets`, `terminal_window.py:clear_text` |
+| UIR-065 | The Terminal Window shall provide a "Local Echo" checkbox, centred, that is disabled by default. | Mandatory | T | App_Requirements §Terminal Window; impl. `terminal_window.py:TerminalWindow`, `terminal_window.py:create_widgets` |
+| UIR-066 | The Terminal Window shall provide an "Autoscroll" checkbox, right-aligned, that is enabled by default. | Mandatory | T | App_Requirements §Terminal Window; impl. `terminal_window.py:TerminalWindow`, `terminal_window.py:create_widgets` |
+| UIR-067 | The Terminal Window shall provide a "Transmit" group containing a single-line text field aligned left and a "Send" button aligned right in the same row. | Mandatory | I | App_Requirements §Terminal Window; impl. `terminal_window.py:TerminalWindow`, `terminal_window.py:create_widgets` |
 
 ### 4.6 Visual theme and modern layout (v1.3)
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| UIR-070 | The GUI shall apply a modern Material Design visual theme to all windows, dialogs, and widgets (via the `qt-material` stylesheet over PySide6 widgets), in place of the platform-default Tk appearance. | Mandatory | D | v1.3 UI migration |
-| UIR-071 | The main window shall present the Connect, Disconnect, and Terminal actions of UIR-013 as a toolbar at the top of the window (above the file panes), with each action shown as a labelled, icon-bearing button. | Mandatory | I | v1.3 UI migration |
-| UIR-072 | The Host Files and Remote Files panes shall be separated by a user-draggable splitter that lets the user re-apportion horizontal space between the two panes; the split position is not required to persist between sessions. | Mandatory | D | v1.3 UI migration |
-| UIR-073 | The application shall, at startup, detect the host operating system's light/dark colour-scheme preference and apply the corresponding (light or dark) variant of the Material theme. If the preference cannot be determined, the application shall default to the dark variant. | Mandatory | T | v1.3 UI migration |
-| UIR-074 | The status bar (UIR-010) shall display two connection indicators — one for the Terminal status flag (FR-001) and one for the Transport status flag (FR-002) — each rendering a distinct visual state for connected versus not-connected. | Desirable | D | v1.3 UI migration |
+| UIR-070 | The GUI shall apply a modern Material Design visual theme to all windows, dialogs, and widgets (via the `qt-material` stylesheet over PySide6 widgets), in place of the platform-default Tk appearance. | Mandatory | D | v1.3 UI migration; impl. `theme.py:apply_theme` |
+| UIR-071 | The main window shall present the Connect, Disconnect, and Terminal actions of UIR-013 as a toolbar at the top of the window (above the file panes), with each action shown as a labelled, icon-bearing button. | Mandatory | I | v1.3 UI migration; impl. `app.py:setup_toolbar` |
+| UIR-072 | The Host Files and Remote Files panes shall be separated by a user-draggable splitter that lets the user re-apportion horizontal space between the two panes; the split position is not required to persist between sessions. | Mandatory | D | v1.3 UI migration; impl. `app.py:setup_layout` |
+| UIR-073 | The application shall, at startup, detect the host operating system's light/dark colour-scheme preference and apply the corresponding (light or dark) variant of the Material theme. If the preference cannot be determined, the application shall default to the dark variant. | Mandatory | T | v1.3 UI migration; impl. `theme.py:prefers_dark`, `theme.py:apply_theme` |
+| UIR-074 | The status bar (UIR-010) shall display two connection indicators — one for the Terminal status flag (FR-001) and one for the Transport status flag (FR-002) — each rendering a distinct visual state for connected versus not-connected. | Desirable | D | v1.3 UI migration; impl. `app.py:setup_status_bar`, `app.py:_make_indicator`, `app.py:_update_indicators` |
 
 ### 4.7 Transfer Progress Dialog
 
@@ -307,10 +307,10 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| IFR-001 | The application shall communicate with the remote CP/M system over a serial (RS-232 style) communications link. | Mandatory | T | App_Design §Purpose |
-| IFR-002 | The application shall support configuring two logical serial ports — a Terminal Port and a Transport Port — which may map to the same physical port. | Mandatory | T | App_Requirements §Serial Configuration Dialog; CLAUDE.md |
-| IFR-003 | The application shall enumerate the serial ports installed on the host and present them for selection. | Mandatory | T | App_Requirements §Serial Configuration Dialog |
-| IFR-004 | Configuration data shall be exchanged with the file system as JSON files. | Mandatory | T | App_Requirements §Load, §Save |
+| IFR-001 | The application shall communicate with the remote CP/M system over a serial (RS-232 style) communications link. | Mandatory | T | App_Design §Purpose; impl. `serial_manager.py:SerialManager` |
+| IFR-002 | The application shall support configuring two logical serial ports — a Terminal Port and a Transport Port — which may map to the same physical port. | Mandatory | T | App_Requirements §Serial Configuration Dialog; CLAUDE.md; impl. `config_dialogs.py:SerialConfigDialog`, `serial_manager.py:SerialManager` |
+| IFR-003 | The application shall enumerate the serial ports installed on the host and present them for selection. | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `app.py:menu_serial_config` |
+| IFR-004 | Configuration data shall be exchanged with the file system as JSON files. | Mandatory | T | App_Requirements §Load, §Save; impl. `config_handler.py:ConfigHandler`, `config_handler.py:load_json`, `config_handler.py:save_json` |
 
 ---
 
@@ -323,44 +323,44 @@ The following requirements define the algorithm for extracting remote file names
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| DR-001 | The parser shall ignore lines that are empty or contain only whitespace. | Mandatory | T | App_Design §Ignore non-file lines |
-| DR-002 | The parser shall ignore lines that begin with a shell prompt of the form `C>` where `C` may be any drive letter. | Mandatory | T | App_Design §Ignore non-file lines |
-| DR-003 | The parser shall ignore lines that contain the substring "NO FILE". | Mandatory | T | App_Design §Ignore non-file lines |
-| DR-004 | The parser shall process only lines that start with the literal prefix `C:` (where `C` may be any drive letter). | Mandatory | T | App_Design §Identify file listing lines |
+| DR-001 | The parser shall ignore lines that are empty or contain only whitespace. | Mandatory | T | App_Design §Ignore non-file lines; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
+| DR-002 | The parser shall ignore lines that begin with a shell prompt of the form `C>` where `C` may be any drive letter. | Mandatory | T | App_Design §Ignore non-file lines; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
+| DR-003 | The parser shall ignore lines that contain the substring "NO FILE". | Mandatory | T | App_Design §Ignore non-file lines; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
+| DR-004 | The parser shall process only lines that start with the literal prefix `C:` (where `C` may be any drive letter). | Mandatory | T | App_Design §Identify file listing lines; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
 | DR-005 | The parser shall process every line that starts with the drive prefix (DR-004), whether or not it contains the separator sequence space-colon-space (" : "). The separator only delimits multiple file entries on a line (DR-011); a directory containing a single file produces a line with no separator, which shall still be processed. *(v1.3.3: fixes the defect where a directory with a single file showed no entries because the separator was wrongly required as a line filter.)* | Mandatory | T | App_Design §Identify file listing lines; impl. `cpm_parser.py:parse_dir_output` |
-| DR-006 | The parser shall additionally process file listing lines produced by CP/M variants (e.g. ZCPR/ZSDOS) that use the vertical bar `\|` as both the entry separator and a leading line marker, in place of the drive prefix and the space-colon-space delimiter. Such a line begins (after trimming) with `\|`, has no drive prefix, separates entries with `\|`, and presents each entry with a literal dot between the space-padded filename base and extension (e.g. `\|  ASM     .COM  \|  FILEATTR.COM`). Both this format and the standard drive-prefix format (DR-004/DR-005) shall be supported. | Mandatory | T | impl. `cpm_parser.py:parse_dir_output` |
+| DR-006 | The parser shall additionally process file listing lines produced by CP/M variants (e.g. ZCPR/ZSDOS) that use the vertical bar `\|` as both the entry separator and a leading line marker, in place of the drive prefix and the space-colon-space delimiter. Such a line begins (after trimming) with `\|`, has no drive prefix, separates entries with `\|`, and presents each entry with a literal dot between the space-padded filename base and extension (e.g. `\|  ASM     .COM  \|  FILEATTR.COM`). Both this format and the standard drive-prefix format (DR-004/DR-005) shall be supported. | Mandatory | T | impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
 
 ### 6.2 Entry extraction
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| DR-010 | For each identified file listing line, the parser shall remove the leading drive prefix and process only the remainder of the line. | Mandatory | T | App_Design §Strip drive identifier |
-| DR-011 | The parser shall split each processed line into individual file entries using the space-colon-space delimiter. | Mandatory | T | App_Design §Split file entries |
-| DR-012 | For each file entry, the parser shall replace any sequence of one or more consecutive spaces with a single space and trim leading and trailing whitespace. | Mandatory | T | App_Design §Normalise whitespace |
-| DR-013 | For each normalised entry, the parser shall split into tokens by whitespace. If two or more tokens are present, the last token is the file extension and all preceding tokens are the filename base concatenated without spaces. If exactly one token is present, it is a filename with no extension (CP/M leaves the space-padded extension field blank, e.g. `LICENCE`). | Mandatory | T | App_Design §Parse filename and extension |
-| DR-014 | The parser shall construct each canonical filename in the format `<filename_base>.<extension>`, except for an extensionless entry (DR-013) which is constructed as `<filename_base>` with no trailing dot, so the listed name matches the host filename. | Mandatory | T | App_Design §Construct full filename |
+| DR-010 | For each identified file listing line, the parser shall remove the leading drive prefix and process only the remainder of the line. | Mandatory | T | App_Design §Strip drive identifier; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
+| DR-011 | The parser shall split each processed line into individual file entries using the space-colon-space delimiter. | Mandatory | T | App_Design §Split file entries; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
+| DR-012 | For each file entry, the parser shall replace any sequence of one or more consecutive spaces with a single space and trim leading and trailing whitespace. | Mandatory | T | App_Design §Normalise whitespace; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
+| DR-013 | For each normalised entry, the parser shall split into tokens by whitespace. If two or more tokens are present, the last token is the file extension and all preceding tokens are the filename base concatenated without spaces. If exactly one token is present, it is a filename with no extension (CP/M leaves the space-padded extension field blank, e.g. `LICENCE`). | Mandatory | T | App_Design §Parse filename and extension; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
+| DR-014 | The parser shall construct each canonical filename in the format `<filename_base>.<extension>`, except for an extensionless entry (DR-013) which is constructed as `<filename_base>` with no trailing dot, so the listed name matches the host filename. | Mandatory | T | App_Design §Construct full filename; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
 | DR-015 | For vertical-bar format lines (DR-006), where the dot delimiting the extension is already present in the output, the parser shall construct each canonical filename by removing all internal whitespace from the entry (the filename base is space-padded), yielding `<filename_base>.<extension>`. A trailing dot left by an empty extension field shall be removed so the result matches the extensionless convention of DR-014. | Mandatory | T | impl. `cpm_parser.py:parse_dir_output` |
 
 ### 6.3 Output and robustness
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| DR-020 | The parser shall store each constructed filename as a key in a dictionary with the boolean value `True`; duplicate filenames shall overwrite the existing key (no duplicate keys). | Mandatory | T | App_Design §Store filenames |
-| DR-021 | The parser shall return a Python `dict` whose keys are filename strings — of the form "NAME.EXT", or "NAME" for an extensionless file (DR-013/DR-014) — and whose values are the boolean literal `True`, containing only valid filenames extracted from the input. | Mandatory | T | App_Design §Output format |
-| DR-022 | The parser shall preserve the exact case of filename and extension characters as provided in the input. | Mandatory | T | App_Design §Case sensitivity |
-| DR-023 | The parser shall skip empty entries (those with no tokens after whitespace normalisation). A single-token entry is not malformed: it is an extensionless filename and shall be listed (DR-013). | Mandatory | T | App_Design §Handle edge cases |
-| DR-024 | The parser shall not raise exceptions for invalid or unexpected input. | Mandatory | T | App_Design §Handle edge cases |
-| DR-025 | The parser shall return an empty dictionary if no valid file entries are found. | Mandatory | T | App_Design §Handle edge cases |
-| DR-026 | The parser shall tolerate irregular spacing, extra colons within filenames, and mixed line endings (`\n`, `\r\n`). | Mandatory | T | App_Design §Input robustness |
+| DR-020 | The parser shall store each constructed filename as a key in a dictionary with the boolean value `True`; duplicate filenames shall overwrite the existing key (no duplicate keys). | Mandatory | T | App_Design §Store filenames; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
+| DR-021 | The parser shall return a Python `dict` whose keys are filename strings — of the form "NAME.EXT", or "NAME" for an extensionless file (DR-013/DR-014) — and whose values are the boolean literal `True`, containing only valid filenames extracted from the input. | Mandatory | T | App_Design §Output format; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
+| DR-022 | The parser shall preserve the exact case of filename and extension characters as provided in the input. | Mandatory | T | App_Design §Case sensitivity; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
+| DR-023 | The parser shall skip empty entries (those with no tokens after whitespace normalisation). A single-token entry is not malformed: it is an extensionless filename and shall be listed (DR-013). | Mandatory | T | App_Design §Handle edge cases; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
+| DR-024 | The parser shall not raise exceptions for invalid or unexpected input. | Mandatory | T | App_Design §Handle edge cases; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
+| DR-025 | The parser shall return an empty dictionary if no valid file entries are found. | Mandatory | T | App_Design §Handle edge cases; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
+| DR-026 | The parser shall tolerate irregular spacing, extra colons within filenames, and mixed line endings (`\n`, `\r\n`). | Mandatory | T | App_Design §Input robustness; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
 | DR-033 | The drive-prompt detection routine shall report a drive prompt for drive `X` as present when any non-blank line of the captured terminal text, after stripping surrounding whitespace and comparing case-insensitively, starts with `X>`. Blank lines shall be ignored. | Mandatory | T | impl. `cpm_parser.py:has_drive_prompt`; FR-101, FR-102 |
 
 ### 6.4 Parser constraints
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| DR-030 | The parser assumes input conforming to standard CP/M 2.2 `DIR` output format (8.3 filenames, space-padded). | Mandatory | A | App_Design §Constraints |
-| DR-031 | The parser is not required to support long filenames or non-ASCII characters. | Optional | A | App_Design §Constraints |
-| DR-032 | The parser is not required to parse file sizes, dates, or attributes — only names and extensions. | Mandatory | A | App_Design §Constraints |
+| DR-030 | The parser assumes input conforming to standard CP/M 2.2 `DIR` output format (8.3 filenames, space-padded). | Mandatory | A | App_Design §Constraints; impl. `cpm_parser.py:CPMParser` |
+| DR-031 | The parser is not required to support long filenames or non-ASCII characters. | Optional | A | App_Design §Constraints; impl. `cpm_parser.py:CPMParser` |
+| DR-032 | The parser is not required to parse file sizes, dates, or attributes — only names and extensions. | Mandatory | A | App_Design §Constraints; impl. `cpm_parser.py:CPMParser` |
 
 ---
 
@@ -369,7 +369,7 @@ The following requirements define the algorithm for extracting remote file names
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
 | CR-001 | All source files shall reside under a `src` folder at the project root. | Mandatory | I | App_Design §Project Structure |
-| CR-002 | The package shall provide a runnable module entry point at `src/cpm_fm/__main__.py` that invokes `cpm_fm.app:main()`, enabling `python -m cpm_fm`. | Mandatory | I | App_Design §Project Structure; impl. `src/cpm_fm/__main__.py` |
+| CR-002 | The package shall provide a runnable module entry point at `src/cpm_fm/__main__.py` that invokes `cpm_fm.app:main()`, enabling `python -m cpm_fm`. | Mandatory | I | App_Design §Project Structure; impl. `app.py:main` |
 | CR-003 | All GUI-related source files shall reside in a `gui` folder within the source tree. | Mandatory | I | App_Design §Project Structure |
 | CR-004 | All serial and terminal related source files shall reside in a `terminal` folder within the source tree. | Mandatory | I | App_Design §Project Structure |
 | CR-005 | All other source files shall reside in a `utils` folder within the source tree. | Mandatory | I | App_Design §Project Structure |
@@ -380,7 +380,7 @@ The following requirements define the algorithm for extracting remote file names
 | CR-010 | The Copy to Remote and Copy to Host actions shall be guarded so that a transfer is only attempted when **both** the Terminal status flag and the Transport status flag are true (consistent with FR-080); otherwise an error dialog with the body text "Transport port not connected" shall be shown and the transfer shall not proceed. | Mandatory | T | App_Requirements §Copy to Remote, §Copy to Host; impl. `app.py:do_copy_to_remote`, `do_copy_to_host` |
 | CR-011 | The following settings are persisted but their behaviour is deferred to a future release and is not implemented in the current baseline: `msec_char` (UIR-030) and `msec_line` (UIR-031). *(v1.3.1: `recv_remote_cmd`/`send_remote_cmd` are no longer deferred — see FR-087. Later: `change_disk_cmd` was removed entirely rather than deferred — see UIR-043 (Withdrawn), FR-100–FR-104.)* | Mandatory | I | impl. survey of `app.py` |
 | CR-012 | The graphical user interface shall be implemented with **PySide6 (Qt for Python)**. Tkinter shall not be used for any GUI component. PySide6 shall be declared as a runtime dependency in `pyproject.toml`. | Mandatory | I | v1.3 UI migration |
-| CR-013 | The Material Design visual theme (UIR-070) shall be supplied by the `qt-material` package, declared as a runtime dependency in `pyproject.toml`. The theme shall be applied centrally at application start-up (not per-widget), so that all current and future windows inherit it. | Mandatory | I | v1.3 UI migration |
+| CR-013 | The Material Design visual theme (UIR-070) shall be supplied by the `qt-material` package, declared as a runtime dependency in `pyproject.toml`. The theme shall be applied centrally at application start-up (not per-widget), so that all current and future windows inherit it. | Mandatory | I | v1.3 UI migration; impl. `app.py:main`, `theme.py:apply_theme` |
 | CR-014 | The GUI, serial/terminal (`terminal/`), and configuration (`utils/`) layers shall remain decoupled such that the `terminal/` and `utils/` modules contain no PySide6 (or other GUI-toolkit) imports and remain unit-testable without a running Qt application. | Mandatory | T | CLAUDE.md §Architecture; v1.3 UI migration |
 
 ---
@@ -392,7 +392,7 @@ The following requirements define the algorithm for extracting remote file names
 | NFR-001 | The application shall remain responsive during serial reads and file transfers. Serial reads shall run on a background daemon thread; each file transfer shall run on its own background thread; and all GUI updates originating from those threads shall be marshalled onto the Qt GUI (main) thread via the Qt signal/slot mechanism (queued connections) — see NFR-004. *(Prior to v1.3 this marshalling was performed with Tkinter's `self.after(0, ...)`.)* | Mandatory | T | impl. `serial_manager.py:_read_loop`, `app.py` transfer threads; v1.3 UI migration |
 | NFR-002 | The application shall support both the flat and nested JSON configuration file shapes for serial settings, normalising an outer `serial` sub-dict and falling back across the alternative key names (e.g. `transport_port`/`transfer_port`, `data`/`data_bits`, `stopbits`/`stop_bits`). | Mandatory | T | CLAUDE.md §Two config JSON formats; impl. `serial_manager.py:open_port` |
 | NFR-003 | The X-Modem implementation shall transmit 128-byte packets framed with SOH (0x01) and shall support both error-check modes selected by the standard receiver-driven handshake: **CRC** (CRC-16/XMODEM, polynomial 0x1021, initial value 0x0000, transmitted as a 2-byte big-endian trailer), requested by the receiver polling with `'C'` (0x43); and **checksum** (arithmetic sum of the data bytes modulo 256, 1-byte trailer), requested by the receiver polling with NAK (0x15). When receiving, the application shall poll with NAK (checksum) **first** and fall back to `'C'` (CRC) only if the sender does not answer NAK, and shall additionally accept STX (0x02) frames carrying 1024 data bytes (XMODEM-1K) from 1K-capable senders such as PCPUT1K. The final transmitted packet shall be padded to a full 128-byte data field using the pad byte 0x1A (SUB / Ctrl-Z, the CP/M end-of-file convention), and the trailer shall be computed over the padded field. *(v1.3.1: extended from checksum-only to add CRC and XMODEM-1K receive for interoperability with PCGET/PCPUT. v1.6.1: receive polls NAK before `'C'` — the CP/M senders are checksum-only and abort on a stray `'C'` ("Unknown response from host").)* | Mandatory | T | impl. `xmodem.py:send_file`, `receive_file` |
-| NFR-004 | No Qt widget shall be created or mutated from any thread other than the Qt GUI (main) thread. Cross-thread UI updates (serial receive callbacks, transfer progress/results, transfer byte echo) shall be delivered to the GUI thread exclusively via Qt signals connected with `Qt.QueuedConnection` (or the implicitly-queued cross-thread default), satisfying NFR-001. | Mandatory | T | v1.3 UI migration |
+| NFR-004 | No Qt widget shall be created or mutated from any thread other than the Qt GUI (main) thread. Cross-thread UI updates (serial receive callbacks, transfer progress/results, transfer byte echo) shall be delivered to the GUI thread exclusively via Qt signals connected with `Qt.QueuedConnection` (or the implicitly-queued cross-thread default), satisfying NFR-001. | Mandatory | T | v1.3 UI migration; impl. `app.py:_connect_signals` |
 
 ---
 
