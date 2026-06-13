@@ -496,6 +496,10 @@ class MainWindow(QMainWindow):
                 if not self.serial_mgr.open_port("transport", self.settings):
                     QMessageBox.critical(self, "Error", "Transport port is unable to be opened")
             else:
+                # FR-037: same physical port. Point the Transport Port at the
+                # already-open Terminal Port object so transfers have a real
+                # port to use (not None) and set the Transport flag.
+                self.serial_mgr.transport_port = self.serial_mgr.terminal_port
                 self.serial_mgr.transport_connected = True
         else:
             QMessageBox.critical(self, "Error", "Terminal port is unable to be opened")
@@ -521,8 +525,11 @@ class MainWindow(QMainWindow):
             # Port, so it is stale — clear it.
             self.remote_list.clear()
 
-        # FR-054: same physical port — clear the Transport flag, no separate close.
+        # FR-054: same physical port — clear the Transport flag, no separate
+        # close. Also drop the shared reference so it cannot point at the
+        # now-closed Terminal Port object.
         if trans_port == term_port:
+            self.serial_mgr.transport_port = None
             self.serial_mgr.transport_connected = False
         # FR-055/FR-056/FR-057: different port — close it if open.
         elif self.serial_mgr.transport_connected:
@@ -857,21 +864,31 @@ class MainWindow(QMainWindow):
             f"cmd={self.settings.get('send_remote_cmd', 'PCGET $1')!r} "
             f"launch_delay={delay}s transport={ser}"
         )
-        # Clear stale bytes, then launch the CP/M receiver (PCGET) on the
-        # Terminal Port so its start character lands on a clean transport
-        # buffer that send_file does not flush.
-        if ser:
-            ser.reset_input_buffer()
-        self._issue_remote_cmd("send_remote_cmd", "PCGET $1", os.path.basename(filepath))
-        self._debug(f"[copy-to-remote] launched PCGET; waiting {delay}s before handshake")
-        time.sleep(delay)
-        self._debug("[copy-to-remote] starting X-Modem send")
-        xm = XModem(
-            ser,
-            monitor=self._on_transfer_bytes,
-            progress=self._on_transfer_progress_cb,
-        )
-        return xm.send_file(filepath)
+        # FR-037: when the Transport and Terminal Ports are the same physical
+        # port, suspend the terminal read loop for the whole session so it does
+        # not steal the start character (C/NAK) and ACKs that X-Modem needs.
+        shared = ser is not None and ser is self.serial_mgr.terminal_port
+        if shared:
+            self.serial_mgr.pause_terminal_reads()
+        try:
+            # Clear stale bytes, then launch the CP/M receiver (PCGET) on the
+            # Terminal Port so its start character lands on a clean transport
+            # buffer that send_file does not flush.
+            if ser:
+                ser.reset_input_buffer()
+            self._issue_remote_cmd("send_remote_cmd", "PCGET $1", os.path.basename(filepath))
+            self._debug(f"[copy-to-remote] launched PCGET; waiting {delay}s before handshake")
+            time.sleep(delay)
+            self._debug("[copy-to-remote] starting X-Modem send")
+            xm = XModem(
+                ser,
+                monitor=self._on_transfer_bytes,
+                progress=self._on_transfer_progress_cb,
+            )
+            return xm.send_file(filepath)
+        finally:
+            if shared:
+                self.serial_mgr.resume_terminal_reads()
 
     def do_copy_to_host(self):
         """
@@ -951,19 +968,29 @@ class MainWindow(QMainWindow):
             f"cmd={self.settings.get('recv_remote_cmd', 'PCPUT $1')!r} "
             f"launch_delay={delay}s transport={ser}"
         )
-        # Launch the CP/M sender (PCPUT) on the Terminal Port, then receive.
-        # receive_file drives the handshake (polls with 'C'), so it tolerates
-        # PCPUT taking several seconds to arm.
-        self._issue_remote_cmd("recv_remote_cmd", "PCPUT $1", os.path.basename(save_path))
-        self._debug(f"[copy-to-host] launched PCPUT; waiting {delay}s before handshake")
-        time.sleep(delay)
-        self._debug("[copy-to-host] starting X-Modem receive")
-        xm = XModem(
-            ser,
-            monitor=self._on_transfer_bytes,
-            progress=self._on_transfer_progress_cb,
-        )
-        return xm.receive_file(save_path)
+        # FR-037: when the Transport and Terminal Ports are the same physical
+        # port, suspend the terminal read loop for the whole session so it does
+        # not consume the packets X-Modem is trying to receive.
+        shared = ser is not None and ser is self.serial_mgr.terminal_port
+        if shared:
+            self.serial_mgr.pause_terminal_reads()
+        try:
+            # Launch the CP/M sender (PCPUT) on the Terminal Port, then receive.
+            # receive_file drives the handshake (polls with 'C'), so it tolerates
+            # PCPUT taking several seconds to arm.
+            self._issue_remote_cmd("recv_remote_cmd", "PCPUT $1", os.path.basename(save_path))
+            self._debug(f"[copy-to-host] launched PCPUT; waiting {delay}s before handshake")
+            time.sleep(delay)
+            self._debug("[copy-to-host] starting X-Modem receive")
+            xm = XModem(
+                ser,
+                monitor=self._on_transfer_bytes,
+                progress=self._on_transfer_progress_cb,
+            )
+            return xm.receive_file(save_path)
+        finally:
+            if shared:
+                self.serial_mgr.resume_terminal_reads()
 
     # ------------------------------------------------------------------ config
 

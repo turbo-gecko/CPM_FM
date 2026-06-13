@@ -424,6 +424,31 @@ def test_disconnect_keeps_remote_list_when_close_fails(qapp, monkeypatch, state)
         win.close()
 
 
+def test_connect_shared_port_assigns_transport_port(qapp, monkeypatch, state):
+    # FR-037: when the Transport and Terminal Ports are the same physical port,
+    # connecting must point transport_port at the open terminal port object (not
+    # leave it None) so transfers have a real port. Regression for the
+    # "'NoneType' object has no attribute 'in_waiting'" crash on Copy to Remote.
+    win = MainWindow(state)
+    try:
+        win.settings = {"terminal_port": "COM7", "transport_port": "COM7"}
+        fake = _FakeSerial()
+
+        def fake_open(port_type, _settings):
+            assert port_type == "terminal"  # the shared case never opens transport
+            win.serial_mgr.terminal_port = fake
+            win.serial_mgr.terminal_connected = True
+            return True
+
+        monkeypatch.setattr(win.serial_mgr, "open_port", fake_open)
+        win.do_connect()
+        qapp.processEvents()
+        assert win.serial_mgr.transport_connected is True
+        assert win.serial_mgr.transport_port is fake
+    finally:
+        win.close()
+
+
 def test_load_config_clears_remote_list(qapp, state, tmp_path):
     # FR-017: loading a configuration file clears the (now-stale) Remote Files list.
     win = MainWindow(state)

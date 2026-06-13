@@ -26,6 +26,12 @@ class SerialManager:
 
         self._read_thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
+        # When set, the read loop stops consuming bytes from the terminal port
+        # so an X-Modem transfer can take exclusive ownership of it. This is
+        # required when the Transport Port and Terminal Port are the same
+        # physical port (FR-037): otherwise the read loop and X-Modem race for
+        # the same incoming bytes.
+        self._read_paused = threading.Event()
         self.on_data_received: Optional[Callable[[str], None]] = None
 
     def open_port(self, port_type: str, settings: dict) -> bool:
@@ -149,6 +155,29 @@ class SerialManager:
             print(f"Failed to close transport port: {e}")
             return False
 
+    def pause_terminal_reads(self) -> None:
+        """Suspend the terminal read loop so a transfer can own the port.
+
+        Needed only when the Transport and Terminal Ports are the same physical
+        port (FR-037): X-Modem and the read loop would otherwise both consume
+        incoming bytes. Returns once an in-flight read cycle has had time to
+        finish, so the caller can rely on having exclusive access afterwards.
+
+        Satisfies: FR-037, FR-083, NFR-001.
+        """
+        self._read_paused.set()
+        # Let any read iteration already past the pause check complete; the loop
+        # body reads then sleeps 0.01s, so this comfortably covers one cycle.
+        time.sleep(0.05)
+
+    def resume_terminal_reads(self) -> None:
+        """Resume the terminal read loop after a transfer (see
+        ``pause_terminal_reads``).
+
+        Satisfies: FR-037, FR-083, NFR-001.
+        """
+        self._read_paused.clear()
+
     def send_data(self, port_type: str, data: str) -> bool:
         """
         Sends data through the specified port.
@@ -171,7 +200,11 @@ class SerialManager:
         Satisfies: FR-036, FR-091, NFR-001.
         """
         while not self._stop_event.is_set():
-            if self.terminal_port and self.terminal_port.is_open:
+            if (
+                not self._read_paused.is_set()
+                and self.terminal_port
+                and self.terminal_port.is_open
+            ):
                 try:
                     if self.terminal_port.in_waiting > 0:
                         data = self.terminal_port.read(self.terminal_port.in_waiting).decode(
