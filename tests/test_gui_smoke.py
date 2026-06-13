@@ -391,6 +391,30 @@ def test_change_drive_requires_open_terminal(qapp, monkeypatch, state):
         win.close()
 
 
+def test_update_switches_to_displayed_drive_first(qapp, monkeypatch, state):
+    # FR-073 (OI-22): the Update button must list the drive shown in the
+    # drop-down, not the remote's then-current drive. It runs the drive-change
+    # logic for the displayed drive, so the displayed letter is the one sent.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.drive_combo.setCurrentIndex(2)  # "C:"
+        targets = []
+
+        class _RecordingThread:
+            def __init__(self, *a, target=None, args=(), **k):
+                targets.append((target, args))
+
+            def start(self):
+                pass
+
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win.refresh_remote_files()
+        assert targets == [(win._do_change_drive_logic, ("C",))]
+    finally:
+        win.close()
+
+
 def test_disconnect_clears_remote_list(qapp, monkeypatch, state):
     # FR-058: a successful disconnect clears the (now-stale) Remote Files list.
     win = MainWindow(state)

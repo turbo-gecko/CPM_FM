@@ -555,12 +555,20 @@ class MainWindow(QMainWindow):
     def refresh_remote_files(self):
         """
         Satisfies: FR-073, FR-074.
+
+        FR-073: populate the Remote Files list for the drive currently shown in
+        the drive-selection drop-down (UIR-017). Switch to that drive first (as
+        if it had just been selected - FR-100-FR-104) before listing, so the
+        displayed files always match the drive next to the Update button even
+        when the remote's current drive was changed directly in the Terminal
+        Window. Runs the drive-change logic on a worker thread.
         """
         if not self.serial_mgr.terminal_connected:
             self.set_status("Terminal port not open - cannot read file list")
             self.remote_list.clear()
             return
-        threading.Thread(target=self._do_refresh_remote_logic, daemon=True).start()
+        drive = self.drive_combo.currentText()[0]  # 'A'..'P'
+        threading.Thread(target=self._do_change_drive_logic, args=(drive,), daemon=True).start()
 
     def _capture_terminal_response(self, command: str) -> str:
         """
