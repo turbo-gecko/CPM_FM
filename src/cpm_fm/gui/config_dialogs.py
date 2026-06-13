@@ -6,7 +6,6 @@ from PySide6.QtGui import QIntValidator
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
-    QDialogButtonBox,
     QFileDialog,
     QFormLayout,
     QHBoxLayout,
@@ -15,6 +14,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from cpm_fm.gui.dialog_buttons import build_button_row
 
 if TYPE_CHECKING:
     from cpm_fm.gui.window_state import WindowState
@@ -74,7 +75,7 @@ class ConfigDialog(QDialog):
 
     def create_widgets(self):
         """
-        Satisfies: UIR-021, UIR-053.
+        Satisfies: UIR-021, UIR-053, UIR-075.
         """
         layout = QVBoxLayout(self)
         form = QFormLayout()
@@ -140,12 +141,14 @@ class ConfigDialog(QDialog):
 
         layout.addLayout(form)
 
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
-        )
-        buttons.accepted.connect(self.save)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
+        # UIR-075: Cancel at the far left, the affirmative (Save) button at the
+        # far right.
+        save_btn = QPushButton("Save")
+        save_btn.setDefault(True)
+        save_btn.clicked.connect(self.save)
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.clicked.connect(self.reject)
+        layout.addLayout(build_button_row(accept_button=save_btn, reject_button=cancel_btn))
 
     def _value(self, widget) -> str:
         if isinstance(widget, QComboBox):
@@ -266,13 +269,13 @@ class GeneralConfigDialog(ConfigDialog):
     Specialized dialog for General Configuration
     (SRS docs/cpm_fm_requirements.md, UIR-040 through UIR-048).
 
-    Satisfies: UIR-040-UIR-053.
+    Satisfies: UIR-040-UIR-057.
     """
 
     def __init__(self, parent, settings, callback, window_state=None):
         """
         Satisfies: UIR-042, UIR-045, UIR-046, UIR-047, UIR-048, UIR-049,
-        UIR-050, UIR-052, UIR-053.
+        UIR-050, UIR-052, UIR-053, UIR-054, UIR-055, UIR-056.
 
         Command text fields limited to 79 characters.
         """
@@ -333,6 +336,31 @@ class GeneralConfigDialog(ConfigDialog):
                 "type": "dropdown",
                 "options": ["OFF", "ON"],
                 "default": "OFF",
+            },
+            # UIR-054: command used to open a file for viewing/editing (FR-112);
+            # $1 is the file path.
+            {
+                "key": "viewer_cmd",
+                "label": "Viewer/Editor",
+                "type": "text",
+                "default": "notepad $1",
+            },
+            # UIR-055: remote rename command (FR-117); $1 = original name,
+            # $2 = new name (CP/M REN newname=oldname).
+            {
+                "key": "rename_remote_cmd",
+                "label": "Rename Remote",
+                "type": "text",
+                "default": "REN $2=$1",
+                "maxlength": 79,
+            },
+            # UIR-056: remote delete command (FR-117); $1 = filename.
+            {
+                "key": "delete_remote_cmd",
+                "label": "Delete Remote",
+                "type": "text",
+                "default": "ERA $1",
+                "maxlength": 79,
             },
             {
                 "key": "host_directory",

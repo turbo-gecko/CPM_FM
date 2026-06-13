@@ -13,6 +13,7 @@ ACK = b"\x06"
 SOH = b"\x01"
 EOT = b"\x04"
 NAK = b"\x15"
+CAN = b"\x18"
 
 
 class _FakeSerial:
@@ -96,3 +97,29 @@ def test_receive_file_polls_checksum_not_crc_first(tmp_path):
     assert b"C" not in fake.written  # never poll with the CRC start character
     assert fake.written[:1] == NAK  # first poll is checksum (NAK)
     assert save.read_bytes() == payload
+
+
+def test_send_file_cancel_aborts_and_sends_can(tmp_path):
+    # FR-120: a cancellation request aborts the send, returns False, and emits
+    # the CAN sequence so the remote receiver aborts too.
+    path = tmp_path / "UP.TXT"
+    path.write_bytes(bytes(range(128)))
+    # The receiver would otherwise proceed (seeded 'C' + ACKs), but cancellation
+    # is requested before the handshake completes.
+    fake = _FakeSerial(b"C" + ACK * 4)
+    xm = XModem(fake, cancel_check=lambda: True)
+
+    assert xm.send_file(str(path)) is False
+    assert CAN in fake.written
+
+
+def test_receive_file_cancel_aborts_and_sends_can(tmp_path):
+    # FR-120: a cancellation request aborts the receive, returns False, sends
+    # CAN, and writes no (partial) file.
+    save = tmp_path / "DOWN.TXT"
+    fake = _FakeSerial(b"")
+    xm = XModem(fake, cancel_check=lambda: True)
+
+    assert xm.receive_file(str(save)) is False
+    assert CAN in fake.written
+    assert not save.exists()

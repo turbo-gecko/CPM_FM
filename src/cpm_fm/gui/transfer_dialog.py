@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+from typing import Callable
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
     QLabel,
     QProgressBar,
+    QPushButton,
     QVBoxLayout,
 )
+
+from cpm_fm.gui.dialog_buttons import build_button_row
 
 
 class TransferProgressDialog(QDialog):
@@ -22,18 +27,29 @@ class TransferProgressDialog(QDialog):
     When the file size is known (host-to-remote sends) a determinate progress bar
     is shown; for receives, where X-Modem carries no length, the bar is left
     indeterminate. The owning MainWindow closes the dialog when the batch
-    completes (success or failure) — it does not close itself.
+    completes (success, failure, or cancellation) — it does not close itself.
 
-    Satisfies: FR-105, UIR-051.
+    A centred Cancel button (FR-120) requests cancellation of the transfer via
+    the supplied ``cancel_callback``; once pressed it disables itself and shows
+    "Cancelling…" until the owner tears the dialog down.
+
+    Satisfies: FR-105, FR-120, UIR-051.
     """
 
-    def __init__(self, parent, direction: str, file_count: int):
+    def __init__(
+        self,
+        parent,
+        direction: str,
+        file_count: int,
+        cancel_callback: Callable[[], None] | None = None,
+    ):
         """
-        Satisfies: FR-105, UIR-051.
+        Satisfies: FR-105, FR-120, UIR-051.
         """
         super().__init__(parent)
         self._file_count = max(1, file_count)
         self._total_bytes: int | None = None
+        self._cancel_callback = cancel_callback
 
         verb = "Sending" if direction == "remote" else "Receiving"
         self.setWindowTitle(f"{verb} File")
@@ -60,7 +76,29 @@ class TransferProgressDialog(QDialog):
         self.progress_bar = QProgressBar()
         layout.addWidget(self.progress_bar)
 
-        self.resize(360, 140)
+        # FR-120/UIR-051: centred Cancel button to request cancellation.
+        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.clicked.connect(self._on_cancel_clicked)
+        layout.addLayout(build_button_row(reject_button=self.cancel_button))
+
+        self.resize(360, 160)
+
+    def _on_cancel_clicked(self) -> None:
+        """Request cancellation and show that it is in progress.
+
+        Satisfies: FR-120, UIR-051.
+        """
+        self.mark_cancelling()
+        if self._cancel_callback is not None:
+            self._cancel_callback()
+
+    def mark_cancelling(self) -> None:
+        """Disable the Cancel button and indicate cancellation is underway.
+
+        Satisfies: FR-120, UIR-051.
+        """
+        self.cancel_button.setEnabled(False)
+        self.cancel_button.setText("Cancelling…")
 
     def set_file(self, filename: str, total_bytes: int | None, index: int) -> None:
         """Switch the dialog to the file at 1-based position `index`.

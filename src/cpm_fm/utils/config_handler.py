@@ -23,6 +23,13 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "xfer_interfile_delay": "2",
     "eol": "CR",
     "debug_logging": "OFF",
+    # FR-112/FR-117: file context-menu action commands. viewer_cmd opens a file
+    # in a viewer/editor ($1 = path); rename_remote_cmd / delete_remote_cmd are
+    # the CP/M-side commands for remote Rename/Delete ($1 = original name,
+    # $2 = new name for rename).
+    "viewer_cmd": "notepad $1",
+    "rename_remote_cmd": "REN $2=$1",
+    "delete_remote_cmd": "ERA $1",
     "host_directory": "",
 }
 

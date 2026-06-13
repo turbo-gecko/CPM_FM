@@ -54,7 +54,7 @@ def _fake_xmodem_cls(success=True, calls=None):
     seq = iter(success) if isinstance(success, (list, tuple)) else None
 
     class _FakeXModem:
-        def __init__(self, ser, monitor=None, progress=None):
+        def __init__(self, ser, monitor=None, progress=None, cancel_check=None):
             self.progress = progress
 
         def _report(self):
@@ -94,6 +94,38 @@ def _arm_transfer(win, monkeypatch, success=True, calls=None):
     # Neutralise worker-thread sleeps (launch delay, FR-109 inter-file idle/settle)
     # so batch tests run fast while still exercising the real wait logic.
     monkeypatch.setattr("cpm_fm.app.time.sleep", lambda *a, **k: None)
+
+
+def _fake_action_dialog(value, accepted=True):
+    # Stand-in for FileActionDialog: exec() returns Accepted/Rejected without a
+    # real modal dialog, and value() returns the supplied (edited) filename.
+    from PySide6.QtWidgets import QDialog
+
+    class _Fake:
+        def __init__(self, *a, **k):
+            pass
+
+        def exec(self):
+            return QDialog.DialogCode.Accepted if accepted else QDialog.DialogCode.Rejected
+
+        def value(self):
+            return value
+
+    return _Fake
+
+
+class _RecordingThread:
+    # Captures (target, args) and runs nothing, so the worker body can be
+    # asserted on without spawning a real thread.
+    instances: list = []
+
+    def __init__(self, *a, target=None, args=(), **k):
+        self.target = target
+        self.args = args
+        _RecordingThread.instances.append(self)
+
+    def start(self):
+        pass
 
 
 def test_copy_to_host_refreshes_host_list(qapp, monkeypatch, state):
@@ -662,3 +694,392 @@ def test_menu_save_remembers_config_folder(qapp, monkeypatch, state, tmp_path):
     finally:
         win.close()
         win.deleteLater()
+
+
+# --------------------------------------------------------------- file actions
+
+
+def test_build_viewer_args_substitutes_token():
+    # FR-112: $1 is replaced by the file path; a path with spaces stays a single
+    # argument and is never re-split by the tokeniser.
+    from cpm_fm.app import build_viewer_args
+
+    assert build_viewer_args("notepad $1", "C:/dir/F.TXT") == ["notepad", "C:/dir/F.TXT"]
+    assert build_viewer_args("notepad $1", "/tmp/a b/F.TXT") == ["notepad", "/tmp/a b/F.TXT"]
+    # No $1 token -> the path is appended as the final argument.
+    assert build_viewer_args("editor", "F.TXT") == ["editor", "F.TXT"]
+
+
+def test_lists_have_context_menus(qapp, state):
+    # UIR-018/UIR-019: both file lists expose a custom (right-click) context menu.
+    from PySide6.QtCore import Qt
+
+    win = MainWindow(state)
+    try:
+        assert win.host_list.contextMenuPolicy() == Qt.ContextMenuPolicy.CustomContextMenu
+        assert win.remote_list.contextMenuPolicy() == Qt.ContextMenuPolicy.CustomContextMenu
+    finally:
+        win.close()
+
+
+def test_host_view_launches_viewer(qapp, monkeypatch, state, tmp_path):
+    # FR-110/FR-112: View/Edit launches viewer_cmd with the host file path.
+    win = MainWindow(state)
+    try:
+        win.host_dir = str(tmp_path)
+        win.settings = {"viewer_cmd": "myview $1"}
+        launched = []
+        monkeypatch.setattr(
+            "cpm_fm.app.subprocess.Popen", lambda args, *a, **k: launched.append(args)
+        )
+        win._host_view("F.TXT")
+        assert launched == [["myview", os.path.join(str(tmp_path), "F.TXT")]]
+    finally:
+        win.close()
+
+
+def test_host_rename_renames_file(qapp, monkeypatch, state, tmp_path):
+    # FR-114/FR-116/FR-118: Apply on the rename dialog renames the file and refreshes.
+    win = MainWindow(state)
+    try:
+        win.host_dir = str(tmp_path)
+        (tmp_path / "OLD.TXT").write_text("x")
+        monkeypatch.setattr("cpm_fm.app.FileActionDialog", _fake_action_dialog("NEW.TXT"))
+        refreshed = []
+        monkeypatch.setattr(win, "refresh_host_files", lambda: refreshed.append(1))
+        win._host_rename("OLD.TXT")
+        assert (tmp_path / "NEW.TXT").exists()
+        assert not (tmp_path / "OLD.TXT").exists()
+        assert refreshed == [1]
+    finally:
+        win.close()
+
+
+def test_host_rename_cancelled_makes_no_change(qapp, monkeypatch, state, tmp_path):
+    # FR-114: Cancel leaves the file untouched.
+    win = MainWindow(state)
+    try:
+        win.host_dir = str(tmp_path)
+        (tmp_path / "OLD.TXT").write_text("x")
+        monkeypatch.setattr(
+            "cpm_fm.app.FileActionDialog", _fake_action_dialog("NEW.TXT", accepted=False)
+        )
+        win._host_rename("OLD.TXT")
+        assert (tmp_path / "OLD.TXT").exists()
+        assert not (tmp_path / "NEW.TXT").exists()
+    finally:
+        win.close()
+
+
+def test_host_delete_removes_file(qapp, monkeypatch, state, tmp_path):
+    # FR-115/FR-116/FR-118: Apply on the delete dialog removes the file and refreshes.
+    win = MainWindow(state)
+    try:
+        win.host_dir = str(tmp_path)
+        (tmp_path / "F.TXT").write_text("x")
+        monkeypatch.setattr("cpm_fm.app.FileActionDialog", _fake_action_dialog("F.TXT"))
+        refreshed = []
+        monkeypatch.setattr(win, "refresh_host_files", lambda: refreshed.append(1))
+        win._host_delete("F.TXT")
+        assert not (tmp_path / "F.TXT").exists()
+        assert refreshed == [1]
+    finally:
+        win.close()
+
+
+def test_remote_rename_sends_command(qapp, monkeypatch, state):
+    # FR-117: remote Rename sends rename_remote_cmd with $1=old, $2=new.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.settings = {"rename_remote_cmd": "REN $2=$1"}
+        monkeypatch.setattr("cpm_fm.app.FileActionDialog", _fake_action_dialog("NEW.TXT"))
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._remote_rename("OLD.TXT")
+        assert _RecordingThread.instances[0].args == ("REN NEW.TXT=OLD.TXT",)
+    finally:
+        win.close()
+
+
+def test_remote_delete_sends_command(qapp, monkeypatch, state):
+    # FR-117: remote Delete sends delete_remote_cmd with $1=name.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.settings = {"delete_remote_cmd": "ERA $1"}
+        monkeypatch.setattr("cpm_fm.app.FileActionDialog", _fake_action_dialog("F.TXT"))
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._remote_delete("F.TXT")
+        assert _RecordingThread.instances[0].args == ("ERA F.TXT",)
+    finally:
+        win.close()
+
+
+def test_remote_rename_requires_open_terminal(qapp, monkeypatch, state):
+    # FR-117: with the Terminal Port closed, no command is issued.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = False
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._remote_rename("OLD.TXT")
+        assert _RecordingThread.instances == []
+        assert win.statusBar().currentMessage() == "Terminal port not open - cannot rename"
+    finally:
+        win.close()
+
+
+def test_do_remote_file_cmd_refreshes_remote_list(qapp, monkeypatch, state):
+    # FR-118: after sending the command the remote list is refreshed.
+    win = MainWindow(state)
+    try:
+        captured = []
+        monkeypatch.setattr(win, "_capture_terminal_response", lambda c: captured.append(c) or "")
+        refreshed = []
+        monkeypatch.setattr(win, "_do_refresh_remote_logic", lambda: refreshed.append(1))
+        win._do_remote_file_cmd("ERA F.TXT")
+        assert captured == ["ERA F.TXT"]
+        assert refreshed == [1]
+    finally:
+        win.close()
+
+
+def test_remote_view_requires_both_flags(qapp, monkeypatch, state):
+    # FR-113/CR-010: remote View needs both status flags; otherwise it errors and
+    # starts no download.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = False
+        errors = []
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:]))
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._remote_view("F.TXT")
+        assert _RecordingThread.instances == []
+        assert errors == [("Error", "Transport port not connected")]
+    finally:
+        win.close()
+
+
+def test_remote_view_downloads_then_opens(qapp, monkeypatch, state):
+    # FR-113/FR-112: a successful download opens the temp file in the viewer.
+    win = MainWindow(state)
+    try:
+        _arm_transfer(win, monkeypatch)
+        opened = []
+        monkeypatch.setattr(win, "_open_in_viewer", lambda p: opened.append(p))
+        win._download_and_view("F.TXT")
+        qapp.processEvents()  # deliver the queued view_file_ready signal
+        assert len(opened) == 1
+        assert os.path.basename(opened[0]) == "F.TXT"
+        assert win._transfer_dialog is None  # progress dialog closed
+    finally:
+        win.close()
+
+
+def test_host_to_remote_transfers_under_cursor_file(qapp, monkeypatch, state):
+    # FR-119: To Remote transfers the single host file under the cursor via the
+    # Copy to Remote batch worker.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._host_to_remote("F.TXT")
+        t = _RecordingThread.instances[0]
+        assert t.target == win._transfer_to_remote_batch
+        assert t.args == ([os.path.join(win.host_dir, "F.TXT")],)
+    finally:
+        win.close()
+
+
+def test_remote_to_host_transfers_under_cursor_file(qapp, monkeypatch, state):
+    # FR-119: To Host transfers the single remote file under the cursor via the
+    # Copy to Host batch worker.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._remote_to_host("F.TXT")
+        t = _RecordingThread.instances[0]
+        assert t.target == win._transfer_to_host_batch
+        assert t.args == ([os.path.join(win.host_dir, "F.TXT")],)
+    finally:
+        win.close()
+
+
+def test_progress_dialog_cancel_button_requests_cancel(qapp):
+    # FR-120/UIR-051: the Cancel button invokes the callback and then disables
+    # itself, showing that cancellation is underway.
+    from cpm_fm.gui.transfer_dialog import TransferProgressDialog
+
+    clicked = []
+    dlg = TransferProgressDialog(None, "remote", 1, cancel_callback=lambda: clicked.append(1))
+    try:
+        dlg.cancel_button.click()
+        assert clicked == [1]
+        assert not dlg.cancel_button.isEnabled()
+        assert "ancel" in dlg.cancel_button.text()  # "Cancelling…"
+    finally:
+        dlg.deleteLater()
+
+
+def test_request_transfer_cancel_sets_flag(qapp, state):
+    # FR-120: the GUI cancel handler raises the worker-polled cancel flag.
+    win = MainWindow(state)
+    try:
+        assert not win._transfer_cancel.is_set()
+        win._request_transfer_cancel()
+        assert win._transfer_cancel.is_set()
+    finally:
+        win.close()
+
+
+def _arm_transfer_with_xmodem(win, monkeypatch, xmodem_cls):
+    # Like _arm_transfer but with a caller-supplied XModem stub (so the test can
+    # trigger cancellation from inside send_file/receive_file).
+    win.settings = {"xfer_launch_delay": 0}
+    win.serial_mgr.terminal_connected = True
+    win.serial_mgr.transport_connected = True
+    win.serial_mgr.transport_port = _FakeSerial()
+    monkeypatch.setattr(win.serial_mgr, "send_data", lambda *a, **k: None)
+    monkeypatch.setattr("cpm_fm.app.XModem", xmodem_cls)
+    monkeypatch.setattr("cpm_fm.app.time.sleep", lambda *a, **k: None)
+
+
+def test_cancelled_transfer_is_not_reported_as_error(qapp, monkeypatch, state):
+    # FR-120: cancelling mid-transfer closes the dialog, sets a "cancelled"
+    # status, and raises no error dialog; with nothing completed, no refresh.
+    win = MainWindow(state)
+    try:
+        errors = []
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:]))
+        refreshed = []
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: refreshed.append(1))
+
+        class _CancellingXModem:
+            def __init__(self, ser, monitor=None, progress=None, cancel_check=None):
+                pass
+
+            def send_file(self, path):
+                win._transfer_cancel.set()  # user cancels during the transfer
+                return False  # X-Modem aborted
+
+        _arm_transfer_with_xmodem(win, monkeypatch, _CancellingXModem)
+        win._transfer_to_remote_batch([os.path.join(win.host_dir, "A.TXT")])
+        qapp.processEvents()
+        assert errors == []  # cancellation is not an error
+        assert win._transfer_dialog is None  # dialog torn down
+        assert refreshed == []  # nothing completed -> no refresh
+        assert "cancelled" in win.statusBar().currentMessage().lower()
+    finally:
+        win.close()
+
+
+def test_cancel_after_partial_batch_refreshes_and_skips_rest(qapp, monkeypatch, state):
+    # FR-120: when a multi-file batch is cancelled after some files completed,
+    # the remaining files are skipped and the destination list refreshes once.
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: None)
+        refreshed = []
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: refreshed.append(1))
+        calls = []
+
+        class _XModem:
+            def __init__(self, ser, monitor=None, progress=None, cancel_check=None):
+                pass
+
+            def send_file(self, path):
+                calls.append(os.path.basename(path))
+                if len(calls) == 1:
+                    return True  # first file succeeds
+                win._transfer_cancel.set()  # cancel during the second file
+                return False
+
+        _arm_transfer_with_xmodem(win, monkeypatch, _XModem)
+        paths = [os.path.join(win.host_dir, n) for n in ("A.TXT", "B.TXT", "C.TXT")]
+        win._transfer_to_remote_batch(paths)
+        qapp.processEvents()
+        assert calls == ["A.TXT", "B.TXT"]  # C.TXT never attempted
+        assert refreshed == [1]  # one refresh because A.TXT completed
+    finally:
+        win.close()
+
+
+def test_button_row_both_cancel_left_apply_right(qapp):
+    # UIR-075: with both buttons, Cancel is far left and the affirmative far right.
+    from PySide6.QtWidgets import QPushButton
+
+    from cpm_fm.gui.dialog_buttons import build_button_row
+
+    apply_btn = QPushButton("Apply")
+    cancel_btn = QPushButton("Cancel")
+    row = build_button_row(accept_button=apply_btn, reject_button=cancel_btn)
+    assert row.itemAt(0).widget() is cancel_btn  # far left
+    assert row.itemAt(row.count() - 1).widget() is apply_btn  # far right
+    # A flexible stretch separates them.
+    assert row.itemAt(1).widget() is None
+    assert row.itemAt(1).spacerItem() is not None
+
+
+def test_button_row_single_button_is_centered(qapp):
+    # UIR-075: a lone button is centred between two stretches.
+    from PySide6.QtWidgets import QPushButton
+
+    from cpm_fm.gui.dialog_buttons import build_button_row
+
+    only = QPushButton("Close")
+    row = build_button_row(accept_button=only)
+    assert row.count() == 3
+    assert row.itemAt(0).spacerItem() is not None  # leading stretch
+    assert row.itemAt(1).widget() is only  # centred button
+    assert row.itemAt(2).spacerItem() is not None  # trailing stretch
+
+
+def test_file_action_dialog_button_layout(qapp):
+    # UIR-057/UIR-075: the File Action Dialog places Cancel far left, Apply far
+    # right, both connected to reject/accept.
+    from PySide6.QtWidgets import QHBoxLayout, QPushButton
+
+    from cpm_fm.gui.file_action_dialog import FileActionDialog
+
+    dlg = FileActionDialog(None, "Rename File", "F.TXT", editable=True)
+    try:
+        rows = [
+            dlg.layout().itemAt(i).layout()
+            for i in range(dlg.layout().count())
+            if isinstance(dlg.layout().itemAt(i).layout(), QHBoxLayout)
+        ]
+        assert rows, "expected a horizontal button row"
+        row = rows[-1]
+        left = row.itemAt(0).widget()
+        right = row.itemAt(row.count() - 1).widget()
+        assert isinstance(left, QPushButton) and left.text() == "Cancel"
+        assert isinstance(right, QPushButton) and right.text() == "Apply"
+    finally:
+        dlg.deleteLater()
+
+
+def test_host_to_remote_requires_both_flags(qapp, monkeypatch, state):
+    # FR-119/CR-010: To Remote needs both status flags; otherwise it errors and
+    # starts no transfer.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = False
+        errors = []
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:]))
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._host_to_remote("F.TXT")
+        assert _RecordingThread.instances == []
+        assert errors == [("Error", "Transport port not connected")]
+    finally:
+        win.close()

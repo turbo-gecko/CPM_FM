@@ -18,6 +18,7 @@ class XModem:
     EOT = b"\x04"  # End of Transmission
     ACK = b"\x06"  # Acknowledge
     NAK = b"\x15"  # Negative Acknowledge
+    CAN = b"\x18"  # Cancel (X-Modem abort), see FR-120/NFR-003
     PAD = 0x1A  # Final-packet padding byte (CP/M EOF / Ctrl-Z), see NFR-003
 
     def __init__(
@@ -26,6 +27,7 @@ class XModem:
         timeout: float = 1.0,
         monitor: Optional[Callable[[str, bytes], None]] = None,
         progress: Optional[Callable[[int, int, Optional[int]], None]] = None,
+        cancel_check: Optional[Callable[[], bool]] = None,
     ):
         self.ser = serial_conn
         self.timeout = timeout
@@ -37,6 +39,30 @@ class XModem:
         # dialog. total_bytes is the file size when known (send_file) or None
         # when the protocol does not carry it (receive_file).
         self.progress = progress
+        # FR-120: optional predicate polled during the transfer; when it returns
+        # True the transfer is aborted (CAN sent to the remote) and the
+        # send/receive call returns False. Set from a thread-safe flag by the
+        # caller so a GUI Cancel button can interrupt the worker thread.
+        self.cancel_check = cancel_check
+
+    def _cancelled(self) -> bool:
+        """Whether cancellation has been requested (FR-120).
+
+        Satisfies: FR-120.
+        """
+        return self.cancel_check is not None and self.cancel_check()
+
+    def _abort(self) -> None:
+        """Abort the transfer by sending the X-Modem CAN sequence (FR-120).
+
+        Several CAN bytes are sent so the remote reliably recognises the abort.
+
+        Satisfies: FR-120, NFR-003.
+        """
+        try:
+            self._write(self.CAN * 3)
+        except Exception:
+            pass
 
     def _write(self, data: bytes) -> None:
         """
@@ -66,6 +92,9 @@ class XModem:
         t = timeout if timeout is not None else self.timeout
         start_time = time.time()
         while (time.time() - start_time) < t:
+            # FR-120: end long waits promptly when cancellation is requested.
+            if self._cancelled():
+                return b""
             if self.ser.in_waiting > 0:
                 return self._read(1)
             time.sleep(0.01)
@@ -80,6 +109,11 @@ class XModem:
         t = timeout if timeout is not None else self.timeout
         start_time = time.time()
         while (time.time() - start_time) < t:
+            # FR-120: bail out of the wait promptly when cancellation is
+            # requested (otherwise _read_byte returns b"" instantly and this
+            # loop would spin for the whole timeout before the caller aborts).
+            if self._cancelled():
+                return b""
             char = self._read_byte(timeout=t - (time.time() - start_time))
             if char and char in expected:
                 return char
@@ -134,7 +168,7 @@ class XModem:
         'C' (0x43) requests CRC, NAK (0x15) requests checksum — and we frame
         the trailer to match (NFR-003). 128-byte SOH packets either way.
 
-        Satisfies: FR-081, FR-082, FR-083, FR-086, FR-105, NFR-003.
+        Satisfies: FR-081, FR-082, FR-083, FR-086, FR-105, FR-120, NFR-003.
         """
         if not os.path.exists(filepath):
             return False
@@ -151,6 +185,9 @@ class XModem:
         #    it. Receivers retransmit it periodically, so allow generous time.
         start = self._wait_for_one_of((b"C", self.NAK), timeout=60.0)
         if start == b"":
+            # FR-120: a cancellation during the handshake aborts the transfer.
+            if self._cancelled():
+                self._abort()
             return False
         crc_mode = start == b"C"
 
@@ -161,6 +198,11 @@ class XModem:
         offset = 0
 
         while offset < len(data):
+            # FR-120: abort between packets when cancellation is requested.
+            if self._cancelled():
+                self._abort()
+                return False
+
             # Create packet: SOH + Seq + ~Seq + Data (128 bytes) + trailer.
             # NFR-003: the final short chunk is padded to a full 128-byte data
             # field with the PAD byte before the trailer is computed.
@@ -180,6 +222,10 @@ class XModem:
             # Send the packet, retransmitting the SAME packet on NAK/timeout.
             # The sequence number is fixed per packet and only advances on ACK.
             for _ in range(10):
+                # FR-120: abort mid-retransmit when cancellation is requested.
+                if self._cancelled():
+                    self._abort()
+                    return False
                 self._write(packet)
                 if self._wait_for_one_of((self.ACK, self.NAK), timeout=2.0) == self.ACK:
                     break
@@ -213,7 +259,7 @@ class XModem:
         prompt the sender answers. SOH frames carry 128 data bytes; STX frames
         carry 1024 (XMODEM-1K), so the 1K sender variants are accepted too.
 
-        Satisfies: FR-081, FR-082, FR-083, FR-105, NFR-003.
+        Satisfies: FR-081, FR-082, FR-083, FR-105, FR-120, NFR-003.
         """
         received_data = bytearray()
         expected_packet = 1
@@ -231,6 +277,10 @@ class XModem:
         crc_mode = False
         for prompt, is_crc in ((self.NAK, False), (b"C", True)):
             for _ in range(6):
+                # FR-120: a cancellation during the handshake aborts the receive.
+                if self._cancelled():
+                    self._abort()
+                    return False
                 self._write(prompt)
                 char = self._read_byte(timeout=3.0)
                 if char in (self.SOH, self.STX, self.EOT):
@@ -242,6 +292,11 @@ class XModem:
             return False
 
         while True:
+            # FR-120: abort the receive (and discard the partial file) on cancel.
+            if self._cancelled():
+                self._abort()
+                return False
+
             if char == self.EOT:
                 self._write(self.ACK)
                 break

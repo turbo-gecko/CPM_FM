@@ -2,23 +2,28 @@ from __future__ import annotations
 
 import copy
 import os
+import shlex
+import subprocess
 import sys
+import tempfile
 import threading
 import time
 from typing import cast
 
 import serial.tools.list_ports
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
     QComboBox,
+    QDialog,
     QFileDialog,
     QGroupBox,
     QHBoxLayout,
     QListWidget,
     QMainWindow,
+    QMenu,
     QMessageBox,
     QPushButton,
     QSplitter,
@@ -29,6 +34,7 @@ from PySide6.QtWidgets import (
 )
 
 from cpm_fm.gui.config_dialogs import GeneralConfigDialog, SerialConfigDialog
+from cpm_fm.gui.file_action_dialog import FileActionDialog
 from cpm_fm.gui.terminal_window import TerminalWindow
 from cpm_fm.gui.theme import apply_theme
 from cpm_fm.gui.transfer_dialog import TransferProgressDialog
@@ -39,6 +45,39 @@ from cpm_fm.terminal.xmodem import XModem
 from cpm_fm.utils.config_handler import DEFAULT_SETTINGS, ConfigHandler
 
 EOL_MAP = {"CR": "\r", "LF": "\n", "CRLF": "\r\n"}
+
+
+def build_viewer_args(template: str, path: str) -> list[str]:
+    """Build the argument vector for launching the viewer/editor (FR-112).
+
+    Splits the configured ``viewer_cmd`` template into tokens *before*
+    substituting, so a file path containing spaces or backslashes is never
+    re-parsed by the shell-style splitter. The ``$1`` token is replaced by
+    ``path``; if no ``$1`` token is present, ``path`` is appended as the final
+    argument. Splitting uses non-POSIX rules on Windows so backslashes in the
+    command are preserved.
+
+    Satisfies: FR-112.
+    """
+    try:
+        tokens = shlex.split(template, posix=(os.name != "nt"))
+    except ValueError:
+        tokens = template.split()
+
+    args: list[str] = []
+    substituted = False
+    for tok in tokens:
+        # Strip surrounding quotes left by a non-POSIX split.
+        if len(tok) >= 2 and tok[0] == tok[-1] and tok[0] in ("'", '"'):
+            tok = tok[1:-1]
+        if tok == "$1":
+            args.append(path)
+            substituted = True
+        else:
+            args.append(tok)
+    if not substituted:
+        args.append(path)
+    return args
 
 
 class MainWindow(QMainWindow):
@@ -75,6 +114,14 @@ class MainWindow(QMainWindow):
     # worker thread when the drive's prompt does not appear, so the "Drive not
     # found" dialog and the list-clear run on the GUI thread (NFR-004).
     drive_not_found = Signal(str)
+    # FR-113: emitted (with the downloaded temp-file path) from the remote-view
+    # worker thread once the file has been received, so the viewer is launched
+    # on the GUI thread (NFR-004).
+    view_file_ready = Signal(str)
+    # FR-120: emitted from a transfer worker thread when the batch is cancelled,
+    # carrying (direction, any_succeeded), so the dialog teardown and any
+    # destination-list refresh run on the GUI thread (NFR-004).
+    transfer_cancelled = Signal(str, bool)
 
     def __init__(self, window_state: WindowState | None = None):
         """
@@ -97,6 +144,9 @@ class MainWindow(QMainWindow):
         # FR-105: the modal transfer-progress dialog, live only for the duration
         # of a transfer. Owned and torn down on the GUI thread.
         self._transfer_dialog: TransferProgressDialog | None = None
+        # FR-120: set on the GUI thread (Cancel button) and polled by the
+        # transfer worker thread to abort the in-progress transfer.
+        self._transfer_cancel = threading.Event()
         self.host_dir = os.getcwd()
         self._remote_capture_buffer = ""
         self._capture_active = False
@@ -147,6 +197,8 @@ class MainWindow(QMainWindow):
         self.transfer_file_started.connect(self._on_transfer_file_started)
         self.transfer_progress.connect(self._on_transfer_progress)
         self.drive_not_found.connect(self._on_drive_not_found)
+        self.view_file_ready.connect(self._on_view_file_ready)
+        self.transfer_cancelled.connect(self._on_transfer_cancelled)
 
     def setup_menu(self):
         """
@@ -201,6 +253,9 @@ class MainWindow(QMainWindow):
         host_layout.addWidget(QPushButton("Change Directory", clicked=self.change_host_dir))
         self.host_list = QListWidget()
         self.host_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        # UIR-018: right-click context menu (View/Edit, Rename, Delete) on host files.
+        self.host_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.host_list.customContextMenuRequested.connect(self._host_context_menu)
         host_layout.addWidget(self.host_list)
 
         # Host buttons row
@@ -232,6 +287,9 @@ class MainWindow(QMainWindow):
 
         self.remote_list = QListWidget()
         self.remote_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        # UIR-019: right-click context menu (View, Rename, Delete) on remote files.
+        self.remote_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.remote_list.customContextMenuRequested.connect(self._remote_context_menu)
         remote_layout.addWidget(self.remote_list)
 
         # Remote buttons row
@@ -348,7 +406,10 @@ class MainWindow(QMainWindow):
         the whole batch. transfer_file_started then switches it to each file.
         """
         self._close_transfer_dialog()  # defensive: never leak a prior dialog
-        self._transfer_dialog = TransferProgressDialog(self, direction, file_count)
+        # FR-120: the dialog's Cancel button requests cancellation of the batch.
+        self._transfer_dialog = TransferProgressDialog(
+            self, direction, file_count, cancel_callback=self._request_transfer_cancel
+        )
         self._transfer_dialog.show()
 
     def _on_transfer_file_started(self, filename: str, total_bytes: int, file_index: int):
@@ -383,6 +444,33 @@ class MainWindow(QMainWindow):
             self._transfer_dialog.deleteLater()
             self._transfer_dialog = None
 
+    def _request_transfer_cancel(self):
+        """
+        Satisfies: FR-120.
+
+        GUI-thread Cancel handler: raise the thread-safe cancel flag the
+        transfer worker polls, and reflect the request in the status bar. The
+        dialog button is disabled by the dialog itself; the worker tears the
+        dialog down once it has aborted (transfer_cancelled).
+        """
+        self._transfer_cancel.set()
+        self.set_status("Cancelling transfer...")
+
+    def _on_transfer_cancelled(self, direction: str, any_succeeded: bool):
+        """
+        Satisfies: FR-120.
+
+        Runs on the GUI thread (queued from the transfer worker). Close the
+        progress dialog and, if any file completed before the cancellation,
+        refresh the destination list (FR-099).
+        """
+        self._close_transfer_dialog()
+        if any_succeeded:
+            if direction == "host":
+                self.refresh_host_files()
+            elif direction == "remote":
+                self.refresh_remote_files()
+
     # ------------------------------------------------------------- host files
 
     def refresh_host_files(self):
@@ -408,6 +496,250 @@ class MainWindow(QMainWindow):
         if path:
             self.host_dir = path
             self.refresh_host_files()
+
+    # ------------------------------------------------ file context-menu actions
+
+    def _host_context_menu(self, pos):
+        """
+        Satisfies: FR-110, FR-119, UIR-018.
+
+        Right-click menu for the Host Files list: To Remote, View/Edit, Rename,
+        Delete, acting on the file under the cursor.
+        """
+        item = self.host_list.itemAt(pos)
+        if item is None:
+            return
+        name = item.text()
+        menu = QMenu(self)
+        menu.addAction("To Remote", lambda: self._host_to_remote(name))
+        menu.addSeparator()
+        menu.addAction("View/Edit", lambda: self._host_view(name))
+        menu.addAction("Rename", lambda: self._host_rename(name))
+        menu.addAction("Delete", lambda: self._host_delete(name))
+        menu.exec(self.host_list.mapToGlobal(pos))
+
+    def _remote_context_menu(self, pos):
+        """
+        Satisfies: FR-111, FR-119, UIR-019.
+
+        Right-click menu for the Remote Files list: To Host, View, Rename,
+        Delete, acting on the file under the cursor.
+        """
+        item = self.remote_list.itemAt(pos)
+        if item is None:
+            return
+        name = item.text()
+        menu = QMenu(self)
+        menu.addAction("To Host", lambda: self._remote_to_host(name))
+        menu.addSeparator()
+        menu.addAction("View", lambda: self._remote_view(name))
+        menu.addAction("Rename", lambda: self._remote_rename(name))
+        menu.addAction("Delete", lambda: self._remote_delete(name))
+        menu.exec(self.remote_list.mapToGlobal(pos))
+
+    def _host_to_remote(self, name):
+        """
+        Satisfies: FR-119, FR-080, CR-010.
+
+        Copy the single host file under the cursor to the remote, reusing the
+        Copy to Remote batch transfer (FR-099/FR-105) for one file.
+        """
+        if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
+            QMessageBox.critical(self, "Error", "Transport port not connected")
+            return
+        filepath = os.path.join(self.host_dir, name)
+        threading.Thread(
+            target=self._transfer_to_remote_batch, args=([filepath],), daemon=True
+        ).start()
+
+    def _remote_to_host(self, name):
+        """
+        Satisfies: FR-119, FR-080, CR-010.
+
+        Copy the single remote file under the cursor to the host, reusing the
+        Copy to Host batch transfer (FR-099/FR-105) for one file.
+        """
+        if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
+            QMessageBox.critical(self, "Error", "Transport port not connected")
+            return
+        save_path = os.path.join(self.host_dir, name)
+        threading.Thread(
+            target=self._transfer_to_host_batch, args=([save_path],), daemon=True
+        ).start()
+
+    def _open_in_viewer(self, path):
+        """
+        Satisfies: FR-112.
+
+        Open ``path`` in the configured viewer/editor (`viewer_cmd`, $1 = path).
+        When `viewer_cmd` is empty, fall back to the host OS default file
+        association.
+        """
+        template = self.settings.get("viewer_cmd", "notepad $1")
+        try:
+            if template and template.strip():
+                subprocess.Popen(build_viewer_args(template, path))
+            else:
+                self._os_open(path)
+        except Exception as e:  # pragma: no cover - depends on host environment
+            QMessageBox.critical(self, "Error", f"Unable to open viewer: {e}")
+
+    @staticmethod
+    def _os_open(path):
+        """
+        Satisfies: FR-112.
+
+        Open a file with the host operating system's default association.
+        """
+        startfile = getattr(os, "startfile", None)
+        if startfile is not None:  # Windows
+            startfile(path)
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", path])
+        else:
+            subprocess.Popen(["xdg-open", path])
+
+    def _host_view(self, name):
+        """
+        Satisfies: FR-110, FR-112.
+        """
+        self._open_in_viewer(os.path.join(self.host_dir, name))
+
+    def _host_rename(self, name):
+        """
+        Satisfies: FR-110, FR-114, FR-116, FR-118.
+        """
+        dlg = FileActionDialog(self, "Rename File", name, editable=True)
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        new_name = dlg.value().strip()
+        if not new_name or new_name == name:
+            return
+        try:
+            os.rename(os.path.join(self.host_dir, name), os.path.join(self.host_dir, new_name))
+        except OSError as e:
+            QMessageBox.critical(self, "Error", f"Rename failed: {e}")
+            return
+        self.refresh_host_files()
+
+    def _host_delete(self, name):
+        """
+        Satisfies: FR-110, FR-115, FR-116, FR-118.
+        """
+        dlg = FileActionDialog(
+            self, "Delete File", name, editable=False, prompt="Delete this file?"
+        )
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            os.remove(os.path.join(self.host_dir, name))
+        except OSError as e:
+            QMessageBox.critical(self, "Error", f"Delete failed: {e}")
+            return
+        self.refresh_host_files()
+
+    def _remote_view(self, name):
+        """
+        Satisfies: FR-111, FR-113.
+
+        Download the remote file to a temporary folder over X-Modem, then open
+        it in the viewer (FR-112). Permitted only when both status flags are
+        connected (FR-080/CR-010). Runs the download on a worker thread.
+        """
+        if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
+            QMessageBox.critical(self, "Error", "Transport port not connected")
+            return
+        threading.Thread(target=self._download_and_view, args=(name,), daemon=True).start()
+
+    def _download_and_view(self, name):
+        """
+        Satisfies: FR-113.
+
+        Worker thread: receive ``name`` into a temp folder via the Copy to Host
+        transfer process, then request the viewer on the GUI thread via the
+        view_file_ready signal (NFR-004). The progress dialog (FR-105) is driven
+        by the same batch signals as a normal transfer.
+        """
+        save_path = os.path.join(tempfile.mkdtemp(prefix="cpm_fm_"), name)
+        self._transfer_cancel.clear()  # FR-120: start un-cancelled.
+        self.batch_started.emit("host", 1)
+        self.set_status(f"Downloading {name} for viewing...")
+        self.transfer_file_started.emit(name, 0, 1)
+        try:
+            ok = self._recv_one_to_host(save_path)
+        except Exception as e:
+            self._debug(f"[remote-view] EXCEPTION: {e!r}")
+            self.error_raised.emit("Error", str(e))
+            return
+        if not ok:
+            # FR-120: a cancelled download just closes the dialog (no viewer).
+            if self._transfer_cancel.is_set():
+                self._finish_cancelled_batch("host", 0)
+                return
+            self.error_raised.emit("X-Modem Error", f"Download of {name} failed")
+            return
+        self.view_file_ready.emit(save_path)
+
+    def _on_view_file_ready(self, path):
+        """
+        Satisfies: FR-112, FR-113.
+
+        Runs on the GUI thread (queued from the remote-view worker). Close the
+        progress dialog and open the downloaded file in the viewer.
+        """
+        self._close_transfer_dialog()
+        self.set_status("Opening viewer...")
+        self._open_in_viewer(path)
+
+    def _remote_rename(self, name):
+        """
+        Satisfies: FR-111, FR-114, FR-117, FR-118.
+        """
+        if not self.serial_mgr.terminal_connected:
+            self.set_status("Terminal port not open - cannot rename")
+            return
+        dlg = FileActionDialog(self, "Rename Remote File", name, editable=True)
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        new_name = dlg.value().strip()
+        if not new_name or new_name == name:
+            return
+        template = self.settings.get("rename_remote_cmd", "REN $2=$1")
+        if not template:
+            return
+        cmd = template.replace("$2", new_name).replace("$1", name)
+        threading.Thread(target=self._do_remote_file_cmd, args=(cmd,), daemon=True).start()
+
+    def _remote_delete(self, name):
+        """
+        Satisfies: FR-111, FR-115, FR-117, FR-118.
+        """
+        if not self.serial_mgr.terminal_connected:
+            self.set_status("Terminal port not open - cannot delete")
+            return
+        dlg = FileActionDialog(
+            self, "Delete Remote File", name, editable=False, prompt="Delete this remote file?"
+        )
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        template = self.settings.get("delete_remote_cmd", "ERA $1")
+        if not template:
+            return
+        cmd = template.replace("$1", name)
+        threading.Thread(target=self._do_remote_file_cmd, args=(cmd,), daemon=True).start()
+
+    def _do_remote_file_cmd(self, cmd):
+        """
+        Satisfies: FR-117, FR-118.
+
+        Worker thread: send the remote file-management command on the Terminal
+        Port, wait for the output to go idle (reusing the capture mechanism),
+        then refresh the Remote Files list (FR-074-FR-079). _do_refresh_remote_logic
+        marshals its UI update via the remote_files_ready signal (NFR-004).
+        """
+        self.set_status(f"Executing: {cmd}")
+        self._capture_terminal_response(cmd)
+        self._do_refresh_remote_logic()
 
     # -------------------------------------------------------------- terminal
 
@@ -822,13 +1154,19 @@ class MainWindow(QMainWindow):
 
         Transfer each selected file sequentially over the
         single Transport Port. Runs on a worker thread. One progress
-        dialog serves the whole batch. Abort on the first failure.
+        dialog serves the whole batch. Abort on the first failure, or when the
+        user cancels (FR-120).
         """
         count = len(filepaths)
+        self._transfer_cancel.clear()  # FR-120: start each batch un-cancelled.
         self.batch_started.emit("remote", count)
         succeeded = 0
         for index, filepath in enumerate(filepaths, start=1):
             name = os.path.basename(filepath)
+            # FR-120: stop before starting the next file if cancellation is requested.
+            if self._transfer_cancel.is_set():
+                self._finish_cancelled_batch("remote", succeeded)
+                return
             # FR-109: let CP/M return to its prompt before the next command.
             if index > 1:
                 self._wait_for_terminal_idle()
@@ -847,6 +1185,10 @@ class MainWindow(QMainWindow):
                 self.error_raised.emit("Error", str(e))
                 return
             if not ok:
+                # FR-120: a cancelled transfer is not a failure.
+                if self._transfer_cancel.is_set():
+                    self._finish_cancelled_batch("remote", succeeded)
+                    return
                 # FR-108: abort the batch and refresh if anything got through.
                 if succeeded:
                     self.transfer_completed.emit("remote")
@@ -858,6 +1200,18 @@ class MainWindow(QMainWindow):
         self.set_status(f"Successfully uploaded {succeeded} file(s)")
         # FR-099: refresh the Remote Files list so the uploaded files show.
         self.transfer_completed.emit("remote")
+
+    def _finish_cancelled_batch(self, direction: str, succeeded: int) -> None:
+        """
+        Satisfies: FR-120.
+
+        Common end-of-batch handling for a user-cancelled transfer (either
+        direction). Runs on the transfer worker thread: report the cancellation
+        and hand the dialog teardown / optional refresh to the GUI thread via
+        the transfer_cancelled signal (NFR-004).
+        """
+        self.set_status(f"Transfer cancelled after {succeeded} file(s)")
+        self.transfer_cancelled.emit(direction, succeeded > 0)
 
     def _send_one_to_remote(self, filepath) -> bool:
         """
@@ -894,6 +1248,7 @@ class MainWindow(QMainWindow):
                 ser,
                 monitor=self._on_transfer_bytes,
                 progress=self._on_transfer_progress_cb,
+                cancel_check=self._transfer_cancel.is_set,
             )
             return xm.send_file(filepath)
         finally:
@@ -928,13 +1283,19 @@ class MainWindow(QMainWindow):
 
         Receive each selected file sequentially over the single
         Transport Port. Runs on a worker thread. One progress dialog
-        serves the whole batch. Abort on the first failure.
+        serves the whole batch. Abort on the first failure, or when the user
+        cancels (FR-120).
         """
         count = len(save_paths)
+        self._transfer_cancel.clear()  # FR-120: start each batch un-cancelled.
         self.batch_started.emit("host", count)
         succeeded = 0
         for index, save_path in enumerate(save_paths, start=1):
             name = os.path.basename(save_path)
+            # FR-120: stop before starting the next file if cancellation is requested.
+            if self._transfer_cancel.is_set():
+                self._finish_cancelled_batch("host", succeeded)
+                return
             # FR-109: let CP/M return to its prompt before the next command.
             if index > 1:
                 self._wait_for_terminal_idle()
@@ -951,6 +1312,10 @@ class MainWindow(QMainWindow):
                 self.error_raised.emit("Error", str(e))
                 return
             if not ok:
+                # FR-120: a cancelled transfer is not a failure.
+                if self._transfer_cancel.is_set():
+                    self._finish_cancelled_batch("host", succeeded)
+                    return
                 # FR-108: abort the batch and refresh if anything got through.
                 if succeeded:
                     self.transfer_completed.emit("host")
@@ -996,6 +1361,7 @@ class MainWindow(QMainWindow):
                 ser,
                 monitor=self._on_transfer_bytes,
                 progress=self._on_transfer_progress_cb,
+                cancel_check=self._transfer_cancel.is_set,
             )
             return xm.receive_file(save_path)
         finally:

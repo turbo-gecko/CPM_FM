@@ -1,0 +1,317 @@
+# CP/M File Manager — Manual Test Plan
+
+| Field | Value |
+|-------|-------|
+| Document title | CP/M File Manager Manual Test Plan |
+| Document ID | CPM-FM-MTP |
+| Version | 1.1 |
+| Status | Draft |
+| Date | 2026-06-14 |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v1.9.0) |
+
+---
+
+## 1. Purpose and scope
+
+This plan covers functionality that the automated test suite **cannot** exercise and that therefore
+must be verified by hand. The automated suite (`pytest`) already covers:
+
+- The CP/M 4-column DIR parser and drive-prompt detection — all of `DR-*` (`tests/test_cpm_parser.py`).
+- `SerialManager.open_port` flow-control / key-name mapping — `UIR-028`, `NFR-002`
+  (`tests/test_serial_manager.py`).
+- The X-Modem progress hook, the checksum/CRC receive handshake, and cancel/abort (CAN) — `FR-105`,
+  `FR-120`, `NFR-003` (`tests/test_xmodem.py`), using an in-memory fake port.
+- Headless GUI logic under the `offscreen` Qt platform — transfer/batch orchestration, progress-dialog
+  state, transfer cancellation wiring, dialog button layout, drive-change logic, list-clearing on
+  load/disconnect, geometry/last-config persistence, File > New, and the context-menu file actions
+  (`tests/test_gui_smoke.py`), all with serial I/O, sleeps, threads, and modal dialogs stubbed out.
+
+What remains for **manual** verification, and is the subject of this plan:
+
+1. **Real serial behaviour** — opening/closing physical ports, two-port vs. shared-port operation,
+   port enumeration, and the error paths when a port cannot be opened/closed (`FR-030`–`FR-058`,
+   `IFR-001`–`IFR-003`).
+2. **End-to-end X-Modem transfers** against a real (or emulated) CP/M system, in both directions,
+   single and batch, including the CP/M-side launch commands, timing, and live cancellation
+   (`FR-080`–`FR-109`, `FR-120`).
+3. **Real remote listing and drive selection** — the capture/idle-timeout mechanism and the live
+   `DIR` round-trip (`FR-070`–`FR-079`, `FR-100`–`FR-104`).
+4. **Visual / look-and-feel** — the Material theme, OS light/dark following, toolbar, splitter,
+   status-bar indicators, every dialog's on-screen layout and field constraints, and the consistent
+   Cancel/affirmative button placement across dialogs (`UIR-*`, `UIR-075`, `CR-012`/`CR-013`).
+5. **OS integration** — File dialogs, geometry persistence across real sessions, viewer/editor launch
+   and OS-default fallback, and `python -m cpm_fm` debug output (`FR-004`–`FR-006`, `FR-088`, `FR-112`).
+6. **Terminal Window** interactive behaviour over a live link (`FR-090`–`FR-098`, `UIR-060`–`UIR-067`).
+
+Each test case lists the requirement IDs it verifies so coverage can be traced back to the SRS.
+
+---
+
+## 2. Test environment and prerequisites
+
+### 2.1 Hardware / connectivity options
+
+A real serial round-trip is required for most of §5–§9. Use whichever of the following is available;
+note which was used in the results.
+
+- **Option A — Real CP/M system.** A legacy CP/M 2.2 machine connected over RS-232 (directly or via a
+  USB-to-serial adapter), with `PCGET`/`PCPUT` (or equivalents) installed on the CP/M side.
+- **Option B — CP/M emulator.** An emulator (e.g. RunCPM, z80pack) exposing a serial endpoint, with
+  the X-Modem helper programs available.
+- **Option C — Loopback / port pair (partial).** A null-modem pair (`com0com` on Windows, `socat`
+  PTY pair on Linux/macOS) or a hardware loopback plug. This validates *port open/close*, *enumeration*,
+  *terminal send/receive*, and *byte echo*, but **not** a genuine CP/M `DIR` parse or a real X-Modem
+  handshake (there is no CP/M peer). Mark CP/M-dependent steps **N/A** when using Option C.
+
+For the **two-port** cases you need two distinct ports (e.g. two adapters, or two `com0com` pairs).
+For the **shared-port** cases the Terminal and Transport ports are set to the same device.
+
+### 2.2 Software setup
+
+```
+python -m pip install -e .[dev]
+```
+
+Launch under each of the two entry points as the case requires:
+
+- `cpm-fm` — windowed launcher (no console). Use for normal GUI testing.
+- `python -m cpm_fm` — keeps a console; **required** for any case that inspects stdout
+  (debug logging, serial error prints — `FR-088`).
+
+### 2.3 Test data
+
+- The example configs in `examples/` — `serial_settings.json` (flat shape) and `settings_a.json`
+  (nested shape) — for the config-format compatibility cases.
+- A small **host** file set in a scratch folder: at least one short text file, one binary file, one
+  file whose name has no extension, and one file ≥ ~1 KB (to span multiple X-Modem blocks).
+- On the CP/M side, a drive (e.g. `A:`) holding a few files including one extensionless file and one
+  single-file directory if you can arrange it.
+
+### 2.4 Clean-state note (QSettings)
+
+Geometry, the last-used config file, and the last-used config folder persist in host-native storage
+(`QSettings`, org `turbo-gecko`, app `cpm-fm` — on Windows, `HKCU\Software\turbo-gecko\cpm-fm`).
+For a true "first run" (`FR-003` unconfigured start, `FR-005` no remembered file) clear that key
+first, and restore/back it up afterwards if you care about your own settings.
+
+### 2.5 Pass/fail recording
+
+For each case record: **Pass / Fail / Blocked / N/A**, the environment option used (A/B/C), the OS,
+the app version, and any observation. A case is **Pass** only if every "Expected" bullet is observed.
+
+---
+
+## 3. How to use this plan
+
+Run §4 (smoke) first; if the app will not start, stop and fix that. Then §5–§13 may be run in any
+order, subject to their preconditions. Cases that need a live CP/M peer are marked **[CP/M]**; cases
+that need two physical ports are marked **[2-port]**; visual-only cases are marked **[visual]**.
+
+---
+
+## 4. Smoke / start-up
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-S01 | STR-002, CR-012, CR-013 | Launch `cpm-fm` with QSettings cleared (§2.4). | Main window appears; no console error; the Material theme is visibly applied (not the default Qt/native look). |
+| MT-S02 | FR-003, FR-060, FR-070 | Observe the freshly-launched window. | App is unconfigured (no settings loaded); Host Files list shows the current working directory's files; Remote Files list is **empty**. |
+| MT-S03 | UIR-001, UIR-002, UIR-003 | Inspect the menu bar. | A **File** menu with **New, Load, Save, Exit** (New at top) and a **Config** menu with **Serial, General**. |
+| MT-S04 | UIR-013, UIR-071, UIR-015, UIR-016 | Inspect the top toolbar. | A toolbar with **Connect, Disconnect, Terminal** as labelled, icon-bearing buttons; Connect and Disconnect both enabled at startup. |
+| MT-S05 | UIR-011, UIR-012, UIR-061..067 | Inspect the panes. | Host Files group (Change Directory button, multi-select list, row with Refresh Host + Copy to Remote); Remote Files group (drive drop-down, Update button, multi-select list, Copy to Host row). |
+
+---
+
+## 5. Serial connect / disconnect (real ports)
+
+Preconditions: a valid serial configuration is loaded (File > Load `examples/serial_settings.json`,
+then edit ports via Config > Serial to match your hardware), unless a case says otherwise.
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-C01 | FR-030, FR-032, FR-034, UIR-074 | With a valid Terminal Port configured and free, press **Connect**. | Terminal Port opens; status bar shows "Terminal port open"; the Terminal status indicator switches to its *connected* visual state. |
+| MT-C02 | FR-031, FR-033 | Configure the Terminal Port to a non-existent or already-in-use port; press **Connect**. | An error dialog containing "Terminal port is unable to be opened" appears; workflow cancelled; Terminal indicator stays *not-connected*. |
+| MT-C03 [2-port] | FR-038, FR-040, UIR-074 | Configure **different** Terminal and Transport ports, both free; press **Connect**. | Both ports open; Transport status flag/indicator becomes *connected*. |
+| MT-C04 [2-port] | FR-039 | Configure a valid Terminal Port but a bad/busy **Transport** Port; press **Connect**. | An error dialog containing "Transport port is unable to be opened" appears. |
+| MT-C05 | FR-037 | Configure the **same** physical port as both Terminal and Transport; press **Connect**. | Terminal opens; Transport flag/indicator also becomes *connected* without a second open. (Regression: no `NoneType … in_waiting` crash on a later Copy.) |
+| MT-C06 | FR-035, FR-097 | After connecting, confirm the Terminal Window did **not** auto-open. | Connect does not open the Terminal Window; it opens only via the Terminal button. |
+| MT-C07 | FR-050, FR-052, FR-053 | While connected (shared or single port), press **Disconnect**. | Terminal Port closes; status bar shows "Terminal port closed"; Terminal indicator → *not-connected*. |
+| MT-C08 [2-port] | FR-055, FR-057 | While connected on two ports, press **Disconnect**. | Both ports close; Transport flag/indicator → *not-connected*. |
+| MT-C09 | FR-058 | Connect, Update to populate the Remote list, then Disconnect (clean close). | Remote Files list is **cleared** after the successful disconnect. |
+| MT-C10 | FR-051, FR-058 | Force a close failure if you can (e.g. pull the adapter mid-session so close raises), then Disconnect. | Error dialog "Terminal port is unable to be closed"; disconnect cancelled; Remote list **not** cleared. *(May be Blocked if a close failure cannot be induced.)* |
+
+---
+
+## 6. Serial port configuration & enumeration
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-P01 | IFR-003, UIR-022, UIR-023 | Plug in a known adapter. Open Config > Serial. Inspect the Terminal Port and Transfer Port drop-downs. | Both drop-downs list the host's installed serial ports, including the just-plugged adapter. |
+| MT-P02 [visual] | UIR-020, UIR-021, UIR-029 | Open Config > Serial. | Modal dialog titled "Serial Config"; "Port Settings" and "Transmit Delay" groups laid out as two columns (name left, field right). |
+| MT-P03 | UIR-024..028 | Inspect each drop-down's values and defaults. | Speed list = 300…921600, default 115200; Data = 7,8 default 8; Parity = NONE,ODD,EVEN,MARK,SPACE default NONE; Stop Bits = 1,2 default 1; Flow = NONE,XON/XOFF,RTS/CTS,DSR/DTR default NONE. |
+| MT-P04 | UIR-030, UIR-031 | Try to type out-of-range / non-integer values into msec/char and msec/line. | Each field accepts only integers 0–255; default 0. |
+| MT-P05 | UIR-028 | Set Flow = RTS/CTS, save, Connect to a port whose peer requires/asserts hardware flow control. | Handshake applied at open (transfer proceeds where a NONE setting would stall, or verify via a serial line monitor). *(Best-effort; mark N/A if no flow-control-sensitive peer.)* |
+| MT-P06 | IFR-002 | Set Terminal and Transport to the same port; save; reopen the dialog. | Same physical port accepted for both logical ports; values round-trip. |
+
+---
+
+## 7. General configuration dialog
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-G01 [visual] | UIR-040, UIR-041, UIR-044 | Open Config > General. | Modal dialog titled "General Config"; "Terminal Commands", "Xmodem Commands", and "End of Line" groups present, two-column layout. |
+| MT-G02 | UIR-042, UIR-045, UIR-046 | Inspect defaults / length limits of List Files, Receive from Remote, Send to Remote. | List Files default "DIR"; Receive default "PCPUT $1"; Send default "PCGET $1"; each limited to 79 characters. |
+| MT-G03 | UIR-047, UIR-048 | Inspect End of Line radios. | Mutually exclusive CR / LF / CR-LF radios; **CR** selected by default. |
+| MT-G04 | UIR-049, UIR-052 | Inspect Xfer Launch Delay and Xfer Inter-file Delay fields. | Launch Delay integer 0–60 default 3; Inter-file Delay integer 0–60 default 2. |
+| MT-G05 | UIR-050 | Inspect Debug Logging control. | Dropdown OFF/ON, default OFF. |
+| MT-G06 | UIR-053 | Click the Default Host Directory browse button, pick a folder. | A folder-select dialog appears; the chosen path populates the field. |
+| MT-G07 | UIR-054, UIR-055, UIR-056 | Inspect Viewer/Editor, Rename Remote, Delete Remote fields. | Defaults `notepad $1`, `REN $2=$1`, `ERA $1`; Rename/Delete limited to 79 chars. |
+| MT-G08 | UIR-043 | Confirm there is **no** "Change Disk" field. | The withdrawn field is absent. |
+
+---
+
+## 8. Configuration load / save (real file dialogs)
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-L01 | FR-010, IFR-004 | File > Load. | A file-select dialog defaulting to JSON appears. |
+| MT-L02 | FR-011, NFR-002 | Load `examples/serial_settings.json` (flat), then load `examples/settings_a.json` (nested). | Each load **fully replaces** the settings store; both shapes are accepted; serial settings normalise (Connect works with either). |
+| MT-L03 | FR-012 | Hand-edit a config to add an unknown key (e.g. `"foo": 123`), load it, then Save to a new file. | App accepts the file (no rejection); the unknown key survives verbatim in the saved output and does not change behaviour. |
+| MT-L04 | FR-017 | Update to populate the Remote list, then File > Load any config. | Remote Files list is **cleared** on load. |
+| MT-L05 | FR-013, FR-014 | File > Save to a new path; reopen the file in a text editor. | JSON file written with the current serial + general settings. |
+| MT-L06 | FR-006, FR-010, FR-013 | Save into folder X; then File > Load. | The Load dialog opens in folder X (the last-used **config** folder), independent of the Host directory. |
+| MT-L07 | FR-005 | Load a config, then fully quit and relaunch (`cpm-fm`). | On next start the app auto-reloads and applies that same config file. |
+| MT-L08 | FR-005, FR-003 | After MT-L07, delete or rename the remembered config file, relaunch. | App starts **unconfigured** (no crash) because the remembered file no longer parses/exists. |
+| MT-L09 | FR-018, FR-019 | Load a config (so a file is remembered), connect, Update, then File > **New**. | Current config is saved to the remembered file; ports closed (disconnect behaviour); Remote list cleared; settings replaced with defaults; remembered path forgotten; Host list refreshed to the default directory. |
+| MT-L10 | FR-018 | With **no** remembered file, File > New. | A Save dialog appears first; choosing a file then resets to defaults; **cancelling** the Save dialog cancels New entirely (config, ports, lists retained). |
+
+---
+
+## 9. Host file management
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-H01 | FR-060 | Launch with a config whose Default Host Directory points at your scratch folder. | Host Files list shows that folder's files at startup. |
+| MT-H02 | FR-061, FR-062 | Press **Change Directory**, pick a different folder. | Folder-select dialog appears; Host Files list reloads from the chosen folder (session-only; not written to the config until Save). |
+| MT-H03 [CP/M] | FR-063 | Connect; press **Refresh Host**. | Host list refreshes **and** the Remote list is (re)populated via the remote-listing process — Refresh Host acts on **both** lists. |
+
+---
+
+## 10. Remote listing & drive selection (live)  **[CP/M]**
+
+Preconditions: connected to a CP/M peer with files on at least drive `A:`.
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-R01 | FR-073, FR-075..079 | Select the current drive in the drop-down and press **Update** (or just press Update). | List command sent over Terminal Port; after the capture wait the Remote Files list fills with filenames **sorted ascending**; status bar shows "Remote file list updated". |
+| MT-R02 | FR-074, FR-104 | With the Terminal Port **closed**, press Update / select a drive. | Status bar: "Terminal port not open - cannot read file list"; Remote list cleared; no hang. |
+| MT-R03 | FR-076 | Time a list refresh against a directory that prints slowly / in bursts. | The app waits ≥1 s, keeps waiting until output is idle ~0.5 s, and caps at ~10 s — no truncated listing for a slow directory. |
+| MT-R04 | FR-077, FR-078, DR-013 | List a drive containing an **extensionless** file and a **single-file** directory (if available). | Extensionless names appear without a trailing dot; a lone file still shows. (Parsing logic itself is unit-tested; this confirms the live capture feeds it correctly.) |
+| MT-R05 | FR-100, FR-102 | Select a different existing drive (e.g. `B:`) from the drop-down. | App sends `B:`; on seeing the `B>` prompt it lists that drive exactly as Update does. |
+| MT-R06 | FR-103 | Select a drive letter that does not exist on the remote. | Remote list cleared; a modal OK dialog "Drive `<letter>`: not found" (e.g. "Drive B: not found"). |
+| MT-R07 | FR-073 (OI-22) | In the Terminal Window type `A:` to change the remote drive directly; then in the main window, with `C:` shown in the drop-down, press Update. | Update first switches the remote to the **displayed** drive (`C:`) and lists that — the list matches the drop-down, not the drive typed in the terminal. |
+
+---
+
+## 11. File transfers (live X-Modem)  **[CP/M]**
+
+Preconditions: connected (both Terminal and Transport flags set); `PCGET`/`PCPUT` available on the
+CP/M side. Use the multi-block (≥1 KB) file plus small files from §2.3.
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-T01 | CR-010, FR-080 | With Transport **not** connected, press Copy to Remote / Copy to Host. | Error dialog body "Transport port not connected"; no transfer starts. |
+| MT-T02 | FR-106 | Connected, but **no** file selected, press Copy to Remote / Copy to Host. | Warning "Please select one or more files to upload" / "…to download"; no transfer. |
+| MT-T03 | FR-081..083, FR-087, FR-089, FR-099 | Select one host file; **Copy to Remote**. | `PCGET <name>` issued on Terminal Port; after the launch delay the X-Modem send runs on the Transport Port; on success the **Remote** list auto-refreshes and the file appears there. Verify the file on the CP/M side opens/types correctly (content integrity). |
+| MT-T04 | FR-081..083, FR-087, FR-099 | Select one remote file; **Copy to Host**. | `PCPUT <name>` issued; X-Modem receive runs; on success the **Host** list refreshes and the file appears; downloaded content matches the original (binary-compare for the binary file). |
+| MT-T05 | FR-105, UIR-051 | During MT-T03/T04 watch the progress dialog. | Modal dialog titled "Sending File"/"Receiving File"; shows the filename, a live Blocks/Bytes count that increments per block, and a progress bar (tracking bytes on send; indeterminate on receive); a centred **Cancel** button (FR-120) is present but **no** window close (X) control; auto-closes on completion. |
+| MT-T06 | FR-106, FR-107, FR-105 | Multi-select three host files; Copy to Remote. | Files transfer **sequentially in list order**, each with its own `PCGET`; a **single** progress dialog serves the batch and shows "File i of N"; on success the Remote list refreshes once. |
+| MT-T07 | FR-108 | In a 3-file batch, arrange for the middle file to fail (e.g. abort it on the CP/M side / disconnect briefly). | Batch aborts (third file not attempted); error dialog names the failed file; because file 1 succeeded, the destination list refreshes once. |
+| MT-T08 | FR-109 | Run a multi-file batch and watch the Terminal Window between files. | Before each file **after the first**, the app waits for the CCP prompt to return plus the inter-file settle delay; the second/third launch commands are not truncated ("command not found"). |
+| MT-T09 | FR-086 | Open the Terminal Window, then run a transfer. | Every byte sent/received on the Transport Port is echoed into the Receive area as `<HH>` hex tokens (uppercase two-digit). |
+| MT-T10 | NFR-003 | Transfer to/from a 1K-capable sender (e.g. PCPUT1K) and a checksum-only sender (PCPUT V1.0). | Receive polls **NAK first** (no stray `C`); 1K (STX) frames accepted from 1K senders; final packet padded with 0x1A. Content round-trips intact. |
+| MT-T11 | NFR-001 | During a large transfer, move/resize the main window and hover the toolbar. | UI stays responsive (transfer runs off the GUI thread); progress keeps updating. |
+| MT-T12 | FR-119 | Right-click a single host file → **To Remote**; right-click a single remote file → **To Host**. | Each transfers just that one file exactly as the corresponding Copy button (progress dialog, refresh on success); with Transport disconnected, "Transport port not connected" and no transfer. |
+| MT-T13 | FR-120, NFR-003 | Start a transfer of the multi-block (≥1 KB) file (either direction); while the progress dialog shows blocks incrementing, press **Cancel**. (Open the Terminal Window first to watch the byte echo.) | The Cancel button disables and shows "Cancelling…"; the transfer aborts promptly; the CAN sequence is sent (visible as `<18>` tokens in the Terminal Window — MT-T09) and the CP/M program reports an abort; the progress dialog closes; the status bar shows a "Transfer cancelled" message; **no** error dialog appears. |
+| MT-T14 | FR-120 | Multi-select three files; start the batch; press **Cancel** during the **second** file (so file 1 already completed). | Remaining files are skipped (third never launched); the dialog closes with a cancellation status; because file 1 completed, the destination list refreshes once; on a cancelled **Copy to Host**, no partially-received file is left in the host folder. |
+
+---
+
+## 12. Terminal Window (live)  **[CP/M or loopback]**
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-W01 | FR-097, UIR-060 | Press the **Terminal** toolbar button (port may be closed). | A non-modal window titled "Terminal" opens; pressing the button again when minimised restores it. |
+| MT-W02 | UIR-061, UIR-063, UIR-067 | Inspect the window. | Large multi-line read-only "Receive" area; a "Transmit" group with a single-line field (left) and "Send" button (right). |
+| MT-W03 | FR-091, FR-094, FR-096 | Connected: type a CP/M command (e.g. `DIR`) and press Send. | Configured EOL is appended; command is sent; the remote's response appears in the Receive area. |
+| MT-W04 | UIR-065, FR-093 | Local Echo checkbox (off by default): enable it, send text. | With Local Echo on, transmitted text is copied into the Receive area; with it off, only the remote echo appears. |
+| MT-W05 | UIR-066, UIR-062 | Autoscroll (on by default): send enough to overflow; then toggle Autoscroll off. | With Autoscroll on, the view follows new text to the bottom; with it off, the view stays put. |
+| MT-W06 | FR-095 | After traffic, press **Clear**. | Receive area clears; the retained RX/TX buffers are also cleared (subsequent behaviour reflects an empty buffer). |
+| MT-W07 | FR-098 | With the Terminal Port **closed**, type text and press Send. | Status bar: "Terminal port not open - cannot send"; nothing transmitted. |
+
+---
+
+## 13. File context-menu actions
+
+Host-side Rename/Delete/View are unit-tested at the logic level; manual testing confirms the **real**
+dialog, real filesystem effect, and real viewer launch. Remote actions need a live peer.
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-F01 [visual] | UIR-018, UIR-019 | Right-click a host file; right-click a remote file. | Host menu: **To Remote** (top, separated), View/Edit, Rename, Delete. Remote menu: **To Host** (top, separated), View, Rename, Delete. |
+| MT-F02 | FR-112 | Host file → **View/Edit** with default `viewer_cmd` (`notepad $1`). | The file opens in Notepad (or the configured editor). |
+| MT-F03 | FR-112 | Set `viewer_cmd` empty (General Config), then View/Edit a host file. | The file opens via the OS default association for its type. |
+| MT-F04 | UIR-057, FR-114, FR-116, FR-118 | Host file → **Rename**: dialog shows an editable field pre-filled and pre-selected; change the name, Apply. | File renamed on disk; Host list refreshes. Cancel (or unchanged/empty name) makes no change. |
+| MT-F05 | UIR-057, FR-115, FR-116, FR-118 | Host file → **Delete**: dialog shows a **read-only** name field; Apply. | File deleted from disk; Host list refreshes. Cancel makes no change. |
+| MT-F06 [CP/M] | FR-117, FR-118 | Remote file → Rename / Delete with the Terminal Port open. | `REN new=old` / `ERA name` sent on the Terminal Port; Remote list refreshes; the change is visible on the CP/M side. |
+| MT-F07 [CP/M] | FR-117 | Remote Rename/Delete with the Terminal Port **closed**. | No command sent; status bar "Terminal port not open - cannot rename"/"…cannot delete". |
+| MT-F08 [CP/M] | FR-113, FR-112 | Remote file → **View** while both flags connected. | File is first downloaded over X-Modem to a temp folder (progress dialog shows), then opened in the viewer. With Transport disconnected: "Transport port not connected", no download. |
+
+---
+
+## 14. Visual theme, layout, and window state  **[visual]**
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-V01 | UIR-070, CR-013 | Inspect all windows/dialogs. | The Material theme is applied consistently across the main window, Terminal Window, and every dialog (centrally, not per-widget). |
+| MT-V02 | UIR-073 | Set the host OS to **light** mode, launch; then set OS to **dark** mode, relaunch. | The app picks the matching light/dark Material variant at start-up. (If the OS preference is unavailable, it defaults to dark.) |
+| MT-V03 | UIR-071 | Inspect the toolbar. | Connect/Disconnect/Terminal shown as labelled, icon-bearing toolbar buttons at the top. |
+| MT-V04 | UIR-072 | Drag the splitter between Host and Remote panes. | The divider moves and re-apportions horizontal space. (Need not persist across sessions.) |
+| MT-V05 | UIR-074 | Watch the status-bar indicators through a connect/disconnect cycle. | Two indicators (Terminal, Transport) each show a distinct connected vs. not-connected visual state. |
+| MT-V06 | UIR-014 | Trigger a very long status message (e.g. a long error). | Status bar shows a single line truncated to 127 characters. |
+| MT-V07 | FR-004 | Move/resize the main window, the Terminal Window, and the Serial & General dialogs; quit; relaunch and reopen each. | Each window/dialog reopens at its last size/position. (Splitter position is exempt — UIR-072.) |
+| MT-V08 | FR-015, FR-016 | With ports open and the Terminal Window + a config dialog open, choose File > **Exit**. | All COM ports close and all dialogs/windows close cleanly; no orphaned process. |
+| MT-V09 | UIR-075 | Open Config > Serial, Config > General, and a File Action dialog (right-click a host file → Rename); also glance at a transfer progress dialog (MT-T05). | In every two-button dialog the **Cancel** button is at the **far left** and the affirmative button (**Save** for the config dialogs, **Apply** for the File Action dialog) at the **far right**, with space between; the progress dialog's single **Cancel** button is **centred**. |
+
+---
+
+## 15. Cross-cutting / non-functional
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-N01 | FR-088 | Run via `python -m cpm_fm` with Debug Logging **OFF**, do a transfer; then set it **ON** and repeat. | OFF: no verbose per-byte X-Modem trace on stdout. ON: verbose trace and transfer-flow messages appear. |
+| MT-N02 | STR-003, CR-012 | If feasible, repeat the §4 smoke and one transfer (§11) on a second OS (e.g. Linux/macOS as well as Windows). | App launches and core flows work cross-platform. *(Mark N/A if only one OS is available.)* |
+| MT-N03 | NFR-001, NFR-004 | During a long transfer and a long remote listing, interact with the UI. | UI never freezes; no Qt "cannot create children for a parent in a different thread" warnings on the console. |
+
+---
+
+## 16. Traceability summary (manual-only coverage)
+
+The cases above target requirements that are **not** fully exercised by `pytest` because they depend on
+real serial hardware, a live CP/M peer, on-screen rendering, real OS dialogs/associations, real timing,
+or real cross-session persistence:
+
+- Lifecycle / persistence (real): `FR-004` (windows/dialogs), `FR-005`, `FR-006`, `FR-015`, `FR-016`.
+- Connect/disconnect (real ports & error paths): `FR-030`–`FR-040`, `FR-050`–`FR-058`.
+- Remote listing & drive selection (live capture/timing): `FR-074`–`FR-079`, `FR-100`–`FR-104`.
+- Transfers (live X-Modem, CP/M launch, timing, byte echo, live cancel): `FR-080`–`FR-089`, `FR-099`, `FR-105`–`FR-109`, `FR-119`, `FR-120`, `NFR-003` (interop + CAN abort).
+- Terminal Window (interactive over a link): `FR-090`–`FR-098`, `UIR-060`–`UIR-067`.
+- File actions (real dialog/filesystem/viewer/remote cmd): `FR-112`, `FR-113`, `FR-114`–`FR-118`, `UIR-057`.
+- Interfaces (real): `IFR-001`–`IFR-004`.
+- Config dialogs (on-screen layout, field values/limits): `UIR-020`–`UIR-056`.
+- Theme, layout & dialog button placement: `UIR-070`–`UIR-075`, `CR-012`, `CR-013`.
+- Non-functional (real): `NFR-001`, `NFR-004` (live), `STR-003`, `FR-088`.
+
+Purely algorithmic and headless-logic requirements (`DR-*`, the X-Modem progress/handshake internals,
+parser-fed list ordering, and the stubbed GUI orchestration in `test_gui_smoke.py`) are already covered
+by the automated suite and are **not** re-tested here except where a live round-trip is needed to
+confirm the real data path feeds them correctly (e.g. MT-R04).
