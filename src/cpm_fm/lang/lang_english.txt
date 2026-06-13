@@ -1,0 +1,168 @@
+# =============================================================================
+# CP/M File Manager - English language file (reference / fallback)
+# =============================================================================
+# Format (DR-042):
+#   * key = value   (split on the FIRST '='; values may contain '=')
+#   * Blank lines and lines beginning with '#' are ignored.
+#   * Values are str.format templates; placeholders such as {name}, {index},
+#     {count}, {error} are filled in at run time.
+#
+# This is the complete reference language (DR-043). To add a language, copy this
+# file to lang_<language>.txt and translate the values on the right of each '='.
+# Do NOT translate the keys on the left.
+# =============================================================================
+
+# --- Application ---------------------------------------------------------------
+app.title = CP/M File Manager
+
+# --- Menu bar ------------------------------------------------------------------
+menu.file = File
+menu.file.new = New
+menu.file.load = Load
+menu.file.save = Save
+menu.file.exit = Exit
+menu.config = Config
+menu.config.serial = Serial
+menu.config.general = General
+menu.config.language = Language
+menu.help = Help
+menu.help.about = About
+
+# --- Toolbar -------------------------------------------------------------------
+toolbar.connect = Connect
+toolbar.disconnect = Disconnect
+toolbar.terminal = Terminal
+
+# --- Main window ---------------------------------------------------------------
+main.host_files = Host Files
+main.change_directory = Change Directory
+main.copy_to_remote = Copy to Remote
+main.remote_files = Remote Files
+main.update = Update
+main.copy_to_host = Copy to Host
+
+# --- Connection indicators -----------------------------------------------------
+indicator.terminal = Terminal
+indicator.transport = Transport
+
+# --- File list context menus ---------------------------------------------------
+ctxmenu.to_remote = To Remote
+ctxmenu.view_edit = View/Edit
+ctxmenu.rename = Rename
+ctxmenu.delete = Delete
+ctxmenu.to_host = To Host
+ctxmenu.view = View
+
+# --- Status bar messages -------------------------------------------------------
+status.ready = Ready
+status.cancelling_transfer = Cancelling transfer...
+status.error_reading_host = Error reading host files: {error}
+status.uploading = Uploading {name} ({index}/{count})...
+status.successfully_uploaded = Successfully uploaded {count} file(s)
+status.downloading = Downloading {name} ({index}/{count})...
+status.successfully_downloaded = Successfully downloaded {count} file(s)
+status.transfer_cancelled = Transfer cancelled after {count} file(s)
+status.downloading_for_viewing = Downloading {name} for viewing...
+status.opening_viewer = Opening viewer...
+status.terminal_not_open_rename = Terminal port not open - cannot rename
+status.terminal_not_open_delete = Terminal port not open - cannot delete
+status.terminal_not_open_send = Terminal port not open - cannot send
+status.terminal_not_open_list = Terminal port not open - cannot read file list
+status.executing = Executing: {cmd}
+status.terminal_port_open = Terminal port open
+status.terminal_port_closed = Terminal port closed
+status.updating_remote_list = Updating remote file list...
+status.changing_drive = Changing to drive {drive}:...
+status.remote_list_updated = Remote file list updated
+status.loaded_config = Loaded config: {filename}
+status.saved_config = Saved config to {path}
+status.new_config_created = New configuration created
+status.serial_settings_updated = Serial settings updated
+status.general_settings_updated = General settings updated
+
+# --- Dialog titles -------------------------------------------------------------
+dialog.error.title = Error
+dialog.warning.title = Warning
+dialog.xmodem_error.title = X-Modem Error
+dialog.drive_not_found.title = Drive not found
+dialog.rename_file.title = Rename File
+dialog.delete_file.title = Delete File
+dialog.delete_file.prompt = Delete this file?
+dialog.rename_remote.title = Rename Remote File
+dialog.delete_remote.title = Delete Remote File
+dialog.delete_remote.prompt = Delete this remote file?
+dialog.change_directory.title = Change Directory
+dialog.load_config.title = Load Config
+dialog.save_config.title = Save Config
+dialog.json_filter = JSON files (*.json)
+dialog.select_directory.title = Select Directory
+
+# --- Error / warning message bodies --------------------------------------------
+error.transport_not_connected = Transport port not connected
+error.unable_open_viewer = Unable to open viewer: {error}
+error.rename_failed = Rename failed: {error}
+error.delete_failed = Delete failed: {error}
+error.transport_unable_open = Transport port is unable to be opened
+error.terminal_unable_open = Terminal port is unable to be opened
+error.terminal_unable_close = Terminal port is unable to be closed
+error.transport_unable_close = Transport port is unable to be closed
+error.drive_not_found_body = Drive {drive}: not found
+error.download_failed = Download of {name} failed
+error.transfer_failed = Transfer of {name} failed; remaining files skipped
+warning.select_upload = Please select one or more files to upload
+warning.select_download = Please select one or more files to download
+
+# --- Common buttons ------------------------------------------------------------
+button.apply = Apply
+button.cancel = Cancel
+button.save = Save
+button.ok = OK
+button.cancelling = Cancelling…
+
+# --- Transfer progress dialog --------------------------------------------------
+transfer.title.send = Sending File
+transfer.title.recv = Receiving File
+transfer.label.send = Sending:
+transfer.label.recv = Receiving:
+transfer.file.send = Sending: {filename}
+transfer.file.recv = Receiving: {filename}
+transfer.batch_position = File {index} of {count}
+transfer.count = Blocks: {blocks}    Bytes: {bytes_done}
+
+# --- Terminal window -----------------------------------------------------------
+terminal.title = Terminal
+terminal.clear = Clear
+terminal.local_echo = Local Echo
+terminal.autoscroll = Autoscroll
+terminal.send = Send
+
+# --- Serial Configuration dialog -----------------------------------------------
+config.serial.title = Serial Config
+config.serial.terminal_port = Terminal Port
+config.serial.transfer_port = Transfer Port
+config.serial.speed = Speed
+config.serial.data_bits = Data Bits
+config.serial.parity = Parity
+config.serial.stop_bits = Stop Bits
+config.serial.flow_control = Flow Control
+config.serial.msec_char = msec/char
+config.serial.msec_line = msec/line
+
+# --- General Configuration dialog ----------------------------------------------
+config.general.title = General Config
+config.general.remote_group = Remote
+config.general.list_files = List Files
+config.general.recv_remote = Receive from Remote
+config.general.send_remote = Send to Remote
+config.general.xfer_launch_delay = Xfer Launch Delay (s)
+config.general.xfer_interfile_delay = Xfer Inter-file Delay (s)
+config.general.eol = End of Line
+config.general.debug_logging = Debug Logging
+config.general.viewer = Viewer/Editor
+config.general.rename_remote = Rename
+config.general.delete_remote = Delete
+config.general.host_directory = Default Host Directory
+
+# --- About dialog --------------------------------------------------------------
+about.title = About
+about.version = Version {version}

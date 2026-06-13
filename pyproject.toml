@@ -25,6 +25,12 @@ cpm-fm = "cpm_fm.app:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# DR-042: ship the per-language string files (lang_<language>.txt) inside the
+# package so internationalisation works from an installed wheel, not just from
+# a source/editable checkout.
+[tool.setuptools.package-data]
+cpm_fm = ["lang/*.txt"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"

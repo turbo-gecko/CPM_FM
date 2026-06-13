@@ -20,8 +20,19 @@ from cpm_fm.app import MainWindow  # noqa: E402
 from cpm_fm.gui.about_dialog import AboutDialog  # noqa: E402
 from cpm_fm.gui.terminal_window import TerminalWindow  # noqa: E402
 from cpm_fm.gui.window_state import WindowState  # noqa: E402
+from cpm_fm.utils import i18n  # noqa: E402
 from cpm_fm.utils.config_handler import DEFAULT_SETTINGS  # noqa: E402
 from cpm_fm.version import APP_NAME, REPO_URL, get_version  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _english_language():
+    # The translator is a process-wide singleton; force English around every
+    # test so a test that switches language cannot break the many tests that
+    # assert on English literals (FR-124).
+    i18n.set_language(i18n.DEFAULT_LANGUAGE)
+    yield
+    i18n.set_language(i18n.DEFAULT_LANGUAGE)
 
 
 @pytest.fixture(scope="module")
@@ -1123,6 +1134,97 @@ def test_file_action_dialog_button_layout(qapp):
         assert isinstance(right, QPushButton) and right.text() == "Apply"
     finally:
         dlg.deleteLater()
+
+
+def test_general_config_remote_group_first(qapp, monkeypatch):
+    # UIR-041: the General Config dialog gathers the remote command fields
+    # (List Files, Receive/Send, Rename, Delete) into a "Remote" group placed
+    # first, with Rename/Delete labelled without the "Remote" suffix.
+    from PySide6.QtWidgets import QFormLayout, QGroupBox
+
+    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+
+    # The base dialog calls exec() in __init__; neutralise it so the modal does
+    # not block this headless test.
+    monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
+    dlg = GeneralConfigDialog(None, {}, lambda s: None)
+    try:
+        layout = dlg.layout()
+        # The first laid-out section is the Remote group box.
+        first = layout.itemAt(0).widget()
+        assert isinstance(first, QGroupBox)
+        assert first.title() == "Remote"
+        # Its rows hold exactly the five remote command fields, in order.
+        form = first.layout()
+        labels = [
+            form.itemAt(i, QFormLayout.ItemRole.LabelRole).widget().text()
+            for i in range(form.rowCount())
+        ]
+        assert labels == ["List Files", "Receive from Remote", "Send to Remote", "Rename", "Delete"]
+        # The non-remote settings remain reachable for saving (e.g. EOL).
+        assert "eol" in dlg.entries and "host_directory" in dlg.entries
+    finally:
+        dlg.deleteLater()
+
+
+def test_config_menu_has_language_submenu(qapp, state):
+    # UIR-003/UIR-077: the Config menu contains a Language submenu listing every
+    # shipped language by its (capitalised) name, with the active one checked.
+    from PySide6.QtWidgets import QMenu
+
+    win = MainWindow(state)
+    try:
+        # A "Language" submenu exists somewhere under the menu bar.
+        titles = [m.title() for m in win.menuBar().findChildren(QMenu)]
+        assert "Language" in titles
+        # The per-language actions are keyed by language name and labelled by the
+        # capitalised display name.
+        labels = {name: act.text() for name, act in win._language_actions.items()}
+        assert labels.get("english") == "English"
+        assert labels.get("german") == "German"
+        assert labels.get("french") == "French"
+        # The active language's entry is checked (UIR-077).
+        checked = [name for name, act in win._language_actions.items() if act.isChecked()]
+        assert checked == ["english"]
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_language_switch_retranslates_live(qapp, state):
+    # FR-122/FR-123: switching language re-labels the visible UI immediately and
+    # persists the choice; switching back restores the English text.
+    from PySide6.QtWidgets import QPushButton
+
+    win = MainWindow(state)
+    try:
+        win.menu_set_language("german")
+        qapp.processEvents()
+        # A registered widget (the Copy to Remote button) now shows German text.
+        buttons = [b.text() for b in win.findChildren(QPushButton)]
+        assert "Zum Gerät kopieren" in buttons
+        assert win.window_state.language == "german"
+
+        win.menu_set_language("english")
+        qapp.processEvents()
+        buttons = [b.text() for b in win.findChildren(QPushButton)]
+        assert "Copy to Remote" in buttons
+        assert win.window_state.language == "english"
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_persisted_language_applied_on_construction(qapp, state):
+    # FR-124: a window built from a store that remembers German starts localised.
+    state.language = "german"
+    win = MainWindow(state)
+    try:
+        # The window title comes from app.title via the i18n registry.
+        assert win.windowTitle() == "CP/M-Dateimanager"
+    finally:
+        win.close()
+        win.deleteLater()
 
 
 def test_host_to_remote_requires_both_flags(qapp, monkeypatch, state):
