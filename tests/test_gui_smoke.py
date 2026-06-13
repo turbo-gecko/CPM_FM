@@ -490,3 +490,49 @@ def test_geometry_and_last_config_persist_across_sessions(qapp, state, tmp_path)
     finally:
         second.close()
         second.deleteLater()
+
+
+def test_menu_load_remembers_and_reuses_config_folder(qapp, monkeypatch, state, tmp_path):
+    # FR-006: File > Load defaults to the last-used config folder and records the
+    # folder of the chosen file, separately from the Host Files directory.
+    cfg = tmp_path / "serial.json"
+    cfg.write_text('{"terminal_port": "COM3"}')
+
+    win = MainWindow(state)
+    try:
+        seen_dirs = []
+
+        def fake_open(parent, caption, directory, filt):
+            seen_dirs.append(directory)
+            return str(cfg), filt
+
+        monkeypatch.setattr("cpm_fm.app.QFileDialog.getOpenFileName", fake_open)
+        win.menu_load()
+
+        # First open started with no remembered folder; the chosen file's folder
+        # is now persisted and is independent of the host directory.
+        assert seen_dirs == [""]
+        assert state.last_config_dir == str(tmp_path)
+
+        win.menu_load()
+        assert seen_dirs[-1] == str(tmp_path)
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_menu_save_remembers_config_folder(qapp, monkeypatch, state, tmp_path):
+    # FR-006: a successful File > Save records its folder for the next dialog.
+    target = tmp_path / "out.json"
+
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(
+            "cpm_fm.app.QFileDialog.getSaveFileName",
+            lambda *a, **k: (str(target), "JSON files (*.json)"),
+        )
+        win.menu_save()
+        assert state.last_config_dir == str(tmp_path)
+    finally:
+        win.close()
+        win.deleteLater()

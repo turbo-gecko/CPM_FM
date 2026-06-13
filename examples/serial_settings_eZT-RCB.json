@@ -1,24 +1,12 @@
 {
-    "terminal_port": "COM4",
-    "transport_port": "COM5",
-    "speed": "230400",
+    "terminal_port": "COM7",
+    "transport_port": "COM7",
+    "speed": "115200",
     "data": "8",
     "parity": "NONE",
     "stopbits": "1",
     "flow": "RTS/CTS",
     "msec_char": "0",
     "msec_line": "0",
-    "general_settings": {
-        "list_files": "DIR",
-        "receive_from_remote": "PCPUT $1",
-        "send_to_remote": "PCGET $1",
-        "end_of_line": "CR"
-    },
-    "list_files_cmd": "DIR",
-    "recv_remote_cmd": "B:PCPUT $1",
-    "send_remote_cmd": "B:PCGET $1",
-    "eol": "CR",
-    "xfer_launch_delay": "3",
-    "debug_logging": "OFF",
     "host_directory": "D:/Old_Skool/CPM/Files"
 }
