@@ -19,6 +19,7 @@ from PySide6.QtWidgets import QApplication  # noqa: E402
 from cpm_fm.app import MainWindow  # noqa: E402
 from cpm_fm.gui.terminal_window import TerminalWindow  # noqa: E402
 from cpm_fm.gui.window_state import WindowState  # noqa: E402
+from cpm_fm.utils.config_handler import DEFAULT_SETTINGS  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -565,6 +566,82 @@ def test_menu_load_remembers_and_reuses_config_folder(qapp, monkeypatch, state, 
 
         win.menu_load()
         assert seen_dirs[-1] == str(tmp_path)
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_menu_new_saves_to_current_file_resets_and_closes_ports(qapp, monkeypatch, state, tmp_path):
+    # FR-018/FR-019: New saves the current config to the remembered file, closes
+    # any open ports, clears the remote list, and replaces settings with the
+    # defaults (forgetting the remembered file path).
+    target = tmp_path / "current.json"
+    target.write_text("{}")
+
+    win = MainWindow(state)
+    try:
+        win.window_state.last_config = str(target)
+        win.settings = {"terminal_port": "COM9", "speed": "300"}
+        win.remote_list.addItems(["STALE.TXT"])
+        monkeypatch.setattr(win, "refresh_host_files", lambda: None)
+        disconnected = []
+        monkeypatch.setattr(win, "do_disconnect", lambda: disconnected.append(1))
+
+        win.menu_new()
+
+        # FR-018: the previous configuration was written to its file.
+        assert "COM9" in target.read_text()
+        # FR-019: ports closed, remote list cleared, defaults applied, path forgotten.
+        assert disconnected == [1]
+        assert win.remote_list.count() == 0
+        assert win.settings == DEFAULT_SETTINGS
+        assert win.window_state.last_config == ""
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_menu_new_prompts_for_file_when_none_remembered(qapp, monkeypatch, state, tmp_path):
+    # FR-018: with no remembered file, New presents the Save dialog before
+    # resetting to the default configuration.
+    target = tmp_path / "saved.json"
+
+    win = MainWindow(state)
+    try:
+        win.window_state.last_config = ""
+        win.settings = {"terminal_port": "COM9"}
+        monkeypatch.setattr(win, "refresh_host_files", lambda: None)
+        monkeypatch.setattr(
+            "cpm_fm.app.QFileDialog.getSaveFileName",
+            lambda *a, **k: (str(target), "JSON files (*.json)"),
+        )
+
+        win.menu_new()
+
+        assert target.exists()
+        assert win.settings == DEFAULT_SETTINGS
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_menu_new_aborts_when_save_cancelled(qapp, monkeypatch, state):
+    # FR-018: cancelling the Save dialog cancels New entirely — the current
+    # configuration, ports, and remote list are retained.
+    win = MainWindow(state)
+    try:
+        win.window_state.last_config = ""
+        win.settings = {"terminal_port": "COM9"}
+        win.remote_list.addItems(["KEEP.TXT"])
+        disconnected = []
+        monkeypatch.setattr(win, "do_disconnect", lambda: disconnected.append(1))
+        monkeypatch.setattr("cpm_fm.app.QFileDialog.getSaveFileName", lambda *a, **k: ("", ""))
+
+        win.menu_new()
+
+        assert win.settings == {"terminal_port": "COM9"}
+        assert disconnected == []
+        assert win.remote_list.count() == 1
     finally:
         win.close()
         win.deleteLater()

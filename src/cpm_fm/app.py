@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import os
 import sys
 import threading
@@ -35,7 +36,7 @@ from cpm_fm.gui.window_state import APP, ORG, WindowState
 from cpm_fm.terminal.cpm_parser import CPMParser
 from cpm_fm.terminal.serial_manager import SerialManager
 from cpm_fm.terminal.xmodem import XModem
-from cpm_fm.utils.config_handler import ConfigHandler
+from cpm_fm.utils.config_handler import DEFAULT_SETTINGS, ConfigHandler
 
 EOL_MAP = {"CR": "\r", "LF": "\n", "CRLF": "\r\n"}
 
@@ -149,11 +150,12 @@ class MainWindow(QMainWindow):
 
     def setup_menu(self):
         """
-        Satisfies: UIR-001, UIR-002, UIR-003.
+        Satisfies: UIR-001, UIR-002, UIR-003, FR-018, FR-019.
         """
         menubar = self.menuBar()
 
         file_menu = menubar.addMenu("File")
+        file_menu.addAction(QAction("New", self, triggered=self.menu_new))
         file_menu.addAction(QAction("Load", self, triggered=self.menu_load))
         file_menu.addAction(QAction("Save", self, triggered=self.menu_save))
         file_menu.addSeparator()
@@ -1043,18 +1045,75 @@ class MainWindow(QMainWindow):
             self, "Save Config", self.window_state.last_config_dir, "JSON files (*.json)"
         )
         if path:
-            if not path.endswith(".json"):
-                path += ".json"
+            self._save_to_path(path)
 
-            # Persist the current host directory in the settings before saving
-            self.settings["host_directory"] = self.host_dir
+    def _save_to_path(self, path: str) -> bool:
+        """
+        Write the current settings to ``path`` and update last-used bookkeeping.
 
-            if self.config_handler.save_json(path, self.settings):
-                # FR-005: the saved file becomes the last-used config to reload.
-                self.window_state.last_config = path
-                # FR-006: remember its folder for the next Load/Save dialog.
-                self.window_state.last_config_dir = os.path.dirname(path)
-                self.set_status(f"Saved config to {path}")
+        Shared by File > Save (FR-013/FR-014) and File > New (FR-018). Returns
+        True on a successful write.
+
+        Satisfies: FR-005, FR-006, FR-014.
+        """
+        if not path.endswith(".json"):
+            path += ".json"
+
+        # Persist the current host directory in the settings before saving
+        self.settings["host_directory"] = self.host_dir
+
+        if self.config_handler.save_json(path, self.settings):
+            # FR-005: the saved file becomes the last-used config to reload.
+            self.window_state.last_config = path
+            # FR-006: remember its folder for the next Load/Save dialog.
+            self.window_state.last_config_dir = os.path.dirname(path)
+            self.set_status(f"Saved config to {path}")
+            return True
+        return False
+
+    def menu_new(self):
+        """
+        Satisfies: FR-018, FR-019.
+
+        FR-018: save the current configuration first (to the last-used file if
+        known, otherwise via the Save dialog); abort if the save is cancelled or
+        fails so nothing is lost. FR-019: on a successful save, close any open
+        ports, clear the Remote Files list, and replace the settings with the
+        default configuration.
+        """
+        # FR-018: save the current configuration. Save silently to the
+        # currently-loaded file if there is one, otherwise prompt with the Save
+        # dialog. Abort New on cancel/failure.
+        if self.window_state.last_config:
+            if not self._save_to_path(self.window_state.last_config):
+                return
+        else:
+            path, _ = QFileDialog.getSaveFileName(
+                self, "Save Config", self.window_state.last_config_dir, "JSON files (*.json)"
+            )
+            if not path or not self._save_to_path(path):
+                return
+
+        # FR-019: close any open Terminal/Transport ports (Disconnect behaviour,
+        # FR-050-FR-058) and clear the now-stale Remote Files list. do_disconnect
+        # reads the port names from the current settings, so it must run before
+        # the settings are reset below.
+        self.do_disconnect()
+
+        # FR-019: replace the entire settings store with the default
+        # configuration (full replace, per FR-011) and forget the remembered
+        # configuration file path.
+        self.settings = copy.deepcopy(DEFAULT_SETTINGS)
+        self.window_state.last_config = ""
+
+        # FR-019/FR-060: refresh the Host Files list to the default host
+        # directory (empty -> current working directory).
+        self.host_dir = self.settings.get("host_directory") or os.getcwd()
+        self.refresh_host_files()
+
+        # FR-019: ensure the Remote Files list is empty even if no port was open.
+        self.remote_list.clear()
+        self.set_status("New configuration created")
 
     def menu_serial_config(self):
         """
