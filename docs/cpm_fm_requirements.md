@@ -106,6 +106,8 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | FR-015 | The File > Exit menu item shall close any open COM ports. | Mandatory | D | App_Requirements §Exit; impl. `app.py:closeEvent`, `serial_manager.py:close_ports` |
 | FR-016 | The File > Exit menu item shall close all open dialogs and windows. | Mandatory | D | App_Requirements §Exit; impl. `app.py:closeEvent` |
 | FR-017 | On loading a configuration file, the application shall clear the Remote Files list. The previously displayed remote listing was captured under the prior configuration (potentially a different port, drive, or system) and is no longer valid (consistent with the empty-at-startup state, FR-070). | Mandatory | T | impl. `app.py:load_config` |
+| FR-018 | The File > New menu item (presented at the top of the File menu) shall first save the current configuration: to the most recently loaded/saved configuration file (FR-005) if one is remembered, otherwise via the Save dialog (FR-013). If no file is chosen, or the save fails, the File > New action shall be cancelled and the current configuration, ports, and lists shall be retained. | Mandatory | T | App_Requirements §New; impl. `app.py:menu_new`, `app.py:_save_to_path` |
+| FR-019 | After the current configuration has been successfully saved (FR-018), the File > New menu item shall: close any open Terminal and Transport ports following the Disconnect behaviour (FR-050–FR-058); clear the Remote Files list (consistent with FR-070); replace the entire settings store with the default configuration (a full replace, per FR-011); forget the remembered configuration file path; and refresh the Host Files list to the default host directory (FR-060). | Mandatory | T | impl. `app.py:menu_new`, `config_handler.py:DEFAULT_SETTINGS` |
 
 ### 3.3 Config menu
 
@@ -222,7 +224,7 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
 | UIR-001 | The GUI shall present a menu bar at the top of the main window. | Mandatory | I | App_Requirements §Look and Feel, §Main Program GUI; impl. `app.py:setup_menu` |
-| UIR-002 | The menu bar shall contain a File menu with the items Load, Save, and Exit. | Mandatory | I | App_Requirements §Look and Feel; impl. `app.py:setup_menu` |
+| UIR-002 | The menu bar shall contain a File menu with the items New, Load, Save, and Exit. | Mandatory | I | App_Requirements §Look and Feel; impl. `app.py:setup_menu` |
 | UIR-003 | The menu bar shall contain a Config menu with the items Serial and General. | Mandatory | I | App_Requirements §Look and Feel; impl. `app.py:setup_menu` |
 
 ### 4.2 Main window layout

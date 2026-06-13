@@ -2,6 +2,30 @@ import json
 import os
 from typing import Any
 
+# Default (flat-format) configuration applied by File > New (FR-019). This is
+# the single source of truth for the hard-coded defaults that are otherwise
+# duplicated across the config dialogs (config_dialogs.py) and the various
+# settings.get(key, default) call sites in app.py.
+DEFAULT_SETTINGS: dict[str, Any] = {
+    "terminal_port": "COM1",
+    "transport_port": "COM1",
+    "speed": "115200",
+    "data": "8",
+    "parity": "NONE",
+    "stopbits": "1",
+    "flow": "NONE",
+    "msec_char": "0",
+    "msec_line": "0",
+    "list_files_cmd": "DIR",
+    "recv_remote_cmd": "PCPUT $1",
+    "send_remote_cmd": "PCGET $1",
+    "xfer_launch_delay": "3",
+    "xfer_interfile_delay": "2",
+    "eol": "CR",
+    "debug_logging": "OFF",
+    "host_directory": "",
+}
+
 
 class ConfigHandler:
     """
