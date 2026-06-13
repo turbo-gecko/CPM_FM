@@ -15,7 +15,9 @@ class SerialManager:
     """
 
     def __init__(self):
-        """Satisfies: FR-001, FR-002."""
+        """
+        Satisfies: FR-001, FR-002.
+        """
         self.terminal_port: Optional[serial.Serial] = None
         self.transport_port: Optional[serial.Serial] = None
 
@@ -31,7 +33,7 @@ class SerialManager:
         Opens a serial port.
         port_type: 'terminal' or 'transport'
 
-        Satisfies: FR-030, FR-032, FR-038, FR-040, NFR-002.
+        Satisfies: FR-030, FR-032, FR-038, FR-040, UIR-028, NFR-002.
         """
         try:
             # Map settings to pyserial parameters
@@ -67,6 +69,15 @@ class SerialManager:
             }
             params["parity"] = parity_map.get(parity_val, serial.PARITY_NONE)
 
+            # UIR-028: apply the configured flow control. The flat config shape
+            # uses the key `flow`, the nested shape uses `flow_control`; fall
+            # back across both (NFR-002). An unknown value (or NONE) leaves all
+            # three handshakes disabled.
+            flow_val = str(s.get("flow", s.get("flow_control", "NONE"))).upper()
+            params["xonxoff"] = flow_val == "XON/XOFF"
+            params["rtscts"] = flow_val == "RTS/CTS"
+            params["dsrdtr"] = flow_val == "DSR/DTR"
+
             if port_type == "terminal":
                 self.terminal_port = serial.Serial(**params)
                 self.terminal_connected = True
@@ -84,7 +95,8 @@ class SerialManager:
             return False
 
     def close_ports(self):
-        """Closes both serial ports and stops the read thread.
+        """
+        Closes both serial ports and stops the read thread.
 
         Satisfies: FR-015.
         """
@@ -138,7 +150,8 @@ class SerialManager:
             return False
 
     def send_data(self, port_type: str, data: str) -> bool:
-        """Sends data through the specified port.
+        """
+        Sends data through the specified port.
 
         Satisfies: FR-096.
         """
@@ -152,7 +165,8 @@ class SerialManager:
         return False
 
     def _read_loop(self):
-        """Background thread to read data from the terminal port.
+        """
+        Background thread to read data from the terminal port.
 
         Satisfies: FR-036, FR-091, NFR-001.
         """

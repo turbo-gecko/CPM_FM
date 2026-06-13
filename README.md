@@ -1,6 +1,6 @@
 # CP/M File Manager (`cpm-fm`)
 
-A cross-platform Tkinter desktop app for transferring files between a modern host and legacy
+A cross-platform PySide6 desktop app for transferring files between a modern host and legacy
 [CP/M](https://en.wikipedia.org/wiki/CP/M) systems over a serial link, using the X-Modem protocol.
 
 ## Features
@@ -14,6 +14,7 @@ A cross-platform Tkinter desktop app for transferring files between a modern hos
 ## Requirements
 
 - Python 3.9+
+- PySide6 (for the GUI)
 - A serial connection to the CP/M system (`pyserial` is installed automatically).
 
 ## Install
@@ -53,7 +54,7 @@ mypy src                    # type-check
 ```
 src/cpm_fm/        application package (src-layout)
   app.py           MainApplication + main() entry point
-  gui/             Tkinter dialogs and terminal window
+  gui/             PySide6 dialogs and terminal window
   terminal/        serial manager, CP/M DIR parser, X-Modem protocol
   utils/           JSON config handling
 tests/             pytest suite

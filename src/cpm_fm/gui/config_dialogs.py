@@ -41,7 +41,9 @@ class ConfigDialog(QDialog):
         window_state: WindowState | None = None,
         state_key: str | None = None,
     ):
-        """Satisfies: FR-004, UIR-020, UIR-040."""
+        """
+        Satisfies: FR-004, UIR-020, UIR-040.
+        """
         super().__init__(parent)
         self.setWindowTitle(title)
         self.setModal(True)
@@ -60,15 +62,20 @@ class ConfigDialog(QDialog):
         self.exec()
 
     def done(self, result: int) -> None:
-        """Satisfies: FR-004."""
-        # FR-004: save geometry on every close path (Save, Cancel, window close,
-        # which all funnel through done()) before the modal exec() returns.
+        """
+        Satisfies: FR-004.
+
+        Save geometry on every close path (Save, Cancel, window close,
+        which all funnel through done()) before the modal exec() returns.
+        """
         if self._window_state is not None and self._state_key is not None:
             self._window_state.save_geometry(self._state_key, self)
         super().done(result)
 
     def create_widgets(self):
-        """Satisfies: UIR-021, UIR-053."""
+        """
+        Satisfies: UIR-021, UIR-053.
+        """
         layout = QVBoxLayout(self)
         form = QFormLayout()
         self.entries: dict[str, Any] = {}
@@ -97,7 +104,9 @@ class ConfigDialog(QDialog):
                 # `line_edit` every iteration); `checked` absorbs the bool the
                 # clicked signal passes.
                 def on_browse(checked=False, line_edit=line_edit):
-                    """Satisfies: UIR-053."""
+                    """
+                    Satisfies: UIR-053.
+                    """
                     path = QFileDialog.getExistingDirectory(
                         self, "Select Directory", line_edit.text()
                     )
@@ -144,7 +153,9 @@ class ConfigDialog(QDialog):
         return widget.text()
 
     def save(self):
-        """Satisfies: FR-020, FR-021."""
+        """
+        Satisfies: FR-020, FR-021.
+        """
         new_settings = {key: self._value(w) for key, w in self.entries.items()}
         self.result_settings = new_settings
         self.callback(new_settings)
@@ -160,8 +171,11 @@ class SerialConfigDialog(ConfigDialog):
     """
 
     def __init__(self, parent, settings, current_ports, callback, window_state=None):
-        """Satisfies: UIR-022-UIR-031."""
-        # Define fields based on Requirements
+        """
+        Satisfies: UIR-022-UIR-031.
+
+        Define fields based on Requirements.
+        """
         fields = [
             {
                 "key": "terminal_port",
@@ -256,10 +270,12 @@ class GeneralConfigDialog(ConfigDialog):
     """
 
     def __init__(self, parent, settings, callback, window_state=None):
-        """Satisfies: UIR-042, UIR-045, UIR-046, UIR-047, UIR-048, UIR-049,
-        UIR-050, UIR-052, UIR-053.
         """
-        # UIR-042..046: command text fields limited to 79 characters.
+        Satisfies: UIR-042, UIR-045, UIR-046, UIR-047, UIR-048, UIR-049,
+        UIR-050, UIR-052, UIR-053.
+
+        Command text fields limited to 79 characters.
+        """
         fields = [
             {
                 "key": "list_files_cmd",

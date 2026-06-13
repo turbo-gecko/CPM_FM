@@ -1,4 +1,6 @@
-"""Entry point for `python -m cpm_fm`."""
+"""
+Entry point for `python -m cpm_fm`.
+"""
 
 from cpm_fm.app import main
 

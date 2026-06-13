@@ -118,10 +118,53 @@ def parse_requirements_md(file_path: str) -> List[RequirementRow]:
     logger.info(f"Parsed {len(requirements)} requirements from {file_path}.")
     return requirements
 
+# Splits a Markdown table row on cell boundaries only — pipes escaped as ``\|``
+# inside a cell (e.g. the DR-006 vertical-bar requirement) are left intact.
+_CELL_SPLIT = re.compile(r"(?<!\\)\|")
+
+
+def _merge_source(existing: str, new_impl: str) -> str:
+    """Merge a freshly computed ``impl. ...`` citation into a Source cell
+    without discarding the cell's legacy document reference.
+
+    * If the cell already carries an ``impl.`` segment (always the trailing
+      part in this SRS), that segment is replaced with ``new_impl`` and any
+      legacy reference before it is preserved.
+    * If the cell holds only a legacy reference, ``new_impl`` is appended after
+      a ``; `` separator.
+    * If the cell is empty or a placeholder (``—``/``None``), it becomes
+      ``new_impl`` alone.
+
+    Args:
+        existing: The current Source cell text (already stripped).
+        new_impl: The new implementation citation, e.g. ``impl. `app.py:foo` ``.
+
+    Returns:
+        The merged Source cell text.
+    """
+    if existing in ("", "—", "None"):
+        return new_impl
+
+    lowered = existing.lower()
+    idx = lowered.find("impl.")
+    if idx != -1:
+        prefix = existing[:idx].rstrip().rstrip(";").rstrip()
+        return f"{prefix}; {new_impl}" if prefix else new_impl
+
+    return f"{existing.rstrip().rstrip(';').rstrip()}; {new_impl}"
+
+
 def update_requirements_md(file_path: str, updates: Dict[str, str]):
     """
-    Updates the implementation column of a Markdown table with new mappings.
-    
+    Updates the implementation citation of a Markdown table without discarding
+    the existing Source-column content.
+
+    Only genuine data rows whose first cell is a requirement ID present in
+    ``updates`` are touched, and only their final (Source) cell is rewritten
+    via :func:`_merge_source`. All other cells — and the spacing of every cell
+    that is not changed — are preserved verbatim, including literal ``\\|``
+    sequences inside a cell.
+
     Args:
         file_path: Path to the requirements.md file.
         updates: Dictionary mapping Requirement ID to the new implementation string.
@@ -129,34 +172,31 @@ def update_requirements_md(file_path: str, updates: Dict[str, str]):
     path = Path(file_path)
     with open(path, "r", encoding="utf-8") as f:
         lines = f.readlines()
-    
-    new_lines = []
+
+    applied = 0
+    new_lines: List[str] = []
     for line in lines:
-        if line.startswith("|") and not line.startswith("|---") and " | " in line:
-            parts = [p.strip() for p in line.split("|")]
-            # Remove empty strings from leading/trailing pipes
-            filtered_parts = [p for p in parts if p != ""]
-            
-            if filtered_parts:
-                req_id = filtered_parts[0]
+        body = line.rstrip("\n")
+        ending = line[len(body):]  # preserve the original line ending (or none)
+
+        # Only consider table data rows: start with '|', not a separator row.
+        if body.lstrip().startswith("|") and "---" not in body:
+            cells = _CELL_SPLIT.split(body)
+            # A well-formed row splits to ['', cell0, cell1, ..., cellN, ''];
+            # the first/last entries are the artefacts of the edge pipes.
+            if len(cells) >= 3 and cells[0].strip() == "" and cells[-1].strip() == "":
+                inner = cells[1:-1]
+                req_id = inner[0].strip()
                 if req_id in updates:
-                    # Replace the last column (Source/Implementation)
-                    # We assume the structure: | ID | Req | Priority | Verif | Source |
-                    # Since we can't easily know the exact column count without parsing the header 
-                    # for every file, we'll replace the last element.
-                    filtered_parts[-1] = updates[req_id]
-                    
-                    # Reconstruct the line
-                    # Note: This is a bit naive as it doesn't preserve exact spacing,
-                    # but for Markdown tables it's usually acceptable.
-                    line = "| " + " | ".join(filtered_parts) + " |"
-                    # Add the original line ending
-                    if not line.endswith("\n"):
-                        line += "\n"
-        
+                    merged = _merge_source(inner[-1].strip(), updates[req_id])
+                    inner[-1] = f" {merged} "
+                    body = "|" + "|".join(inner) + "|"
+                    line = body + (ending or "\n")
+                    applied += 1
+
         new_lines.append(line)
-    
+
     with open(path, "w", encoding="utf-8") as f:
         f.writelines(new_lines)
-    
-    logger.info(f"Updated {len(updates)} rows in {file_path}.")
+
+    logger.info(f"Updated {applied} rows in {file_path}.")

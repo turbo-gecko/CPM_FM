@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import List, Dict, Tuple
 from pydantic import BaseModel
 
@@ -39,17 +40,17 @@ class TraceabilityAgent:
         """
         logger.info("Step 1: Identifying REQ-XXX tags in source code...")
         discovered_elements = scan_codebase(self.codebase_root)
-        
-        # Create a mapping: ReqID -> "module_path -> element_name"
-        code_mapping: Dict[str, str] = {}
+
+        # Create a mapping: ReqID -> [CodeElement, ...]. A single requirement is
+        # frequently satisfied by more than one class/function, so we keep every
+        # element rather than letting the last writer win.
+        code_mapping: Dict[str, List[CodeElement]] = {}
         for elem in discovered_elements:
-            # Format: module_path -> class_or_function_name
-            mapping_str = f"{elem.module} -> {elem.name}"
-            code_mapping[elem.requirement_id] = mapping_str
+            code_mapping.setdefault(elem.requirement_id, []).append(elem)
 
         logger.info("Step 2: Parsing requirements documentation...")
         doc_requirements = parse_requirements_md(self.requirements_file)
-        
+
         # Create a mapping: ReqID -> implementation_string
         doc_mapping: Dict[str, str] = {row.requirement_id: row.implementation for row in doc_requirements}
 
@@ -58,27 +59,60 @@ class TraceabilityAgent:
 
         # Check for updates and removals
         for req_id, doc_impl in doc_mapping.items():
-            code_impl = code_mapping.get(req_id)
-            
-            if code_impl:
-                # If it's in code, check if the doc is outdated or unmapped
-                # We consider it outdated if the mapping string doesn't match the doc
-                # Note: The doc might have "impl. app.py:load_config", while our tool produces "app.py -> load_config"
-                # For a strict diff, we compare the essence.
-                if doc_impl == "Unmapped" or code_impl not in doc_impl:
-                    diff.to_update[req_id] = f"impl. {code_impl}"
+            elements = code_mapping.get(req_id)
+
+            if elements:
+                # In code: only flag an update when the doc's Source/impl text
+                # does not already cite ANY of the satisfying code elements.
+                # Compare on a normalised "basename:name" token so the tool's
+                # "cpm_fm\app.py -> load_config" matches the doc's freeform
+                # "impl. `app.py:load_config`" (differing path depth, separator
+                # and slashes no longer cause spurious mismatches).
+                if not any(self._doc_cites(doc_impl, e) for e in elements):
+                    diff.to_update[req_id] = "impl. " + self._format_elements(elements)
             else:
-                # If it's in docs but not in code, it might be a removal (or just not tagged yet)
-                # For this tool, we mark it as potentially removed if it was previously mapped
+                # In docs but not tagged in any code element. Only meaningful for
+                # rows that previously claimed an implementation; rows sourced
+                # solely to legacy docs ("Unmapped" here) are left alone.
                 if doc_impl != "Unmapped":
                     diff.to_remove.append(req_id)
 
-        # Check for new discoveries (in code but not in docs)
-        for req_id in code_mapping:
-            if req_id not in doc_mapping:
+        # Check for new discoveries (in code but not in docs). Ignore IDs that
+        # exist only as range-shorthand expansions (e.g. a gap inside
+        # "DR-001-DR-032"): those are not real requirements, just artefacts of
+        # the range covering a non-contiguous span. An ID counts as a genuine
+        # discovery only if some element names it explicitly.
+        for req_id, elements in code_mapping.items():
+            if req_id not in doc_mapping and any(not e.from_range for e in elements):
                 diff.new_discoveries.append(req_id)
 
         return diff
+
+    @staticmethod
+    def _normalize(text: str) -> str:
+        """Lower-case, unify path slashes and the `->`/`:` separators, and drop
+        backticks/whitespace so code-tool tokens and doc prose compare cleanly."""
+        text = text.lower().replace("\\", "/").replace("`", "")
+        text = text.replace("->", ":")
+        return re.sub(r"\s+", "", text)
+
+    @classmethod
+    def _doc_cites(cls, doc_impl: str, elem: CodeElement) -> bool:
+        """True if ``doc_impl`` references ``elem`` by file basename + name."""
+        basename = elem.module.replace("\\", "/").split("/")[-1]
+        token = cls._normalize(f"{basename}:{elem.name}")
+        return token in cls._normalize(doc_impl)
+
+    @staticmethod
+    def _format_elements(elements: List[CodeElement]) -> str:
+        """Render the satisfying elements as a doc-style citation list."""
+        seen: List[str] = []
+        for e in elements:
+            basename = e.module.replace("\\", "/").split("/")[-1]
+            cite = f"`{basename}:{e.name}`"
+            if cite not in seen:
+                seen.append(cite)
+        return ", ".join(seen)
 
     def generate_update_plan(self) -> str:
         """
