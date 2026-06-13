@@ -33,6 +33,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from cpm_fm.gui.about_dialog import AboutDialog
 from cpm_fm.gui.config_dialogs import GeneralConfigDialog, SerialConfigDialog
 from cpm_fm.gui.file_action_dialog import FileActionDialog
 from cpm_fm.gui.terminal_window import TerminalWindow
@@ -202,7 +203,7 @@ class MainWindow(QMainWindow):
 
     def setup_menu(self):
         """
-        Satisfies: UIR-001, UIR-002, UIR-003, FR-018, FR-019.
+        Satisfies: UIR-001, UIR-002, UIR-003, UIR-004, FR-018, FR-019, FR-022.
         """
         menubar = self.menuBar()
 
@@ -216,6 +217,10 @@ class MainWindow(QMainWindow):
         config_menu = menubar.addMenu("Config")
         config_menu.addAction(QAction("Serial", self, triggered=self.menu_serial_config))
         config_menu.addAction(QAction("General", self, triggered=self.menu_general_config))
+
+        # UIR-004: Help menu with an About item (FR-022).
+        help_menu = menubar.addMenu("Help")
+        help_menu.addAction(QAction("About", self, triggered=self.menu_about))
 
     def setup_toolbar(self):
         """
@@ -1513,6 +1518,14 @@ class MainWindow(QMainWindow):
             self.set_status("General settings updated")
 
         GeneralConfigDialog(self, self.settings, update_settings, self.window_state)
+
+    def menu_about(self):
+        """
+        Satisfies: FR-022, UIR-004, UIR-076.
+
+        Present the modal About dialog (program name, version, GitHub link, OK).
+        """
+        AboutDialog(self).exec()
 
     # ------------------------------------------------------------------- exit
 

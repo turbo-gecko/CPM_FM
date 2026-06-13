@@ -17,9 +17,11 @@ from PySide6.QtCore import QSettings  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
 from cpm_fm.app import MainWindow  # noqa: E402
+from cpm_fm.gui.about_dialog import AboutDialog  # noqa: E402
 from cpm_fm.gui.terminal_window import TerminalWindow  # noqa: E402
 from cpm_fm.gui.window_state import WindowState  # noqa: E402
 from cpm_fm.utils.config_handler import DEFAULT_SETTINGS  # noqa: E402
+from cpm_fm.version import APP_NAME, REPO_URL, get_version  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -655,6 +657,62 @@ def test_menu_new_prompts_for_file_when_none_remembered(qapp, monkeypatch, state
     finally:
         win.close()
         win.deleteLater()
+
+
+def test_help_menu_contains_about_action(qapp, state):
+    # UIR-004: the Help menu lists an About action.
+    from PySide6.QtWidgets import QMenu
+
+    win = MainWindow(state)
+    try:
+        help_menus = [m for m in win.menuBar().findChildren(QMenu) if m.title() == "Help"]
+        assert help_menus, "Help menu not found on the menu bar"
+        labels = [act.text() for act in help_menus[0].actions()]
+        assert "About" in labels
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_menu_about_opens_dialog(qapp, monkeypatch, state):
+    # FR-022: selecting Help > About constructs and shows the About dialog.
+    win = MainWindow(state)
+    try:
+        opened = []
+
+        class _FakeAbout:
+            def __init__(self, parent=None):
+                opened.append(parent)
+
+            def exec(self):
+                return 1
+
+        monkeypatch.setattr("cpm_fm.app.AboutDialog", _FakeAbout)
+        win.menu_about()
+        assert opened == [win]
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_about_dialog_contents(qapp):
+    # UIR-076: program name, version string, GitHub link, and an OK button.
+    from PySide6.QtWidgets import QLabel, QPushButton
+
+    dlg = AboutDialog()
+    try:
+        assert dlg.windowTitle() == "About"
+        label_text = " ".join(lbl.text() for lbl in dlg.findChildren(QLabel))
+        assert APP_NAME in label_text
+        assert f"Version {get_version()}" in label_text
+        assert REPO_URL in label_text
+        # The hyperlink opens externally (host default browser).
+        link = next(lbl for lbl in dlg.findChildren(QLabel) if REPO_URL in lbl.text())
+        assert link.openExternalLinks()
+        buttons = [b.text() for b in dlg.findChildren(QPushButton)]
+        assert buttons == ["OK"]
+    finally:
+        dlg.deleteLater()
 
 
 def test_menu_new_aborts_when_save_cancelled(qapp, monkeypatch, state):
