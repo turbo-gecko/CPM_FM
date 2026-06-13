@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Callable
+
 from PySide6.QtGui import QFont, QTextCursor
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -11,6 +13,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from cpm_fm.utils.i18n import tr
 
 
 class TerminalWindow(QMainWindow):
@@ -29,7 +33,10 @@ class TerminalWindow(QMainWindow):
         The owning MainWindow keeps a reference to it.
         """
         super().__init__()
-        self.setWindowTitle("Terminal")
+        # FR-121/FR-123: maps a widget text-setter to its translation key so the
+        # window can be re-translated live when the language changes.
+        self._i18n_registry: list[tuple[Callable[[str], None], str]] = []
+        self._register_text(self.setWindowTitle, "terminal.title")
         self.resize(600, 400)
         self.send_callback = send_callback
         # Invoked when the Clear button is pressed, so the owner can clear the
@@ -37,6 +44,22 @@ class TerminalWindow(QMainWindow):
         self.clear_callback = clear_callback
 
         self.create_widgets()
+
+    def _register_text(self, setter: Callable[[str], None], key: str) -> None:
+        """Set ``setter``'s text from ``key`` now and register it for retranslation.
+
+        Satisfies: FR-121, FR-123.
+        """
+        self._i18n_registry.append((setter, key))
+        setter(tr(key))
+
+    def retranslate_ui(self) -> None:
+        """Re-apply the active language to this window's widgets (live).
+
+        Satisfies: FR-123.
+        """
+        for setter, key in self._i18n_registry:
+            setter(tr(key))
 
     def create_widgets(self):
         """Satisfies: UIR-061-UIR-067."""
@@ -54,16 +77,19 @@ class TerminalWindow(QMainWindow):
 
         # Control Frame: Clear (left), Local Echo (centre), Autoscroll (right).
         ctrl_layout = QHBoxLayout()
-        self.btn_clear = QPushButton("Clear", clicked=self.clear_text)
+        self.btn_clear = QPushButton(clicked=self.clear_text)
+        self._register_text(self.btn_clear.setText, "terminal.clear")
         ctrl_layout.addWidget(self.btn_clear)
         ctrl_layout.addStretch()
 
-        self.chk_echo = QCheckBox("Local Echo")  # UIR-065: disabled by default.
+        self.chk_echo = QCheckBox()  # UIR-065: disabled by default.
+        self._register_text(self.chk_echo.setText, "terminal.local_echo")
         self.chk_echo.setChecked(False)
         ctrl_layout.addWidget(self.chk_echo)
         ctrl_layout.addStretch()
 
-        self.chk_scroll = QCheckBox("Autoscroll")  # UIR-066: enabled by default.
+        self.chk_scroll = QCheckBox()  # UIR-066: enabled by default.
+        self._register_text(self.chk_scroll.setText, "terminal.autoscroll")
         self.chk_scroll.setChecked(True)
         ctrl_layout.addWidget(self.chk_scroll)
         layout.addLayout(ctrl_layout)
@@ -73,7 +99,8 @@ class TerminalWindow(QMainWindow):
         self.tx_entry = QLineEdit()
         self.tx_entry.returnPressed.connect(self.send_text)
         tx_layout.addWidget(self.tx_entry)
-        self.btn_send = QPushButton("Send", clicked=self.send_text)
+        self.btn_send = QPushButton(clicked=self.send_text)
+        self._register_text(self.btn_send.setText, "terminal.send")
         tx_layout.addWidget(self.btn_send)
         layout.addLayout(tx_layout)
 

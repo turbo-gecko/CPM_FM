@@ -7,9 +7,9 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.2 |
-| Scorecard for plan version | 1.2 (`docs/manual_test_plan.md`) |
-| SRS version | (e.g. 1.10.0) |
+| Scorecard version | 1.5 |
+| Scorecard for plan version | 1.5 (`docs/manual_test_plan.md`) |
+| SRS version | (e.g. 2.1.1) |
 | Tester | |
 | Date(s) of run | |
 
@@ -59,7 +59,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-S02 | Unconfigured start; host populated; remote empty | FR-003/060/070 | | | |
 | MT-S03 | File, Config & Help menus present | UIR-001/002/003/004 | | | |
 | MT-S04 | Toolbar Connect/Disconnect/Terminal enabled | UIR-013/071/015/016 | | | |
-| MT-S05 | Pane layout correct | UIR-011/012/061-067 | | | |
+| MT-S05 | Pane layout correct (equal Change Dir/Update; equal drive/Update) | UIR-011/012/017/061-067 | | | |
 
 ### §5 Connect / disconnect (real ports)
 | ID | Title | Req | Result | Env | Notes |
@@ -88,13 +88,13 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 ### §7 General config dialog
 | ID | Title | Req | Result | Env | Notes |
 |----|-------|-----|:------:|:---:|-------|
-| MT-G01 | Dialog title/groups/layout | UIR-040/041/044 | | | |
+| MT-G01 | Title; "Remote" group first; rest ungrouped | UIR-040/041/044 | | | |
 | MT-G02 | Command field defaults & limits | UIR-042/045/046 | | | |
 | MT-G03 | EOL radios; CR default | UIR-047/048 | | | |
 | MT-G04 | Launch/inter-file delay defaults & ranges | UIR-049/052 | | | |
 | MT-G05 | Debug Logging dropdown OFF/ON | UIR-050 | | | |
 | MT-G06 | Default Host Directory browse | UIR-053 | | | |
-| MT-G07 | Viewer/Rename/Delete field defaults | UIR-054/055/056 | | | |
+| MT-G07 | Viewer; Rename/Delete (in Remote group) defaults | UIR-054/055/056 | | | |
 | MT-G08 | No "Change Disk" field | UIR-043 | | | |
 
 ### §8 Config load / save
@@ -116,7 +116,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 |----|-------|-----|:------:|:---:|-------|
 | MT-H01 | Host list = default host dir at startup | FR-060 | | | |
 | MT-H02 | Change Directory reloads host list | FR-061/062 | | | |
-| MT-H03 | Refresh Host acts on BOTH lists | FR-063 | | | |
+| MT-H03 | Host "Update" button acts on BOTH lists | FR-063 | | | |
 
 ### §10 Remote listing & drive selection (live)
 | ID | Title | Req | Result | Env | Notes |
@@ -170,21 +170,31 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-F07 | Remote action with port closed | FR-117 | | | |
 | MT-F08 | Remote View downloads then opens | FR-113/112 | | | |
 
-### §14 Theme, layout, window state (visual)
+### §14 Internationalisation (Language)
+| ID | Title | Req | Result | Env | Notes |
+|----|-------|-----|:------:|:---:|-------|
+| MT-I01 | Language submenu lists languages, active checked | FR-122, UIR-003/077 | | | |
+| MT-I02 | Switch language re-translates UI live | FR-123 | | | |
+| MT-I03 | Dialogs/menus translated in chosen language | FR-121/123 | | | |
+| MT-I04 | Option values/commands NOT translated | CR-015 | | | |
+| MT-I05 | Language choice persists across restart | FR-124 | | | |
+| MT-I06 | New lang file discovered, no code change | FR-121, NFR-005 | | | |
+
+### §15 Theme, layout, window state (visual)
 | ID | Title | Req | Result | Env | Notes |
 |----|-------|-----|:------:|:---:|-------|
 | MT-V01 | Material theme consistent everywhere | UIR-070, CR-013 | | | |
 | MT-V02 | OS light/dark variant selected | UIR-073 | | | |
 | MT-V03 | Toolbar buttons labelled/iconned | UIR-071 | | | |
 | MT-V04 | Splitter re-apportions panes | UIR-072 | | | |
-| MT-V05 | Status-bar indicators connected/not | UIR-074 | | | |
+| MT-V05 | Status-bar indicators green=connected/red=not | UIR-074 | | | |
 | MT-V06 | Long status truncated to 127 | UIR-014 | | | |
 | MT-V07 | Window/dialog geometry restored | FR-004 | | | |
 | MT-V08 | Exit closes ports + all windows | FR-015/016 | | | |
 | MT-V09 | Dialog button layout (Cancel left / affirmative right; lone centred) | UIR-075 | | | |
 | MT-V10 | About dialog (name/version/GitHub link/OK; version matches) | FR-022, UIR-076, DR-040/041 | | | |
 
-### §15 Cross-cutting / non-functional
+### §16 Cross-cutting / non-functional
 | ID | Title | Req | Result | Env | Notes |
 |----|-------|-----|:------:|:---:|-------|
 | MT-N01 | Debug logging OFF/ON on stdout | FR-088 | | | |
@@ -204,8 +214,9 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | §11 Transfers | | | | | |
 | §12 Terminal Window | | | | | |
 | §13 Context actions | | | | | |
-| §14 Theme/layout | | | | | |
-| §15 Non-functional | | | | | |
+| §14 Internationalisation | | | | | |
+| §15 Theme/layout | | | | | |
+| §16 Non-functional | | | | | |
 | **Total** | | | | | |
 
 ---

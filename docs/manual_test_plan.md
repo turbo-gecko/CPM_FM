@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.2 |
+| Version | 1.5 |
 | Status | Draft |
 | Date | 2026-06-14 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v1.10.0) |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.1.1) |
 
 ---
 
@@ -117,7 +117,7 @@ that need two physical ports are marked **[2-port]**; visual-only cases are mark
 | MT-S02 | FR-003, FR-060, FR-070 | Observe the freshly-launched window. | App is unconfigured (no settings loaded); Host Files list shows the current working directory's files; Remote Files list is **empty**. |
 | MT-S03 | UIR-001, UIR-002, UIR-003, UIR-004 | Inspect the menu bar. | A **File** menu with **New, Load, Save, Exit** (New at top), a **Config** menu with **Serial, General**, and a **Help** menu with **About**. |
 | MT-S04 | UIR-013, UIR-071, UIR-015, UIR-016 | Inspect the top toolbar. | A toolbar with **Connect, Disconnect, Terminal** as labelled, icon-bearing buttons; Connect and Disconnect both enabled at startup. |
-| MT-S05 | UIR-011, UIR-012, UIR-061..067 | Inspect the panes. | Host Files group (Change Directory button, multi-select list, row with Refresh Host + Copy to Remote); Remote Files group (drive drop-down, Update button, multi-select list, Copy to Host row). |
+| MT-S05 | UIR-011, UIR-012, UIR-017, UIR-061..067 | Inspect the panes. | Host Files group (top row with equally-sized **Change Directory** + **Update** buttons, multi-select list, row with **Copy to Remote**); Remote Files group (equally-sized drive drop-down + **Update** button, multi-select list, **Copy to Host** row). |
 
 ---
 
@@ -158,13 +158,13 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
-| MT-G01 [visual] | UIR-040, UIR-041, UIR-044 | Open Config > General. | Modal dialog titled "General Config"; "Terminal Commands", "Xmodem Commands", and "End of Line" groups present, two-column layout. |
-| MT-G02 | UIR-042, UIR-045, UIR-046 | Inspect defaults / length limits of List Files, Receive from Remote, Send to Remote. | List Files default "DIR"; Receive default "PCPUT $1"; Send default "PCGET $1"; each limited to 79 characters. |
+| MT-G01 [visual] | UIR-040, UIR-041, UIR-044 | Open Config > General. | Modal dialog titled "General Config". A **"Remote"** group is the **first** section, containing (in order) List Files, Receive from Remote, Send to Remote, Rename, Delete. The remaining settings (Xfer Launch Delay, Xfer Inter-file Delay, End of Line, Debug Logging, Viewer/Editor, Default Host Directory) appear below it, ungrouped. Two-column layout throughout. |
+| MT-G02 | UIR-042, UIR-045, UIR-046 | Inspect defaults / length limits of List Files, Receive from Remote, Send to Remote (in the Remote group). | List Files default "DIR"; Receive default "PCPUT $1"; Send default "PCGET $1"; each limited to 79 characters. |
 | MT-G03 | UIR-047, UIR-048 | Inspect End of Line radios. | Mutually exclusive CR / LF / CR-LF radios; **CR** selected by default. |
 | MT-G04 | UIR-049, UIR-052 | Inspect Xfer Launch Delay and Xfer Inter-file Delay fields. | Launch Delay integer 0–60 default 3; Inter-file Delay integer 0–60 default 2. |
 | MT-G05 | UIR-050 | Inspect Debug Logging control. | Dropdown OFF/ON, default OFF. |
 | MT-G06 | UIR-053 | Click the Default Host Directory browse button, pick a folder. | A folder-select dialog appears; the chosen path populates the field. |
-| MT-G07 | UIR-054, UIR-055, UIR-056 | Inspect Viewer/Editor, Rename Remote, Delete Remote fields. | Defaults `notepad $1`, `REN $2=$1`, `ERA $1`; Rename/Delete limited to 79 chars. |
+| MT-G07 | UIR-054, UIR-055, UIR-056 | Inspect the Viewer/Editor field, and the "Rename" and "Delete" fields (in the Remote group). | Defaults `notepad $1`, `REN $2=$1`, `ERA $1`; the Rename/Delete fields are labelled just "Rename"/"Delete" (no "Remote" suffix) and limited to 79 chars. |
 | MT-G08 | UIR-043 | Confirm there is **no** "Change Disk" field. | The withdrawn field is absent. |
 
 ---
@@ -192,7 +192,7 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 |----|-----|-------|----------|
 | MT-H01 | FR-060 | Launch with a config whose Default Host Directory points at your scratch folder. | Host Files list shows that folder's files at startup. |
 | MT-H02 | FR-061, FR-062 | Press **Change Directory**, pick a different folder. | Folder-select dialog appears; Host Files list reloads from the chosen folder (session-only; not written to the config until Save). |
-| MT-H03 [CP/M] | FR-063 | Connect; press **Refresh Host**. | Host list refreshes **and** the Remote list is (re)populated via the remote-listing process — Refresh Host acts on **both** lists. |
+| MT-H03 [CP/M] | FR-063 | Connect; press the Host Files group's **Update** button (beside **Change Directory**). | Host list refreshes **and** the Remote list is (re)populated via the remote-listing process — this button acts on **both** lists. |
 
 ---
 
@@ -268,7 +268,24 @@ dialog, real filesystem effect, and real viewer launch. Remote actions need a li
 
 ---
 
-## 14. Visual theme, layout, and window state  **[visual]**
+## 14. Internationalisation (Language)  **[visual]**
+
+The translator, file parsing, fallback chain, and key parity are unit-tested (`tests/test_i18n.py`);
+manual testing confirms the **on-screen** live re-translation, real menu, and cross-session
+persistence of the language choice.
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-I01 [visual] | FR-122, UIR-003, UIR-077 | Open **Config > Language**. | A submenu lists **English**, **German**, **French** (one per `lang_*.txt`); entries are checkable and mutually exclusive; the active language (English by default) is checked. |
+| MT-I02 [visual] | FR-123 | With the main window and Terminal Window open, choose **Config > Language > German**. | The menu bar, toolbar, "Host Files"/"Remote Files" group titles, all buttons, the status indicators, and the Terminal Window labels switch to German **immediately**, with no restart. The German entry is now checked. |
+| MT-I03 [visual] | FR-121, FR-123 | While in German, open Config > Serial, Config > General, Help > About, and right-click a file. | The dialog titles, field labels, button captions (e.g. Speichern/Abbrechen), the About text, and the context-menu items are shown in German. |
+| MT-I04 | CR-015 | While in German, open Config > Serial and Config > General and inspect the drop-downs (Parity, Flow Control, End of Line, Debug Logging) and command fields (List Files, Receive/Send, Rename/Delete in the Remote group). | Option **values** (NONE/ODD/…, CR/LF/CRLF, OFF/ON) and command templates (DIR, PCPUT $1, REN $2=$1, …) remain **untranslated**; only the row labels and the group title change. Saving and reloading the config preserves these values unchanged. |
+| MT-I05 | FR-124 | Switch to French, then fully quit and relaunch (`cpm-fm`). | On next start the GUI is in **French** (the choice persisted); switching back to English persists likewise. |
+| MT-I06 | FR-121, NFR-005 | Copy `src/cpm_fm/lang/lang_english.txt` to `lang_spanish.txt`, translate a few values, relaunch. | **Spanish** appears in the Config > Language menu with no code change; selecting it shows the translated strings and English for any keys left untranslated (fallback). |
+
+---
+
+## 15. Visual theme, layout, and window state  **[visual]**
 
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
@@ -276,16 +293,16 @@ dialog, real filesystem effect, and real viewer launch. Remote actions need a li
 | MT-V02 | UIR-073 | Set the host OS to **light** mode, launch; then set OS to **dark** mode, relaunch. | The app picks the matching light/dark Material variant at start-up. (If the OS preference is unavailable, it defaults to dark.) |
 | MT-V03 | UIR-071 | Inspect the toolbar. | Connect/Disconnect/Terminal shown as labelled, icon-bearing toolbar buttons at the top. |
 | MT-V04 | UIR-072 | Drag the splitter between Host and Remote panes. | The divider moves and re-apportions horizontal space. (Need not persist across sessions.) |
-| MT-V05 | UIR-074 | Watch the status-bar indicators through a connect/disconnect cycle. | Two indicators (Terminal, Transport) each show a distinct connected vs. not-connected visual state. |
+| MT-V05 | UIR-074 | Watch the status-bar indicators through a connect/disconnect cycle. | Two indicators (Terminal, Transport) each show a distinct visual state: **green** when connected and **red** when not connected. |
 | MT-V06 | UIR-014 | Trigger a very long status message (e.g. a long error). | Status bar shows a single line truncated to 127 characters. |
 | MT-V07 | FR-004 | Move/resize the main window, the Terminal Window, and the Serial & General dialogs; quit; relaunch and reopen each. | Each window/dialog reopens at its last size/position. (Splitter position is exempt — UIR-072.) |
 | MT-V08 | FR-015, FR-016 | With ports open and the Terminal Window + a config dialog open, choose File > **Exit**. | All COM ports close and all dialogs/windows close cleanly; no orphaned process. |
 | MT-V09 | UIR-075 | Open Config > Serial, Config > General, and a File Action dialog (right-click a host file → Rename); also glance at a transfer progress dialog (MT-T05). | In every two-button dialog the **Cancel** button is at the **far left** and the affirmative button (**Save** for the config dialogs, **Apply** for the File Action dialog) at the **far right**, with space between; the progress dialog's single **Cancel** button is **centred**. |
-| MT-V10 | FR-022, UIR-076, UIR-075, DR-040, DR-041 | Choose **Help > About**. Read the dialog, then click the GitHub link, then click **OK**. | A modal dialog titled "About" shows: the program name **CP/M File Manager**; **Version `<x.y.z>`** matching `src/version.txt` and the SRS version field (both `1.10.0`); a clickable hyperlink to `https://github.com/turbo-gecko/CPM_FM`. Clicking the link opens that page in the host's default browser. A single **OK** button (centred) closes the dialog. |
+| MT-V10 | FR-022, UIR-076, UIR-075, DR-040, DR-041 | Choose **Help > About**. Read the dialog, then click the GitHub link, then click **OK**. | A modal dialog titled "About" shows: the program name **CP/M File Manager**; **Version `<x.y.z>`** matching `src/version.txt` and the SRS version field (both `2.1.1`); a clickable hyperlink to `https://github.com/turbo-gecko/CPM_FM`. Clicking the link opens that page in the host's default browser. A single **OK** button (centred) closes the dialog. |
 
 ---
 
-## 15. Cross-cutting / non-functional
+## 16. Cross-cutting / non-functional
 
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
@@ -295,7 +312,7 @@ dialog, real filesystem effect, and real viewer launch. Remote actions need a li
 
 ---
 
-## 16. Traceability summary (manual-only coverage)
+## 17. Traceability summary (manual-only coverage)
 
 The cases above target requirements that are **not** fully exercised by `pytest` because they depend on
 real serial hardware, a live CP/M peer, on-screen rendering, real OS dialogs/associations, real timing,
@@ -311,6 +328,7 @@ or real cross-session persistence:
 - Config dialogs (on-screen layout, field values/limits): `UIR-020`–`UIR-056`.
 - Theme, layout & dialog button placement: `UIR-070`–`UIR-075`, `CR-012`, `CR-013`.
 - About dialog (on-screen render + live browser launch): `FR-022`, `UIR-004`, `UIR-076` (the version-sourcing `DR-040`/`DR-041` are covered automatically by `tests/test_version.py`; MT-V10 confirms the displayed version matches end-to-end).
+- Internationalisation (live on-screen re-translation, real menu, cross-session language persistence): `FR-122`, `FR-123`, `FR-124` (live), `UIR-003`, `UIR-077`, `CR-015`, `NFR-005` (the translator, parsing, and fallback in `FR-121`/`DR-042`/`DR-043` are covered automatically by `tests/test_i18n.py`; the manual cases confirm the rendered UI switches language live and that the choice persists).
 - Non-functional (real): `NFR-001`, `NFR-004` (live), `STR-003`, `FR-088`.
 
 Purely algorithmic and headless-logic requirements (`DR-*`, the X-Modem progress/handshake internals,

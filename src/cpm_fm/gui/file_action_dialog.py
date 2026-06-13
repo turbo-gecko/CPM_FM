@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
 )
 
 from cpm_fm.gui.dialog_buttons import build_button_row
+from cpm_fm.utils.i18n import tr
 
 
 class FileActionDialog(QDialog):
@@ -50,10 +51,10 @@ class FileActionDialog(QDialog):
 
         # UIR-057/UIR-075: Apply confirms the action; Cancel makes no change.
         # Cancel sits at the far left, Apply at the far right.
-        apply_btn = QPushButton("Apply")
+        apply_btn = QPushButton(tr("button.apply"))
         apply_btn.setDefault(True)
         apply_btn.clicked.connect(self.accept)
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(tr("button.cancel"))
         cancel_btn.clicked.connect(self.reject)
         layout.addLayout(build_button_row(accept_button=apply_btn, reject_button=cancel_btn))
 
