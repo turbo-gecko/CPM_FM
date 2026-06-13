@@ -53,6 +53,7 @@ class MainWindow(QMainWindow):
 
     Cross-thread GUI marshalling signals.
     """
+
     status_changed = Signal(str)
     term_write = Signal(str)
     remote_files_ready = Signal(dict)
@@ -987,17 +988,25 @@ class MainWindow(QMainWindow):
 
     def menu_load(self):
         """
-        Satisfies: FR-010.
+        Satisfies: FR-006, FR-010.
         """
-        path, _ = QFileDialog.getOpenFileName(self, "Load Config", "", "JSON files (*.json)")
+        # FR-006: default to the folder used the last time a config was
+        # loaded/saved, kept separate from the Host Files directory (FR-060).
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Load Config", self.window_state.last_config_dir, "JSON files (*.json)"
+        )
         if path:
+            self.window_state.last_config_dir = os.path.dirname(path)
             self.load_config(path)
 
     def menu_save(self):
         """
-        Satisfies: FR-005, FR-013, FR-014.
+        Satisfies: FR-005, FR-006, FR-013, FR-014.
         """
-        path, _ = QFileDialog.getSaveFileName(self, "Save Config", "", "JSON files (*.json)")
+        # FR-006: default to the last-used config folder (see menu_load).
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save Config", self.window_state.last_config_dir, "JSON files (*.json)"
+        )
         if path:
             if not path.endswith(".json"):
                 path += ".json"
@@ -1008,6 +1017,8 @@ class MainWindow(QMainWindow):
             if self.config_handler.save_json(path, self.settings):
                 # FR-005: the saved file becomes the last-used config to reload.
                 self.window_state.last_config = path
+                # FR-006: remember its folder for the next Load/Save dialog.
+                self.window_state.last_config_dir = os.path.dirname(path)
                 self.set_status(f"Saved config to {path}")
 
     def menu_serial_config(self):

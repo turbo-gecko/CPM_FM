@@ -12,7 +12,7 @@ APP = "cpm-fm"
 
 
 class WindowState:
-    """Persists window/dialog geometry and the last-used config file.
+    """Persists window/dialog geometry and the last-used config file/folder.
 
     Window geometry is stored as the opaque blob produced by
     ``QWidget.saveGeometry`` (which captures size, position and maximised/normal
@@ -20,10 +20,15 @@ class WindowState:
     state, deliberately kept separate from the user's serial-configuration JSON
     files handled by :class:`~cpm_fm.utils.config_handler.ConfigHandler`.
 
+    The folder of the most recently loaded/saved config file (``last_config_dir``)
+    is also persisted here, so the Load/Save dialogs reopen where the user last
+    worked with configuration files. It is deliberately distinct from the Host
+    Files directory (FR-060), which is stored per-config in the JSON itself.
+
     A :class:`QSettings` instance may be injected (tests pass an isolated,
     temporary store so they do not touch the host's real settings).
 
-    Satisfies: FR-004, FR-005.
+    Satisfies: FR-004, FR-005, FR-006.
     """
 
     def __init__(self, settings: QSettings | None = None) -> None:
@@ -63,3 +68,21 @@ class WindowState:
         Satisfies: FR-005.
         """
         self._settings.setValue("last_config", path)
+
+    @property
+    def last_config_dir(self) -> str:
+        """Folder the Load/Save config dialogs should default to ("" if none).
+
+        Distinct from the Host Files directory (FR-060); see the class docstring.
+
+        Satisfies: FR-006.
+        """
+        value = self._settings.value("last_config_dir", "")
+        return value if isinstance(value, str) else ""
+
+    @last_config_dir.setter
+    def last_config_dir(self, path: str) -> None:
+        """
+        Satisfies: FR-006.
+        """
+        self._settings.setValue("last_config_dir", path)
