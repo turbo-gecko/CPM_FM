@@ -7,5 +7,13 @@
     "stopbits": "1",
     "flow": "RTS/CTS",
     "msec_char": "0",
-    "msec_line": "0"
+    "msec_line": "0",
+    "host_directory": "D:/Old_Skool/CPM/Files/TEMP",
+    "list_files_cmd": "DIR",
+    "recv_remote_cmd": "A:XMODEM $1 /S",
+    "send_remote_cmd": "A:XMODEM $1 /R",
+    "xfer_launch_delay": "3",
+    "xfer_interfile_delay": "2",
+    "eol": "CR",
+    "debug_logging": "OFF"
 }
