@@ -13,7 +13,8 @@ class ConfigHandler:
 
     @staticmethod
     def load_json(filepath: str) -> dict[str, Any]:
-        """Loads a JSON file and returns its content as a dictionary.
+        """
+        Loads a JSON file and returns its content as a dictionary.
 
         Satisfies: FR-011, FR-012, IFR-004.
         """
@@ -28,7 +29,8 @@ class ConfigHandler:
 
     @staticmethod
     def save_json(filepath: str, data: dict[str, Any]) -> bool:
-        """Saves a dictionary to a JSON file.
+        """
+        Saves a dictionary to a JSON file.
 
         Satisfies: FR-014, IFR-004.
         """

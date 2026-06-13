@@ -22,9 +22,12 @@ class TerminalWindow(QMainWindow):
     """
 
     def __init__(self, parent, send_callback, clear_callback=None):
-        """Satisfies: UIR-060."""
-        # No Qt parent, so this is an independent non-modal top-level window
-        # (UIR-060). The owning MainWindow keeps a reference to it.
+        """
+        Satisfies: UIR-060.
+
+        No Qt parent, so this is an independent non-modal top-level window.
+        The owning MainWindow keeps a reference to it.
+        """
         super().__init__()
         self.setWindowTitle("Terminal")
         self.resize(600, 400)
@@ -88,11 +91,13 @@ class TerminalWindow(QMainWindow):
             self.tx_entry.clear()
 
     def write_text(self, text):
-        """Appends text to the receive area.
+        """
+        Appends text to the receive area.
 
         Satisfies: FR-091, UIR-062.
+
+        insertPlainText preserves existing content and does not add newlines.
         """
-        # insertPlainText preserves existing content and does not add newlines.
         cursor = self.receive_area.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
         cursor.insertText(text)
@@ -101,8 +106,11 @@ class TerminalWindow(QMainWindow):
             self.receive_area.ensureCursorVisible()
 
     def closeEvent(self, event):
-        """Satisfies: FR-097."""
-        # Non-modal window persists in the background when closed by the user;
-        # FR-097 reopens/restores the same instance via the Terminal button.
+        """
+        Satisfies: FR-097.
+
+        Non-modal window persists in the background when closed by the user;
+        reopens/restores the same instance via the Terminal button.
+        """
         event.ignore()
         self.hide()

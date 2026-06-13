@@ -39,7 +39,8 @@ class XModem:
         self.progress = progress
 
     def _write(self, data: bytes) -> None:
-        """Write bytes to the port, reporting them to the monitor (FR-086).
+        """
+        Write bytes to the port, reporting them to the monitor (FR-086).
 
         Satisfies: FR-086.
         """
@@ -48,7 +49,8 @@ class XModem:
             self.monitor("tx", data)
 
     def _read(self, n: int) -> bytes:
-        """Read up to n bytes from the port, reporting them to the monitor.
+        """
+        Read up to n bytes from the port, reporting them to the monitor.
 
         Satisfies: FR-086.
         """
@@ -58,7 +60,9 @@ class XModem:
         return data
 
     def _read_byte(self, timeout: Optional[float] = None) -> bytes:
-        """Return the next byte to arrive within the timeout (b"" on timeout)."""
+        """
+        Return the next byte to arrive within the timeout (b"" on timeout).
+        """
         t = timeout if timeout is not None else self.timeout
         start_time = time.time()
         while (time.time() - start_time) < t:
@@ -70,7 +74,9 @@ class XModem:
     def _wait_for_one_of(
         self, expected: tuple[bytes, ...], timeout: Optional[float] = None
     ) -> bytes:
-        """Wait for any byte in `expected`, discarding others (b"" on timeout)."""
+        """
+        Wait for any byte in `expected`, discarding others (b"" on timeout).
+        """
         t = timeout if timeout is not None else self.timeout
         start_time = time.time()
         while (time.time() - start_time) < t:

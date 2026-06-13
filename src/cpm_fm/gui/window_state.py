@@ -12,7 +12,7 @@ APP = "cpm-fm"
 
 
 class WindowState:
-    """Persists window/dialog geometry and the last-used config file (FR-004/FR-005).
+    """Persists window/dialog geometry and the last-used config file.
 
     Window geometry is stored as the opaque blob produced by
     ``QWidget.saveGeometry`` (which captures size, position and maximised/normal
@@ -27,11 +27,15 @@ class WindowState:
     """
 
     def __init__(self, settings: QSettings | None = None) -> None:
-        """Satisfies: FR-004, FR-005."""
+        """
+        Satisfies: FR-004, FR-005.
+        """
         self._settings = settings if settings is not None else QSettings(ORG, APP)
 
     def save_geometry(self, name: str, widget: QWidget) -> None:
-        """Satisfies: FR-004."""
+        """
+        Satisfies: FR-004.
+        """
         self._settings.setValue(f"geometry/{name}", widget.saveGeometry())
 
     def restore_geometry(self, name: str, widget: QWidget) -> bool:
@@ -55,5 +59,7 @@ class WindowState:
 
     @last_config.setter
     def last_config(self, path: str) -> None:
-        """Satisfies: FR-005."""
+        """
+        Satisfies: FR-005.
+        """
         self._settings.setValue("last_config", path)

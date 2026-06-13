@@ -1,8 +1,9 @@
 import ast
 import logging
 import os
+import re
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
 
 # Configure logging
@@ -12,15 +13,21 @@ logger = logging.getLogger(__name__)
 class CodeElement(BaseModel):
     """
     Represents a code element (class or function) that satisfies a requirement.
-    
+
     Attributes:
         module: The path to the Python module containing the element.
         name: The name of the class or function.
         requirement_id: The ID of the requirement satisfied by this element.
+        from_range: True if this ID was derived by expanding a range shorthand
+            (e.g. ``DR-001-DR-032``) rather than written out explicitly. Range
+            shorthand can span gaps in the numbering, so a range-derived ID that
+            is absent from the docs is treated as a non-existent gap-filler, not
+            a genuine new discovery.
     """
     module: str
     name: str
     requirement_id: str
+    from_range: bool = False
 
 class RequirementExtractor(ast.NodeVisitor):
     """
@@ -30,44 +37,96 @@ class RequirementExtractor(ast.NodeVisitor):
         self.module_path = module_path
         self.found_elements: List[CodeElement] = []
 
-    def _extract_req_id(self, docstring: Optional[str]) -> Optional[str]:
+    def _extract_req_ids(self, docstring: Optional[str]) -> List[tuple]:
         """
-        Extracts the requirement ID from the docstring based on the pattern 'Satisfies: REQ-XXX'.
-        
+        Extracts every requirement ID from a docstring's 'Satisfies:' line.
+
+        A single ``Satisfies:`` tag commonly lists multiple IDs, in two forms:
+          * a comma-separated list, e.g. ``Satisfies: FR-030, FR-031, FR-040.``
+          * an inclusive range, e.g. ``Satisfies: FR-050-FR-058.`` or
+            ``Satisfies: DR-001-DR-032.`` (same prefix on both ends).
+        Both forms are expanded to the full set of individual IDs. Ranges are
+        expanded across the contiguous numeric span sharing one prefix; the
+        zero-padding width of the lower bound is preserved (FR-050 -> FR-051 …).
+
         Args:
             docstring: The docstring to search.
-            
+
         Returns:
-            The requirement ID if found, otherwise None.
+            A list of ``(requirement_id, from_range)`` tuples (empty if none /
+            no docstring), de-duplicated while preserving first-seen order.
+            ``from_range`` flags IDs produced by expanding a range shorthand —
+            such a span can cover gaps in the numbering, so those IDs must not
+            be reported as genuine new discoveries downstream.
         """
         if not docstring:
-            return None
-        
-        # Search for "Satisfies: REQ-XXX" or similar patterns like "Satisfies: FR-001"
-        import re
-        match = re.search(r"Satisfies:\s*([A-Z]+-\d+)", docstring)
-        if match:
-            return match.group(1)
-        return None
+            return []
+
+        ids: List[tuple] = []
+        # Consider the text after the first "Satisfies:" up to the end of that
+        # line, so prose elsewhere in the docstring cannot leak IDs in.
+        match = re.search(r"Satisfies:\s*(.+)", docstring)
+        if not match:
+            return []
+        clause = match.group(1)
+
+        # First consume ranges ("FR-050-FR-058" / "FR-050-058"), expanding each,
+        # then strip them out so the leftover single IDs aren't double-counted.
+        range_re = re.compile(r"([A-Z]+)-(\d+)\s*-\s*(?:([A-Z]+)-)?(\d+)")
+
+        def _expand(m: "re.Match[str]") -> str:
+            prefix, lo_str, end_prefix, hi_str = m.groups()
+            # A range only makes sense within one prefix; if the end names a
+            # different prefix, treat it as two separate IDs, not a span.
+            if end_prefix and end_prefix != prefix:
+                return m.group(0)
+            width = len(lo_str)
+            lo, hi = int(lo_str), int(hi_str)
+            if hi < lo:
+                return m.group(0)
+            for n in range(lo, hi + 1):
+                ids.append((f"{prefix}-{n:0{width}d}", True))
+            return " "  # blank out so the trailing single-ID pass skips it
+
+        leftover = range_re.sub(_expand, clause)
+        ids.extend((req_id, False) for req_id in re.findall(r"[A-Z]+-\d+", leftover))
+
+        # De-duplicate, preserving order. An explicit mention wins over a
+        # range-derived one for the same ID (from_range=False is "stronger").
+        best: Dict[str, bool] = {}
+        order: List[str] = []
+        for req_id, from_range in ids:
+            if req_id not in best:
+                order.append(req_id)
+                best[req_id] = from_range
+            elif not from_range:
+                best[req_id] = False
+        return [(req_id, best[req_id]) for req_id in order]
+
+    def _record(self, name: str, docstring: Optional[str]) -> None:
+        """Append a CodeElement for each requirement ID tagged on ``name``."""
+        for req_id, from_range in self._extract_req_ids(docstring):
+            self.found_elements.append(
+                CodeElement(
+                    module=self.module_path,
+                    name=name,
+                    requirement_id=req_id,
+                    from_range=from_range,
+                )
+            )
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
-        """Visit function definitions."""
-        docstring = ast.get_docstring(node)
-        req_id = self._extract_req_id(docstring)
-        if req_id:
-            self.found_elements.append(
-                CodeElement(module=self.module_path, name=node.name, requirement_id=req_id)
-            )
+        """
+        Visit function definitions.
+        """
+        self._record(node.name, ast.get_docstring(node))
         self.generic_visit(node)
 
     def visit_ClassDef(self, node: ast.ClassDef):
-        """Visit class definitions."""
-        docstring = ast.get_docstring(node)
-        req_id = self._extract_req_id(docstring)
-        if req_id:
-            self.found_elements.append(
-                CodeElement(module=self.module_path, name=node.name, requirement_id=req_id)
-            )
+        """
+        Visit class definitions.
+        """
+        self._record(node.name, ast.get_docstring(node))
         self.generic_visit(node)
 
 def scan_codebase(root_dir: str) -> List[CodeElement]:

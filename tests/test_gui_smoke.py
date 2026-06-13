@@ -36,7 +36,9 @@ def state(tmp_path):
 
 
 class _FakeSerial:
-    """Minimal stand-in for a pyserial port used by the transfer workers."""
+    """
+    Minimal stand-in for a pyserial port used by the transfer workers.
+    """
 
     is_open = False  # so SerialManager.close_ports() skips closing it on teardown
 

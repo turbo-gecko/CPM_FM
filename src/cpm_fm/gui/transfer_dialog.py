@@ -12,9 +12,9 @@ from PySide6.QtWidgets import (
 class TransferProgressDialog(QDialog):
     """
     Modal progress dialog shown during an X-Modem file transfer (SRS
-    docs/cpm_fm_requirements.md, FR-105, UIR-051).
+    docs/cpm_fm_requirements.md).
 
-    A single dialog serves a whole transfer batch (FR-106/FR-107): it is created
+    A single dialog serves a whole transfer batch: it is created
     when the batch begins, switched to each file via :meth:`set_file`, and shows
     the batch position ("File i of N") when more than one file is transferred.
     For each file it displays the filename and a running blocks/bytes count that
@@ -28,7 +28,9 @@ class TransferProgressDialog(QDialog):
     """
 
     def __init__(self, parent, direction: str, file_count: int):
-        """Satisfies: FR-105, UIR-051."""
+        """
+        Satisfies: FR-105, UIR-051.
+        """
         super().__init__(parent)
         self._file_count = max(1, file_count)
         self._total_bytes: int | None = None
@@ -61,7 +63,7 @@ class TransferProgressDialog(QDialog):
         self.resize(360, 140)
 
     def set_file(self, filename: str, total_bytes: int | None, index: int) -> None:
-        """Switch the dialog to the file at 1-based position `index` (FR-105/FR-107).
+        """Switch the dialog to the file at 1-based position `index`.
 
         Updates the batch-position and filename labels, resets the blocks/bytes
         count, and reconfigures the progress bar: determinate against the file
@@ -82,7 +84,7 @@ class TransferProgressDialog(QDialog):
             self.progress_bar.setRange(0, 0)
 
     def update_progress(self, blocks: int, bytes_done: int) -> None:
-        """Refresh the blocks/bytes display after a transferred block (FR-105).
+        """Refresh the blocks/bytes display after a transferred block.
 
         Satisfies: FR-105.
         """
