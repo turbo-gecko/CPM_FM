@@ -8,6 +8,23 @@ from pydantic import BaseModel
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
+# Splits a Markdown table row on cell boundaries only — pipes escaped as ``\|``
+# inside a cell (e.g. the DR-006 vertical-bar requirement) are left intact, so
+# the columns of such a row stay aligned.
+_CELL_SPLIT = re.compile(r"(?<!\\)\|")
+
+
+def _split_row(line: str) -> List[str]:
+    """Split a table row into its cells (stripped), dropping the empty artefacts
+    produced by the leading and trailing pipe but keeping interior cells
+    positional (interior blanks are preserved, not discarded)."""
+    cells = _CELL_SPLIT.split(line.rstrip("\n"))
+    if cells and cells[0].strip() == "":
+        cells = cells[1:]
+    if cells and cells[-1].strip() == "":
+        cells = cells[:-1]
+    return [c.strip() for c in cells]
+
 class RequirementRow(BaseModel):
     """
     Represents a single requirement row from the Markdown table.
@@ -76,11 +93,12 @@ def parse_requirements_md(file_path: str) -> List[RequirementRow]:
                 continue
             
             if line.startswith("|"):
-                # Data row
-                parts = [p.strip() for p in line.split("|")]
-                # Filter out empty strings from split at start/end
-                parts = [p for p in parts if p != ""]
-                
+                # Data row. Split on unescaped pipes only and keep interior
+                # cells positional, so a literal "\|" inside a cell (the DR-006
+                # vertical-bar requirement) cannot fragment the row and push the
+                # Source column out of alignment.
+                parts = _split_row(line)
+
                 if len(parts) >= 2:
                     req_id = parts[0]
                     description = parts[1]
@@ -117,11 +135,6 @@ def parse_requirements_md(file_path: str) -> List[RequirementRow]:
 
     logger.info(f"Parsed {len(requirements)} requirements from {file_path}.")
     return requirements
-
-# Splits a Markdown table row on cell boundaries only — pipes escaped as ``\|``
-# inside a cell (e.g. the DR-006 vertical-bar requirement) are left intact.
-_CELL_SPLIT = re.compile(r"(?<!\\)\|")
-
 
 def _merge_source(existing: str, new_impl: str) -> str:
     """Merge a freshly computed ``impl. ...`` citation into a Source cell
