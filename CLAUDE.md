@@ -81,3 +81,20 @@ empty stubs, but the SRS and code implement working X-Modem transfers — see `F
 `CR-010`).
 `Workflows/` holds repo-specific multi-agent workflow definitions (`requirements-check`,
 `code-requirements-align`, `defect-investigator`) for checking code against the SRS.
+
+## Requirement-change workflow (MANDATORY)
+
+Whenever you are asked to **add or change a requirement**, perform all of these steps in order — do
+not stop short:
+
+1. **Update the requirements** in `docs/cpm_fm_requirements.md` (add/modify the `FR-`/`UIR-`/`DR-`/
+   `CR-`/`NFR-` entry).
+2. **Implement the changes.** In every new or changed function, update the docstring with a
+   `Satisfies:` tag citing the relevant requirement ID(s).
+3. **Update the requirements** with the traceability mapping to the new and changed functions.
+4. **Run the unit tests** (`pytest`).
+5. **Iterate steps 2–4** until all unit tests pass.
+6. **Update the manual test plan** (`docs/manual_test_plan.md`) and increment its test plan version.
+7. **Update the manual test scorecard** (`docs/manual_test_scorecard.md`) to match the test plan and
+   increment its score version.
+8. **Provide a summary** of the actions taken.
