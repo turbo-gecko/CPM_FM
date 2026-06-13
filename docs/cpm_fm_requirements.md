@@ -4,7 +4,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 1.9.0 |
+| Version | 1.10.0 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
@@ -115,6 +115,12 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 |----|-------------|----------|--------------|--------|
 | FR-020 | When the Config > Serial menu option is selected, the application shall present the Serial Configuration Dialog to allow the user to modify the serial settings. | Mandatory | D | App_Requirements §Serial; impl. `app.py:menu_serial_config`, `config_dialogs.py:save` |
 | FR-021 | When the Config > General menu option is selected, the application shall present the General Configuration Dialog to allow the user to modify the general settings. | Mandatory | D | App_Requirements §General; impl. `app.py:menu_general_config`, `config_dialogs.py:save` |
+
+### 3.3.1 Help menu
+
+| ID | Requirement | Priority | Verification | Source |
+|----|-------------|----------|--------------|--------|
+| FR-022 | When the Help > About menu item is selected, the application shall present the modal About Dialog (UIR-076). *(v1.10.)* | Mandatory | T | impl. `app.py:menu_about`, `gui/about_dialog.py:AboutDialog` |
 
 ### 3.4 Connecting to the remote system
 
@@ -242,6 +248,7 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | UIR-001 | The GUI shall present a menu bar at the top of the main window. | Mandatory | I | App_Requirements §Look and Feel, §Main Program GUI; impl. `app.py:setup_menu` |
 | UIR-002 | The menu bar shall contain a File menu with the items New, Load, Save, and Exit. | Mandatory | I | App_Requirements §Look and Feel; impl. `app.py:setup_menu` |
 | UIR-003 | The menu bar shall contain a Config menu with the items Serial and General. | Mandatory | I | App_Requirements §Look and Feel; impl. `app.py:setup_menu` |
+| UIR-004 | The menu bar shall contain a Help menu with the item About (FR-022). *(v1.10.)* | Mandatory | I | impl. `app.py:setup_menu` |
 
 ### 4.2 Main window layout
 
@@ -335,7 +342,13 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| UIR-075 | All dialogs shall lay out their confirm/cancel buttons consistently: when **both** buttons are present, the Cancel (reject) button shall be placed at the far left of the button row and the affirmative button (accept — e.g. "Apply" or "Save") at the far right, with the space between them filled by a flexible stretch; when **only one** button is present, that button shall be horizontally centred. This applies to the Serial and General Configuration Dialogs (Save/Cancel) and the File Action Dialog (Apply/Cancel). *(v1.8.2.)* | Mandatory | T | impl. `gui/dialog_buttons.py:build_button_row`, `config_dialogs.py:create_widgets`, `file_action_dialog.py:FileActionDialog` |
+| UIR-075 | All dialogs shall lay out their confirm/cancel buttons consistently: when **both** buttons are present, the Cancel (reject) button shall be placed at the far left of the button row and the affirmative button (accept — e.g. "Apply" or "Save") at the far right, with the space between them filled by a flexible stretch; when **only one** button is present, that button shall be horizontally centred. This applies to the Serial and General Configuration Dialogs (Save/Cancel), the File Action Dialog (Apply/Cancel), and the About Dialog (OK). *(v1.8.2; About added v1.10.)* | Mandatory | T | impl. `gui/dialog_buttons.py:build_button_row`, `config_dialogs.py:create_widgets`, `file_action_dialog.py:FileActionDialog`, `about_dialog.py:AboutDialog` |
+
+### 4.10 About Dialog
+
+| ID | Requirement | Priority | Verification | Source |
+|----|-------------|----------|--------------|--------|
+| UIR-076 | The About Dialog (FR-022) shall be a modal dialog titled "About" displaying: the program name "CP/M File Manager"; the application version (DR-040), shown as "Version `<x.y.z>`"; a clickable hyperlink to the project's GitHub repository at `https://github.com/turbo-gecko/CPM_FM` that opens in the host's default browser; and a single **OK** button (centred per UIR-075) that closes the dialog. *(v1.10.)* | Mandatory | T | impl. `gui/about_dialog.py:AboutDialog`; FR-022, DR-040 |
 
 ---
 
@@ -398,6 +411,13 @@ The following requirements define the algorithm for extracting remote file names
 | DR-031 | The parser is not required to support long filenames or non-ASCII characters. | Optional | A | App_Design §Constraints; impl. `cpm_parser.py:CPMParser` |
 | DR-032 | The parser is not required to parse file sizes, dates, or attributes — only names and extensions. | Mandatory | A | App_Design §Constraints; impl. `cpm_parser.py:CPMParser` |
 
+### 6.5 Application version
+
+| ID | Requirement | Priority | Verification | Source |
+|----|-------------|----------|--------------|--------|
+| DR-040 | The application version number shall be stored in a plain-text file named `version.txt` located in the `src/` folder (a sibling of the `cpm_fm` package). The file shall contain a single semantic-version string (e.g. `1.10.0`); surrounding whitespace is insignificant. The application shall read its version from this file. *(v1.10.)* | Mandatory | T | impl. `version.py:get_version` |
+| DR-041 | The application version (DR-040) shall match the version of this SRS (the document Version field). If `version.txt` cannot be read, the application shall fall back to the sentinel version string `0.0.0` and continue to operate rather than failing to start. *(v1.10.)* | Mandatory | T | impl. `version.py:get_version`, `__init__.py:__version__` |
+
 ---
 
 ## 7. Design Constraints
@@ -459,6 +479,7 @@ The following requirements define the algorithm for extracting remote file names
 | v1.8 file context-menu actions | FR-110 – FR-119, UIR-018, UIR-019, UIR-054 – UIR-057 |
 | v1.8.2 common dialog conventions | UIR-075 |
 | v1.9 cancel in-progress transfer | FR-120; revises UIR-051, NFR-003 |
+| v1.10 versioning and About dialog | FR-022, UIR-004, UIR-076, DR-040, DR-041; revises UIR-075 |
 
 ---
 
@@ -505,6 +526,7 @@ pass added OI-20–OI-21. All issues are now closed.
 
 | Version | Date | Author | Description |
 |---------|------|--------|-------------|
+| 1.10.0 | 2026-06-14 | Software Engineer | Added program versioning and an About dialog. **Added:** DR-040 (the version number is stored in a plain-text `src/version.txt` containing a single semantic-version string, read by the application), DR-041 (the application version matches the SRS version; fall back to `0.0.0` if the file is unreadable), FR-022 (Help > About presents the modal About Dialog), UIR-004 (Help menu with an About item), UIR-076 (About Dialog — new §4.10 — program name "CP/M File Manager", "Version `<x.y.z>`", a clickable GitHub-repo hyperlink opening in the default browser, and a centred OK button). **Modified:** UIR-075 (now also covers the About Dialog's single OK button). **Code changes:** new `src/version.txt` (now `1.10.0`); new `version.py` (`APP_NAME`, `REPO_URL`, `get_version` reading `version.txt`); `__init__.py` (`__version__` derived from `get_version`); new `gui/about_dialog.py:AboutDialog`; `app.py` (`setup_menu` adds the Help menu, `menu_about` handler). |
 | 1.9.0 | 2026-06-14 | Software Engineer | Added the ability to cancel an in-progress file transfer. **Added:** FR-120 (Cancel button on the progress dialog requests cancellation; the active X-Modem transfer is signalled to abort and transmits the CAN sequence so the remote aborts too; the batch stops, the dialog closes, the status shows a cancellation message, and the destination list refreshes if any file already completed; a partially-received file is not written). **Modified:** UIR-051 (centred Cancel button, disabled/"Cancelling…" on request), NFR-003 (CAN-0x18 abort on cancel). **Code changes:** `terminal/xmodem.py` (`CAN`, `cancel_check` callable, `_cancelled`/`_abort`, cancel checks in `send_file`/`receive_file` and the read waits), `gui/transfer_dialog.py` (Cancel button + `cancel_callback` + `mark_cancelling`), `app.py` (`_transfer_cancel` `threading.Event`, `_request_transfer_cancel`, `transfer_cancelled` signal + `_on_transfer_cancelled`, batch-driver cancel handling, `cancel_check` passed to `XModem`). |
 | 1.8.2 | 2026-06-14 | Software Engineer | Standardised dialog button layout across all dialogs. **Added:** UIR-075 (new §4.9 — when both buttons are present Cancel sits at the far left and the affirmative button at the far right with a stretch between; a lone button is centred). **Modified:** UIR-057 (File Action Dialog buttons laid out per UIR-075). **Code changes:** new `gui/dialog_buttons.py:build_button_row` shared helper; `gui/config_dialogs.py` and `gui/file_action_dialog.py` now build their button rows via the helper (replacing the platform-ordered `QDialogButtonBox`), keeping their existing labels (Save/Cancel and Apply/Cancel). |
 | 1.8.1 | 2026-06-14 | Software Engineer | Extended the v1.8 context menus with one-click transfer shortcuts. **Added:** FR-119 (a **To Remote** action on the Host Files context menu and a **To Host** action on the Remote Files context menu, each transferring the single file under the cursor, behaving as the corresponding Copy to Remote / Copy to Host button — both-flag guard FR-080/CR-010, progress dialog FR-105, destination refresh FR-099). **Modified:** FR-110/FR-111 (menus now include the transfer action), UIR-018/UIR-019 (transfer item at the top of each menu, separated from the file actions). **Code changes:** `app.py` (`_host_to_remote`/`_remote_to_host` handlers reusing `_transfer_to_remote_batch`/`_transfer_to_host_batch`; menu builders gain the new items + a separator). |

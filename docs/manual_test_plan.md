@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.1 |
+| Version | 1.2 |
 | Status | Draft |
 | Date | 2026-06-14 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v1.9.0) |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v1.10.0) |
 
 ---
 
@@ -115,7 +115,7 @@ that need two physical ports are marked **[2-port]**; visual-only cases are mark
 |----|-----|-------|----------|
 | MT-S01 | STR-002, CR-012, CR-013 | Launch `cpm-fm` with QSettings cleared (§2.4). | Main window appears; no console error; the Material theme is visibly applied (not the default Qt/native look). |
 | MT-S02 | FR-003, FR-060, FR-070 | Observe the freshly-launched window. | App is unconfigured (no settings loaded); Host Files list shows the current working directory's files; Remote Files list is **empty**. |
-| MT-S03 | UIR-001, UIR-002, UIR-003 | Inspect the menu bar. | A **File** menu with **New, Load, Save, Exit** (New at top) and a **Config** menu with **Serial, General**. |
+| MT-S03 | UIR-001, UIR-002, UIR-003, UIR-004 | Inspect the menu bar. | A **File** menu with **New, Load, Save, Exit** (New at top), a **Config** menu with **Serial, General**, and a **Help** menu with **About**. |
 | MT-S04 | UIR-013, UIR-071, UIR-015, UIR-016 | Inspect the top toolbar. | A toolbar with **Connect, Disconnect, Terminal** as labelled, icon-bearing buttons; Connect and Disconnect both enabled at startup. |
 | MT-S05 | UIR-011, UIR-012, UIR-061..067 | Inspect the panes. | Host Files group (Change Directory button, multi-select list, row with Refresh Host + Copy to Remote); Remote Files group (drive drop-down, Update button, multi-select list, Copy to Host row). |
 
@@ -281,6 +281,7 @@ dialog, real filesystem effect, and real viewer launch. Remote actions need a li
 | MT-V07 | FR-004 | Move/resize the main window, the Terminal Window, and the Serial & General dialogs; quit; relaunch and reopen each. | Each window/dialog reopens at its last size/position. (Splitter position is exempt — UIR-072.) |
 | MT-V08 | FR-015, FR-016 | With ports open and the Terminal Window + a config dialog open, choose File > **Exit**. | All COM ports close and all dialogs/windows close cleanly; no orphaned process. |
 | MT-V09 | UIR-075 | Open Config > Serial, Config > General, and a File Action dialog (right-click a host file → Rename); also glance at a transfer progress dialog (MT-T05). | In every two-button dialog the **Cancel** button is at the **far left** and the affirmative button (**Save** for the config dialogs, **Apply** for the File Action dialog) at the **far right**, with space between; the progress dialog's single **Cancel** button is **centred**. |
+| MT-V10 | FR-022, UIR-076, UIR-075, DR-040, DR-041 | Choose **Help > About**. Read the dialog, then click the GitHub link, then click **OK**. | A modal dialog titled "About" shows: the program name **CP/M File Manager**; **Version `<x.y.z>`** matching `src/version.txt` and the SRS version field (both `1.10.0`); a clickable hyperlink to `https://github.com/turbo-gecko/CPM_FM`. Clicking the link opens that page in the host's default browser. A single **OK** button (centred) closes the dialog. |
 
 ---
 
@@ -309,6 +310,7 @@ or real cross-session persistence:
 - Interfaces (real): `IFR-001`–`IFR-004`.
 - Config dialogs (on-screen layout, field values/limits): `UIR-020`–`UIR-056`.
 - Theme, layout & dialog button placement: `UIR-070`–`UIR-075`, `CR-012`, `CR-013`.
+- About dialog (on-screen render + live browser launch): `FR-022`, `UIR-004`, `UIR-076` (the version-sourcing `DR-040`/`DR-041` are covered automatically by `tests/test_version.py`; MT-V10 confirms the displayed version matches end-to-end).
 - Non-functional (real): `NFR-001`, `NFR-004` (live), `STR-003`, `FR-088`.
 
 Purely algorithmic and headless-logic requirements (`DR-*`, the X-Modem progress/handshake internals,
