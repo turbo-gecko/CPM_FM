@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.6 |
+| Version | 1.8 |
 | Status | Draft |
 | Date | 2026-06-14 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.2.0) |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.3.0) |
 
 ---
 
@@ -259,13 +259,17 @@ dialog, real filesystem effect, and real viewer launch. Remote actions need a li
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
 | MT-F01 [visual] | UIR-018, UIR-019 | Right-click a host file; right-click a remote file. | Host menu: **To Remote** (top, separated), View/Edit, Rename, Delete. Remote menu: **To Host** (top, separated), View, Rename, Delete. |
+| MT-F01a [visual] | FR-110, FR-111, UIR-018, UIR-019 | Select **two or more** files in the Host list (and likewise the Remote list), then right-click a selected file. | **View/Edit** (host) / **View** (remote) and **Rename** are **disabled** (greyed). To Remote/To Host and Delete remain enabled. |
 | MT-F02 | FR-112 | Host file → **View/Edit** with default `viewer_cmd` (`notepad $1`). | The file opens in Notepad (or the configured editor). |
 | MT-F03 | FR-112 | Set `viewer_cmd` empty (General Config), then View/Edit a host file. | The file opens via the OS default association for its type. |
 | MT-F04 | UIR-057, FR-114, FR-116, FR-118 | Host file → **Rename**: dialog shows an editable field pre-filled and pre-selected; change the name, Apply. | File renamed on disk; Host list refreshes. Cancel (or unchanged/empty name) makes no change. |
 | MT-F05 | UIR-057, FR-115, FR-116, FR-118 | Host file → **Delete**: dialog shows a **read-only** name field; Apply. | File deleted from disk; Host list refreshes. Cancel makes no change. |
+| MT-F05a | FR-110, FR-115, FR-116, FR-118 | Select **several** host files, right-click → **Delete**: the dialog lists **all** selected names (read-only) and asks "Delete these N files?"; Apply. | **Every** selected file is deleted from disk; Host list refreshes once. Cancel makes no change. |
 | MT-F06 [CP/M] | FR-117, FR-118 | Remote file → Rename / Delete with the Terminal Port open. | `REN new=old` / `ERA name` sent on the Terminal Port; Remote list refreshes; the change is visible on the CP/M side. |
+| MT-F06a [CP/M] | FR-111, FR-115, FR-117, FR-118 | Select **several** remote files, right-click → **Delete**: the dialog lists all selected names; Apply. | `ERA name` is sent **once per selected file** (in list order) on the Terminal Port; Remote list refreshes once; all files are gone on the CP/M side. |
 | MT-F07 [CP/M] | FR-117 | Remote Rename/Delete with the Terminal Port **closed**. | No command sent; status bar "Terminal port not open - cannot rename"/"…cannot delete". |
 | MT-F08 [CP/M] | FR-113, FR-112 | Remote file → **View** while both flags connected. | File is first downloaded over X-Modem to a temp folder (progress dialog shows), then opened in the viewer. With Transport disconnected: "Transport port not connected", no download. |
+| MT-F09 [CP/M] | FR-119, FR-106, FR-107 | Select **several** host files, right-click → **To Remote** (and likewise several remote files → **To Host**), with both flags connected. | **Every** selected file is transferred sequentially via the normal batch process (progress dialog shows each file); the destination list refreshes once on success. With a flag disconnected: "Transport port not connected", no transfer. |
 
 ---
 

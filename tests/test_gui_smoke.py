@@ -881,7 +881,72 @@ def test_remote_delete_sends_command(qapp, monkeypatch, state):
         _RecordingThread.instances = []
         monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
         win._remote_delete("F.TXT")
-        assert _RecordingThread.instances[0].args == ("ERA F.TXT",)
+        assert _RecordingThread.instances[0].args == (["ERA F.TXT"],)
+    finally:
+        win.close()
+
+
+def test_host_delete_removes_all_selected_files(qapp, monkeypatch, state, tmp_path):
+    # FR-110/FR-116: Delete from the context menu removes every selected file.
+    win = MainWindow(state)
+    try:
+        win.host_dir = str(tmp_path)
+        for fn in ("A.TXT", "B.TXT", "C.TXT"):
+            (tmp_path / fn).write_text("x")
+        monkeypatch.setattr("cpm_fm.app.FileActionDialog", _fake_action_dialog("A.TXT"))
+        monkeypatch.setattr(win, "refresh_host_files", lambda: None)
+        win._host_delete(["A.TXT", "B.TXT", "C.TXT"])
+        assert not (tmp_path / "A.TXT").exists()
+        assert not (tmp_path / "B.TXT").exists()
+        assert not (tmp_path / "C.TXT").exists()
+    finally:
+        win.close()
+
+
+def test_remote_delete_sends_command_per_selected_file(qapp, monkeypatch, state):
+    # FR-111/FR-117: remote Delete sends delete_remote_cmd once per selected file.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.settings = {"delete_remote_cmd": "ERA $1"}
+        monkeypatch.setattr("cpm_fm.app.FileActionDialog", _fake_action_dialog("A.TXT"))
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._remote_delete(["A.TXT", "B.TXT"])
+        assert _RecordingThread.instances[0].args == (["ERA A.TXT", "ERA B.TXT"],)
+    finally:
+        win.close()
+
+
+def test_context_menu_targets_uses_full_selection_when_clicked_item_selected(qapp, state):
+    # FR-110: clicking a file that is part of the multi-selection -> Delete
+    # targets the whole selection; the single-file name is the clicked item.
+    win = MainWindow(state)
+    try:
+        win.host_list.clear()
+        win.host_list.addItems(["A.TXT", "B.TXT", "C.TXT"])
+        for row in range(win.host_list.count()):
+            win.host_list.item(row).setSelected(True)
+        win.host_list.itemAt = lambda pos: win.host_list.item(0)
+        name, names = win._context_menu_targets(win.host_list, None)
+        assert name == "A.TXT"
+        assert names == ["A.TXT", "B.TXT", "C.TXT"]
+    finally:
+        win.close()
+
+
+def test_context_menu_targets_uses_clicked_item_when_outside_selection(qapp, state):
+    # FR-110: clicking a file NOT in the selection -> the action targets that one
+    # file alone, not the (unrelated) selection.
+    win = MainWindow(state)
+    try:
+        win.host_list.clear()
+        win.host_list.addItems(["A.TXT", "B.TXT", "C.TXT"])
+        win.host_list.item(1).setSelected(True)  # B selected
+        win.host_list.itemAt = lambda pos: win.host_list.item(0)  # but A clicked
+        name, names = win._context_menu_targets(win.host_list, None)
+        assert name == "A.TXT"
+        assert names == ["A.TXT"]
     finally:
         win.close()
 
@@ -966,6 +1031,25 @@ def test_host_to_remote_transfers_under_cursor_file(qapp, monkeypatch, state):
         win.close()
 
 
+def test_host_to_remote_transfers_all_selected_files(qapp, monkeypatch, state):
+    # FR-119/FR-106/FR-107: To Remote transfers every selected host file via the
+    # Copy to Remote batch worker, in order.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._host_to_remote(["A.TXT", "B.TXT"])
+        t = _RecordingThread.instances[0]
+        assert t.target == win._transfer_to_remote_batch
+        assert t.args == (
+            [os.path.join(win.host_dir, "A.TXT"), os.path.join(win.host_dir, "B.TXT")],
+        )
+    finally:
+        win.close()
+
+
 def test_remote_to_host_transfers_under_cursor_file(qapp, monkeypatch, state):
     # FR-119: To Host transfers the single remote file under the cursor via the
     # Copy to Host batch worker.
@@ -979,6 +1063,25 @@ def test_remote_to_host_transfers_under_cursor_file(qapp, monkeypatch, state):
         t = _RecordingThread.instances[0]
         assert t.target == win._transfer_to_host_batch
         assert t.args == ([os.path.join(win.host_dir, "F.TXT")],)
+    finally:
+        win.close()
+
+
+def test_remote_to_host_transfers_all_selected_files(qapp, monkeypatch, state):
+    # FR-119/FR-106/FR-107: To Host transfers every selected remote file via the
+    # Copy to Host batch worker, in order.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._remote_to_host(["A.TXT", "B.TXT"])
+        t = _RecordingThread.instances[0]
+        assert t.target == win._transfer_to_host_batch
+        assert t.args == (
+            [os.path.join(win.host_dir, "A.TXT"), os.path.join(win.host_dir, "B.TXT")],
+        )
     finally:
         win.close()
 
@@ -1132,6 +1235,29 @@ def test_file_action_dialog_button_layout(qapp):
         right = row.itemAt(row.count() - 1).widget()
         assert isinstance(left, QPushButton) and left.text() == "Cancel"
         assert isinstance(right, QPushButton) and right.text() == "Apply"
+    finally:
+        dlg.deleteLater()
+
+
+def test_file_action_dialog_multi_file_shows_readonly_list(qapp):
+    # FR-115: a multi-file Delete shows every selected name in a read-only,
+    # non-editable list instead of the single-line field.
+    from PySide6.QtWidgets import QPlainTextEdit
+
+    from cpm_fm.gui.file_action_dialog import FileActionDialog
+
+    names = ["A.TXT", "B.TXT", "C.TXT"]
+    dlg = FileActionDialog(None, "Delete File", names[0], editable=False, filenames=names)
+    try:
+        listings = [
+            dlg.layout().itemAt(i).widget()
+            for i in range(dlg.layout().count())
+            if isinstance(dlg.layout().itemAt(i).widget(), QPlainTextEdit)
+        ]
+        assert listings, "expected a read-only list of filenames"
+        listing = listings[0]
+        assert listing.isReadOnly()
+        assert listing.toPlainText().splitlines() == names
     finally:
         dlg.deleteLater()
 

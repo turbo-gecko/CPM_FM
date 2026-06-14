@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QLabel,
     QLineEdit,
+    QPlainTextEdit,
     QPushButton,
     QVBoxLayout,
 )
@@ -18,7 +19,9 @@ class FileActionDialog(QDialog):
     Presents a single-line filename field pre-populated with the target file's
     name, an Apply button, and a Cancel button (UIR-057). For Rename the field
     is editable (and pre-selected for quick replacement); for Delete it is
-    read-only and merely confirms the file to be removed.
+    read-only and merely confirms the file to be removed. When Delete targets
+    more than one file (``filenames`` with several entries), a read-only list of
+    every selected name is shown instead of the single-line field (FR-115).
 
     Satisfies: FR-114, FR-115, UIR-057.
     """
@@ -30,6 +33,7 @@ class FileActionDialog(QDialog):
         filename: str,
         editable: bool = True,
         prompt: str | None = None,
+        filenames: list[str] | None = None,
     ):
         """
         Satisfies: FR-114, FR-115, UIR-057, UIR-075.
@@ -42,12 +46,21 @@ class FileActionDialog(QDialog):
         if prompt:
             layout.addWidget(QLabel(prompt))
 
+        # name_edit always exists so value() is meaningful for the (single-file,
+        # editable) Rename case; for a multi-file Delete it is not added to the
+        # layout and value() is unused.
         self.name_edit = QLineEdit(filename)
         self.name_edit.setReadOnly(not editable)
-        if editable:
-            # Pre-select so the user can immediately type a replacement name.
-            self.name_edit.selectAll()
-        layout.addWidget(self.name_edit)
+        if filenames is not None and len(filenames) > 1:
+            # FR-115: multi-file Delete — show every selected name read-only.
+            listing = QPlainTextEdit("\n".join(filenames))
+            listing.setReadOnly(True)
+            layout.addWidget(listing)
+        else:
+            if editable:
+                # Pre-select so the user can immediately type a replacement name.
+                self.name_edit.selectAll()
+            layout.addWidget(self.name_edit)
 
         # UIR-057/UIR-075: Apply confirms the action; Cancel makes no change.
         # Cancel sits at the far left, Apply at the far right.
