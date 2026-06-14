@@ -153,6 +153,7 @@ config.general.xfer_launch_delay = 啟動延遲 (s)
 config.general.xfer_interfile_delay = 檔案間隔延遲 (s)
 config.general.eol = 換行符
 config.general.debug_logging = 調試日誌
+config.general.echo_transfer = 回顯傳輸數據
 config.general.viewer = 查看器/編輯器
 config.general.rename_remote = 重命名
 config.general.delete_remote = 刪除

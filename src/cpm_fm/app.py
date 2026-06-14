@@ -1196,17 +1196,37 @@ class MainWindow(QMainWindow):
         Satisfies: FR-086, FR-088.
 
         Echo transfer bytes to the Terminal Window as hex tokens of
-        the form <HH>. Runs on the transfer worker thread; the display write
+        the form <HH>, unless the `echo_transfer_data` setting disables it
+        (FR-086). Runs on the transfer worker thread; the display write
         is marshalled to the GUI thread via term_write (NFR-004). The slot
         no-ops when the Terminal Window does not exist.
         Direction-tagged, timestamped trace to stdout (visible via
         `python -m cpm_fm`) so transfers can be debugged without conflating
         sent and received bytes, and so prompt/response timing is visible.
+        The stdout trace (FR-088) is independent of the Terminal Window echo,
+        so it still fires when the echo is turned off.
         """
         if self._debug_enabled():
             print(f"[xfer {direction} {time.time():.2f}] {data.hex(' ')}", flush=True)
+        if not self._echo_transfer_enabled():
+            return
         hex_text = "".join(f"<{b:02X}>" for b in data)
         self.term_write.emit(hex_text)
+
+    def _echo_transfer_enabled(self) -> bool:
+        """
+        Satisfies: FR-086.
+
+        The X-Modem transfer byte echo to the Terminal Window is emitted only
+        when the `echo_transfer_data` setting holds an affirmative value
+        (`ON`/`TRUE`/`1`/`YES`, case-insensitive); the default is off.
+        """
+        return str(self.settings.get("echo_transfer_data", "OFF")).strip().upper() in (
+            "ON",
+            "TRUE",
+            "1",
+            "YES",
+        )
 
     def _on_transfer_progress_cb(self, blocks, bytes_done, total):
         """

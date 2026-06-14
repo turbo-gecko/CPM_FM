@@ -153,6 +153,7 @@ config.general.xfer_launch_delay = Startvertraging (s)
 config.general.xfer_interfile_delay = Vertraging tussen bestanden (s)
 config.general.eol = Einde regel
 config.general.debug_logging = Debug logging
+config.general.echo_transfer = Overdrachtsdata echoën
 config.general.viewer = Viewer/Editor
 config.general.rename_remote = Hernoemen
 config.general.delete_remote = Verwijderen

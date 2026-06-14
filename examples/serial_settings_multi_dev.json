@@ -1,0 +1,23 @@
+{
+    "terminal_port": "COM12",
+    "transport_port": "COM12",
+    "speed": "115200",
+    "data": "8",
+    "parity": "NONE",
+    "stopbits": "1",
+    "flow": "RTS/CTS",
+    "msec_char": "0",
+    "msec_line": "0",
+    "list_files_cmd": "DIR",
+    "recv_remote_cmd": "C:XM S $1",
+    "send_remote_cmd": "C:XM R $1",
+    "xfer_launch_delay": "3",
+    "xfer_interfile_delay": "2",
+    "eol": "CR",
+    "debug_logging": "OFF",
+    "viewer_cmd": "notepad $1",
+    "rename_remote_cmd": "REN $2=$1",
+    "delete_remote_cmd": "ERA $1",
+    "host_directory": "D:/Old_Skool/CPM/Computers/Multi-Dev/A",
+    "echo_transfer_data": "OFF"
+}
