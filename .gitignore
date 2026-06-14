@@ -16,3 +16,4 @@ dist/
 .mypy_cache/
 .ruff_cache/
 docs/bug_list.md
+/temp
