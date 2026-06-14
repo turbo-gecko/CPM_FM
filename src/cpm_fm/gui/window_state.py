@@ -3,6 +3,8 @@ from __future__ import annotations
 from PySide6.QtCore import QByteArray, QSettings
 from PySide6.QtWidgets import QWidget
 
+from cpm_fm.utils.i18n import DEFAULT_LANGUAGE
+
 # QSettings storage identity. On Windows these map to a registry key under
 # HKEY_CURRENT_USER\Software\<ORG>\<APP>; on other platforms to a native config
 # file. Kept here (rather than relying on QCoreApplication's org/app names) so
@@ -86,3 +88,23 @@ class WindowState:
         Satisfies: FR-006.
         """
         self._settings.setValue("last_config_dir", path)
+
+    @property
+    def language(self) -> str:
+        """The active GUI language name, defaulting to English ("english").
+
+        This is a global UI preference (like geometry and the last-used config
+        file), deliberately kept in QSettings rather than the per-config serial
+        JSON, so it persists independently of which configuration is loaded.
+
+        Satisfies: FR-124.
+        """
+        value = self._settings.value("language", DEFAULT_LANGUAGE)
+        return value if isinstance(value, str) and value else DEFAULT_LANGUAGE
+
+    @language.setter
+    def language(self, name: str) -> None:
+        """
+        Satisfies: FR-122, FR-124.
+        """
+        self._settings.setValue("language", name)

@@ -1,0 +1,163 @@
+# ==============================================================================
+# CP/M File Manager - Greek language file (lang_greek.txt)
+# ==============================================================================
+# Example / stub translation. The values are a best-effort Greek translation
+# and should be reviewed by a native speaker. The keys (left of '=') and the
+# {placeholders} must NOT be changed. See lang_english.txt for the format and
+# the canonical reference text.
+# ==============================================================================
+
+# --- Application ---------------------------------------------------------------
+app.title = Διαχειριστής Αρχείων CP/M
+
+# --- Menu bar ------------------------------------------------------------------
+menu.file = Αρχείο
+menu.file.new = Νέο
+menu.file.load = Φόρτωση
+menu.file.save = Αποθήκευση
+menu.file.exit = Έξοδος
+menu.config = Ρυθμίσεις
+menu.config.serial = Σειριακή
+menu.config.general = Γενικά
+menu.config.language = Γλώσσα
+menu.help = Βοήθεια
+menu.help.about = Πληροφορίες
+
+# --- Toolbar -------------------------------------------------------------------
+toolbar.connect = Σύνδεση
+toolbar.disconnect = Αποσύνδεση
+toolbar.terminal = Τερματικός
+
+# --- Main window ---------------------------------------------------------------
+main.host_files = Αρχεία ξενιστή
+main.change_directory = Αλλαγή καταλόγου
+main.copy_to_remote = Αντιγραφή στη συσκευή
+main.remote_files = Απομακρυσμένα αρχεία
+main.update = Ενημέρωση
+main.copy_to_host = Αντιγραφή στον ξενιστή
+
+# --- Connection indicators -----------------------------------------------------
+indicator.terminal = Τερματικός
+indicator.transport = Μεταφορά
+
+# --- File list context menus ---------------------------------------------------
+ctxmenu.to_remote = Στη συσκευή
+ctxmenu.view_edit = Προβολή/Επεξεργασία
+ctxmenu.rename = Μετονομασία
+ctxmenu.delete = Διαγραφή
+ctxmenu.to_host = Στον ξενιστή
+ctxmenu.view = Προβολή
+
+# --- Status bar messages --------------------------------------------------------
+status.ready = Έτοιμος
+status.cancelling_transfer = Ακύρωση μεταφοράς...
+status.error_reading_host = Σφάλμα ανάγνωσης αρχείων ξενιστή: {error}
+status.uploading = Μεταφόρτωση {name} ({index}/{count})...
+status.successfully_uploaded = {count} αρχείο(α) μεταφορτώθηκαν με επιτυχία
+status.downloading = Λήψη {name} ({index}/{count})...
+status.successfully_downloaded = {count} αρχείο(α) λήφθηκαν με επιτυχία
+status.transfer_cancelled = Η μεταφορά ακυρώθηκε μετά από {count} αρχεία
+status.downloading_for_viewing = Λήψη {name} για προβολή...
+status.opening_viewer = Άνοιγμα προβολέα...
+status.terminal_not_open_rename = Ο τερματικός θύρα δεν είναι ανοιχτός - η μετονομασία είναι αδύνατη
+status.terminal_not_open_delete = Ο τερματικός θύρα δεν είναι ανοιχτός - η διαγραφή είναι αδύνατη
+status.terminal_not_open_send = Ο τερματικός θύρα δεν είναι ανοιχτός - η αποστολή είναι αδύνατη
+status.terminal_not_open_list = Ο τερματικός θύρα δεν είναι ανοιχτός - η ανάγνωση λίστας αρχείων είναι αδύνατη
+status.executing = Εκτέλεση: {cmd}
+status.terminal_port_open = Ο τερματικός θύρα είναι ανοιχτός
+status.terminal_port_closed = Ο τερματικός θύρα είναι κλειστός
+status.updating_remote_list = Ενημέρωση λίστας απομακρυσμένων αρχείων...
+status.changing_drive = Αλλαγή σε δίσκο {drive}:...
+status.remote_list_updated = Η λίστα απομακρυσμένων αρχείων ενημερώθηκε
+status.loaded_config = Φόρτωση ρυθμίσεων: {filename}
+status.saved_config = Αποθήκευση ρυθμίσεων στο {path}
+status.new_config_created = Δημιουργήθηκαν νέες ρυθμίσεις
+status.serial_settings_updated = Οι σειριακές ρυθμίσεις ενημερώθηκαν
+status.general_settings_updated = Οι γενικές ρυθμίσεις ενημερώθηκαν
+
+# --- Dialog titles -------------------------------------------------------------
+dialog.error.title = Σφάλμα
+dialog.warning.title = Προειδοποίηση
+dialog.xmodem_error.title = Σφάλμα X-Modem
+dialog.drive_not_found.title = Ο δίσκος δεν βρέθηκε
+dialog.rename_file.title = Μετονομασία αρχείου
+dialog.delete_file.title = Διαγραφή αρχείου
+dialog.delete_file.prompt = Διαγραφή αυτού του αρχείου;
+dialog.rename_remote.title = Μετονομασία απομακρυσμένου αρχείου
+dialog.delete_remote.title = Διαγραφή απομακρυσμένου αρχείου
+dialog.delete_remote.prompt = Διαγραφή αυτού του απομακρυσμένου αρχείου;
+dialog.change_directory.title = Αλλαγή καταλόγου
+dialog.load_config.title = Φόρτωση ρυθμίσεων
+dialog.save_config.title = Αποθήκευση ρυθμίσεων
+dialog.json_filter = Αρχεία JSON (*.json)
+dialog.select_directory.title = Επιλογή καταλόγου
+
+# --- Error / warning message bodies ---------------------------------------------
+error.transport_not_connected = Η θύρα μεταφοράς δεν είναι συνδεδεμένη
+error.unable_open_viewer = Αδυναμία ανοίγματος προβολέα: {error}
+error.rename_failed = Αποτυχία μετονομασίας: {error}
+error.delete_failed = Αποτυχία διαγραφής: {error}
+error.transport_unable_open = Αδυναμία ανοίγματος θύρας μεταφοράς
+error.terminal_unable_open = Αδυναμία ανοίγματος θύρας τερματικού
+error.terminal_unable_close = Αδυναμία κλεισίματος θύρας τερματικού
+error.transport_unable_close = Αδυναμία κλεισίματος θύρας μεταφοράς
+error.drive_not_found_body = Ο δίσκος {drive}: δεν βρέθηκε
+error.download_failed = Αποτυχία λήψης του {name}
+error.transfer_failed = Αποτυχία μεταφοράς του {name}; τα υπόλοιπα αρχεία αγνοούνται
+warning.select_upload = Παρακαλώ επιλέξτε ένα ή περισσότερα αρχεία για μεταφόρτωση
+warning.select_download = Παρακαλώ επιλέξτε ένα ή περισσότερα αρχεία για λήψη
+
+# --- Common buttons ------------------------------------------------------------
+button.apply = Εφαρμογή
+button.cancel = Ακύρωση
+button.save = Αποθήκευση
+button.ok = OK
+button.cancelling = Ακύρωση…
+
+# --- Transfer progress dialog ---------------------------------------------------
+transfer.title.send = Μεταφόρτωση αρχείου
+transfer.title.recv = Λήψη αρχείου
+transfer.label.send = Μεταφόρτωση:
+transfer.label.recv = Λήψη:
+transfer.file.send = Μεταφόρτωση: {filename}
+transfer.file.recv = Λήψη: {filename}
+transfer.batch_position = Αρχείο {index} από {count}
+transfer.count = Μπλοκ: {blocks}    Bytes: {bytes_done}
+
+# --- Terminal window ------------------------------------------------------------
+terminal.title = Τερματικός
+terminal.clear = Καθαρισμός
+terminal.local_echo = Τοπική αντήχηση
+terminal.autoscroll = Αυτόματη κύλιση
+terminal.send = Αποστολή
+
+# --- Serial Configuration dialog ------------------------------------------------
+config.serial.title = Σειριακές Ρυθμίσεις
+config.serial.terminal_port = Θύρα τερματικού
+config.serial.transfer_port = Θύρα μεταφοράς
+config.serial.speed = Ταχύτητα
+config.serial.data_bits = Bits δεδομένων
+config.serial.parity = Παритетность
+config.serial.stop_bits = Stop bits
+config.serial.flow_control = Έλεγχος ροής
+config.serial.msec_char = ms/χαρακτήρα
+config.serial.msec_line = ms/γραμμή
+
+# --- General Configuration dialog ----------------------------------------------
+config.general.title = Γενικές Ρυθμίσεις
+config.general.remote_group = Απομακρυσμένο
+config.general.list_files = Λίστα αρχείων
+config.general.recv_remote = Λήψη από συσκευή
+config.general.send_remote = Αποστολή σε συσκευή
+config.general.xfer_launch_delay = Καθυστέρηση έναρξης (s)
+config.general.xfer_interfile_delay = Καθυστέρηση μεταξύ αρχείων (s)
+config.general.eol = Τέλος γραμμής
+config.general.debug_logging = Καταγραφή αποσφαλμάτωσης
+config.general.viewer = Προβολέας/Επεξεργαστής
+config.general.rename_remote = Μετονομασία
+config.general.delete_remote = Διαγραφή
+config.general.host_directory = Προεπιλεγμένος κατάλογος ξενιστή
+
+# --- About dialog --------------------------------------------------------------
+about.title = Πληροφορίες
+about.version = Έκδοση {version}

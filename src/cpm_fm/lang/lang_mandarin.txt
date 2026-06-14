@@ -1,0 +1,163 @@
+# =============================================================================
+# CP/M File Manager - Mandarin language file (lang_mandarin.txt)
+# =============================================================================
+# Example / stub translation. The values are a best-effort Mandarin translation
+# and should be reviewed by a native speaker. The keys (left of '=') and the
+# {placeholders} must NOT be changed. See lang_english.txt for the format and
+# the canonical reference text.
+# =============================================================================
+
+# --- Application ---------------------------------------------------------------
+app.title = CP/M 文件管理器
+
+# --- Menu bar ------------------------------------------------------------------
+menu.file = 文件
+menu.file.new = 新建
+menu.file.load = 加载
+menu.file.save = 保存
+menu.file.exit = 退出
+menu.config = 配置
+menu.config.serial = 串口
+menu.config.general = 常规
+menu.config.language = 语言
+menu.help = 帮助
+menu.help.about = 关于
+
+# --- Toolbar -------------------------------------------------------------------
+toolbar.connect = 连接
+toolbar.disconnect = 断开连接
+toolbar.terminal = 终端
+
+# --- Main window ---------------------------------------------------------------
+main.host_files = 主机文件
+main.change_directory = 更改目录
+main.copy_to_remote = 复制到设备
+main.remote_files = 远程文件
+main.update = 更新
+main.copy_to_host = 复制到主机
+
+# --- Connection indicators -----------------------------------------------------
+indicator.terminal = 终端
+indicator.transport = 传输
+
+# --- File list context menus ---------------------------------------------------
+ctxmenu.to_remote = 到设备
+ctxmenu.view_edit = 查看/编辑
+ctxmenu.rename = 重命名
+ctxmenu.delete = 删除
+ctxmenu.to_host = 到主机
+ctxmenu.view = 查看
+
+# --- Status bar messages -------------------------------------------------------
+status.ready = 就绪
+status.cancelling_transfer = 正在取消传输...
+status.error_reading_host = 读取主机文件错误: {error}
+status.uploading = 正在发送 {name} ({index}/{count})...
+status.successfully_uploaded = {count} 个文件发送成功
+status.downloading = 正在下载 {name} ({index}/{count})...
+status.successfully_downloaded = {count} 个文件下载成功
+status.transfer_cancelled = 传输在 {count} 个文件后取消
+status.downloading_for_viewing = 正在下载 {name} 以便查看...
+status.opening_viewer = 正在打开查看器...
+status.terminal_not_open_rename = 终端端口未打开 - 无法重命名
+status.terminal_not_open_delete = 终端端口未打开 - 无法删除
+status.terminal_not_open_send = 终端端口未打开 - 无法发送
+status.terminal_not_open_list = 终端端口未打开 - 无法读取文件列表
+status.executing = 执行: {cmd}
+status.terminal_port_open = 终端端口已打开
+status.terminal_port_closed = 终端端口已关闭
+status.updating_remote_list = 正在更新远程文件列表...
+status.changing_drive = 切换到驱动器 {drive}:...
+status.remote_list_updated = 远程文件列表已更新
+status.loaded_config = 配置已加载: {filename}
+status.saved_config = 配置已保存到 {path}
+status.new_config_created = 新配置已创建
+status.serial_settings_updated = 串口设置已更新
+status.general_settings_updated = 常规设置已更新
+
+# --- Dialog titles -------------------------------------------------------------
+dialog.error.title = 错误
+dialog.warning.title = 警告
+dialog.xmodem_error.title = X-Modem 错误
+dialog.drive_not_found.title = 未找到驱动器
+dialog.rename_file.title = 重命名文件
+dialog.delete_file.title = 删除文件
+dialog.delete_file.prompt = 删除此文件？
+dialog.rename_remote.title = 重命名远程文件
+dialog.delete_remote.title = 删除远程文件
+dialog.delete_remote.prompt = 删除此远程文件？
+dialog.change_directory.title = 更改目录
+dialog.load_config.title = 加载配置
+dialog.save_config.title = 保存配置
+dialog.json_filter = JSON 文件 (*.json)
+dialog.select_directory.title = 选择目录
+
+# --- Error / warning message bodies --------------------------------------------
+error.transport_not_connected = 传输端口未连接
+error.unable_open_viewer = 无法打开查看器: {error}
+error.rename_failed = 重命名失败: {error}
+error.delete_failed = 删除失败: {error}
+error.transport_unable_open = 无法打开传输端口
+error.terminal_unable_open = 无法打开终端端口
+error.terminal_unable_close = 无法关闭终端端口
+error.transport_unable_close = 无法关闭传输端口
+error.drive_not_found_body = 未找到驱动器 {drive}:
+error.download_failed = 下载 {name} 失败
+error.transfer_failed = 传输 {name} 失败；忽略剩余文件
+warning.select_upload = 请选择一个或多个要发送的文件
+warning.select_download = 请选择一个或多个要下载的文件
+
+# --- Common buttons ------------------------------------------------------------
+button.apply = 应用
+button.cancel = 取消
+button.save = 保存
+button.ok = 确定
+button.cancelling = 取消中…
+
+# --- Transfer progress dialog --------------------------------------------------
+transfer.title.send = 发送文件
+transfer.title.recv = 接收文件
+transfer.label.send = 发送:
+transfer.label.recv = 接收:
+transfer.file.send = 发送: {filename}
+transfer.file.recv = 接收: {filename}
+transfer.batch_position = 文件 {index} / {count}
+transfer.count = 块: {blocks}    字节: {bytes_done}
+
+# --- Terminal window -----------------------------------------------------------
+terminal.title = 终端
+terminal.clear = 清除
+terminal.local_echo = 本地回显
+terminal.autoscroll = 自动滚动
+terminal.send = 发送
+
+# --- Serial Configuration dialog -----------------------------------------------
+config.serial.title = 串口配置
+config.serial.terminal_port = 终端端口
+config.serial.transfer_port = 传输端口
+config.serial.speed = 波特率
+config.serial.data_bits = 数据位
+config.serial.parity = 校验位
+config.serial.stop_bits = 停止位
+config.serial.flow_control = 流控
+config.serial.msec_char = 字符间隔 (ms)
+config.serial.msec_line = 行间隔 (ms)
+
+# --- General Configuration dialog ----------------------------------------------
+config.general.title = 常规配置
+config.general.remote_group = 远程
+config.general.list_files = 列出文件
+config.general.recv_remote = 从设备接收
+config.general.send_remote = 发送到设备
+config.general.xfer_launch_delay = 启动延迟 (s)
+config.general.xfer_interfile_delay = 文件间隔延迟 (s)
+config.general.eol = 换行符
+config.general.debug_logging = 调试日志
+config.general.viewer = 查看器/编辑器
+config.general.rename_remote = 重命名
+config.general.delete_remote = 删除
+config.general.host_directory = 默认主机目录
+
+# --- About dialog --------------------------------------------------------------
+about.title = 关于
+about.version = 版本 {version}

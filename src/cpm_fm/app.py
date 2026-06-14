@@ -8,11 +8,11 @@ import sys
 import tempfile
 import threading
 import time
-from typing import cast
+from typing import Callable, cast
 
 import serial.tools.list_ports
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QActionGroup
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -44,6 +44,13 @@ from cpm_fm.terminal.cpm_parser import CPMParser
 from cpm_fm.terminal.serial_manager import SerialManager
 from cpm_fm.terminal.xmodem import XModem
 from cpm_fm.utils.config_handler import DEFAULT_SETTINGS, ConfigHandler
+from cpm_fm.utils.i18n import (
+    available_languages,
+    current_language,
+    display_name,
+    set_language,
+    tr,
+)
 
 EOL_MAP = {"CR": "\r", "LF": "\n", "CRLF": "\r\n"}
 
@@ -126,11 +133,9 @@ class MainWindow(QMainWindow):
 
     def __init__(self, window_state: WindowState | None = None):
         """
-        Satisfies: FR-003, FR-004, FR-005.
+        Satisfies: FR-003, FR-004, FR-005, FR-124.
         """
         super().__init__()
-        self.setWindowTitle("CP/M File Manager")
-        self.resize(900, 560)
 
         # Core Components
         self.serial_mgr = SerialManager()
@@ -139,6 +144,16 @@ class MainWindow(QMainWindow):
         # Injectable so tests can isolate the store from the host's real settings.
         self.window_state = window_state if window_state is not None else WindowState()
         self.settings: dict = {}
+
+        # FR-124: activate the persisted GUI language before any widget text is
+        # built, so the first paint is already localised. _i18n_registry maps a
+        # widget text-setter to its translation key for live re-translation
+        # (FR-123); _register_text populates it during setup.
+        set_language(self.window_state.language)
+        self._i18n_registry: list[tuple[Callable[[str], None], str]] = []
+
+        self._register_text(self.setWindowTitle, "app.title")
+        self.resize(900, 560)
 
         # UI State
         self.terminal_win: TerminalWindow | None = None
@@ -183,6 +198,38 @@ class MainWindow(QMainWindow):
         if last and os.path.exists(last):
             self.load_config(last)
 
+    # ------------------------------------------------------------------ i18n
+
+    def _register_text(self, setter: Callable[[str], None], key: str) -> None:
+        """Set a widget's text from ``key`` now and register it for re-translation.
+
+        ``setter`` is a bound text-setter (e.g. ``action.setText``,
+        ``menu.setTitle``, ``button.setText``). The pair is remembered so
+        retranslate_ui can re-apply the active language's text when the user
+        switches language (FR-123).
+
+        Satisfies: FR-121, FR-123.
+        """
+        self._i18n_registry.append((setter, key))
+        setter(tr(key))
+
+    def retranslate_ui(self) -> None:
+        """Re-apply the active language to every persistent UI element (live).
+
+        Re-runs every registered text-setter, refreshes the connection
+        indicators (whose text combines a bullet with a translated name), and
+        cascades to the Terminal Window if it has been created. On-demand
+        dialogs and context menus are not registered here: they read the active
+        language via tr() each time they are built, so they are always current.
+
+        Satisfies: FR-123.
+        """
+        for setter, key in self._i18n_registry:
+            setter(tr(key))
+        self._update_indicators()
+        if self.terminal_win is not None:
+            self.terminal_win.retranslate_ui()
+
     # ------------------------------------------------------------------ setup
 
     def _connect_signals(self):
@@ -203,24 +250,79 @@ class MainWindow(QMainWindow):
 
     def setup_menu(self):
         """
-        Satisfies: UIR-001, UIR-002, UIR-003, UIR-004, FR-018, FR-019, FR-022.
+        Satisfies: UIR-001, UIR-002, UIR-003, UIR-004, FR-018, FR-019, FR-022, FR-122.
         """
         menubar = self.menuBar()
 
-        file_menu = menubar.addMenu("File")
-        file_menu.addAction(QAction("New", self, triggered=self.menu_new))
-        file_menu.addAction(QAction("Load", self, triggered=self.menu_load))
-        file_menu.addAction(QAction("Save", self, triggered=self.menu_save))
+        file_menu = menubar.addMenu("")
+        self._register_text(file_menu.setTitle, "menu.file")
+        self._add_menu_action(file_menu, "menu.file.new", self.menu_new)
+        self._add_menu_action(file_menu, "menu.file.load", self.menu_load)
+        self._add_menu_action(file_menu, "menu.file.save", self.menu_save)
         file_menu.addSeparator()
-        file_menu.addAction(QAction("Exit", self, triggered=self.close))
+        self._add_menu_action(file_menu, "menu.file.exit", self.close)
 
-        config_menu = menubar.addMenu("Config")
-        config_menu.addAction(QAction("Serial", self, triggered=self.menu_serial_config))
-        config_menu.addAction(QAction("General", self, triggered=self.menu_general_config))
+        config_menu = menubar.addMenu("")
+        self._register_text(config_menu.setTitle, "menu.config")
+        self._add_menu_action(config_menu, "menu.config.serial", self.menu_serial_config)
+        self._add_menu_action(config_menu, "menu.config.general", self.menu_general_config)
+        self._setup_language_menu(config_menu)
 
         # UIR-004: Help menu with an About item (FR-022).
-        help_menu = menubar.addMenu("Help")
-        help_menu.addAction(QAction("About", self, triggered=self.menu_about))
+        help_menu = menubar.addMenu("")
+        self._register_text(help_menu.setTitle, "menu.help")
+        self._add_menu_action(help_menu, "menu.help.about", self.menu_about)
+
+    def _add_menu_action(self, menu, key: str, handler) -> QAction:
+        """Create a menu QAction whose text follows the active language.
+
+        Satisfies: FR-121, FR-123.
+        """
+        action = QAction("", self)
+        action.triggered.connect(handler)
+        self._register_text(action.setText, key)
+        menu.addAction(action)
+        return action
+
+    def _setup_language_menu(self, config_menu) -> None:
+        """Build the Config > Language submenu (UIR-077).
+
+        One checkable, mutually-exclusive entry per available language
+        (FR-122), displayed by its language name (which is itself not
+        translated). The entry for the active language is checked.
+
+        Satisfies: FR-122, UIR-003, UIR-077.
+        """
+        language_menu = config_menu.addMenu("")
+        self._register_text(language_menu.setTitle, "menu.config.language")
+        self._language_group = QActionGroup(self)
+        self._language_group.setExclusive(True)
+        self._language_actions: dict[str, QAction] = {}
+        active = current_language()
+        for name in available_languages():
+            # The language name is the menu label and is deliberately NOT
+            # translated (UIR-077); it identifies the language to a speaker of
+            # that language.
+            action = QAction(display_name(name), self, checkable=True)
+            action.setChecked(name == active)
+            action.triggered.connect(lambda _checked=False, n=name: self.menu_set_language(n))
+            self._language_group.addAction(action)
+            language_menu.addAction(action)
+            self._language_actions[name] = action
+
+    def menu_set_language(self, name: str) -> None:
+        """Switch the active GUI language, persist it, and re-translate live.
+
+        Satisfies: FR-122, FR-123, FR-124.
+        """
+        set_language(name)
+        self.window_state.language = name
+        # Keep the checked entry in step (also corrects the state if the change
+        # was triggered programmatically rather than by the user).
+        action = self._language_actions.get(name)
+        if action is not None:
+            action.setChecked(True)
+        self.retranslate_ui()
 
     def setup_toolbar(self):
         """
@@ -236,12 +338,13 @@ class MainWindow(QMainWindow):
         sp = self.style().standardIcon
         Pix = QStyle.StandardPixmap
         actions = [
-            ("Connect", Pix.SP_DialogApplyButton, self.do_connect),
-            ("Disconnect", Pix.SP_DialogCancelButton, self.do_disconnect),
-            ("Terminal", Pix.SP_ComputerIcon, self.show_terminal),
+            ("toolbar.connect", Pix.SP_DialogApplyButton, self.do_connect),
+            ("toolbar.disconnect", Pix.SP_DialogCancelButton, self.do_disconnect),
+            ("toolbar.terminal", Pix.SP_ComputerIcon, self.show_terminal),
         ]
-        for text, pixmap, handler in actions:
-            action = QAction(sp(pixmap), text, self, triggered=handler)
+        for key, pixmap, handler in actions:
+            action = QAction(sp(pixmap), "", self, triggered=handler)
+            self._register_text(action.setText, key)
             toolbar.addAction(action)
 
     def setup_layout(self):
@@ -253,9 +356,21 @@ class MainWindow(QMainWindow):
         splitter = QSplitter()
 
         # Left Side: Host Files
-        host_group = QGroupBox("Host Files")
+        host_group = QGroupBox()
+        self._register_text(host_group.setTitle, "main.host_files")
         host_layout = QVBoxLayout(host_group)
-        host_layout.addWidget(QPushButton("Change Directory", clicked=self.change_host_dir))
+
+        # UIR-011: a top row with the "Change Directory" and "Update" (refresh
+        # both lists, FR-063) buttons sized equally (stretch factor 1 each).
+        host_top = QHBoxLayout()
+        change_dir_btn = QPushButton(clicked=self.change_host_dir)
+        self._register_text(change_dir_btn.setText, "main.change_directory")
+        host_top.addWidget(change_dir_btn, 1)
+        refresh_btn = QPushButton(clicked=self.refresh_all)
+        self._register_text(refresh_btn.setText, "main.update")
+        host_top.addWidget(refresh_btn, 1)
+        host_layout.addLayout(host_top)
+
         self.host_list = QListWidget()
         self.host_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         # UIR-018: right-click context menu (View/Edit, Rename, Delete) on host files.
@@ -265,19 +380,22 @@ class MainWindow(QMainWindow):
 
         # Host buttons row
         host_btns = QHBoxLayout()
-        host_btns.addWidget(QPushButton("Refresh Host", clicked=self.refresh_all))
-        host_btns.addWidget(QPushButton("Copy to Remote", clicked=self.do_copy_to_remote))
+        copy_remote_btn = QPushButton(clicked=self.do_copy_to_remote)
+        self._register_text(copy_remote_btn.setText, "main.copy_to_remote")
+        host_btns.addWidget(copy_remote_btn)
         host_layout.addLayout(host_btns)
 
         splitter.addWidget(host_group)
 
         # Right Side: Remote Files
-        remote_group = QGroupBox("Remote Files")
+        remote_group = QGroupBox()
+        self._register_text(remote_group.setTitle, "main.remote_files")
         remote_layout = QVBoxLayout(remote_group)
 
         # UIR-012/UIR-017: a drive-selection drop-down (A:–P:) followed by the
-        # Update button. `activated` fires only on a user selection, never on
-        # programmatic changes, so it cannot trigger a drive change spuriously.
+        # Update button, sized equally (stretch factor 1 each). `activated` fires
+        # only on a user selection, never on programmatic changes, so it cannot
+        # trigger a drive change spuriously.
         remote_top = QHBoxLayout()
         self.drive_combo = QComboBox()
         self.drive_combo.addItems([f"{chr(c)}:" for c in range(ord("A"), ord("P") + 1)])
@@ -285,9 +403,10 @@ class MainWindow(QMainWindow):
         self.drive_combo.setMinimumContentsLength(4)
         self.drive_combo.setMinimumWidth(80)
         self.drive_combo.activated.connect(self.change_drive)
-        remote_top.addWidget(self.drive_combo)
-        remote_top.addWidget(QPushButton("Update", clicked=self.refresh_remote_files))
-        remote_top.addStretch()
+        remote_top.addWidget(self.drive_combo, 1)
+        update_btn = QPushButton(clicked=self.refresh_remote_files)
+        self._register_text(update_btn.setText, "main.update")
+        remote_top.addWidget(update_btn, 1)
         remote_layout.addLayout(remote_top)
 
         self.remote_list = QListWidget()
@@ -299,7 +418,9 @@ class MainWindow(QMainWindow):
 
         # Remote buttons row
         remote_btns = QHBoxLayout()
-        remote_btns.addWidget(QPushButton("Copy to Host", clicked=self.do_copy_to_host))
+        copy_host_btn = QPushButton(clicked=self.do_copy_to_host)
+        self._register_text(copy_host_btn.setText, "main.copy_to_host")
+        remote_btns.addWidget(copy_host_btn)
         remote_layout.addLayout(remote_btns)
 
         splitter.addWidget(remote_group)
@@ -316,36 +437,42 @@ class MainWindow(QMainWindow):
 
         Single-line status bar; connection indicators.
         """
-        self.term_indicator = self._make_indicator("Terminal")
-        self.trans_indicator = self._make_indicator("Transport")
+        self.term_indicator = self._make_indicator("indicator.terminal")
+        self.trans_indicator = self._make_indicator("indicator.transport")
         self.statusBar().addPermanentWidget(self.term_indicator)
         self.statusBar().addPermanentWidget(self.trans_indicator)
         self._update_indicators()
-        self.set_status("Ready")
+        self.set_status(tr("status.ready"))
 
     @staticmethod
-    def _make_indicator(name: str):
+    def _make_indicator(key: str):
         """
-        Satisfies: UIR-074.
+        Satisfies: UIR-074, FR-121.
+
+        The translation key (not the display text) is stored on the label, so
+        _update_indicators can re-resolve the name in the active language.
         """
         from PySide6.QtWidgets import QLabel
 
         label = QLabel()
-        label.setProperty("indicator_name", name)
+        label.setProperty("indicator_key", key)
         return label
 
     def _update_indicators(self):
         """
-        Satisfies: UIR-074.
+        Satisfies: UIR-074, FR-123.
 
-        Distinct visual state for connected vs not-connected.
+        Distinct visual state for connected vs not-connected: green (#4caf50)
+        when connected, red (#f44336) when not connected. The indicator name is
+        resolved from its translation key each call, so it follows the active
+        language after a live re-translation.
         """
         for label, connected in (
             (self.term_indicator, self.serial_mgr.terminal_connected),
             (self.trans_indicator, self.serial_mgr.transport_connected),
         ):
-            name = label.property("indicator_name")
-            color = "#4caf50" if connected else "#9e9e9e"
+            name = tr(label.property("indicator_key"))
+            color = "#4caf50" if connected else "#f44336"
             label.setText(f"● {name}")
             label.setStyleSheet(f"color: {color};")
 
@@ -459,7 +586,7 @@ class MainWindow(QMainWindow):
         dialog down once it has aborted (transfer_cancelled).
         """
         self._transfer_cancel.set()
-        self.set_status("Cancelling transfer...")
+        self.set_status(tr("status.cancelling_transfer"))
 
     def _on_transfer_cancelled(self, direction: str, any_succeeded: bool):
         """
@@ -491,13 +618,15 @@ class MainWindow(QMainWindow):
             ]
             self.host_list.addItems(files)
         except Exception as e:
-            self.set_status(f"Error reading host files: {e}")
+            self.set_status(tr("status.error_reading_host", error=e))
 
     def change_host_dir(self):
         """
         Satisfies: FR-062.
         """
-        path = QFileDialog.getExistingDirectory(self, "Change Directory", self.host_dir)
+        path = QFileDialog.getExistingDirectory(
+            self, tr("dialog.change_directory.title"), self.host_dir
+        )
         if path:
             self.host_dir = path
             self.refresh_host_files()
@@ -516,11 +645,11 @@ class MainWindow(QMainWindow):
             return
         name = item.text()
         menu = QMenu(self)
-        menu.addAction("To Remote", lambda: self._host_to_remote(name))
+        menu.addAction(tr("ctxmenu.to_remote"), lambda: self._host_to_remote(name))
         menu.addSeparator()
-        menu.addAction("View/Edit", lambda: self._host_view(name))
-        menu.addAction("Rename", lambda: self._host_rename(name))
-        menu.addAction("Delete", lambda: self._host_delete(name))
+        menu.addAction(tr("ctxmenu.view_edit"), lambda: self._host_view(name))
+        menu.addAction(tr("ctxmenu.rename"), lambda: self._host_rename(name))
+        menu.addAction(tr("ctxmenu.delete"), lambda: self._host_delete(name))
         menu.exec(self.host_list.mapToGlobal(pos))
 
     def _remote_context_menu(self, pos):
@@ -535,11 +664,11 @@ class MainWindow(QMainWindow):
             return
         name = item.text()
         menu = QMenu(self)
-        menu.addAction("To Host", lambda: self._remote_to_host(name))
+        menu.addAction(tr("ctxmenu.to_host"), lambda: self._remote_to_host(name))
         menu.addSeparator()
-        menu.addAction("View", lambda: self._remote_view(name))
-        menu.addAction("Rename", lambda: self._remote_rename(name))
-        menu.addAction("Delete", lambda: self._remote_delete(name))
+        menu.addAction(tr("ctxmenu.view"), lambda: self._remote_view(name))
+        menu.addAction(tr("ctxmenu.rename"), lambda: self._remote_rename(name))
+        menu.addAction(tr("ctxmenu.delete"), lambda: self._remote_delete(name))
         menu.exec(self.remote_list.mapToGlobal(pos))
 
     def _host_to_remote(self, name):
@@ -550,7 +679,9 @@ class MainWindow(QMainWindow):
         Copy to Remote batch transfer (FR-099/FR-105) for one file.
         """
         if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
-            QMessageBox.critical(self, "Error", "Transport port not connected")
+            QMessageBox.critical(
+                self, tr("dialog.error.title"), tr("error.transport_not_connected")
+            )
             return
         filepath = os.path.join(self.host_dir, name)
         threading.Thread(
@@ -565,7 +696,9 @@ class MainWindow(QMainWindow):
         Copy to Host batch transfer (FR-099/FR-105) for one file.
         """
         if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
-            QMessageBox.critical(self, "Error", "Transport port not connected")
+            QMessageBox.critical(
+                self, tr("dialog.error.title"), tr("error.transport_not_connected")
+            )
             return
         save_path = os.path.join(self.host_dir, name)
         threading.Thread(
@@ -587,7 +720,9 @@ class MainWindow(QMainWindow):
             else:
                 self._os_open(path)
         except Exception as e:  # pragma: no cover - depends on host environment
-            QMessageBox.critical(self, "Error", f"Unable to open viewer: {e}")
+            QMessageBox.critical(
+                self, tr("dialog.error.title"), tr("error.unable_open_viewer", error=e)
+            )
 
     @staticmethod
     def _os_open(path):
@@ -614,7 +749,7 @@ class MainWindow(QMainWindow):
         """
         Satisfies: FR-110, FR-114, FR-116, FR-118.
         """
-        dlg = FileActionDialog(self, "Rename File", name, editable=True)
+        dlg = FileActionDialog(self, tr("dialog.rename_file.title"), name, editable=True)
         if dlg.exec() != QDialog.DialogCode.Accepted:
             return
         new_name = dlg.value().strip()
@@ -623,7 +758,7 @@ class MainWindow(QMainWindow):
         try:
             os.rename(os.path.join(self.host_dir, name), os.path.join(self.host_dir, new_name))
         except OSError as e:
-            QMessageBox.critical(self, "Error", f"Rename failed: {e}")
+            QMessageBox.critical(self, tr("dialog.error.title"), tr("error.rename_failed", error=e))
             return
         self.refresh_host_files()
 
@@ -632,14 +767,18 @@ class MainWindow(QMainWindow):
         Satisfies: FR-110, FR-115, FR-116, FR-118.
         """
         dlg = FileActionDialog(
-            self, "Delete File", name, editable=False, prompt="Delete this file?"
+            self,
+            tr("dialog.delete_file.title"),
+            name,
+            editable=False,
+            prompt=tr("dialog.delete_file.prompt"),
         )
         if dlg.exec() != QDialog.DialogCode.Accepted:
             return
         try:
             os.remove(os.path.join(self.host_dir, name))
         except OSError as e:
-            QMessageBox.critical(self, "Error", f"Delete failed: {e}")
+            QMessageBox.critical(self, tr("dialog.error.title"), tr("error.delete_failed", error=e))
             return
         self.refresh_host_files()
 
@@ -652,7 +791,9 @@ class MainWindow(QMainWindow):
         connected (FR-080/CR-010). Runs the download on a worker thread.
         """
         if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
-            QMessageBox.critical(self, "Error", "Transport port not connected")
+            QMessageBox.critical(
+                self, tr("dialog.error.title"), tr("error.transport_not_connected")
+            )
             return
         threading.Thread(target=self._download_and_view, args=(name,), daemon=True).start()
 
@@ -668,20 +809,22 @@ class MainWindow(QMainWindow):
         save_path = os.path.join(tempfile.mkdtemp(prefix="cpm_fm_"), name)
         self._transfer_cancel.clear()  # FR-120: start un-cancelled.
         self.batch_started.emit("host", 1)
-        self.set_status(f"Downloading {name} for viewing...")
+        self.set_status(tr("status.downloading_for_viewing", name=name))
         self.transfer_file_started.emit(name, 0, 1)
         try:
             ok = self._recv_one_to_host(save_path)
         except Exception as e:
             self._debug(f"[remote-view] EXCEPTION: {e!r}")
-            self.error_raised.emit("Error", str(e))
+            self.error_raised.emit(tr("dialog.error.title"), str(e))
             return
         if not ok:
             # FR-120: a cancelled download just closes the dialog (no viewer).
             if self._transfer_cancel.is_set():
                 self._finish_cancelled_batch("host", 0)
                 return
-            self.error_raised.emit("X-Modem Error", f"Download of {name} failed")
+            self.error_raised.emit(
+                tr("dialog.xmodem_error.title"), tr("error.download_failed", name=name)
+            )
             return
         self.view_file_ready.emit(save_path)
 
@@ -693,7 +836,7 @@ class MainWindow(QMainWindow):
         progress dialog and open the downloaded file in the viewer.
         """
         self._close_transfer_dialog()
-        self.set_status("Opening viewer...")
+        self.set_status(tr("status.opening_viewer"))
         self._open_in_viewer(path)
 
     def _remote_rename(self, name):
@@ -701,9 +844,9 @@ class MainWindow(QMainWindow):
         Satisfies: FR-111, FR-114, FR-117, FR-118.
         """
         if not self.serial_mgr.terminal_connected:
-            self.set_status("Terminal port not open - cannot rename")
+            self.set_status(tr("status.terminal_not_open_rename"))
             return
-        dlg = FileActionDialog(self, "Rename Remote File", name, editable=True)
+        dlg = FileActionDialog(self, tr("dialog.rename_remote.title"), name, editable=True)
         if dlg.exec() != QDialog.DialogCode.Accepted:
             return
         new_name = dlg.value().strip()
@@ -720,10 +863,14 @@ class MainWindow(QMainWindow):
         Satisfies: FR-111, FR-115, FR-117, FR-118.
         """
         if not self.serial_mgr.terminal_connected:
-            self.set_status("Terminal port not open - cannot delete")
+            self.set_status(tr("status.terminal_not_open_delete"))
             return
         dlg = FileActionDialog(
-            self, "Delete Remote File", name, editable=False, prompt="Delete this remote file?"
+            self,
+            tr("dialog.delete_remote.title"),
+            name,
+            editable=False,
+            prompt=tr("dialog.delete_remote.prompt"),
         )
         if dlg.exec() != QDialog.DialogCode.Accepted:
             return
@@ -742,7 +889,7 @@ class MainWindow(QMainWindow):
         then refresh the Remote Files list (FR-074-FR-079). _do_refresh_remote_logic
         marshals its UI update via the remote_files_ready signal (NFR-004).
         """
-        self.set_status(f"Executing: {cmd}")
+        self.set_status(tr("status.executing", cmd=cmd))
         self._capture_terminal_response(cmd)
         self._do_refresh_remote_logic()
 
@@ -780,7 +927,7 @@ class MainWindow(QMainWindow):
         local-echo display is marshalled to the GUI thread via term_write.
         """
         if not self.serial_mgr.terminal_connected:
-            self.set_status("Terminal port not open - cannot send")
+            self.set_status(tr("status.terminal_not_open_send"))
             return
 
         eol = self.settings.get("eol", "CR")
@@ -828,12 +975,14 @@ class MainWindow(QMainWindow):
         Satisfies: FR-030, FR-031, FR-032, FR-034, FR-037, FR-038, FR-039, FR-040.
         """
         if self.serial_mgr.open_port("terminal", self.settings):
-            self.set_status("Terminal port open")
+            self.set_status(tr("status.terminal_port_open"))
             term_port = self.settings.get("terminal_port")
             trans_port = self.settings.get("transport_port")
             if term_port != trans_port:
                 if not self.serial_mgr.open_port("transport", self.settings):
-                    QMessageBox.critical(self, "Error", "Transport port is unable to be opened")
+                    QMessageBox.critical(
+                        self, tr("dialog.error.title"), tr("error.transport_unable_open")
+                    )
             else:
                 # FR-037: same physical port. Point the Transport Port at the
                 # already-open Terminal Port object so transfers have a real
@@ -841,7 +990,7 @@ class MainWindow(QMainWindow):
                 self.serial_mgr.transport_port = self.serial_mgr.terminal_port
                 self.serial_mgr.transport_connected = True
         else:
-            QMessageBox.critical(self, "Error", "Terminal port is unable to be opened")
+            QMessageBox.critical(self, tr("dialog.error.title"), tr("error.terminal_unable_open"))
         self._update_indicators()
 
     def do_disconnect(self):
@@ -855,11 +1004,13 @@ class MainWindow(QMainWindow):
         # error dialog and cancel the current workflow.
         if self.serial_mgr.terminal_connected:
             if not self.serial_mgr.close_terminal_port():
-                QMessageBox.critical(self, "Error", "Terminal port is unable to be closed")
+                QMessageBox.critical(
+                    self, tr("dialog.error.title"), tr("error.terminal_unable_close")
+                )
                 self._update_indicators()
                 return
             # FR-052 (flag cleared by close_terminal_port) / FR-053 (status text).
-            self.set_status("Terminal port closed")
+            self.set_status(tr("status.terminal_port_closed"))
             # FR-058: the remote listing was read over the now-closed Terminal
             # Port, so it is stale — clear it.
             self.remote_list.clear()
@@ -873,7 +1024,9 @@ class MainWindow(QMainWindow):
         # FR-055/FR-056/FR-057: different port — close it if open.
         elif self.serial_mgr.transport_connected:
             if not self.serial_mgr.close_transport_port():
-                QMessageBox.critical(self, "Error", "Transport port is unable to be closed")
+                QMessageBox.critical(
+                    self, tr("dialog.error.title"), tr("error.transport_unable_close")
+                )
                 self._update_indicators()
                 return
 
@@ -903,7 +1056,7 @@ class MainWindow(QMainWindow):
         Window. Runs the drive-change logic on a worker thread.
         """
         if not self.serial_mgr.terminal_connected:
-            self.set_status("Terminal port not open - cannot read file list")
+            self.set_status(tr("status.terminal_not_open_list"))
             self.remote_list.clear()
             return
         drive = self.drive_combo.currentText()[0]  # 'A'..'P'
@@ -941,7 +1094,7 @@ class MainWindow(QMainWindow):
         """
         Satisfies: FR-077, FR-078, FR-079.
         """
-        self.set_status("Updating remote file list...")
+        self.set_status(tr("status.updating_remote_list"))
         cmd = self.settings.get("list_files_cmd", "DIR")
         text = self._capture_terminal_response(cmd)
         files_dict = CPMParser.parse_dir_output(text)
@@ -955,7 +1108,7 @@ class MainWindow(QMainWindow):
         FR-074 and refuse when the Terminal Port is closed.
         """
         if not self.serial_mgr.terminal_connected:
-            self.set_status("Terminal port not open - cannot read file list")
+            self.set_status(tr("status.terminal_not_open_list"))
             self.remote_list.clear()
             return
         drive = self.drive_combo.itemText(index)[0]  # 'A'..'P'
@@ -972,7 +1125,7 @@ class MainWindow(QMainWindow):
         so calling _do_refresh_remote_logic directly is correct (it marshals
         its UI update via the remote_files_ready signal).
         """
-        self.set_status(f"Changing to drive {drive}:...")
+        self.set_status(tr("status.changing_drive", drive=drive))
         text = self._capture_terminal_response(f"{drive}:")
         if CPMParser.has_drive_prompt(text, drive):
             self._do_refresh_remote_logic()
@@ -986,7 +1139,9 @@ class MainWindow(QMainWindow):
         FR-103: runs on the GUI thread (queued from the drive-change worker).
         """
         self.remote_list.clear()
-        QMessageBox.warning(self, "Drive not found", f"Drive {drive}: not found")
+        QMessageBox.warning(
+            self, tr("dialog.drive_not_found.title"), tr("error.drive_not_found_body", drive=drive)
+        )
 
     def _update_remote_list_ui(self, files_dict):
         """
@@ -994,7 +1149,7 @@ class MainWindow(QMainWindow):
         """
         self.remote_list.clear()
         self.remote_list.addItems(sorted(files_dict.keys()))
-        self.set_status("Remote file list updated")
+        self.set_status(tr("status.remote_list_updated"))
 
     # -------------------------------------------------------------- transfers
 
@@ -1020,13 +1175,15 @@ class MainWindow(QMainWindow):
         Transport status flags are true.
         """
         if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
-            QMessageBox.critical(self, "Error", "Transport port not connected")
+            QMessageBox.critical(
+                self, tr("dialog.error.title"), tr("error.transport_not_connected")
+            )
             return
 
         # FR-106: transfer every selected file; warn when none is selected.
         filenames = self._selected_filenames(self.host_list)
         if not filenames:
-            QMessageBox.warning(self, "Warning", "Please select one or more files to upload")
+            QMessageBox.warning(self, tr("dialog.warning.title"), tr("warning.select_upload"))
             return
 
         filepaths = [os.path.join(self.host_dir, name) for name in filenames]
@@ -1175,7 +1332,7 @@ class MainWindow(QMainWindow):
             # FR-109: let CP/M return to its prompt before the next command.
             if index > 1:
                 self._wait_for_terminal_idle()
-            self.set_status(f"Uploading {name} ({index}/{count})...")
+            self.set_status(tr("status.uploading", name=name, index=index, count=count))
             try:
                 total_bytes = os.path.getsize(filepath)
             except OSError:
@@ -1187,7 +1344,7 @@ class MainWindow(QMainWindow):
                 self._debug(f"[copy-to-remote] EXCEPTION: {e!r}")
                 if succeeded:
                     self.transfer_completed.emit("remote")
-                self.error_raised.emit("Error", str(e))
+                self.error_raised.emit(tr("dialog.error.title"), str(e))
                 return
             if not ok:
                 # FR-120: a cancelled transfer is not a failure.
@@ -1198,11 +1355,11 @@ class MainWindow(QMainWindow):
                 if succeeded:
                     self.transfer_completed.emit("remote")
                 self.error_raised.emit(
-                    "X-Modem Error", f"Transfer of {name} failed; remaining files skipped"
+                    tr("dialog.xmodem_error.title"), tr("error.transfer_failed", name=name)
                 )
                 return
             succeeded += 1
-        self.set_status(f"Successfully uploaded {succeeded} file(s)")
+        self.set_status(tr("status.successfully_uploaded", count=succeeded))
         # FR-099: refresh the Remote Files list so the uploaded files show.
         self.transfer_completed.emit("remote")
 
@@ -1215,7 +1372,7 @@ class MainWindow(QMainWindow):
         and hand the dialog teardown / optional refresh to the GUI thread via
         the transfer_cancelled signal (NFR-004).
         """
-        self.set_status(f"Transfer cancelled after {succeeded} file(s)")
+        self.set_status(tr("status.transfer_cancelled", count=succeeded))
         self.transfer_cancelled.emit(direction, succeeded > 0)
 
     def _send_one_to_remote(self, filepath) -> bool:
@@ -1268,13 +1425,15 @@ class MainWindow(QMainWindow):
         Transport status flags are true.
         """
         if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
-            QMessageBox.critical(self, "Error", "Transport port not connected")
+            QMessageBox.critical(
+                self, tr("dialog.error.title"), tr("error.transport_not_connected")
+            )
             return
 
         # FR-106: transfer every selected file; warn when none is selected.
         filenames = self._selected_filenames(self.remote_list)
         if not filenames:
-            QMessageBox.warning(self, "Warning", "Please select one or more files to download")
+            QMessageBox.warning(self, tr("dialog.warning.title"), tr("warning.select_download"))
             return
 
         save_paths = [os.path.join(self.host_dir, name) for name in filenames]
@@ -1304,7 +1463,7 @@ class MainWindow(QMainWindow):
             # FR-109: let CP/M return to its prompt before the next command.
             if index > 1:
                 self._wait_for_terminal_idle()
-            self.set_status(f"Downloading {name} ({index}/{count})...")
+            self.set_status(tr("status.downloading", name=name, index=index, count=count))
             # The X-Modem stream carries no length, so total_bytes is 0
             # (indeterminate progress bar).
             self.transfer_file_started.emit(name, 0, index)
@@ -1314,7 +1473,7 @@ class MainWindow(QMainWindow):
                 self._debug(f"[copy-to-host] EXCEPTION: {e!r}")
                 if succeeded:
                     self.transfer_completed.emit("host")
-                self.error_raised.emit("Error", str(e))
+                self.error_raised.emit(tr("dialog.error.title"), str(e))
                 return
             if not ok:
                 # FR-120: a cancelled transfer is not a failure.
@@ -1325,11 +1484,11 @@ class MainWindow(QMainWindow):
                 if succeeded:
                     self.transfer_completed.emit("host")
                 self.error_raised.emit(
-                    "X-Modem Error", f"Transfer of {name} failed; remaining files skipped"
+                    tr("dialog.xmodem_error.title"), tr("error.transfer_failed", name=name)
                 )
                 return
             succeeded += 1
-        self.set_status(f"Successfully downloaded {succeeded} file(s)")
+        self.set_status(tr("status.successfully_downloaded", count=succeeded))
         # FR-099: refresh the Host Files list so the downloaded files show.
         self.transfer_completed.emit("host")
 
@@ -1392,7 +1551,7 @@ class MainWindow(QMainWindow):
         # FR-017: the prior remote listing was captured under the previous
         # configuration and is no longer valid — clear it.
         self.remote_list.clear()
-        self.set_status(f"Loaded config: {filename}")
+        self.set_status(tr("status.loaded_config", filename=filename))
 
     def menu_load(self):
         """
@@ -1401,7 +1560,10 @@ class MainWindow(QMainWindow):
         # FR-006: default to the folder used the last time a config was
         # loaded/saved, kept separate from the Host Files directory (FR-060).
         path, _ = QFileDialog.getOpenFileName(
-            self, "Load Config", self.window_state.last_config_dir, "JSON files (*.json)"
+            self,
+            tr("dialog.load_config.title"),
+            self.window_state.last_config_dir,
+            tr("dialog.json_filter"),
         )
         if path:
             self.window_state.last_config_dir = os.path.dirname(path)
@@ -1413,7 +1575,10 @@ class MainWindow(QMainWindow):
         """
         # FR-006: default to the last-used config folder (see menu_load).
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save Config", self.window_state.last_config_dir, "JSON files (*.json)"
+            self,
+            tr("dialog.save_config.title"),
+            self.window_state.last_config_dir,
+            tr("dialog.json_filter"),
         )
         if path:
             self._save_to_path(path)
@@ -1438,7 +1603,7 @@ class MainWindow(QMainWindow):
             self.window_state.last_config = path
             # FR-006: remember its folder for the next Load/Save dialog.
             self.window_state.last_config_dir = os.path.dirname(path)
-            self.set_status(f"Saved config to {path}")
+            self.set_status(tr("status.saved_config", path=path))
             return True
         return False
 
@@ -1484,7 +1649,7 @@ class MainWindow(QMainWindow):
 
         # FR-019: ensure the Remote Files list is empty even if no port was open.
         self.remote_list.clear()
-        self.set_status("New configuration created")
+        self.set_status(tr("status.new_config_created"))
 
     def menu_serial_config(self):
         """
@@ -1496,7 +1661,7 @@ class MainWindow(QMainWindow):
 
         def update_settings(new_set):
             self.settings.update(new_set)
-            self.set_status("Serial settings updated")
+            self.set_status(tr("status.serial_settings_updated"))
 
         SerialConfigDialog(self, self.settings, ports, update_settings, self.window_state)
 
@@ -1515,7 +1680,7 @@ class MainWindow(QMainWindow):
                     self.host_dir = path
                     self.refresh_host_files()
 
-            self.set_status("General settings updated")
+            self.set_status(tr("status.general_settings_updated"))
 
         GeneralConfigDialog(self, self.settings, update_settings, self.window_state)
 
