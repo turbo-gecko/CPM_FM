@@ -1,0 +1,163 @@
+# ==============================================================================
+# CP/M File Manager - Polish language file (lang_polish.txt)
+# ==============================================================================
+# Example / stub translation. The values are a best-effort Polish translation
+# and should be reviewed by a native speaker. The keys (left of '=') and the
+# {placeholders} must NOT be changed. See lang_english.txt for the format and
+# the canonical reference text.
+# ==============================================================================
+
+# --- Application ---------------------------------------------------------------
+app.title = Menedżer Plików CP/M
+
+# --- Menu bar ------------------------------------------------------------------
+menu.file = Plik
+menu.file.new = Nowy
+menu.file.load = Załaduj
+menu.file.save = Zapisz
+menu.file.exit = Wyjście
+menu.config = Konfiguracja
+menu.config.serial = Szeregowy
+menu.config.general = Ogólne
+menu.config.language = Język
+menu.help = Pomoc
+menu.help.about = O programie
+
+# --- Toolbar -------------------------------------------------------------------
+toolbar.connect = Połącz
+toolbar.disconnect = Rozłącz
+toolbar.terminal = Terminal
+
+# --- Main window ---------------------------------------------------------------
+main.host_files = Pliki hosta
+main.change_directory = Zmień katalog
+main.copy_to_remote = Kopiuj na urządzenie
+main.remote_files = Pliki zdalne
+main.update = Aktualizuj
+main.copy_to_host = Kopiuj na hosta
+
+# --- Connection indicators -----------------------------------------------------
+indicator.terminal = Terminal
+indicator.transport = Transport
+
+# --- File list context menus ---------------------------------------------------
+ctxmenu.to_remote = Na urządzenie
+ctxmenu.view_edit = Podgląd/Edycja
+ctxmenu.rename = Zmień nazwę
+ctxmenu.delete = Usuń
+ctxmenu.to_host = Na hosta
+ctxmenu.view = Podgląd
+
+# --- Status bar messages -------------------------------------------------------
+status.ready = Gotowy
+status.cancelling_transfer = Anulowanie transferu...
+status.error_reading_host = Błąd odczytu plików hosta: {error}
+status.uploading = Wysyłanie {name} ({index}/{count})...
+status.successfully_uploaded = Pomyślnie wysłano {count} plik(i)
+status.downloading = Pobieranie {name} ({index}/{count})...
+status.successfully_downloaded = Pomyślnie pobrano {count} plik(i)
+status.transfer_cancelled = Transfer anulowany po {count} plik(ach)
+status.downloading_for_viewing = Pobieranie {name} do podglądu...
+status.opening_viewer = Otwieranie podglądu...
+status.terminal_not_open_rename = Port terminala nie jest otwarty - zmiana nazwy niemożliwa
+status.terminal_not_open_delete = Port terminala nie jest otwarty - usuwanie niemożliwe
+status.terminal_not_open_send = Port terminala nie jest otwarty - wysyłanie niemożliwe
+status.terminal_not_open_list = Port terminala nie jest otwarty - odczyt listy plików niemożliwy
+status.executing = Wykonywanie: {cmd}
+status.terminal_port_open = Port terminala otwarty
+status.terminal_port_closed = Port terminala zamknięty
+status.updating_remote_list = Aktualizowanie listy plików zdalnych...
+status.changing_drive = Zmiana napędu na {drive}:...
+status.remote_list_updated = Lista plików zdalnych zaktualizowana
+status.loaded_config = Załadowano konfigurację: {filename}
+status.saved_config = Konfiguracja zapisana w {path}
+status.new_config_created = Utworzono nową konfigurację
+status.serial_settings_updated = Zaktualizowano ustawienia portu szeregowego
+status.general_settings_updated = Zaktualizowano ustawienia ogólne
+
+# --- Dialog titles -------------------------------------------------------------
+dialog.error.title = Błąd
+dialog.warning.title = Ostrzeżenie
+dialog.xmodem_error.title = Błąd X-Modem
+dialog.drive_not_found.title = Nie znaleziono napędu
+dialog.rename_file.title = Zmień nazwę pliku
+dialog.delete_file.title = Usuń plik
+dialog.delete_file.prompt = Usunąć ten plik?
+dialog.rename_remote.title = Zmień nazwę pliku zdalnego
+dialog.delete_remote.title = Usuń plik zdalny
+dialog.delete_remote.prompt = Usunąć ten plik zdalny?
+dialog.change_directory.title = Zmień katalog
+dialog.load_config.title = Załaduj konfigurację
+dialog.save_config.title = Zapisz konfigurację
+dialog.json_filter = Pliki JSON (*.json)
+dialog.select_directory.title = Wybierz katalog
+
+# --- Error / warning message bodies --------------------------------------------
+error.transport_not_connected = Port transportu nie jest połączony
+error.unable_open_viewer = Nie można otworzyć podglądu: {error}
+error.rename_failed = Błąd zmiany nazwy: {error}
+error.delete_failed = Błąd usuwania: {error}
+error.transport_unable_open = Nie można otworzyć portu transportu
+error.terminal_unable_open = Nie można otworzyć portu terminala
+error.terminal_unable_close = Nie można zamknąć portu terminala
+error.transport_unable_close = Nie można zamknąć portu transportu
+error.drive_not_found_body = Nie znaleziono napędu {drive}:
+error.download_failed = Błąd pobierania {name}
+error.transfer_failed = Błąd transferu {name}; pomijanie pozostałych plików
+warning.select_upload = Proszę wybrać jeden lub więcej plików do wysłania
+warning.select_download = Proszę wybrać jeden lub więcej plików do pobrania
+
+# --- Common buttons ------------------------------------------------------------
+button.apply = Zastosuj
+button.cancel = Anuluj
+button.save = Zapisz
+button.ok = OK
+button.cancelling = Anulowanie…
+
+# --- Transfer progress dialog --------------------------------------------------
+transfer.title.send = Wysyłanie pliku
+transfer.title.recv = Odbieranie pliku
+transfer.label.send = Wysyłanie:
+transfer.label.recv = Odbieranie:
+transfer.file.send = Wysyłanie: {filename}
+transfer.file.recv = Odbieranie: {filename}
+transfer.batch_position = Plik {index} z {count}
+transfer.count = Bloki: {blocks}    Bajty: {bytes_done}
+
+# --- Terminal window -----------------------------------------------------------
+terminal.title = Terminal
+terminal.clear = Wyczyść
+terminal.local_echo = Lokalny echo
+terminal.autoscroll = Automatyczne przewijanie
+terminal.send = Wyślij
+
+# --- Serial Configuration dialog -----------------------------------------------
+config.serial.title = Konfiguracja portu szeregowego
+config.serial.terminal_port = Port terminala
+config.serial.transfer_port = Port transportu
+config.serial.speed = Prędkość
+config.serial.data_bits = Bity danych
+config.serial.parity = Parzystość
+config.serial.stop_bits = Bity stopu
+config.serial.flow_control = Kontrola przepływu
+config.serial.msec_char = ms/znak
+config.serial.msec_line = ms/linia
+
+# --- General Configuration dialog ----------------------------------------------
+config.general.title = Konfiguracja ogólna
+config.general.remote_group = Zdalne
+config.general.list_files = Listuj pliki
+config.general.recv_remote = Odbierz z urządzenia
+config.general.send_remote = Wyślij na urządzenie
+config.general.xfer_launch_delay = Opóźnienie startu (s)
+config.general.xfer_interfile_delay = Opóźnienie między plikami (s)
+config.general.eol = Koniec linii
+config.general.debug_logging = Logowanie debugowania
+config.general.viewer = Podgląd/Edytor
+config.general.rename_remote = Zmień nazwę
+config.general.delete_remote = Usuń
+config.general.host_directory = Domyślny katalog hosta
+
+# --- About dialog --------------------------------------------------------------
+about.title = O programie
+about.version = Wersja {version}

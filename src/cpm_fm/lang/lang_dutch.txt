@@ -1,0 +1,163 @@
+# =============================================================================
+# CP/M File Manager - Dutch language file (lang_dutch.txt)
+# =============================================================================
+# Example / stub translation. The values are a best-effort Dutch translation
+# and should be reviewed by a native speaker. The keys (left of '=') and the
+# {placeholders} must NOT be changed. See lang_english.txt for the format and
+# the canonical reference text.
+# =============================================================================
+
+# --- Application -------------------------------------------------------------
+app.title = CP/M Bestandsbeheerder
+
+# --- Menu bar ----------------------------------------------------------------
+menu.file = Bestand
+menu.file.new = Nieuw
+menu.file.load = Laden
+menu.file.save = Opslaan
+menu.file.exit = Afsluiten
+menu.config = Configuratie
+menu.config.serial = Serieel
+menu.config.general = Algemeen
+menu.config.language = Taal
+menu.help = Help
+menu.help.about = Over
+
+# --- Toolbar -----------------------------------------------------------------
+toolbar.connect = Verbinden
+toolbar.disconnect = Ontkoppelen
+toolbar.terminal = Terminal
+
+# --- Main window -------------------------------------------------------------
+main.host_files = Hostbestanden
+main.change_directory = Map wijzigen
+main.copy_to_remote = Kopiëren naar apparaat
+main.remote_files = Afstandsbestanden
+main.update = Bijwerken
+main.copy_to_host = Kopiëren naar host
+
+# --- Connection indicators ----------------------------------------------------
+indicator.terminal = Terminal
+indicator.transport = Transport
+
+# --- File list context menus ---------------------------------------------------
+ctxmenu.to_remote = Naar apparaat
+ctxmenu.view_edit = Bekijken/Bewerken
+ctxmenu.rename = Hernoemen
+ctxmenu.delete = Verwijderen
+ctxmenu.to_host = Naar host
+ctxmenu.view = Bekijken
+
+# --- Status bar messages -----------------------------------------------------
+status.ready = Klaar
+status.cancelling_transfer = Overdracht annuleren...
+status.error_reading_host = Fout bij lezen hostbestanden: {error}
+status.uploading = Bezig met uploaden van {name} ({index}/{count})...
+status.successfully_uploaded = {count} bestand(en) succesvol geüpload
+status.downloading = Bezig met downloaden van {name} ({index}/{count})...
+status.successfully_downloaded = {count} bestand(en) succesvol gedownload
+status.transfer_cancelled = Overdracht geannuleerd na {count} bestand(en)
+status.downloading_for_viewing = Bezig met downloaden van {name} om te bekijken...
+status.opening_viewer = Viewer openen...
+status.terminal_not_open_rename = Terminalpoort niet open - hernoemen onmogelijk
+status.terminal_not_open_delete = Terminalpoort niet open - verwijderen onmogelijk
+status.terminal_not_open_send = Terminalpoort niet open - verzenden onmogelijk
+status.terminal_not_open_list = Terminalpoort niet open - bestandslijst lezen onmogelijk
+status.executing = Uitvoeren: {cmd}
+status.terminal_port_open = Terminalpoort open
+status.terminal_port_closed = Terminalpoort gesloten
+status.updating_remote_list = Afstandsbestandslijst bijwerken...
+status.changing_drive = Overschakelen naar station {drive}:...
+status.remote_list_updated = Afstandsbestandslijst bijgewerkt
+status.loaded_config = Configuratie geladen: {filename}
+status.saved_config = Configuratie opgeslagen in {path}
+status.new_config_created = Nieuwe configuratie aangemaakt
+status.serial_settings_updated = Seriële instellingen bijgewerkt
+status.general_settings_updated = Algemene instellingen bijgewerkt
+
+# --- Dialog titles -----------------------------------------------------------
+dialog.error.title = Fout
+dialog.warning.title = Waarschuwing
+dialog.xmodem_error.title = X-Modem Fout
+dialog.drive_not_found.title = Station niet gevonden
+dialog.rename_file.title = Bestand hernoemen
+dialog.delete_file.title = Bestand verwijderen
+dialog.delete_file.prompt = Dit bestand verwijderen?
+dialog.rename_remote.title = Afstandsbestand hernoemen
+dialog.delete_remote.title = Afstandsbestand verwijderen
+dialog.delete_remote.prompt = Dit afstandsbestand verwijderen?
+dialog.change_directory.title = Map wijzigen
+dialog.load_config.title = Configuratie laden
+dialog.save_config.title = Configuratie opslaan
+dialog.json_filter = JSON-bestanden (*.json)
+dialog.select_directory.title = Map selecteren
+
+# --- Error / warning message bodies -------------------------------------------
+error.transport_not_connected = Transportpoort niet verbonden
+error.unable_open_viewer = Kan viewer niet openen: {error}
+error.rename_failed = Hernoemen mislukt: {error}
+error.delete_failed = Verwijderen mislukt: {error}
+error.transport_unable_open = Kan transportpoort niet openen
+error.terminal_unable_open = Kan terminalpoort niet openen
+error.terminal_unable_close = Kan terminalpoort niet sluiten
+error.transport_unable_close = Kan transportpoort niet sluiten
+error.drive_not_found_body = Station {drive}: niet gevonden
+error.download_failed = Downloaden van {name} mislukt
+error.transfer_failed = Overdracht van {name} mislukt; overige bestanden genegeerd
+warning.select_upload = Selecteer een of meer bestanden om te uploaden
+warning.select_download = Selecteer een of meer bestanden om te downloaden
+
+# --- Common buttons ----------------------------------------------------------
+button.apply = Toepassen
+button.cancel = Annuleren
+button.save = Opslaan
+button.ok = OK
+button.cancelling = Annuleren…
+
+# --- Transfer progress dialog -------------------------------------------------
+transfer.title.send = Bestand uploaden
+transfer.title.recv = Bestand downloaden
+transfer.label.send = Uploaden:
+transfer.label.recv = Downloaden:
+transfer.file.send = Uploaden: {filename}
+transfer.file.recv = Downloaden: {filename}
+transfer.batch_position = Bestand {index} van {count}
+transfer.count = Blokken: {blocks}    Bytes: {bytes_done}
+
+# --- Terminal window ---------------------------------------------------------
+terminal.title = Terminal
+terminal.clear = Wissen
+terminal.local_echo = Lokale echo
+terminal.autoscroll = Automatisch scrollen
+terminal.send = Verzenden
+
+# --- Serial Configuration dialog -----------------------------------------------
+config.serial.title = Seriële Configuratie
+config.serial.terminal_port = Terminalpoort
+config.serial.transfer_port = Transportpoort
+config.serial.speed = Snelheid
+config.serial.data_bits = Databits
+config.serial.parity = Pariteit
+config.serial.stop_bits = Stopbits
+config.serial.flow_control = Flowcontrole
+config.serial.msec_char = ms/karakter
+config.serial.msec_line = ms/regel
+
+# --- General Configuration dialog --------------------------------------------
+config.general.title = Algemene Configuratie
+config.general.remote_group = Afstand
+config.general.list_files = Bestanden listen
+config.general.recv_remote = Ontvangen van apparaat
+config.general.send_remote = Verzenden naar apparaat
+config.general.xfer_launch_delay = Startvertraging (s)
+config.general.xfer_interfile_delay = Vertraging tussen bestanden (s)
+config.general.eol = Einde regel
+config.general.debug_logging = Debug logging
+config.general.viewer = Viewer/Editor
+config.general.rename_remote = Hernoemen
+config.general.delete_remote = Verwijderen
+config.general.host_directory = Standaard hostmap
+
+# --- About dialog --------------------------------------------------------------
+about.title = Over
+about.version = Versie {version}

@@ -1,0 +1,163 @@
+# =============================================================================
+# CP/M File Manager - Cantonese language file (lang_cantonese.txt)
+# =============================================================================
+# Example / stub translation. The values are a best-effort Cantonese translation
+# and should be reviewed by a native speaker. The keys (left of '=') and the
+# {placeholders} must NOT be changed. See lang_english.txt for the format and
+# the canonical reference text.
+# =============================================================================
+
+# --- Application ---------------------------------------------------------------
+app.title = CP/M 檔案管理員
+
+# --- Menu bar ------------------------------------------------------------------
+menu.file = 檔案
+menu.file.new = 新建
+menu.file.load = 載入
+menu.file.save = 儲存
+menu.file.exit = 離開
+menu.config = 設定
+menu.config.serial = 串口
+menu.config.general = 一般
+menu.config.language = 語言
+menu.help = 幫助
+menu.help.about = 關於
+
+# --- Toolbar -------------------------------------------------------------------
+toolbar.connect = 連接
+toolbar.disconnect = 斷開連接
+toolbar.terminal = 終端
+
+# --- Main window ---------------------------------------------------------------
+main.host_files = 主機檔案
+main.change_directory = 更改目錄
+main.copy_to_remote = 複製到裝置
+main.remote_files = 遠端檔案
+main.update = 更新
+main.copy_to_host = 複製到主機
+
+# --- Connection indicators -----------------------------------------------------
+indicator.terminal = 終端
+indicator.transport = 傳輸
+
+# --- File list context menus ---------------------------------------------------
+ctxmenu.to_remote = 到裝置
+ctxmenu.view_edit = 查看/編輯
+ctxmenu.rename = 重命名
+ctxmenu.delete = 刪除
+ctxmenu.to_host = 到主機
+ctxmenu.view = 查看
+
+# --- Status bar messages -------------------------------------------------------
+status.ready = 就緒
+status.cancelling_transfer = 正在取消傳輸...
+status.error_reading_host = 讀取主機檔案錯誤: {error}
+status.uploading = 正在發送 {name} ({index}/{count})...
+status.successfully_uploaded = {count} 個檔案發送成功
+status.downloading = 正在下載 {name} ({index}/{count})...
+status.successfully_downloaded = {count} 個檔案下載成功
+status.transfer_cancelled = 傳輸在 {count} 個檔案後取消
+status.downloading_for_viewing = 正在下載 {name} 以便查看...
+status.opening_viewer = 正在打開查看器...
+status.terminal_not_open_rename = 終端端口未打開 - 無法重命名
+status.terminal_not_open_delete = 終端端口未打開 - 無法刪除
+status.terminal_not_open_send = 終端端口未打開 - 無法發送
+status.terminal_not_open_list = 終端端口未打開 - 無法讀取檔案列表
+status.executing = 執行: {cmd}
+status.terminal_port_open = 終端端口已打開
+status.terminal_port_closed = 終端端口已關閉
+status.updating_remote_list = 正在更新遠端檔案列表...
+status.changing_drive = 切換到驅動器 {drive}:...
+status.remote_list_updated = 遠端檔案列表已更新
+status.loaded_config = 設定已載入: {filename}
+status.saved_config = 設定已儲存到 {path}
+status.new_config_created = 新設定已創建
+status.serial_settings_updated = 串口設定已更新
+status.general_settings_updated = 一般設定已更新
+
+# --- Dialog titles -------------------------------------------------------------
+dialog.error.title = 錯誤
+dialog.warning.title = 警告
+dialog.xmodem_error.title = X-Modem 錯誤
+dialog.drive_not_found.title = 搵唔到驅動器
+dialog.rename_file.title = 重命名檔案
+dialog.delete_file.title = 刪除檔案
+dialog.delete_file.prompt = 刪除呢個檔案？
+dialog.rename_remote.title = 重命名遠端檔案
+dialog.delete_remote.title = 刪除遠端檔案
+dialog.delete_remote.prompt = 刪除呢個遠端檔案？
+dialog.change_directory.title = 更改目錄
+dialog.load_config.title = 載入設定
+dialog.save_config.title = 儲存設定
+dialog.json_filter = JSON 檔案 (*.json)
+dialog.select_directory.title = 選擇目錄
+
+# --- Error / warning message bodies --------------------------------------------
+error.transport_not_connected = 傳輸端口未連接
+error.unable_open_viewer = 無法打開查看器: {error}
+error.rename_failed = 重命名失敗: {error}
+error.delete_failed = 刪除失敗: {error}
+error.transport_unable_open = 無法打開傳輸端口
+error.terminal_unable_open = 無法打開終端端口
+error.terminal_unable_close = 無法關閉終端端口
+error.transport_unable_close = 無法關閉傳輸端口
+error.drive_not_found_body = 搵唔到驅動器 {drive}:
+error.download_failed = 下載 {name} 失敗
+error.transfer_failed = 傳輸 {name} 失敗；忽略其餘檔案
+warning.select_upload = 請選擇一個或多個要發送嘅檔案
+warning.select_download = 請選擇一個或多個要下載嘅檔案
+
+# --- Common buttons ------------------------------------------------------------
+button.apply = 應用
+button.cancel = 取消
+button.save = 儲存
+button.ok = 確定
+button.cancelling = 取消中…
+
+# --- Transfer progress dialog --------------------------------------------------
+transfer.title.send = 發送檔案
+transfer.title.recv = 接收檔案
+transfer.label.send = 發送:
+transfer.label.recv = 接收:
+transfer.file.send = 發送: {filename}
+transfer.file.recv = 接收: {filename}
+transfer.batch_position = 檔案 {index} / {count}
+transfer.count = 塊: {blocks}    字節: {bytes_done}
+
+# --- Terminal window -----------------------------------------------------------
+terminal.title = 終端
+terminal.clear = 清除
+terminal.local_echo = 本地回顯
+terminal.autoscroll = 自動滾動
+terminal.send = 發送
+
+# --- Serial Configuration dialog -----------------------------------------------
+config.serial.title = 串口設定
+config.serial.terminal_port = 終端端口
+config.serial.transfer_port = 傳輸端口
+config.serial.speed = 波特率
+config.serial.data_bits = 數據位
+config.serial.parity = 校驗位
+config.serial.stop_bits = 停止位
+config.serial.flow_control = 流控
+config.serial.msec_char = 字符間隔 (ms)
+config.serial.msec_line = 行間隔 (ms)
+
+# --- General Configuration dialog ----------------------------------------------
+config.general.title = 一般設定
+config.general.remote_group = 遠端
+config.general.list_files = 列出檔案
+config.general.recv_remote = 從裝置接收
+config.general.send_remote = 發送到裝置
+config.general.xfer_launch_delay = 啟動延遲 (s)
+config.general.xfer_interfile_delay = 檔案間隔延遲 (s)
+config.general.eol = 換行符
+config.general.debug_logging = 調試日誌
+config.general.viewer = 查看器/編輯器
+config.general.rename_remote = 重命名
+config.general.delete_remote = 刪除
+config.general.host_directory = 預設主機目錄
+
+# --- About dialog --------------------------------------------------------------
+about.title = 關於
+about.version = 版本 {version}
