@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.5 |
+| Version | 1.6 |
 | Status | Draft |
 | Date | 2026-06-14 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.1.1) |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.2.0) |
 
 ---
 
@@ -158,11 +158,12 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
-| MT-G01 [visual] | UIR-040, UIR-041, UIR-044 | Open Config > General. | Modal dialog titled "General Config". A **"Remote"** group is the **first** section, containing (in order) List Files, Receive from Remote, Send to Remote, Rename, Delete. The remaining settings (Xfer Launch Delay, Xfer Inter-file Delay, End of Line, Debug Logging, Viewer/Editor, Default Host Directory) appear below it, ungrouped. Two-column layout throughout. |
+| MT-G01 [visual] | UIR-040, UIR-041, UIR-044 | Open Config > General. | Modal dialog titled "General Config". A **"Remote"** group is the **first** section, containing (in order) List Files, Receive from Remote, Send to Remote, Rename, Delete. The remaining settings (Xfer Launch Delay, Xfer Inter-file Delay, End of Line, Debug Logging, Echo Transfer Data, Viewer/Editor, Default Host Directory) appear below it, ungrouped. Two-column layout throughout. |
 | MT-G02 | UIR-042, UIR-045, UIR-046 | Inspect defaults / length limits of List Files, Receive from Remote, Send to Remote (in the Remote group). | List Files default "DIR"; Receive default "PCPUT $1"; Send default "PCGET $1"; each limited to 79 characters. |
 | MT-G03 | UIR-047, UIR-048 | Inspect End of Line radios. | Mutually exclusive CR / LF / CR-LF radios; **CR** selected by default. |
 | MT-G04 | UIR-049, UIR-052 | Inspect Xfer Launch Delay and Xfer Inter-file Delay fields. | Launch Delay integer 0–60 default 3; Inter-file Delay integer 0–60 default 2. |
 | MT-G05 | UIR-050 | Inspect Debug Logging control. | Dropdown OFF/ON, default OFF. |
+| MT-G09 | UIR-058 | Inspect Echo Transfer Data control. | Dropdown OFF/ON, default OFF. |
 | MT-G06 | UIR-053 | Click the Default Host Directory browse button, pick a folder. | A folder-select dialog appears; the chosen path populates the field. |
 | MT-G07 | UIR-054, UIR-055, UIR-056 | Inspect the Viewer/Editor field, and the "Rename" and "Delete" fields (in the Remote group). | Defaults `notepad $1`, `REN $2=$1`, `ERA $1`; the Rename/Delete fields are labelled just "Rename"/"Delete" (no "Remote" suffix) and limited to 79 chars. |
 | MT-G08 | UIR-043 | Confirm there is **no** "Change Disk" field. | The withdrawn field is absent. |
@@ -227,7 +228,7 @@ CP/M side. Use the multi-block (≥1 KB) file plus small files from §2.3.
 | MT-T06 | FR-106, FR-107, FR-105 | Multi-select three host files; Copy to Remote. | Files transfer **sequentially in list order**, each with its own `PCGET`; a **single** progress dialog serves the batch and shows "File i of N"; on success the Remote list refreshes once. |
 | MT-T07 | FR-108 | In a 3-file batch, arrange for the middle file to fail (e.g. abort it on the CP/M side / disconnect briefly). | Batch aborts (third file not attempted); error dialog names the failed file; because file 1 succeeded, the destination list refreshes once. |
 | MT-T08 | FR-109 | Run a multi-file batch and watch the Terminal Window between files. | Before each file **after the first**, the app waits for the CCP prompt to return plus the inter-file settle delay; the second/third launch commands are not truncated ("command not found"). |
-| MT-T09 | FR-086 | Open the Terminal Window, then run a transfer. | Every byte sent/received on the Transport Port is echoed into the Receive area as `<HH>` hex tokens (uppercase two-digit). |
+| MT-T09 | FR-086, UIR-058 | With Echo Transfer Data **OFF** (default), open the Terminal Window, then run a transfer. Then set Echo Transfer Data **ON** (Config > General) and run another transfer. | OFF: no `<HH>` tokens appear during the transfer (other terminal traffic is unaffected). ON: every byte sent/received on the Transport Port is echoed into the Receive area as `<HH>` hex tokens (uppercase two-digit). |
 | MT-T10 | NFR-003 | Transfer to/from a 1K-capable sender (e.g. PCPUT1K) and a checksum-only sender (PCPUT V1.0). | Receive polls **NAK first** (no stray `C`); 1K (STX) frames accepted from 1K senders; final packet padded with 0x1A. Content round-trips intact. |
 | MT-T11 | NFR-001 | During a large transfer, move/resize the main window and hover the toolbar. | UI stays responsive (transfer runs off the GUI thread); progress keeps updating. |
 | MT-T12 | FR-119 | Right-click a single host file → **To Remote**; right-click a single remote file → **To Host**. | Each transfers just that one file exactly as the corresponding Copy button (progress dialog, refresh on success); with Transport disconnected, "Transport port not connected" and no transfer. |

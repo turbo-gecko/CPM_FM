@@ -153,6 +153,7 @@ config.general.xfer_launch_delay = Καθυστέρηση έναρξης (s)
 config.general.xfer_interfile_delay = Καθυστέρηση μεταξύ αρχείων (s)
 config.general.eol = Τέλος γραμμής
 config.general.debug_logging = Καταγραφή αποσφαλμάτωσης
+config.general.echo_transfer = Ηχώ δεδομένων μεταφοράς
 config.general.viewer = Προβολέας/Επεξεργαστής
 config.general.rename_remote = Μετονομασία
 config.general.delete_remote = Διαγραφή

@@ -311,13 +311,14 @@ class GeneralConfigDialog(ConfigDialog):
     Specialized dialog for General Configuration
     (SRS docs/cpm_fm_requirements.md, UIR-040 through UIR-048).
 
-    Satisfies: UIR-040-UIR-057.
+    Satisfies: UIR-040-UIR-058.
     """
 
     def __init__(self, parent, settings, callback, window_state=None):
         """
         Satisfies: UIR-041, UIR-042, UIR-045, UIR-046, UIR-047, UIR-048,
-        UIR-049, UIR-050, UIR-052, UIR-053, UIR-054, UIR-055, UIR-056.
+        UIR-049, UIR-050, UIR-052, UIR-053, UIR-054, UIR-055, UIR-056,
+        UIR-058.
 
         Command text fields limited to 79 characters. UIR-041: the remote
         command fields (List Files, Receive from Remote, Send to Remote, Rename,
@@ -406,6 +407,15 @@ class GeneralConfigDialog(ConfigDialog):
             {
                 "key": "debug_logging",
                 "label_key": "config.general.debug_logging",
+                "type": "dropdown",
+                "options": ["OFF", "ON"],
+                "default": "OFF",
+            },
+            # UIR-058: gate the X-Modem transfer byte echo to the Terminal
+            # Window (FR-086). Default OFF.
+            {
+                "key": "echo_transfer_data",
+                "label_key": "config.general.echo_transfer",
                 "type": "dropdown",
                 "options": ["OFF", "ON"],
                 "default": "OFF",

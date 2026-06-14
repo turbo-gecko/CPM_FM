@@ -153,6 +153,7 @@ config.general.xfer_launch_delay = 시작 지연 (s)
 config.general.xfer_interfile_delay = 파일 간 지연 (s)
 config.general.eol = 줄 끝(EOL)
 config.general.debug_logging = 디버그 로깅
+config.general.echo_transfer = 전송 데이터 에코
 config.general.viewer = 뷰어/편집기
 config.general.rename_remote = 이름 바꾸기
 config.general.delete_remote = 삭제

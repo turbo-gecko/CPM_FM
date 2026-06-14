@@ -1167,6 +1167,54 @@ def test_general_config_remote_group_first(qapp, monkeypatch):
         dlg.deleteLater()
 
 
+def test_transfer_byte_echo_respects_setting(qapp, state):
+    # FR-086/UIR-058: the <HH> transfer-byte echo is emitted only when
+    # echo_transfer_data is affirmative (default off) and suppressed otherwise.
+    win = MainWindow(state)
+    try:
+        emitted = []
+        win.term_write.connect(emitted.append)
+
+        # Default (unset) -> echo off.
+        win.settings = {}
+        win._on_transfer_bytes("remote", b"\xb5\x06")
+        qapp.processEvents()
+        assert emitted == []
+
+        # Explicit OFF -> no echo.
+        win.settings = {"echo_transfer_data": "OFF"}
+        win._on_transfer_bytes("remote", b"\x01\x02\x03")
+        qapp.processEvents()
+        assert emitted == []
+
+        # ON -> echoed as <HH> tokens.
+        win.settings = {"echo_transfer_data": "ON"}
+        win._on_transfer_bytes("remote", b"\xb5\x06")
+        qapp.processEvents()
+        assert emitted == ["<B5><06>"]
+    finally:
+        win.close()
+
+
+def test_general_config_has_echo_transfer_field(qapp, monkeypatch):
+    # UIR-058: the General Config dialog exposes an "Echo Transfer Data"
+    # OFF/ON dropdown persisted as echo_transfer_data, defaulting to OFF.
+    from PySide6.QtWidgets import QComboBox
+
+    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+
+    monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
+    dlg = GeneralConfigDialog(None, {}, lambda s: None)
+    try:
+        combo = dlg.entries["echo_transfer_data"]
+        assert isinstance(combo, QComboBox)
+        items = [combo.itemText(i) for i in range(combo.count())]
+        assert items == ["OFF", "ON"]
+        assert combo.currentText() == "OFF"  # default
+    finally:
+        dlg.deleteLater()
+
+
 def test_config_menu_has_language_submenu(qapp, state):
     # UIR-003/UIR-077: the Config menu contains a Language submenu listing every
     # shipped language by its (capitalised) name, with the active one checked.

@@ -7,9 +7,9 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.5 |
-| Scorecard for plan version | 1.5 (`docs/manual_test_plan.md`) |
-| SRS version | (e.g. 2.1.1) |
+| Scorecard version | 1.6 |
+| Scorecard for plan version | 1.6 (`docs/manual_test_plan.md`) |
+| SRS version | (e.g. 2.2.0) |
 | Tester | |
 | Date(s) of run | |
 
@@ -93,6 +93,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-G03 | EOL radios; CR default | UIR-047/048 | | | |
 | MT-G04 | Launch/inter-file delay defaults & ranges | UIR-049/052 | | | |
 | MT-G05 | Debug Logging dropdown OFF/ON | UIR-050 | | | |
+| MT-G09 | Echo Transfer Data dropdown OFF/ON, default OFF | UIR-058 | | | |
 | MT-G06 | Default Host Directory browse | UIR-053 | | | |
 | MT-G07 | Viewer; Rename/Delete (in Remote group) defaults | UIR-054/055/056 | | | |
 | MT-G08 | No "Change Disk" field | UIR-043 | | | |
@@ -140,7 +141,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-T06 | Multi-file batch, sequential, "File i of N" | FR-106/107/105 | | | |
 | MT-T07 | Batch abort on mid-file failure | FR-108 | | | |
 | MT-T08 | Inter-file wait; no truncated command | FR-109 | | | |
-| MT-T09 | Hex byte echo `<HH>` to Terminal Window | FR-086 | | | |
+| MT-T09 | Hex byte echo `<HH>` to Terminal Window; suppressed when Echo Transfer Data OFF | FR-086, UIR-058 | | | |
 | MT-T10 | NAK-first; 1K frames; 0x1A pad; integrity | NFR-003 | | | |
 | MT-T11 | UI responsive during large transfer | NFR-001 | | | |
 | MT-T12 | Context-menu To Remote / To Host | FR-119 | | | |

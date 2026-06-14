@@ -153,6 +153,7 @@ config.general.xfer_launch_delay = Délai de lancement (s)
 config.general.xfer_interfile_delay = Délai entre fichiers (s)
 config.general.eol = Fin de ligne
 config.general.debug_logging = Journalisation de débogage
+config.general.echo_transfer = Afficher les données de transfert
 config.general.viewer = Visionneuse/Éditeur
 config.general.rename_remote = Renommer
 config.general.delete_remote = Supprimer
