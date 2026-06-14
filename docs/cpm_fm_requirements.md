@@ -31,8 +31,9 @@ baselines used Tkinter.
 
 ### 1.3 Product overview
 The product presents a host file list and a remote file list side by side, with controls to connect
-to the remote CP/M system, list remote files, and (in future) copy files in both directions. A
-non-modal terminal window enables direct serial interaction with the remote system.
+to the remote CP/M system, list remote files, and transfer single or multiple files in both directions via the X-Modem protocol. It provides basic file management capabilities, including renaming, deleting, and viewing local and remote files.
+A non-modal terminal window enables direct serial interaction with the remote system.
+The application includes comprehensive serial and general configuration management and supports a multi-language user interface.
 
 ### 1.4 Definitions and abbreviations
 | Term | Definition |
