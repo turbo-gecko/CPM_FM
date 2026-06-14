@@ -7,9 +7,9 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.6 |
-| Scorecard for plan version | 1.6 (`docs/manual_test_plan.md`) |
-| SRS version | (e.g. 2.2.0) |
+| Scorecard version | 1.8 |
+| Scorecard for plan version | 1.8 (`docs/manual_test_plan.md`) |
+| SRS version | (e.g. 2.3.0) |
 | Tester | |
 | Date(s) of run | |
 
@@ -163,13 +163,17 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | ID | Title | Req | Result | Env | Notes |
 |----|-------|-----|:------:|:---:|-------|
 | MT-F01 | Menu contents/order both panes | UIR-018/019 | | | |
+| MT-F01a | Multi-select disables View/Rename | FR-110/111, UIR-018/019 | | | |
 | MT-F02 | Host View/Edit via viewer_cmd | FR-112 | | | |
 | MT-F03 | Empty viewer_cmd → OS default | FR-112 | | | |
 | MT-F04 | Host Rename real dialog + effect | UIR-057, FR-114/116/118 | | | |
 | MT-F05 | Host Delete read-only dialog + effect | UIR-057, FR-115/116/118 | | | |
+| MT-F05a | Host multi-file Delete (all selected) | FR-110/115/116/118 | | | |
 | MT-F06 | Remote Rename/Delete commands | FR-117/118 | | | |
+| MT-F06a | Remote multi-file Delete (ERA per file) | FR-111/115/117/118 | | | |
 | MT-F07 | Remote action with port closed | FR-117 | | | |
 | MT-F08 | Remote View downloads then opens | FR-113/112 | | | |
+| MT-F09 | Multi-file To Remote/To Host transfer | FR-119/106/107 | | | |
 
 ### §14 Internationalisation (Language)
 | ID | Title | Req | Result | Env | Notes |
