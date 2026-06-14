@@ -1,0 +1,163 @@
+# =============================================================================
+# CP/M File Manager - Korean language file (lang_korean.txt)
+# =============================================================================
+# Example / stub translation. The values are a best-effort Korean translation
+# and should be reviewed by a native speaker. The keys (left of '=') and the
+# {placeholders} must NOT be changed. See lang_english.txt for the format and
+# the canonical reference text.
+# =============================================================================
+
+# --- Application --------------------------------------------------------------
+app.title = CP/M 파일 관리자
+
+# --- Menu bar -----------------------------------------------------------------
+menu.file = 파일
+menu.file.new = 새로 만들기
+menu.file.load = 불러오기
+menu.file.save = 저장하기
+menu.file.exit = 종료
+menu.config = 설정
+menu.config.serial = 시리얼
+menu.config.general = 일반
+menu.config.language = 언어
+menu.help = 도움말
+menu.help.about = 정보
+
+# --- Toolbar ------------------------------------------------------------------
+toolbar.connect = 연결
+toolbar.disconnect = 연결 해제
+toolbar.terminal = 터미널
+
+# --- Main window --------------------------------------------------------------
+main.host_files = 호스트 파일
+main.change_directory = 디렉터리 변경
+main.copy_to_remote = 장치로 복사
+main.remote_files = 원격 파일
+main.update = 업데이트
+main.copy_to_host = 호스트로 복사
+
+# --- Connection indicators ----------------------------------------------------
+indicator.terminal = 터미널
+indicator.transport = 전송
+
+# --- File list context menus --------------------------------------------------
+ctxmenu.to_remote = 장치로
+ctxmenu.view_edit = 보기/편집
+ctxmenu.rename = 이름 바꾸기
+ctxmenu.delete = 삭제
+ctxmenu.to_host = 호스트로
+ctxmenu.view = 보기
+
+# --- Status bar messages ------------------------------------------------------
+status.ready = 준비됨
+status.cancelling_transfer = 전송 취소 중...
+status.error_reading_host = 호스트 파일 읽기 오류: {error}
+status.uploading = {name} 전송 중 ({index}/{count})...
+status.successfully_uploaded = {count}개 파일 전송 성공
+status.downloading = {name} 다운로드 중 ({index}/{count})...
+status.successfully_downloaded = {count}개 파일 다운로드 성공
+status.transfer_cancelled = {count}개 파일 전송 후 취소됨
+status.downloading_for_viewing = 보기를 위해 {name} 다운로드 중...
+status.opening_viewer = 뷰어 여는 중...
+status.terminal_not_open_rename = 터미널 포트가 열려 있지 않아 이름을 바꿀 수 없습니다
+status.terminal_not_open_delete = 터미널 포트가 열려 있지 않아 삭제할 수 없습니다
+status.terminal_not_open_send = 터미널 포트가 열려 있지 않아 보낼 수 없습니다
+status.terminal_not_open_list = 터미널 포트가 열려 있지 않아 파일 목록을 읽을 수 없습니다
+status.executing = 실행 중: {cmd}
+status.terminal_port_open = 터미널 포트 열림
+status.terminal_port_closed = 터미널 포트 닫힘
+status.updating_remote_list = 원격 파일 목록 업데이트 중...
+status.changing_drive = 드라이브 {drive}:(으)로 변경 중...
+status.remote_list_updated = 원격 파일 목록 업데이트됨
+status.loaded_config = 설정 로드됨: {filename}
+status.saved_config = 설정이 {path}에 저장됨
+status.new_config_created = 새 설정이 생성됨
+status.serial_settings_updated = 시리얼 설정이 업데이트됨
+status.general_settings_updated = 일반 설정이 업데이트됨
+
+# --- Dialog titles ------------------------------------------------------------
+dialog.error.title = 오류
+dialog.warning.title = 경고
+dialog.xmodem_error.title = X-Modem 오류
+dialog.drive_not_found.title = 드라이브를 찾을 수 없음
+dialog.rename_file.title = 파일 이름 바꾸기
+dialog.delete_file.title = 파일 삭제
+dialog.delete_file.prompt = 이 파일을 삭제하시겠습니까?
+dialog.rename_remote.title = 원격 파일 이름 바꾸기
+dialog.delete_remote.title = 원격 파일 삭제
+dialog.delete_remote.prompt = 이 원격 파일을 삭제하시겠습니까?
+dialog.change_directory.title = 디렉터리 변경
+dialog.load_config.title = 설정 불러오기
+dialog.save_config.title = 설정 저장하기
+dialog.json_filter = JSON 파일 (*.json)
+dialog.select_directory.title = 디렉터리 선택
+
+# --- Error / warning message bodies --------------------------------------------
+error.transport_not_connected = 전송 포트가 연결되지 않았습니다
+error.unable_open_viewer = 뷰어를 열 수 없습니다: {error}
+error.rename_failed = 이름 바꾸기 실패: {error}
+error.delete_failed = 삭제 실패: {error}
+error.transport_unable_open = 전송 포트를 열 수 없습니다
+error.terminal_unable_open = 터미널 포트를 열 수 없습니다
+error.terminal_unable_close = 터미널 포트를 닫을 수 없습니다
+error.transport_unable_close = 전송 포트를 닫을 수 없습니다
+error.drive_not_found_body = 드라이브 {drive}:를 찾을 수 없습니다
+error.download_failed = {name} 다운로드 실패
+error.transfer_failed = {name} 전송 실패; 나머지 파일은 무시됩니다
+warning.select_upload = 전송할 파일 하나 이상을 선택하십시오
+warning.select_download = 다운로드할 파일 하나 이상을 선택하십시오
+
+# --- Common buttons -----------------------------------------------------------
+button.apply = 적용
+button.cancel = 취소
+button.save = 저장
+button.ok = 확인
+button.cancelling = 취소 중…
+
+# --- Transfer progress dialog --------------------------------------------------
+transfer.title.send = 파일 전송
+transfer.title.recv = 파일 수신
+transfer.label.send = 전송:
+transfer.label.recv = 수신:
+transfer.file.send = 전송: {filename}
+transfer.file.recv = 수신: {filename}
+transfer.batch_position = 파일 {index} / {count}
+transfer.count = 블록: {blocks}    바이트: {bytes_done}
+
+# --- Terminal window ----------------------------------------------------------
+terminal.title = 터미널
+terminal.clear = 지우기
+terminal.local_echo = 로컬 에코
+terminal.autoscroll = 자동 스크롤
+terminal.send = 전송
+
+# --- Serial Configuration dialog ----------------------------------------------
+config.serial.title = 시리얼 설정
+config.serial.terminal_port = 터미널 포트
+config.serial.transfer_port = 전송 포트
+config.serial.speed = 속도
+config.serial.data_bits = 데이터 비트
+config.serial.parity = 패리티
+config.serial.stop_bits = 정지 비트
+config.serial.flow_control = 흐름 제어
+config.serial.msec_char = 문자당 ms
+config.serial.msec_line = 줄당 ms
+
+# --- General Configuration dialog ---------------------------------------------
+config.general.title = 일반 설정
+config.general.remote_group = 원격
+config.general.list_files = 파일 목록 보기
+config.general.recv_remote = 장치에서 수신
+config.general.send_remote = 장치로 전송
+config.general.xfer_launch_delay = 시작 지연 (s)
+config.general.xfer_interfile_delay = 파일 간 지연 (s)
+config.general.eol = 줄 끝(EOL)
+config.general.debug_logging = 디버그 로깅
+config.general.viewer = 뷰어/편집기
+config.general.rename_remote = 이름 바꾸기
+config.general.delete_remote = 삭제
+config.general.host_directory = 기본 호스트 디렉터리
+
+# --- About dialog -------------------------------------------------------------
+about.title = 정보
+about.version = 버전 {version}

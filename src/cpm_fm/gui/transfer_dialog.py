@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from cpm_fm.gui.dialog_buttons import build_button_row
+from cpm_fm.utils.i18n import tr
 
 
 class TransferProgressDialog(QDialog):
@@ -51,14 +52,15 @@ class TransferProgressDialog(QDialog):
         self._total_bytes: int | None = None
         self._cancel_callback = cancel_callback
 
-        verb = "Sending" if direction == "remote" else "Receiving"
-        self.setWindowTitle(f"{verb} File")
+        # FR-121: "send"/"recv" selects the direction-specific translation keys
+        # (transfer.title.<dir>, transfer.label.<dir>, transfer.file.<dir>).
+        self._dir = "send" if direction == "remote" else "recv"
+        self.setWindowTitle(tr(f"transfer.title.{self._dir}"))
         self.setModal(True)
         # No close button / context-help: the transfer owns this dialog's
         # lifetime and closes it automatically (FR-105).
         self.setWindowFlag(Qt.WindowType.WindowCloseButtonHint, False)
         self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
-        self._verb = verb
 
         layout = QVBoxLayout(self)
 
@@ -67,17 +69,17 @@ class TransferProgressDialog(QDialog):
         self.batch_label.setVisible(self._file_count > 1)
         layout.addWidget(self.batch_label)
 
-        self.file_label = QLabel(f"{verb}:")
+        self.file_label = QLabel(tr(f"transfer.label.{self._dir}"))
         layout.addWidget(self.file_label)
 
-        self.count_label = QLabel("Blocks: 0    Bytes: 0")
+        self.count_label = QLabel(tr("transfer.count", blocks=0, bytes_done=0))
         layout.addWidget(self.count_label)
 
         self.progress_bar = QProgressBar()
         layout.addWidget(self.progress_bar)
 
         # FR-120/UIR-051: centred Cancel button to request cancellation.
-        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button = QPushButton(tr("button.cancel"))
         self.cancel_button.clicked.connect(self._on_cancel_clicked)
         layout.addLayout(build_button_row(reject_button=self.cancel_button))
 
@@ -98,7 +100,7 @@ class TransferProgressDialog(QDialog):
         Satisfies: FR-120, UIR-051.
         """
         self.cancel_button.setEnabled(False)
-        self.cancel_button.setText("Cancelling…")
+        self.cancel_button.setText(tr("button.cancelling"))
 
     def set_file(self, filename: str, total_bytes: int | None, index: int) -> None:
         """Switch the dialog to the file at 1-based position `index`.
@@ -111,9 +113,11 @@ class TransferProgressDialog(QDialog):
         """
         self._total_bytes = total_bytes if total_bytes and total_bytes > 0 else None
         if self._file_count > 1:
-            self.batch_label.setText(f"File {index} of {self._file_count}")
-        self.file_label.setText(f"{self._verb}: {filename}")
-        self.count_label.setText("Blocks: 0    Bytes: 0")
+            self.batch_label.setText(
+                tr("transfer.batch_position", index=index, count=self._file_count)
+            )
+        self.file_label.setText(tr(f"transfer.file.{self._dir}", filename=filename))
+        self.count_label.setText(tr("transfer.count", blocks=0, bytes_done=0))
         if self._total_bytes is not None:
             self.progress_bar.setRange(0, self._total_bytes)
             self.progress_bar.setValue(0)
@@ -126,6 +130,6 @@ class TransferProgressDialog(QDialog):
 
         Satisfies: FR-105.
         """
-        self.count_label.setText(f"Blocks: {blocks}    Bytes: {bytes_done}")
+        self.count_label.setText(tr("transfer.count", blocks=blocks, bytes_done=bytes_done))
         if self._total_bytes is not None:
             self.progress_bar.setValue(min(bytes_done, self._total_bytes))

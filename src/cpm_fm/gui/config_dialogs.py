@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
     QFormLayout,
+    QGroupBox,
     QHBoxLayout,
     QLineEdit,
     QPushButton,
@@ -16,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from cpm_fm.gui.dialog_buttons import build_button_row
+from cpm_fm.utils.i18n import tr
 
 if TYPE_CHECKING:
     from cpm_fm.gui.window_state import WindowState
@@ -25,11 +27,19 @@ class ConfigDialog(QDialog):
     """Base class for the modal Configuration Dialogs.
 
     Builds a two-column form (UIR-021) from a declarative field list. Each
-    field is a dict with keys: ``key``, ``label``, ``type`` ("dropdown" or
-    "text"), ``default``, and optionally ``options`` (dropdown), ``maxlength``
-    (text) and ``int_range`` (text, an inclusive ``(lo, hi)`` tuple).
+    field is a dict with keys: ``key``, ``label_key`` (an i18n key resolved via
+    :func:`tr` at build time — FR-121), ``type`` ("dropdown", "text" or
+    "directory"), ``default``, and optionally ``options`` (dropdown),
+    ``maxlength`` (text), ``int_range`` (text, an inclusive ``(lo, hi)`` tuple)
+    and ``group`` (an i18n key for a titled :class:`QGroupBox` the field is
+    placed in). Fields that share a ``group`` value are gathered into one boxed,
+    two-column sub-form; fields with no ``group`` render in a plain form. Groups
+    and the ungrouped form appear in order of first appearance in the field
+    list, so reordering the list reorders the dialog (UIR-041). Option *values*
+    and stored keys are technical/semantic and are not translated (CR-015) —
+    only the row label and group title are.
 
-    Satisfies: UIR-021.
+    Satisfies: UIR-021, UIR-041, FR-121.
     """
 
     def __init__(
@@ -75,80 +85,106 @@ class ConfigDialog(QDialog):
 
     def create_widgets(self):
         """
-        Satisfies: UIR-021, UIR-053, UIR-075.
+        Satisfies: UIR-021, UIR-041, UIR-053, UIR-075.
+
+        Fields are laid out into sections keyed by their optional ``group``: a
+        grouped field goes into a titled :class:`QGroupBox`, an ungrouped field
+        into a plain form. Sections are emitted in the order their first field
+        appears in the list, so the field order alone controls dialog layout.
         """
         layout = QVBoxLayout(self)
-        form = QFormLayout()
         self.entries: dict[str, Any] = {}
 
+        # Map each group key (or None for ungrouped) to its form, recording the
+        # order sections are first seen so the layout follows the field list.
+        forms: dict[Any, QFormLayout] = {}
+        section_order: list[Any] = []
         for field in self.fields:
-            key = field["key"]
-            current = str(self.settings.get(key, field["default"]))
+            group = field.get("group")
+            if group not in forms:
+                forms[group] = QFormLayout()
+                section_order.append(group)
+            label, widget = self._build_field(field)
+            forms[group].addRow(label, widget)
 
-            if field["type"] == "dropdown":
-                widget = QComboBox()
-                widget.addItems([str(o) for o in field["options"]])
-                widget.setCurrentText(current)
-            elif field["type"] == "directory":
-                # Create a horizontal layout for the path and the browse button
-                dir_container = QWidget()
-                dir_layout = QHBoxLayout(dir_container)
-                dir_layout.setContentsMargins(0, 0, 0, 0)
-                dir_layout.setSpacing(5)
-
-                line_edit = QLineEdit(current)
-                btn_browse = QPushButton("...")
-                btn_browse.setFixedWidth(40)
-
-                # `line_edit` is bound as a default argument so each browse
-                # handler captures its own field's widget (the loop rebinds
-                # `line_edit` every iteration); `checked` absorbs the bool the
-                # clicked signal passes.
-                def on_browse(checked=False, line_edit=line_edit):
-                    """
-                    Satisfies: UIR-053.
-                    """
-                    path = QFileDialog.getExistingDirectory(
-                        self, "Select Directory", line_edit.text()
-                    )
-                    if path:
-                        line_edit.setText(path)
-
-                btn_browse.clicked.connect(on_browse)
-                dir_layout.addWidget(line_edit)
-                dir_layout.addWidget(btn_browse)
-
-                widget = dir_container
-                # We must be able to retrieve the value from the laout
-                # Overriding _value to handle the context
-                self.entries[key] = line_edit
+        for group in section_order:
+            if group is None:
+                layout.addLayout(forms[group])
             else:
-                widget = QLineEdit(current)
-                if "maxlength" in field:
-                    widget.setMaxLength(field["maxlength"])
-                if "int_range" in field:
-                    lo, hi = field["int_range"]
-                    widget.setValidator(QIntValidator(lo, hi, widget))
-
-            if field["type"] != "directory":
-                self.entries[key] = widget
-                form.addRow(field["label"], widget)
-            else:
-                # For directory type, widget is the container
-                form.addRow(field["label"], dir_container)
-                # The entry for value retrieval is the line edit
-                self.entries[key] = line_edit
-
-        layout.addLayout(form)
+                box = QGroupBox(tr(group))
+                box.setLayout(forms[group])
+                layout.addWidget(box)
 
         # UIR-075: Cancel at the far left, the affirmative (Save) button at the
         # far right.
-        save_btn = QPushButton("Save")
+        save_btn = QPushButton(tr("button.save"))
         save_btn.setDefault(True)
         save_btn.clicked.connect(self.save)
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(tr("button.cancel"))
         cancel_btn.clicked.connect(self.reject)
         layout.addLayout(build_button_row(accept_button=save_btn, reject_button=cancel_btn))
+
+    def _build_field(self, field) -> tuple[str, QWidget]:
+        """Build the widget for one field and register it in ``self.entries``.
+
+        Returns the resolved row label (translated — FR-121) and the widget to
+        place in the form. For a "directory" field the returned widget is the
+        path+browse container, while the value-bearing line edit is what gets
+        registered in ``self.entries`` for save-time retrieval (UIR-053).
+
+        Satisfies: UIR-021, UIR-053.
+        """
+        key = field["key"]
+        current = str(self.settings.get(key, field["default"]))
+        widget: QWidget
+
+        if field["type"] == "dropdown":
+            combo = QComboBox()
+            combo.addItems([str(o) for o in field["options"]])
+            combo.setCurrentText(current)
+            self.entries[key] = combo
+            widget = combo
+        elif field["type"] == "directory":
+            # Create a horizontal layout for the path and the browse button
+            dir_container = QWidget()
+            dir_layout = QHBoxLayout(dir_container)
+            dir_layout.setContentsMargins(0, 0, 0, 0)
+            dir_layout.setSpacing(5)
+
+            line_edit = QLineEdit(current)
+            btn_browse = QPushButton("...")
+            btn_browse.setFixedWidth(40)
+
+            # `line_edit` is bound as a default argument so each browse handler
+            # captures its own field's widget; `checked` absorbs the bool the
+            # clicked signal passes.
+            def on_browse(checked=False, line_edit=line_edit):
+                """
+                Satisfies: UIR-053.
+                """
+                path = QFileDialog.getExistingDirectory(
+                    self, tr("dialog.select_directory.title"), line_edit.text()
+                )
+                if path:
+                    line_edit.setText(path)
+
+            btn_browse.clicked.connect(on_browse)
+            dir_layout.addWidget(line_edit)
+            dir_layout.addWidget(btn_browse)
+
+            widget = dir_container
+            # The entry for value retrieval is the line edit, not the container.
+            self.entries[key] = line_edit
+        else:
+            widget = QLineEdit(current)
+            if "maxlength" in field:
+                widget.setMaxLength(field["maxlength"])
+            if "int_range" in field:
+                lo, hi = field["int_range"]
+                widget.setValidator(QIntValidator(lo, hi, widget))
+            self.entries[key] = widget
+
+        return tr(field["label_key"]), widget
 
     def _value(self, widget) -> str:
         if isinstance(widget, QComboBox):
@@ -182,21 +218,21 @@ class SerialConfigDialog(ConfigDialog):
         fields = [
             {
                 "key": "terminal_port",
-                "label": "Terminal Port",
+                "label_key": "config.serial.terminal_port",
                 "type": "dropdown",
                 "options": current_ports,
                 "default": "COM1",
             },
             {
                 "key": "transport_port",
-                "label": "Transfer Port",
+                "label_key": "config.serial.transfer_port",
                 "type": "dropdown",
                 "options": current_ports,
                 "default": "COM1",
             },
             {
                 "key": "speed",
-                "label": "Speed",
+                "label_key": "config.serial.speed",
                 "type": "dropdown",
                 "options": [
                     "300",
@@ -217,28 +253,28 @@ class SerialConfigDialog(ConfigDialog):
             },
             {
                 "key": "data",
-                "label": "Data Bits",
+                "label_key": "config.serial.data_bits",
                 "type": "dropdown",
                 "options": ["7", "8"],
                 "default": "8",
             },
             {
                 "key": "parity",
-                "label": "Parity",
+                "label_key": "config.serial.parity",
                 "type": "dropdown",
                 "options": ["NONE", "ODD", "EVEN", "MARK", "SPACE"],
                 "default": "NONE",
             },
             {
                 "key": "stopbits",
-                "label": "Stop Bits",
+                "label_key": "config.serial.stop_bits",
                 "type": "dropdown",
                 "options": ["1", "2"],
                 "default": "1",
             },
             {
                 "key": "flow",
-                "label": "Flow Control",
+                "label_key": "config.serial.flow_control",
                 "type": "dropdown",
                 "options": ["NONE", "XON/XOFF", "RTS/CTS", "DSR/DTR"],
                 "default": "NONE",
@@ -246,21 +282,27 @@ class SerialConfigDialog(ConfigDialog):
             # UIR-030/UIR-031: integer 0..255 inclusive.
             {
                 "key": "msec_char",
-                "label": "msec/char",
+                "label_key": "config.serial.msec_char",
                 "type": "text",
                 "default": "0",
                 "int_range": (0, 255),
             },
             {
                 "key": "msec_line",
-                "label": "msec/line",
+                "label_key": "config.serial.msec_line",
                 "type": "text",
                 "default": "0",
                 "int_range": (0, 255),
             },
         ]
         super().__init__(
-            parent, "Serial Config", settings, fields, callback, window_state, "serial_config"
+            parent,
+            tr("config.serial.title"),
+            settings,
+            fields,
+            callback,
+            window_state,
+            "serial_config",
         )
 
 
@@ -274,39 +316,70 @@ class GeneralConfigDialog(ConfigDialog):
 
     def __init__(self, parent, settings, callback, window_state=None):
         """
-        Satisfies: UIR-042, UIR-045, UIR-046, UIR-047, UIR-048, UIR-049,
-        UIR-050, UIR-052, UIR-053, UIR-054, UIR-055, UIR-056.
+        Satisfies: UIR-041, UIR-042, UIR-045, UIR-046, UIR-047, UIR-048,
+        UIR-049, UIR-050, UIR-052, UIR-053, UIR-054, UIR-055, UIR-056.
 
-        Command text fields limited to 79 characters.
+        Command text fields limited to 79 characters. UIR-041: the remote
+        command fields (List Files, Receive from Remote, Send to Remote, Rename,
+        Delete) are gathered into a "Remote" group placed first; the remaining
+        general settings follow ungrouped.
         """
+        # UIR-041: i18n key for the "Remote" group box title. The five remote
+        # command fields below carry this so the base dialog boxes them together
+        # and, being first in the list, renders the group before everything else.
+        REMOTE = "config.general.remote_group"
         fields = [
             {
                 "key": "list_files_cmd",
-                "label": "List Files",
+                "label_key": "config.general.list_files",
                 "type": "text",
                 "default": "DIR",
                 "maxlength": 79,
+                "group": REMOTE,
             },
             {
                 "key": "recv_remote_cmd",
-                "label": "Receive from Remote",
+                "label_key": "config.general.recv_remote",
                 "type": "text",
                 "default": "PCPUT $1",
                 "maxlength": 79,
+                "group": REMOTE,
             },
             {
                 "key": "send_remote_cmd",
-                "label": "Send to Remote",
+                "label_key": "config.general.send_remote",
                 "type": "text",
                 "default": "PCGET $1",
                 "maxlength": 79,
+                "group": REMOTE,
+            },
+            # UIR-055: remote rename command (FR-117); $1 = original name,
+            # $2 = new name (CP/M REN newname=oldname). Labelled just "Rename"
+            # inside the Remote group.
+            {
+                "key": "rename_remote_cmd",
+                "label_key": "config.general.rename_remote",
+                "type": "text",
+                "default": "REN $2=$1",
+                "maxlength": 79,
+                "group": REMOTE,
+            },
+            # UIR-056: remote delete command (FR-117); $1 = filename. Labelled
+            # just "Delete" inside the Remote group.
+            {
+                "key": "delete_remote_cmd",
+                "label_key": "config.general.delete_remote",
+                "type": "text",
+                "default": "ERA $1",
+                "maxlength": 79,
+                "group": REMOTE,
             },
             # UIR-049: seconds to wait after launching PCPUT/PCGET before the
             # X-Modem handshake starts, so prompts do not overrun the remote
             # UART during its start-up (FR-087). Integer 0..60 inclusive.
             {
                 "key": "xfer_launch_delay",
-                "label": "Xfer Launch Delay (s)",
+                "label_key": "config.general.xfer_launch_delay",
                 "type": "text",
                 "default": "3",
                 "int_range": (0, 60),
@@ -317,14 +390,14 @@ class GeneralConfigDialog(ConfigDialog):
             # returning to the prompt (FR-109). Integer 0..60 inclusive.
             {
                 "key": "xfer_interfile_delay",
-                "label": "Xfer Inter-file Delay (s)",
+                "label_key": "config.general.xfer_interfile_delay",
                 "type": "text",
                 "default": "2",
                 "int_range": (0, 60),
             },
             {
                 "key": "eol",
-                "label": "End of Line",
+                "label_key": "config.general.eol",
                 "type": "dropdown",
                 "options": ["CR", "LF", "CRLF"],
                 "default": "CR",
@@ -332,7 +405,7 @@ class GeneralConfigDialog(ConfigDialog):
             # UIR-050: gate verbose transfer debug output to stdout (FR-088).
             {
                 "key": "debug_logging",
-                "label": "Debug Logging",
+                "label_key": "config.general.debug_logging",
                 "type": "dropdown",
                 "options": ["OFF", "ON"],
                 "default": "OFF",
@@ -341,34 +414,23 @@ class GeneralConfigDialog(ConfigDialog):
             # $1 is the file path.
             {
                 "key": "viewer_cmd",
-                "label": "Viewer/Editor",
+                "label_key": "config.general.viewer",
                 "type": "text",
                 "default": "notepad $1",
             },
-            # UIR-055: remote rename command (FR-117); $1 = original name,
-            # $2 = new name (CP/M REN newname=oldname).
-            {
-                "key": "rename_remote_cmd",
-                "label": "Rename Remote",
-                "type": "text",
-                "default": "REN $2=$1",
-                "maxlength": 79,
-            },
-            # UIR-056: remote delete command (FR-117); $1 = filename.
-            {
-                "key": "delete_remote_cmd",
-                "label": "Delete Remote",
-                "type": "text",
-                "default": "ERA $1",
-                "maxlength": 79,
-            },
             {
                 "key": "host_directory",
-                "label": "Default Host Directory",
+                "label_key": "config.general.host_directory",
                 "type": "directory",
                 "default": "",
             },
         ]
         super().__init__(
-            parent, "General Config", settings, fields, callback, window_state, "general_config"
+            parent,
+            tr("config.general.title"),
+            settings,
+            fields,
+            callback,
+            window_state,
+            "general_config",
         )
