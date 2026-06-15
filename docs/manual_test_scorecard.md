@@ -7,9 +7,9 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.10 |
-| Scorecard for plan version | 1.10 (`docs/manual_test_plan.md`) |
-| SRS version | (e.g. 2.5.0) |
+| Scorecard version | 1.11 |
+| Scorecard for plan version | 1.11 (`docs/manual_test_plan.md`) |
+| SRS version | (e.g. 2.5.2) |
 | Tester | |
 | Date(s) of run | |
 
@@ -90,7 +90,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 |----|-------|-----|:------:|:---:|-------|
 | MT-G01 | Title; "Remote" group first; rest ungrouped | UIR-040/041/044 | | | |
 | MT-G02 | Command field defaults & limits | UIR-042/045/046 | | | |
-| MT-G03 | EOL radios; CR default | UIR-047/048 | | | |
+| MT-G03 | EOL drop-down; CR default | UIR-047/048 | | | |
 | MT-G04 | Launch/inter-file delay defaults & ranges | UIR-049/052 | | | |
 | MT-G05 | Debug Logging dropdown OFF/ON | UIR-050 | | | |
 | MT-G09 | Echo Transfer Data dropdown OFF/ON, default OFF | UIR-058 | | | |

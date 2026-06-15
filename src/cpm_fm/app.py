@@ -1674,8 +1674,8 @@ class MainWindow(QMainWindow):
             self.serial_mgr.pause_terminal_reads()
         try:
             # Launch the CP/M sender (PCPUT) on the Terminal Port, then receive.
-            # receive_file drives the handshake (polls with 'C'), so it tolerates
-            # PCPUT taking several seconds to arm.
+            # receive_file drives the handshake (polls with NAK first, then 'C'
+            # per NFR-003), so it tolerates PCPUT taking several seconds to arm.
             self._issue_remote_cmd("recv_remote_cmd", "PCPUT $1", os.path.basename(save_path))
             self._debug(f"[copy-to-host] launched PCPUT; waiting {delay}s before handshake")
             time.sleep(delay)
@@ -1789,7 +1789,10 @@ class MainWindow(QMainWindow):
                 return
         else:
             path, _ = QFileDialog.getSaveFileName(
-                self, "Save Config", self.window_state.last_config_dir, "JSON files (*.json)"
+                self,
+                tr("dialog.save_config.title"),
+                self.window_state.last_config_dir,
+                tr("dialog.json_filter"),
             )
             if not path or not self._save_to_path(path):
                 return
