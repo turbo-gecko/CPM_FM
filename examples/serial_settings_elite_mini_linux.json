@@ -1,0 +1,23 @@
+{
+    "terminal_port": "/dev/ttyUSB0",
+    "transport_port": "/dev/ttyUSB0",
+    "speed": "115200",
+    "data": "8",
+    "parity": "NONE",
+    "stopbits": "1",
+    "flow": "RTS/CTS",
+    "msec_char": "0",
+    "msec_line": "0",
+    "host_directory": "/home/gary/Temp/CPM Stuff",
+    "list_files_cmd": "DIR",
+    "recv_remote_cmd": "A:XMODEM $1 /S",
+    "send_remote_cmd": "A:XMODEM $1 /R",
+    "rename_remote_cmd": "REN $2=$1",
+    "delete_remote_cmd": "ERA $1",
+    "xfer_launch_delay": "1",
+    "xfer_interfile_delay": "1",
+    "eol": "CR",
+    "debug_logging": "OFF",
+    "echo_transfer_data": "OFF",
+    "viewer_cmd": "notepad $1"
+}
