@@ -78,6 +78,12 @@ def build_datas() -> list[tuple[str, str]]:
             if name.endswith(".json"):
                 datas.append((os.path.join(examples_dir, name), "examples"))
 
+    # DR-044/UIR-078: runtime window icon -> cpm_fm/icons, matching theme.py's
+    # __file__-relative lookup (APP_ICON_PATH).
+    runtime_icon = os.path.join(ROOT, "src", "cpm_fm", "icons", "cpm-fm.png")
+    if os.path.isfile(runtime_icon):
+        datas.append((runtime_icon, os.path.join("cpm_fm", "icons")))
+
     # qt-material ships its own QSS templates / icon resources that are loaded at
     # runtime; PyInstaller's static analysis won't find them, so collect them.
     datas += collect_data_files("qt_material")

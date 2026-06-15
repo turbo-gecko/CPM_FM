@@ -7,9 +7,9 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.9 |
-| Scorecard for plan version | 1.9 (`docs/manual_test_plan.md`) |
-| SRS version | (e.g. 2.4.0) |
+| Scorecard version | 1.10 |
+| Scorecard for plan version | 1.10 (`docs/manual_test_plan.md`) |
+| SRS version | (e.g. 2.5.0) |
 | Tester | |
 | Date(s) of run | |
 
@@ -201,6 +201,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-V08 | Exit closes ports + all windows | FR-015/016 | | | |
 | MT-V09 | Dialog button layout (Cancel left / affirmative right; lone centred) | UIR-075 | | | |
 | MT-V10 | About dialog (name/version/GitHub link/OK; version matches) | FR-022, UIR-076, DR-040/041 | | | |
+| MT-V11 | Branded app icon on all windows + taskbar/dock | UIR-078, DR-044 | | | |
 
 ### §16 Cross-cutting / non-functional
 | ID | Title | Req | Result | Env | Notes |

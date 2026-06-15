@@ -37,7 +37,7 @@ from cpm_fm.gui.about_dialog import AboutDialog
 from cpm_fm.gui.config_dialogs import GeneralConfigDialog, SerialConfigDialog
 from cpm_fm.gui.file_action_dialog import FileActionDialog
 from cpm_fm.gui.terminal_window import TerminalWindow
-from cpm_fm.gui.theme import apply_theme
+from cpm_fm.gui.theme import app_icon, apply_theme
 from cpm_fm.gui.transfer_dialog import TransferProgressDialog
 from cpm_fm.gui.window_state import APP, ORG, WindowState
 from cpm_fm.terminal.cpm_parser import CPMParser
@@ -1895,12 +1895,15 @@ class MainWindow(QMainWindow):
 
 def main() -> None:
     """
-    Satisfies: STR-002, CR-002, CR-013.
+    Satisfies: STR-002, CR-002, CR-013, UIR-078.
     """
     app = cast(QApplication, QApplication.instance() or QApplication(sys.argv))
     # FR-004/FR-005: identity for QSettings-backed persistence (see WindowState).
     app.setOrganizationName(ORG)
     app.setApplicationName(APP)
+    # UIR-078: set the branded application icon once, centrally (like the theme),
+    # so every window/dialog and the OS taskbar/dock entry inherit it.
+    app.setWindowIcon(app_icon())
     apply_theme(app)
     window = MainWindow()
     window.show()
