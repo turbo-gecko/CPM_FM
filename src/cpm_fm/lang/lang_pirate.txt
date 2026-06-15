@@ -1,0 +1,173 @@
+# =============================================================================
+# CP/M File Manager - Pirate Speak (Reference / Fallback)
+# =============================================================================
+# Format (DR-042):
+#   * key = value   (split on the FIRST '='; values may contain '=')
+#   * Blank lines and lines beginning with '#' are ignored.
+#   * Values are str.format templates; placeholders such as {name}, {index},
+#     {count}, {error} are filled in at run time.
+#
+# This is the complete reference language (DR-043). To add a language, copy this
+# file to lang_<language>.txt and translate the values on the right of each '='.
+# Do NOT translate the keys on the left.
+# =============================================================================
+
+# --- Application ---------------------------------------------------------------
+app.title = CP/M Loot Manager
+app.title_with_config = {app} — {config}
+
+# --- Menu bar ------------------------------------------------------------------
+menu.file = Charts
+menu.file.new = New Voyage
+menu.file.load = Uncover
+menu.file.save = Stash
+menu.file.exit = Abandon Ship
+menu.config = Ship's Orders
+menu.config.serial = Signal Flags
+menu.config.general = General Orders
+menu.config.language = Pirate Tongue
+menu.help = Scallywag's Guide
+menu.help.about = The Legend
+
+# --- Toolbar -------------------------------------------------------------------
+toolbar.connect = Board the Ship
+toolbar.disconnect = Cast Off
+toolbar.terminal = Captain's Log
+
+# --- Main window ---------------------------------------------------------------
+main.host_files = Home Port Files
+main.host_files_dir = {label} — {dir}
+main.change_directory = Change Course
+main.copy_to_remote = Send Loot to Far Shore
+main.remote_files = Foreign Lands' Files
+main.update = Refresh Charts
+main.copy_to_host = Bring Loot Home
+
+# --- Connection indicators -----------------------------------------------------
+indicator.terminal = Captain's Log
+indicator.transport = Ship's Route
+
+# --- File list context menus ---------------------------------------------------
+ctxmenu.to_remote = To Far Shore
+ctxmenu.view_edit = Behold/Carve
+ctxmenu.rename = Rename Loot
+ctxmenu.delete = Walk the Plank
+ctxmenu.to_host = To Home Port
+ctxmenu.view = Behold
+
+# --- Status bar messages -------------------------------------------------------
+status.ready = Ready to Sail!
+status.cancelling_transfer = Aborting the loot haul...
+status.error_reading_host = Error readin' the home port charts: {error}
+status.uploading = Haulin' {name} ({index}/{count})...
+status.successfully_uploaded = Successfully stashed {count} loot item(s)
+status.downloading = Draggin' in {name} ({index}/{count})...
+status.successfully_downloaded = Successfully brought home {count} loot item(s)
+status.transfer_cancelled = Loot haul aborted after {count} items
+status.downloading_for_viewing = Draggin' {name} in for inspection...
+status.opening_viewer = Openin' the spyglass...
+status.terminal_not_open_rename = Captain's Log be closed - cannot rename loot
+status.terminal_not_open_delete = Captain's Log be closed - cannot walk the plank
+status.terminal_not_open_send = Captain's Log be closed - cannot send cargo
+status.terminal_not_open_list = Captain's Log be closed - cannot read charts
+status.executing = Executin': {cmd}
+status.terminal_port_open = Captain's Log be open
+status.terminal_port_closed = Captain's Log be shuttered
+status.updating_remote_list = Refreshin' foreign charts...
+status.changing_drive = Changin' course to drive {drive}:...
+status.remote_list_updated = Foreign charts updated
+status.loaded_config = Loaded orders: {filename}
+status.saved_lag = Stashed orders in {path}
+status.new_config_created = New ship's orders created
+status.serial_settings_updated = Signal flags updated
+status.general_settings_updated = General orders updated
+
+# --- Dialog titles -------------------------------------------------------------
+dialog.error.title = Blunder!
+dialog.warning.title = Avast!
+dialog.xmodem_error.title = X-Modem Disaster
+dialog.drive_not_found.title = No Land in Sight (Drive not found)
+dialog.rename_file.title = Rename the Loot
+dialog.delete_file.title = Throw to Davy Jones?
+dialog.delete_file.prompt = Send this loot to the depths?
+dialog.delete_file.prompt_multi = Send these {count} items to the depths?
+dialog.rename_remote.title = Rename Foreign Loot
+dialog.delete_remote.title = Delete Foreign Loot
+dialog.delete_remote.prompt = Sink this foreign loot?
+dialog.delete_remote.prompt_multi = Sink these {count} foreign items?
+dialog.change_directory.title = Change Course
+dialog.load_config.title = Uncover Orders
+dialog.save_config.title = Stash Orders
+dialog.json_filter = JSON Treasures (*.json)
+dialog.select_directory.title = Pick a Port
+
+# --- Error / warning message bodies --------------------------------------------
+error.transport_not_connected = Ship's route be unlinked!
+error.unable_open_viewer = Unable to open spyglass: {error}
+error.rename_failed = Renamin' failed: {error}
+error.delete_failed = Sinkin' failed: {error}
+error.transport_unable_open = Ship's route cannot be charted
+error.terminal_unable_open = Captain's Log cannot be opened
+error.terminal_unable_close = Captain's Log cannot be shuttered
+error.transport_unable_close = Ship's route cannot be closed
+error.drive_not_found_body = Drive {drive}: be lost at sea
+error.download_failed = Draggin' in {name} failed
+error.transfer_failed = Loot haul of {name} failed; rest o' the booty skipped
+warning.select_upload = Hand over one or more loot items to upload!
+warning.select_download = Pick one or more treasures to bring home!
+
+# --- Common buttons ------------------------------------------------------------
+button.apply = Aye
+button.cancel = Belay That
+button::save = Stash
+button.ok = Aye, Captain
+button.cancelling = Abortin'...
+
+# --- Transfer progress dialog --------------------------------------------------
+transfer.title.send = Sendin' Loot
+transfer.title.recv = Receivin' Loot
+transfer.label.send = Sendin':
+transfer.label.recv = Receivin':
+transfer.file.send = Sendin': {filename}
+transfer.file.recv = Receivin': {filename}
+transfer.batch_position = Item {index} of {count}
+transfer.count = Chests: {blocks}    Gold: {bytes_done}
+
+# --- Terminal window -----------------------------------------------------------
+terminal.title = Captain's Log
+terminal.clear = Scour the Deck
+terminal.local_echo = Echo the Shout
+terminal.autoscroll = Auto-drift
+terminal.send = Launch Cargo
+
+# --- Serial Configuration dialog -----------------------------------------------
+config.serial.title = Signal Flag Config
+config.serial.terminal_port = Captain's Log Port
+config.serial.transfer_port = Cargo Route Port
+config.serial.speed = Speed o' the Wind
+config.serial.data_bits = Bits o' Information
+config.serial.parity = Parity Check
+config.serial.stop_bits = Stop Bits
+config.serial.flow_control = Flow Control
+config.serial.msec_char = msec/char
+config.serial.msec_line = msec/line
+
+# --- General Configuration dialog ----------------------------------------------
+config.general.title = Ship's Orders
+config.general.remote_group = Foreign Lands
+config.general.list_files = Scour Charts
+config.general.recv_remote = Drag in from Far Shore
+config.general.send_remote = Send to Far Shore
+config.general.xfer_launch_delay = Delay Before Launch (s)
+config.general.xfer_interfile_delay = Delay Between Loot (s)
+config.general.eol = End o' the Line
+config.general.debug_logging = Secret Loggin'
+config.general.echo_transfer = Echo the Cargo
+config.general.viewer = Spyglass/Carver
+config.general.rename_remote = Rename
+config.general.delete_remote = Delete
+config.general.host_directory = Home Port Directory
+
+# --- About dialog --------------------------------------------------------------
+about.title = The Legend
+about.version = Era {version}

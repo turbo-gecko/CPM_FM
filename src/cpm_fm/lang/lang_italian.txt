@@ -9,6 +9,7 @@
 
 # --- Application --------------------------------------------------------------
 app.title = Gestore File CP/M
+app.title_with_config = {app} — {config}
 
 # --- Menu bar -----------------------------------------------------------------
 menu.file = File
@@ -30,6 +31,7 @@ toolbar.terminal = Terminale
 
 # --- Main window --------------------------------------------------------------
 main.host_files = File host
+main.host_files_dir = {label} — {dir}
 main.change_directory = Cambia directory
 main.copy_to_remote = Copia sul dispositivo
 main.remote_files = File remoti

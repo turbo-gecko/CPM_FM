@@ -1394,7 +1394,7 @@ def test_persisted_language_applied_on_construction(qapp, state):
     state.language = "german"
     win = MainWindow(state)
     try:
-        # The window title comes from app.title via the i18n registry.
+        # The window title is rebuilt from app.title (no config loaded -> name only).
         assert win.windowTitle() == "CP/M-Dateimanager"
     finally:
         win.close()
@@ -1417,3 +1417,64 @@ def test_host_to_remote_requires_both_flags(qapp, monkeypatch, state):
         assert errors == [("Error", "Transport port not connected")]
     finally:
         win.close()
+
+
+def _write_config(tmp_path, name="my_settings.json"):
+    import json
+
+    path = tmp_path / name
+    path.write_text(json.dumps({"speed": 9600}), encoding="utf-8")
+    return str(path)
+
+
+def test_window_title_plain_without_config(qapp, state):
+    # FR-125/UIR-005: with no config loaded the title is the application name alone.
+    win = MainWindow(state)
+    try:
+        assert win.windowTitle() == "CP/M File Manager"
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_window_title_includes_loaded_config_basename(qapp, state, tmp_path):
+    # FR-125: loading a config appends its base name (no path, no extension).
+    win = MainWindow(state)
+    try:
+        win.load_config(_write_config(tmp_path, "my_settings.json"))
+        assert win.windowTitle() == "CP/M File Manager — my_settings"
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_window_title_cleared_by_new(qapp, state, tmp_path, monkeypatch):
+    # FR-125/FR-019: File > New drops the config name from the title bar.
+    win = MainWindow(state)
+    try:
+        win.load_config(_write_config(tmp_path))
+        assert "—" in win.windowTitle()
+        # New first saves silently to the last-used file (the temp config loaded
+        # above), then resets. Stub the port teardown so the test stays headless.
+        monkeypatch.setattr(win, "do_disconnect", lambda: None)
+        win.menu_new()
+        assert win.windowTitle() == "CP/M File Manager"
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_host_group_title_includes_directory(qapp, state):
+    # FR-126/UIR-011: the Host Files group title carries the current directory,
+    # left-elided so the trailing (most specific) part of the path is visible.
+    win = MainWindow(state)
+    try:
+        win.resize(900, 560)
+        win.host_dir = os.path.join("C:", os.sep, "tmp", "cpmwork")
+        win.refresh_host_files()
+        title = win.host_group.title()
+        assert title.startswith("Host Files —")
+        assert "cpmwork" in title
+    finally:
+        win.close()
+        win.deleteLater()

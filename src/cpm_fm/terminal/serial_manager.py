@@ -200,11 +200,7 @@ class SerialManager:
         Satisfies: FR-036, FR-091, NFR-001.
         """
         while not self._stop_event.is_set():
-            if (
-                not self._read_paused.is_set()
-                and self.terminal_port
-                and self.terminal_port.is_open
-            ):
+            if not self._read_paused.is_set() and self.terminal_port and self.terminal_port.is_open:
                 try:
                     if self.terminal_port.in_waiting > 0:
                         data = self.terminal_port.read(self.terminal_port.in_waiting).decode(

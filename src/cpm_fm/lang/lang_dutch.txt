@@ -9,6 +9,7 @@
 
 # --- Application -------------------------------------------------------------
 app.title = CP/M Bestandsbeheerder
+app.title_with_config = {app} — {config}
 
 # --- Menu bar ----------------------------------------------------------------
 menu.file = Bestand
@@ -30,6 +31,7 @@ toolbar.terminal = Terminal
 
 # --- Main window -------------------------------------------------------------
 main.host_files = Hostbestanden
+main.host_files_dir = {label} — {dir}
 main.change_directory = Map wijzigen
 main.copy_to_remote = Kopiëren naar apparaat
 main.remote_files = Afstandsbestanden
