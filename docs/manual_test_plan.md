@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.9 |
+| Version | 1.10 |
 | Status | Draft |
 | Date | 2026-06-15 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.4.0) |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.5.0) |
 
 ---
 
@@ -306,7 +306,8 @@ persistence of the language choice.
 | MT-V07 | FR-004 | Move/resize the main window, the Terminal Window, and the Serial & General dialogs; quit; relaunch and reopen each. | Each window/dialog reopens at its last size/position. (Splitter position is exempt — UIR-072.) |
 | MT-V08 | FR-015, FR-016 | With ports open and the Terminal Window + a config dialog open, choose File > **Exit**. | All COM ports close and all dialogs/windows close cleanly; no orphaned process. |
 | MT-V09 | UIR-075 | Open Config > Serial, Config > General, and a File Action dialog (right-click a host file → Rename); also glance at a transfer progress dialog (MT-T05). | In every two-button dialog the **Cancel** button is at the **far left** and the affirmative button (**Save** for the config dialogs, **Apply** for the File Action dialog) at the **far right**, with space between; the progress dialog's single **Cancel** button is **centred**. |
-| MT-V10 | FR-022, UIR-076, UIR-075, DR-040, DR-041 | Choose **Help > About**. Read the dialog, then click the GitHub link, then click **OK**. | A modal dialog titled "About" shows: the program name **CP/M File Manager**; **Version `<x.y.z>`** matching `src/version.txt` and the SRS version field (both `2.1.1`); a clickable hyperlink to `https://github.com/turbo-gecko/CPM_FM`. Clicking the link opens that page in the host's default browser. A single **OK** button (centred) closes the dialog. *(version now `2.4.0`)* |
+| MT-V10 | FR-022, UIR-076, UIR-075, DR-040, DR-041 | Choose **Help > About**. Read the dialog, then click the GitHub link, then click **OK**. | A modal dialog titled "About" shows: the program name **CP/M File Manager**; **Version `<x.y.z>`** matching `src/version.txt` and the SRS version field (both `2.5.0`); a clickable hyperlink to `https://github.com/turbo-gecko/CPM_FM`. Clicking the link opens that page in the host's default browser. A single **OK** button (centred) closes the dialog. |
+| MT-V11 | UIR-078, DR-044 | Launch the app and inspect the window's title-bar icon and the OS taskbar/dock entry; open the Terminal Window and a dialog (e.g. Config > Serial) and check their icons too. | All windows and dialogs and the taskbar/dock show the branded **CP/M File Manager** icon (the blue monitor artwork), not the generic Qt/Python default. The same icon should appear at small (title-bar) and larger (taskbar/alt-tab) sizes without distortion. |
 
 ---
 
@@ -335,6 +336,7 @@ or real cross-session persistence:
 - Interfaces (real): `IFR-001`–`IFR-004`.
 - Config dialogs (on-screen layout, field values/limits): `UIR-020`–`UIR-056`.
 - Theme, layout & dialog button placement: `UIR-070`–`UIR-075`, `CR-012`, `CR-013`.
+- Application icon (on-screen render across windows + OS taskbar/dock): `UIR-078` (the resource presence/loadability and missing-file fallback in `DR-044` are covered automatically by `tests/test_gui_smoke.py`; MT-V11 confirms the branded icon actually renders).
 - About dialog (on-screen render + live browser launch): `FR-022`, `UIR-004`, `UIR-076` (the version-sourcing `DR-040`/`DR-041` are covered automatically by `tests/test_version.py`; MT-V10 confirms the displayed version matches end-to-end).
 - Internationalisation (live on-screen re-translation, real menu, cross-session language persistence): `FR-122`, `FR-123`, `FR-124` (live), `UIR-003`, `UIR-077`, `CR-015`, `NFR-005` (the translator, parsing, and fallback in `FR-121`/`DR-042`/`DR-043` are covered automatically by `tests/test_i18n.py`; the manual cases confirm the rendered UI switches language live and that the choice persists).
 - Non-functional (real): `NFR-001`, `NFR-004` (live), `STR-003`, `FR-088`.

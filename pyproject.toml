@@ -12,7 +12,7 @@ license = { file = "LICENSE" }
 dependencies = ["pyserial>=3.5", "PySide6>=6.6", "qt-material>=2.14"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.5", "mypy>=1.10"]
+dev = ["pytest>=8", "ruff>=0.5", "mypy>=1.10", "Pillow>=10"]
 # Tooling for building standalone distribution packages (see build_dist.py and
 # the pyinstaller_*.spec files). Install with: pip install -e .[build]
 build = ["pyinstaller>=6.0"]
@@ -31,8 +31,10 @@ where = ["src"]
 # DR-042: ship the per-language string files (lang_<language>.txt) inside the
 # package so internationalisation works from an installed wheel, not just from
 # a source/editable checkout.
+# DR-044: likewise ship the runtime window icon (icons/cpm-fm.png) as package
+# data so the branded icon (UIR-078) is present in an installed wheel.
 [tool.setuptools.package-data]
-cpm_fm = ["lang/*.txt"]
+cpm_fm = ["lang/*.txt", "icons/*.png"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

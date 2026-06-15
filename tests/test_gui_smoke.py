@@ -1478,3 +1478,26 @@ def test_host_group_title_includes_directory(qapp, state):
     finally:
         win.close()
         win.deleteLater()
+
+
+def test_app_icon_resource_present_and_loadable(qapp):
+    # UIR-078/DR-044: the runtime icon ships as package data and app_icon()
+    # returns a real (non-null) QIcon loaded from it.
+    from cpm_fm.gui.theme import APP_ICON_PATH, app_icon
+
+    assert APP_ICON_PATH.is_file(), f"missing runtime icon at {APP_ICON_PATH}"
+    icon = app_icon()
+    assert not icon.isNull()
+    assert icon.availableSizes(), "icon has no rendered sizes"
+
+
+def test_app_icon_missing_falls_back_to_empty(qapp, monkeypatch):
+    # UIR-078: a missing icon resource yields an empty QIcon rather than raising,
+    # so start-up survives its absence (consistent with the optional CR-006 icons).
+    from pathlib import Path
+
+    from cpm_fm.gui import theme
+
+    monkeypatch.setattr(theme, "APP_ICON_PATH", Path("does-not-exist.png"))
+    icon = theme.app_icon()
+    assert icon.isNull()
