@@ -104,11 +104,14 @@ def test_set_and_current_language_round_trip():
     assert i18n.tr("menu.file") == "Fichier"
 
 
-@pytest.mark.parametrize("language", ["german", "french"])
+@pytest.mark.parametrize(
+    "language", [lang for lang in i18n.available_languages() if lang != "english"]
+)
 def test_translation_keys_match_english(language):
     # DR-043: each shipped translation must define exactly the same keys as the
     # English reference (no missing keys, no stray extra keys) so nothing silently
-    # falls back and no dead entries accumulate.
+    # falls back and no dead entries accumulate. Parametrized over every shipped
+    # language file (not just german/french) so key-set drift is caught for all.
     english = i18n._parse(i18n._lang_path("english"))
     other = i18n._parse(i18n._lang_path(language))
     assert english, "English reference file should not be empty"
