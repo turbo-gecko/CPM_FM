@@ -11,6 +11,7 @@ from cpm_fm.terminal.xmodem import XModem
 
 ACK = b"\x06"
 SOH = b"\x01"
+STX = b"\x02"  # 1K frame marker (XMODEM-1K)
 EOT = b"\x04"
 NAK = b"\x15"
 CAN = b"\x18"
@@ -123,3 +124,214 @@ def test_receive_file_cancel_aborts_and_sends_can(tmp_path):
     assert xm.receive_file(str(save)) is False
     assert CAN in fake.written
     assert not save.exists()
+
+
+# --------------------------------------------------------------------------- #
+# Independent integrity-math vectors (NFR-003).
+#
+# The progress tests above build each packet with the SAME _calculate_checksum
+# / _crc16 the receiver then validates with, so a wrong checksum/CRC is
+# invisible to them (a mutated _calculate_checksum left every progress test
+# green). These tests pin the math against hand-computed, implementation-
+# independent constants so a checksum/CRC fault cannot pass unnoticed.
+# 0x31C3 is the canonical CRC-16/XMODEM check value for b"123456789".
+# --------------------------------------------------------------------------- #
+
+
+def test_calculate_checksum_matches_independent_vector():
+    # NFR-003: checksum is (sum of bytes) mod 256, verified against fixed values.
+    xm = XModem(_FakeSerial())
+    assert xm._calculate_checksum(b"123456789") == 0xDD  # 477 & 0xFF
+    assert xm._calculate_checksum(bytes(128)) == 0x00
+    assert xm._calculate_checksum(b"\xff\xff\xff\xff") == 0xFC  # 1020 & 0xFF
+
+
+def test_crc16_matches_canonical_xmodem_vector():
+    # NFR-003: CRC-16/XMODEM (poly 0x1021, init 0x0000) against known answers.
+    xm = XModem(_FakeSerial())
+    assert xm._crc16(b"123456789") == 0x31C3  # canonical check value
+    assert xm._crc16(b"") == 0x0000
+    assert xm._crc16(b"A") == 0x58E5
+
+
+def test_trailer_ok_validates_checksum_independently():
+    # NFR-003: a correct 1-byte checksum trailer passes; a wrong one fails.
+    xm = XModem(_FakeSerial())
+    assert xm._trailer_ok(b"123456789", bytes([0xDD]), crc_mode=False) is True
+    assert xm._trailer_ok(b"123456789", bytes([0xDE]), crc_mode=False) is False
+    assert xm._trailer_ok(b"123456789", b"", crc_mode=False) is False  # missing trailer
+
+
+def test_trailer_ok_validates_crc_independently():
+    # NFR-003: a correct 2-byte big-endian CRC trailer passes; a wrong one fails.
+    xm = XModem(_FakeSerial())
+    assert xm._trailer_ok(b"123456789", bytes([0x31, 0xC3]), crc_mode=True) is True
+    assert xm._trailer_ok(b"123456789", bytes([0x31, 0xC4]), crc_mode=True) is False
+    assert xm._trailer_ok(b"123456789", bytes([0x31]), crc_mode=True) is False  # short
+
+
+# --------------------------------------------------------------------------- #
+# send_file error and edge paths.
+# --------------------------------------------------------------------------- #
+
+
+def test_send_file_returns_false_when_file_missing(tmp_path):
+    # FR-081: a non-existent source file fails fast and transmits nothing.
+    fake = _FakeSerial(b"C" + ACK * 4)
+    assert XModem(fake).send_file(str(tmp_path / "does_not_exist.bin")) is False
+    assert fake.written == b""
+
+
+def test_send_file_returns_false_when_no_start_char(tmp_path, monkeypatch):
+    # FR-082: if the receiver never sends a start character the send aborts with
+    # False (and, absent a cancel, sends no CAN). The 60s handshake wait is
+    # replaced by a stubbed timeout so the test does not block.
+    path = tmp_path / "UP.TXT"
+    path.write_bytes(b"x" * 10)
+    fake = _FakeSerial(b"")
+    xm = XModem(fake)
+    monkeypatch.setattr(xm, "_wait_for_one_of", lambda *a, **k: b"")
+    assert xm.send_file(str(path)) is False
+    assert CAN not in fake.written
+
+
+def test_send_file_aborts_after_nak_exhaustion(tmp_path):
+    # NFR-003: a packet that is NAK'd on all 10 retransmit attempts gives up and
+    # returns False rather than looping forever.
+    path = tmp_path / "UP.TXT"
+    path.write_bytes(bytes(range(128)))
+    fake = _FakeSerial(b"C" + NAK * 10)  # CRC handshake, then nothing but NAKs
+    assert XModem(fake).send_file(str(path)) is False
+
+
+def test_send_file_pads_final_short_chunk_with_eof(tmp_path):
+    # NFR-003: a final chunk shorter than 128 bytes is padded to a full data
+    # field with the 0x1A (Ctrl-Z) EOF byte before the trailer is computed.
+    path = tmp_path / "UP.TXT"
+    path.write_bytes(bytes(range(100)))  # one short packet: 100 real + 28 pad
+    fake = _FakeSerial(b"C" + ACK * 2)  # CRC start, ACK the packet, ACK the EOT
+    assert XModem(fake).send_file(str(path)) is True
+    # Frame layout: SOH(1) seq(1) ~seq(1) data(128) crc(2) ... so data is [3:131].
+    data_field = fake.written[3:131]
+    assert data_field[:100] == bytes(range(100))
+    assert data_field[100:] == b"\x1a" * 28
+
+
+# --------------------------------------------------------------------------- #
+# receive_file mode / framing / recovery edge paths.
+# --------------------------------------------------------------------------- #
+
+
+def _checksum_packet_1k(helper: XModem, seq: int, payload: bytes) -> bytes:
+    # A checksum-mode STX (1024-byte) packet, for the XMODEM-1K sender variants.
+    chk = helper._calculate_checksum(payload)
+    return STX + bytes([seq, 255 - seq]) + payload + bytes([chk])
+
+
+def _crc_packet(helper: XModem, seq: int, payload: bytes) -> bytes:
+    # A CRC-mode SOH packet: 2-byte big-endian CRC trailer.
+    crc = helper._crc16(payload)
+    return SOH + bytes([seq, 255 - seq]) + payload + bytes([(crc >> 8) & 0xFF, crc & 0xFF])
+
+
+class _CrcReceiveSerial:
+    """Fake whose seeded packets are withheld until the receiver polls with 'C'.
+
+    The first six reads return a non-frame junk byte (consumed by the six NAK
+    handshake attempts, fast — never the 3s timeout), so the receiver falls
+    through checksum mode to CRC mode, at which point the real frames are armed.
+    """
+
+    def __init__(self, frames: bytes):
+        self._junk = bytearray(b"\x07" * 6)
+        self._frames = bytearray(frames)
+        self._armed = False
+        self.written = bytearray()
+
+    @property
+    def in_waiting(self) -> int:
+        return len(self._frames) if self._armed else len(self._junk)
+
+    def read(self, n: int = 1) -> bytes:
+        buf = self._frames if self._armed else self._junk
+        chunk = bytes(buf[:n])
+        del buf[:n]
+        return chunk
+
+    def write(self, data: bytes) -> int:
+        self.written += data
+        if b"C" in data:
+            self._armed = True
+        return len(data)
+
+    def reset_input_buffer(self) -> None:
+        pass
+
+
+def test_receive_file_falls_through_to_crc_mode(tmp_path):
+    # NFR-003: when the sender ignores NAK (checksum) the receiver polls 'C' and
+    # validates a 2-byte CRC trailer. (crc16 correctness is pinned independently
+    # by test_crc16_matches_canonical_xmodem_vector.)
+    save = tmp_path / "DOWN.TXT"
+    helper = XModem(_FakeSerial())
+    payload = bytes(range(128))
+    fake = _CrcReceiveSerial(_crc_packet(helper, 1, payload) + EOT)
+    xm = XModem(fake)
+    assert xm.receive_file(str(save)) is True
+    assert b"C" in fake.written  # fell through to the CRC poll
+    assert save.read_bytes() == payload
+
+
+def test_receive_file_accepts_1k_stx_frame(tmp_path):
+    # NFR-003: STX frames carry 1024 data bytes (XMODEM-1K) and must be accepted.
+    save = tmp_path / "DOWN.BIN"
+    helper = XModem(_FakeSerial())
+    payload = bytes([0x5A]) * 1024
+    fake = _FakeSerial(_checksum_packet_1k(helper, 1, payload) + EOT)
+    assert XModem(fake).receive_file(str(save)) is True
+    assert save.read_bytes() == payload
+
+
+def test_receive_file_reacks_duplicate_packet_once(tmp_path):
+    # NFR-003: a re-sent packet (lost ACK) is re-ACK'd but stored only once.
+    save = tmp_path / "DOWN.TXT"
+    helper = XModem(_FakeSerial())
+    p1 = bytes(range(128))
+    p2 = bytes([0xAA]) * 128
+    stream = (
+        _checksum_packet(helper, 1, p1)
+        + _checksum_packet(helper, 1, p1)  # duplicate of packet 1
+        + _checksum_packet(helper, 2, p2)
+        + EOT
+    )
+    calls: list[tuple[int, int, int | None]] = []
+    fake = _FakeSerial(stream)
+    xm = XModem(fake, progress=lambda b, n, t: calls.append((b, n, t)))
+    assert xm.receive_file(str(save)) is True
+    assert save.read_bytes() == p1 + p2  # duplicate not appended twice
+    assert calls == [(1, 128, None), (2, 256, None)]  # no progress for the dup
+
+
+def test_receive_file_recovers_from_corrupt_trailer(tmp_path):
+    # NFR-003: a packet with a bad trailer is NAK'd and the resent good copy is
+    # accepted. Only the checksum byte is corrupted, isolating the trailer check.
+    save = tmp_path / "DOWN.TXT"
+    helper = XModem(_FakeSerial())
+    payload = bytes(range(128))
+    good = _checksum_packet(helper, 1, payload)
+    corrupt = good[:-1] + bytes([good[-1] ^ 0xFF])
+    fake = _FakeSerial(corrupt + good + EOT)
+    assert XModem(fake).receive_file(str(save)) is True
+    assert save.read_bytes() == payload
+    # Receiver writes only control bytes: one handshake NAK + one rejecting the
+    # corrupt packet == two NAKs total.
+    assert fake.written.count(0x15) == 2
+
+
+def test_receive_file_empty_transfer_writes_empty_file(tmp_path):
+    # NFR-003: an immediate EOT (no data packets) is a valid, empty transfer.
+    save = tmp_path / "EMPTY.TXT"
+    fake = _FakeSerial(EOT)
+    assert XModem(fake).receive_file(str(save)) is True
+    assert save.read_bytes() == b""
+    assert ACK in fake.written
