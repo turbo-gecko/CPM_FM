@@ -7,9 +7,9 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.8 |
-| Scorecard for plan version | 1.8 (`docs/manual_test_plan.md`) |
-| SRS version | (e.g. 2.3.0) |
+| Scorecard version | 1.9 |
+| Scorecard for plan version | 1.9 (`docs/manual_test_plan.md`) |
+| SRS version | (e.g. 2.4.0) |
 | Tester | |
 | Date(s) of run | |
 
@@ -111,6 +111,8 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-L08 | Missing remembered file → unconfigured | FR-005/003 | | | |
 | MT-L09 | New saves to remembered file, resets | FR-018/019 | | | |
 | MT-L10 | New prompts when none remembered; cancel aborts | FR-018 | | | |
+| MT-L11 | Title bar shows loaded config base name | FR-125/UIR-005 | | | |
+| MT-L12 | New clears config name from title bar | FR-125 | | | |
 
 ### §9 Host file management
 | ID | Title | Req | Result | Env | Notes |
@@ -118,6 +120,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-H01 | Host list = default host dir at startup | FR-060 | | | |
 | MT-H02 | Change Directory reloads host list | FR-061/062 | | | |
 | MT-H03 | Host "Update" button acts on BOTH lists | FR-063 | | | |
+| MT-H04 | Host group title shows current dir, left-elided | FR-126/UIR-011 | | | |
 
 ### §10 Remote listing & drive selection (live)
 | ID | Title | Req | Result | Env | Notes |

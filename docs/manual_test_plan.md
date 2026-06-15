@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.8 |
+| Version | 1.9 |
 | Status | Draft |
-| Date | 2026-06-14 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.3.0) |
+| Date | 2026-06-15 |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.4.0) |
 
 ---
 
@@ -117,7 +117,7 @@ that need two physical ports are marked **[2-port]**; visual-only cases are mark
 | MT-S02 | FR-003, FR-060, FR-070 | Observe the freshly-launched window. | App is unconfigured (no settings loaded); Host Files list shows the current working directory's files; Remote Files list is **empty**. |
 | MT-S03 | UIR-001, UIR-002, UIR-003, UIR-004 | Inspect the menu bar. | A **File** menu with **New, Load, Save, Exit** (New at top), a **Config** menu with **Serial, General**, and a **Help** menu with **About**. |
 | MT-S04 | UIR-013, UIR-071, UIR-015, UIR-016 | Inspect the top toolbar. | A toolbar with **Connect, Disconnect, Terminal** as labelled, icon-bearing buttons; Connect and Disconnect both enabled at startup. |
-| MT-S05 | UIR-011, UIR-012, UIR-017, UIR-061..067 | Inspect the panes. | Host Files group (top row with equally-sized **Change Directory** + **Update** buttons, multi-select list, row with **Copy to Remote**); Remote Files group (equally-sized drive drop-down + **Update** button, multi-select list, **Copy to Host** row). |
+| MT-S05 | UIR-011, UIR-012, UIR-017, UIR-061..067 | Inspect the panes. | Host Files group (title shows **Host Files — `<current directory>`**, FR-126; top row with equally-sized **Change Directory** + **Update** buttons, multi-select list, row with **Copy to Remote**); Remote Files group (equally-sized drive drop-down + **Update** button, multi-select list, **Copy to Host** row). |
 
 ---
 
@@ -184,6 +184,8 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 | MT-L08 | FR-005, FR-003 | After MT-L07, delete or rename the remembered config file, relaunch. | App starts **unconfigured** (no crash) because the remembered file no longer parses/exists. |
 | MT-L09 | FR-018, FR-019 | Load a config (so a file is remembered), connect, Update, then File > **New**. | Current config is saved to the remembered file; ports closed (disconnect behaviour); Remote list cleared; settings replaced with defaults; remembered path forgotten; Host list refreshed to the default directory. |
 | MT-L10 | FR-018 | With **no** remembered file, File > New. | A Save dialog appears first; choosing a file then resets to defaults; **cancelling** the Save dialog cancels New entirely (config, ports, lists retained). |
+| MT-L11 | FR-125, UIR-005 | Launch unconfigured, then File > Load `examples/serial_settings.json`. | Before loading, the title bar reads **CP/M File Manager** alone; after loading it reads **CP/M File Manager — serial_settings** (file base name only — no path, no `.json`). |
+| MT-L12 | FR-125 | After MT-L11, File > **New**. | The title bar reverts to **CP/M File Manager** alone (the config name is dropped). |
 
 ---
 
@@ -194,6 +196,7 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 | MT-H01 | FR-060 | Launch with a config whose Default Host Directory points at your scratch folder. | Host Files list shows that folder's files at startup. |
 | MT-H02 | FR-061, FR-062 | Press **Change Directory**, pick a different folder. | Folder-select dialog appears; Host Files list reloads from the chosen folder (session-only; not written to the config until Save). |
 | MT-H03 [CP/M] | FR-063 | Connect; press the Host Files group's **Update** button (beside **Change Directory**). | Host list refreshes **and** the Remote list is (re)populated via the remote-listing process — this button acts on **both** lists. |
+| MT-H04 | FR-126, UIR-011 | Observe the Host Files group title. Then **Change Directory** to a folder with a **long** absolute path, then narrow the window. | The group title reads **Host Files — `<current directory>`**, tracking the directory each time it changes. When the path is too wide for the group, its **leading** portion is replaced by `…` while the trailing (most specific) part stays visible; narrowing the window elides more, widening it reveals more. |
 
 ---
 
@@ -303,7 +306,7 @@ persistence of the language choice.
 | MT-V07 | FR-004 | Move/resize the main window, the Terminal Window, and the Serial & General dialogs; quit; relaunch and reopen each. | Each window/dialog reopens at its last size/position. (Splitter position is exempt — UIR-072.) |
 | MT-V08 | FR-015, FR-016 | With ports open and the Terminal Window + a config dialog open, choose File > **Exit**. | All COM ports close and all dialogs/windows close cleanly; no orphaned process. |
 | MT-V09 | UIR-075 | Open Config > Serial, Config > General, and a File Action dialog (right-click a host file → Rename); also glance at a transfer progress dialog (MT-T05). | In every two-button dialog the **Cancel** button is at the **far left** and the affirmative button (**Save** for the config dialogs, **Apply** for the File Action dialog) at the **far right**, with space between; the progress dialog's single **Cancel** button is **centred**. |
-| MT-V10 | FR-022, UIR-076, UIR-075, DR-040, DR-041 | Choose **Help > About**. Read the dialog, then click the GitHub link, then click **OK**. | A modal dialog titled "About" shows: the program name **CP/M File Manager**; **Version `<x.y.z>`** matching `src/version.txt` and the SRS version field (both `2.1.1`); a clickable hyperlink to `https://github.com/turbo-gecko/CPM_FM`. Clicking the link opens that page in the host's default browser. A single **OK** button (centred) closes the dialog. |
+| MT-V10 | FR-022, UIR-076, UIR-075, DR-040, DR-041 | Choose **Help > About**. Read the dialog, then click the GitHub link, then click **OK**. | A modal dialog titled "About" shows: the program name **CP/M File Manager**; **Version `<x.y.z>`** matching `src/version.txt` and the SRS version field (both `2.1.1`); a clickable hyperlink to `https://github.com/turbo-gecko/CPM_FM`. Clicking the link opens that page in the host's default browser. A single **OK** button (centred) closes the dialog. *(version now `2.4.0`)* |
 
 ---
 

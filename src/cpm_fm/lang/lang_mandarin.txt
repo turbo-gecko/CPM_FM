@@ -9,6 +9,7 @@
 
 # --- Application ---------------------------------------------------------------
 app.title = CP/M 文件管理器
+app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = 文件
@@ -30,6 +31,7 @@ toolbar.terminal = 终端
 
 # --- Main window ---------------------------------------------------------------
 main.host_files = 主机文件
+main.host_files_dir = {label} — {dir}
 main.change_directory = 更改目录
 main.copy_to_remote = 复制到设备
 main.remote_files = 远程文件

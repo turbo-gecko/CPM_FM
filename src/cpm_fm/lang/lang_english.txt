@@ -14,6 +14,7 @@
 
 # --- Application ---------------------------------------------------------------
 app.title = CP/M File Manager
+app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = File
@@ -35,6 +36,7 @@ toolbar.terminal = Terminal
 
 # --- Main window ---------------------------------------------------------------
 main.host_files = Host Files
+main.host_files_dir = {label} — {dir}
 main.change_directory = Change Directory
 main.copy_to_remote = Copy to Remote
 main.remote_files = Remote Files

@@ -12,7 +12,7 @@ from typing import Callable, cast
 
 import serial.tools.list_ports
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QAction, QActionGroup
+from PySide6.QtGui import QAction, QActionGroup, QFontMetrics
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -152,7 +152,10 @@ class MainWindow(QMainWindow):
         set_language(self.window_state.language)
         self._i18n_registry: list[tuple[Callable[[str], None], str]] = []
 
-        self._register_text(self.setWindowTitle, "app.title")
+        # FR-125: the base name (no path, no extension) of the loaded config
+        # file, shown in the title bar. Empty until a config is loaded.
+        self._config_name = ""
+        self._update_window_title()
         self.resize(900, 560)
 
         # UI State
@@ -227,8 +230,55 @@ class MainWindow(QMainWindow):
         for setter, key in self._i18n_registry:
             setter(tr(key))
         self._update_indicators()
+        # FR-125/FR-126: composite titles (combining translated text with a
+        # filename/path) are re-applied here rather than via the registry, like
+        # the connection indicators above.
+        self._update_window_title()
+        self._update_host_group_title()
         if self.terminal_win is not None:
             self.terminal_win.retranslate_ui()
+
+    def _update_window_title(self) -> None:
+        """Set the main window title, appending the loaded config's name.
+
+        The title bar shows the application name; when a configuration file is
+        loaded it is followed by that file's base name (no directory, no
+        extension). Re-resolves the active language each call so it stays
+        correct across language switches (FR-123).
+
+        Satisfies: FR-125, UIR-005.
+        """
+        base = tr("app.title")
+        if self._config_name:
+            self.setWindowTitle(tr("app.title_with_config", app=base, config=self._config_name))
+        else:
+            self.setWindowTitle(base)
+
+    def _update_host_group_title(self) -> None:
+        """Set the Host Files group title to include the current host directory.
+
+        The directory is appended after the translated "Host Files" label. When
+        the directory text is wider than the space available in the group box,
+        its leading portion is elided (``…\\tail``) so the trailing, most
+        specific part of the path stays visible. Recomputed on resize
+        (``resizeEvent``) and on language change (``retranslate_ui``).
+
+        Safe to call before the group box exists (during early construction) —
+        it simply does nothing.
+
+        Satisfies: FR-126, UIR-011.
+        """
+        group = getattr(self, "host_group", None)
+        if group is None:
+            return
+        label = tr("main.host_files")
+        metrics = QFontMetrics(group.font())
+        # Width consumed by the fixed prefix ("Host Files — ") plus a margin for
+        # the group-box frame and title indent, leaving the rest for the path.
+        prefix = tr("main.host_files_dir", label=label, dir="")
+        avail = group.width() - metrics.horizontalAdvance(prefix) - 24
+        elided = metrics.elidedText(self.host_dir, Qt.TextElideMode.ElideLeft, max(0, avail))
+        group.setTitle(tr("main.host_files_dir", label=label, dir=elided))
 
     # ------------------------------------------------------------------ setup
 
@@ -356,8 +406,11 @@ class MainWindow(QMainWindow):
         splitter = QSplitter()
 
         # Left Side: Host Files
+        # FR-126: kept as an attribute so the title can be updated to include
+        # the current host directory (set via _update_host_group_title).
         host_group = QGroupBox()
-        self._register_text(host_group.setTitle, "main.host_files")
+        self.host_group = host_group
+        self._update_host_group_title()
         host_layout = QVBoxLayout(host_group)
 
         # UIR-011: a top row with the "Change Directory" and "Update" (refresh
@@ -607,8 +660,12 @@ class MainWindow(QMainWindow):
 
     def refresh_host_files(self):
         """
-        Satisfies: FR-060.
+        Satisfies: FR-060, FR-126.
         """
+        # FR-126: the host directory may have changed; reflect it in the group
+        # title. This is the single point through which every host-directory
+        # change passes.
+        self._update_host_group_title()
         self.host_list.clear()
         try:
             files = [
@@ -1638,11 +1695,16 @@ class MainWindow(QMainWindow):
 
     def load_config(self, filename):
         """
-        Satisfies: FR-005, FR-011, FR-012, FR-017, FR-060.
+        Satisfies: FR-005, FR-011, FR-012, FR-017, FR-060, FR-125.
         """
         self.settings = self.config_handler.load_json(filename)
         # FR-005: remember this file so it is reloaded on the next startup.
         self.window_state.last_config = filename
+
+        # FR-125: show the loaded config's base name (no path, no extension)
+        # in the title bar.
+        self._config_name = os.path.splitext(os.path.basename(filename))[0]
+        self._update_window_title()
 
         # Restore host directory if specified in config
         host_dir = self.settings.get("host_directory")
@@ -1744,6 +1806,11 @@ class MainWindow(QMainWindow):
         self.settings = copy.deepcopy(DEFAULT_SETTINGS)
         self.window_state.last_config = ""
 
+        # FR-125: no config file is loaded after New — drop the config name
+        # from the title bar.
+        self._config_name = ""
+        self._update_window_title()
+
         # FR-019/FR-060: refresh the Host Files list to the default host
         # directory (empty -> current working directory).
         self.host_dir = self.settings.get("host_directory") or os.getcwd()
@@ -1795,6 +1862,18 @@ class MainWindow(QMainWindow):
         AboutDialog(self).exec()
 
     # ------------------------------------------------------------------- exit
+
+    def resizeEvent(self, event):
+        """Re-elide the Host Files directory title to the new window width.
+
+        The directory shown in the group title (FR-126) is left-elided to fit
+        the available width, so it must be recomputed whenever the window — and
+        thus the group box — is resized.
+
+        Satisfies: FR-126.
+        """
+        super().resizeEvent(event)
+        self._update_host_group_title()
 
     def closeEvent(self, event):
         """

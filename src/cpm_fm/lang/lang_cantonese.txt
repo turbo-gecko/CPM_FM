@@ -9,6 +9,7 @@
 
 # --- Application ---------------------------------------------------------------
 app.title = CP/M 檔案管理員
+app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = 檔案
@@ -30,6 +31,7 @@ toolbar.terminal = 終端
 
 # --- Main window ---------------------------------------------------------------
 main.host_files = 主機檔案
+main.host_files_dir = {label} — {dir}
 main.change_directory = 更改目錄
 main.copy_to_remote = 複製到裝置
 main.remote_files = 遠端檔案

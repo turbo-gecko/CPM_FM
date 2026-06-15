@@ -9,6 +9,7 @@
 
 # --- Application ---------------------------------------------------------------
 app.title = Gestor de Archivos CP/M
+app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = Archivo
@@ -30,6 +31,7 @@ toolbar.terminal = Terminal
 
 # --- Main window ---------------------------------------------------------------
 main.host_files = Archivos del host
+main.host_files_dir = {label} — {dir}
 main.change_directory = Cambiar de directorio
 main.copy_to_remote = Copiar al dispositivo
 main.remote_files = Archivos remotos

@@ -9,6 +9,7 @@
 
 # --- Application ---------------------------------------------------------------
 app.title = Διαχειριστής Αρχείων CP/M
+app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = Αρχείο
@@ -30,6 +31,7 @@ toolbar.terminal = Τερματικός
 
 # --- Main window ---------------------------------------------------------------
 main.host_files = Αρχεία ξενιστή
+main.host_files_dir = {label} — {dir}
 main.change_directory = Αλλαγή καταλόγου
 main.copy_to_remote = Αντιγραφή στη συσκευή
 main.remote_files = Απομακρυσμένα αρχεία
