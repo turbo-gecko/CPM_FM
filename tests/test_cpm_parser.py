@@ -89,8 +89,13 @@ def test_has_drive_prompt_detects_prompt_embedded_in_output():
     assert CPMParser.has_drive_prompt(text, "B") is True
 
 
-def test_has_drive_prompt_is_case_insensitive():
+def test_has_drive_prompt_matches_lowercase_response():
+    # DR-033: a lowercase prompt from the terminal satisfies an upper-case drive.
     assert CPMParser.has_drive_prompt("a>", "A") is True
+
+
+def test_has_drive_prompt_matches_lowercase_request():
+    # DR-033: a lowercase requested drive letter is matched case-insensitively.
     assert CPMParser.has_drive_prompt("A>", "a") is True
 
 
@@ -104,3 +109,50 @@ def test_has_drive_prompt_ignores_blank_lines():
 def test_has_drive_prompt_rejects_different_drive():
     # A prompt for a different drive does not satisfy the requested drive.
     assert CPMParser.has_drive_prompt("A>", "B") is False
+
+
+# --------------------------------------------------------------------------- #
+# parse_dir_output boundary / edge cases (DR-001-DR-032).
+# --------------------------------------------------------------------------- #
+
+
+def test_parse_dir_output_joins_multi_token_base():
+    # DR-011: the base is every token except the last (the extension) joined
+    # without spaces; pins the documented join so it cannot regress to tokens[0].
+    assert CPMParser.parse_dir_output("A: FOO BAR TXT") == {"FOOBAR.TXT": True}
+
+
+def test_parse_dir_output_accepts_lowercase_drive_letter():
+    # DR-004: the drive identifier is matched case-insensitively (line[0].isalpha).
+    assert CPMParser.parse_dir_output("c: GAME COM") == {"GAME.COM": True}
+
+
+def test_parse_dir_output_skips_empty_entry_between_delimiters():
+    # DR-011: an empty entry produced by adjacent ' : ' delimiters is skipped,
+    # leaving the surrounding real files intact.
+    assert CPMParser.parse_dir_output("A: FOO     TXT :  : BAR     COM") == {
+        "FOO.TXT": True,
+        "BAR.COM": True,
+    }
+
+
+def test_parse_dir_output_bar_format_skips_dot_only_entry():
+    # DR-015: a bar entry that is only a dot (empty name and extension) is
+    # discarded rather than yielding an empty filename.
+    assert CPMParser.parse_dir_output("|  .    |  PIP     .COM") == {"PIP.COM": True}
+
+
+def test_parse_dir_output_deduplicates_repeated_names():
+    # DR-011: a name appearing twice collapses to a single entry.
+    assert CPMParser.parse_dir_output("C: FOO      TXT : FOO      TXT") == {"FOO.TXT": True}
+
+
+def test_parse_dir_output_handles_crlf_line_endings():
+    # DR-001: real serial output is CRLF-terminated; splitlines must handle it.
+    assert CPMParser.parse_dir_output("C: FOO      TXT\r\nC>\r\n") == {"FOO.TXT": True}
+
+
+def test_parse_dir_output_empty_input_yields_no_files():
+    # DR-001: empty / whitespace-only input yields an empty mapping, never raises.
+    assert CPMParser.parse_dir_output("") == {}
+    assert CPMParser.parse_dir_output("   \n\t\n") == {}
