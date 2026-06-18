@@ -166,3 +166,11 @@ config.general.host_directory = Répertoire hôte par défaut
 # --- About dialog --------------------------------------------------------------
 about.title = À propos
 about.version = Version {version}
+
+# --- File list filter / sort (Feature 3) --------------------------------------
+main.filter_placeholder = Filtrer les fichiers…
+main.filter_tooltip = Filtrer par nom ; utilisez * et ? comme caractères génériques
+main.sort.name = Nom
+main.sort.extension = Extension
+main.sort_by_tooltip = Trier par
+main.sort_direction_tooltip = Basculer l'ordre croissant/décroissant

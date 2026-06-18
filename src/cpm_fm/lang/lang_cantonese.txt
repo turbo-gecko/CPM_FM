@@ -166,3 +166,11 @@ config.general.host_directory = 預設主機目錄
 # --- About dialog --------------------------------------------------------------
 about.title = 關於
 about.version = 版本 {version}
+
+# --- File list filter / sort (Feature 3) --------------------------------------
+main.filter_placeholder = 篩選檔案…
+main.filter_tooltip = 按名稱篩選；可用 * 同 ? 作萬用字元
+main.sort.name = 名稱
+main.sort.extension = 副檔名
+main.sort_by_tooltip = 排序方式
+main.sort_direction_tooltip = 切換升序/降序

@@ -1480,6 +1480,174 @@ def test_host_group_title_includes_directory(qapp, state):
         win.deleteLater()
 
 
+# ------------------------------------------------- file-list filter / sort (F3)
+
+
+def _host_names(win):
+    return [win.host_list.item(i).text() for i in range(win.host_list.count())]
+
+
+def _remote_names(win):
+    return [win.remote_list.item(i).text() for i in range(win.remote_list.count())]
+
+
+def test_filter_sort_controls_present_on_both_panes(qapp, state):
+    # UIR-079/UIR-080: each pane has a filter field, a sort drop-down (Name /
+    # Extension), and a direction toggle button.
+    from PySide6.QtWidgets import QComboBox, QLineEdit, QToolButton
+
+    win = MainWindow(state)
+    try:
+        assert isinstance(win.host_filter, QLineEdit)
+        assert isinstance(win.remote_filter, QLineEdit)
+        for combo in (win.host_sort_combo, win.remote_sort_combo):
+            assert isinstance(combo, QComboBox)
+            assert [combo.itemText(i) for i in range(combo.count())] == ["Name", "Extension"]
+            assert [combo.itemData(i) for i in range(combo.count())] == ["name", "extension"]
+        assert isinstance(win.host_sort_dir_btn, QToolButton)
+        assert win.host_sort_dir_btn.isCheckable()
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_host_filter_hides_nonmatching_files(qapp, state):
+    # FR-130/FR-131: a filter restricts the host list to matching names.
+    win = MainWindow(state)
+    try:
+        win._host_files = ["A.TXT", "B.COM", "C.TXT", "D.COM"]
+        win.host_filter.setText("*.TXT")
+        win._apply_host_view()
+        assert _host_names(win) == ["A.TXT", "C.TXT"]
+        # Clearing the filter restores the full list.
+        win.host_filter.setText("")
+        win._apply_host_view()
+        assert _host_names(win) == ["A.TXT", "B.COM", "C.TXT", "D.COM"]
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_host_sort_by_extension_and_direction(qapp, state):
+    # FR-132: the sort drop-down and direction button reorder the host list.
+    from cpm_fm.utils.file_filter import SORT_EXTENSION
+
+    win = MainWindow(state)
+    try:
+        win._host_files = ["B.TXT", "A.COM", "C.TXT", "D.COM"]
+        win.host_sort_combo.setCurrentIndex(win.host_sort_combo.findData(SORT_EXTENSION))
+        win._apply_host_view()
+        assert _host_names(win) == ["A.COM", "D.COM", "B.TXT", "C.TXT"]
+        # Toggling descending reverses within the extension grouping.
+        win.host_sort_dir_btn.setChecked(True)
+        win._apply_host_view()
+        assert _host_names(win) == ["C.TXT", "B.TXT", "D.COM", "A.COM"]
+        assert win.host_sort_dir_btn.text() == "↓"
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_active_filter_sets_visual_indicator(qapp, state):
+    # UIR-079: an active (non-empty) filter flags the field with a styled border.
+    win = MainWindow(state)
+    try:
+        win._host_files = ["A.TXT"]
+        win.host_filter.setText("A")
+        win._apply_host_view()
+        assert "border" in win.host_filter.styleSheet()
+        win.host_filter.setText("")
+        win._apply_host_view()
+        assert win.host_filter.styleSheet() == ""
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_remote_list_applies_filter_and_sort(qapp, state):
+    # FR-133: the remote listing is rendered through the pane's filter/sort.
+    win = MainWindow(state)
+    try:
+        win.remote_filter.setText("*.COM")
+        win._update_remote_list_ui({"B.TXT": True, "A.COM": True, "C.COM": True})
+        assert _remote_names(win) == ["A.COM", "C.COM"]
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_default_remote_list_is_name_ascending(qapp, state):
+    # FR-078/FR-133: with default controls the remote list is name-ascending,
+    # preserving the long-standing default display.
+    win = MainWindow(state)
+    try:
+        win._update_remote_list_ui({"C.TXT": True, "A.TXT": True, "B.TXT": True})
+        assert _remote_names(win) == ["A.TXT", "B.TXT", "C.TXT"]
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_clear_remote_files_empties_canonical_and_widget(qapp, state):
+    # FR-058/FR-103: clearing the remote list drops both the widget rows and the
+    # canonical source, so a later filter change cannot resurrect stale entries.
+    win = MainWindow(state)
+    try:
+        win._update_remote_list_ui({"A.TXT": True})
+        assert win._remote_files
+        win._clear_remote_files()
+        assert win._remote_files == []
+        assert win.remote_list.count() == 0
+        # A filter change now renders nothing rather than the old entries.
+        win.remote_filter.setText("A")
+        win._apply_remote_view()
+        assert win.remote_list.count() == 0
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_filter_sort_settings_persist_across_sessions(qapp, state):
+    # FR-134: a pane's filter text and sort settings are saved and restored in a
+    # later session sharing the same store.
+    from cpm_fm.utils.file_filter import SORT_EXTENSION
+
+    first = MainWindow(state)
+    try:
+        first.host_filter.setText("*.TXT")
+        first.host_sort_combo.setCurrentIndex(first.host_sort_combo.findData(SORT_EXTENSION))
+        first.host_sort_dir_btn.setChecked(True)
+        first._apply_host_view()  # persists via _persist_filter_sort
+    finally:
+        first.close()
+        first.deleteLater()
+
+    second = MainWindow(state)
+    try:
+        assert second.host_filter.text() == "*.TXT"
+        assert second.host_sort_combo.currentData() == SORT_EXTENSION
+        assert second.host_sort_dir_btn.isChecked() is True
+        assert second.host_sort_dir_btn.text() == "↓"
+    finally:
+        second.close()
+        second.deleteLater()
+
+
+def test_sort_combo_labels_retranslate_live(qapp, state):
+    # FR-123: switching language re-labels the sort drop-down items while keeping
+    # their userData (sort keys) intact.
+    win = MainWindow(state)
+    try:
+        win.menu_set_language("german")
+        qapp.processEvents()
+        labels = [win.host_sort_combo.itemText(i) for i in range(win.host_sort_combo.count())]
+        assert labels == ["Name", "Erweiterung"]
+        assert [win.host_sort_combo.itemData(i) for i in range(2)] == ["name", "extension"]
+    finally:
+        win.close()
+        win.deleteLater()
+
+
 def test_app_icon_resource_present_and_loadable(qapp):
     # UIR-078/DR-044: the runtime icon ships as package data and app_icon()
     # returns a real (non-null) QIcon loaded from it.

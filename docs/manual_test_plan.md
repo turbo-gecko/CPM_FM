@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.11 |
+| Version | 1.12 |
 | Status | Draft |
-| Date | 2026-06-16 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.5.2) |
+| Date | 2026-06-18 |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.6.0) |
 
 ---
 
@@ -200,6 +200,28 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 
 ---
 
+## 9.1 File list filter & sort  **[visual]**
+
+Applies to **both** panes; the filter/sort core is unit-tested (`tests/test_file_filter.py`,
+`tests/test_gui_smoke.py`) — these cases confirm the live wiring and on-screen behaviour. Host-pane
+cases need only a populated Host Files list; the remote-pane case (MT-FS08) needs a remote listing
+(**[CP/M]**). Use a scratch host folder containing a mix such as `A.TXT`, `b.txt`, `C.COM`, `D.COM`,
+`LICENSE` (extensionless).
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-FS01 | FR-130, FR-131, UIR-079 | In the Host filter field type a substring (e.g. `txt`). Then press the inline **×** (clear) button. | While typing, the list narrows to names containing `txt` (case-insensitive); the rest are hidden. Clearing restores the full list. |
+| MT-FS02 | FR-131 | Type a wildcard pattern, e.g. `*.COM`, then `?.TXT`. | `*.COM` shows only the `.COM` files; `?.TXT` matches single-character base names ending `.TXT` (whole-name glob, anchored — a bare `TXT` would instead match as a substring). |
+| MT-FS03 | FR-131 | Type quickly then pause. | The list updates shortly after you stop typing (≈150 ms debounce), not jerkily on every keystroke; no perceptible lag. |
+| MT-FS04 | FR-132, UIR-080 | Use the **sort** drop-down to pick **Name**, then **Extension**; click the direction (`↑`/`↓`) button. | Name sorts alphabetically (case-insensitive); Extension groups by extension (extensionless first) with name as tie-breaker. The arrow flips `↑`↔`↓` and the order reverses accordingly. |
+| MT-FS05 | FR-133 | Set a filter (e.g. `*.COM`) **and** a sort (Extension, descending). | The displayed files are the filtered subset, shown in the chosen sort order — filter applied first, then sort. |
+| MT-FS06 | FR-135, UIR-079 | Type any non-empty filter, then clear it. | A clear visual indicator (coloured border on the field) shows while the filter is active; it disappears when the field is empty. |
+| MT-FS07 | FR-134 | Set distinct filter text and sort settings on the **Host** and **Remote** panes. Close the app and relaunch. | Each pane reopens with its own last-used filter text, sort key, and direction restored independently. |
+| MT-FS08 [CP/M] | FR-135 | With a remote listing shown, type a filter in the **Remote** filter. Then Disconnect (or File > Load / File > New). | The remote list clears on disconnect/load/new and stays empty — changing the remote filter afterwards does **not** resurrect the old (stale) entries. |
+| MT-FS09 | UIR-080, FR-123 | Switch the GUI language (Config > Language). | The filter placeholder/tooltip and the sort drop-down options (**Name**/**Extension**) appear in the new language; the sort still works (the underlying keys are unchanged). |
+
+---
+
 ## 10. Remote listing & drive selection (live)  **[CP/M]**
 
 Preconditions: connected to a CP/M peer with files on at least drive `A:`.
@@ -339,6 +361,7 @@ or real cross-session persistence:
 - Application icon (on-screen render across windows + OS taskbar/dock): `UIR-078` (the resource presence/loadability and missing-file fallback in `DR-044` are covered automatically by `tests/test_gui_smoke.py`; MT-V11 confirms the branded icon actually renders).
 - About dialog (on-screen render + live browser launch): `FR-022`, `UIR-004`, `UIR-076` (the version-sourcing `DR-040`/`DR-041` are covered automatically by `tests/test_version.py`; MT-V10 confirms the displayed version matches end-to-end).
 - Internationalisation (live on-screen re-translation, real menu, cross-session language persistence): `FR-122`, `FR-123`, `FR-124` (live), `UIR-003`, `UIR-077`, `CR-015`, `NFR-005` (the translator, parsing, and fallback in `FR-121`/`DR-042`/`DR-043` are covered automatically by `tests/test_i18n.py`; the manual cases confirm the rendered UI switches language live and that the choice persists).
+- File list filter & sort (live on-screen filtering/sorting, debounce timing, active-filter indicator, cross-session persistence): `FR-130`–`FR-135` (live), `UIR-079`, `UIR-080` (the filter/sort logic itself in `utils/file_filter.py` and the GUI wiring are covered automatically by `tests/test_file_filter.py` and `tests/test_gui_smoke.py`; the manual cases confirm the on-screen rendering, the debounce feel, and real cross-session restore).
 - Non-functional (real): `NFR-001`, `NFR-004` (live), `STR-003`, `FR-088`.
 
 Purely algorithmic and headless-logic requirements (`DR-*`, the X-Modem progress/handshake internals,

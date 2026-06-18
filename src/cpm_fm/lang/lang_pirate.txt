@@ -171,3 +171,11 @@ config.general.host_directory = Home Port Directory
 # --- About dialog --------------------------------------------------------------
 about.title = The Legend
 about.version = Era {version}
+
+# --- File list filter / sort (Feature 3) --------------------------------------
+main.filter_placeholder = Sift the booty…
+main.filter_tooltip = Sift by name; use * and ? as wildcards, savvy?
+main.sort.name = Name
+main.sort.extension = Tail End
+main.sort_by_tooltip = Sort by
+main.sort_direction_tooltip = Flip 'twixt high tide an' low

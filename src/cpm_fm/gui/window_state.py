@@ -108,3 +108,58 @@ class WindowState:
         Satisfies: FR-122, FR-124.
         """
         self._settings.setValue("language", name)
+
+    # ------------------------------------------------- file-list filter / sort
+
+    # FR-134: the last-used filter text and sort settings for each file pane are
+    # UI/session preferences (like geometry and language), so they live here in
+    # QSettings rather than in the per-config serial JSON. ``pane`` is "host" or
+    # "remote"; the values are stored under distinct keys so the two panes are
+    # independent.
+
+    def filter_text(self, pane: str) -> str:
+        """The persisted filter text for ``pane`` ("" if none).
+
+        Satisfies: FR-134.
+        """
+        value = self._settings.value(f"filter/{pane}/text", "")
+        return value if isinstance(value, str) else ""
+
+    def set_filter_text(self, pane: str, text: str) -> None:
+        """
+        Satisfies: FR-134.
+        """
+        self._settings.setValue(f"filter/{pane}/text", text)
+
+    def sort_key(self, pane: str) -> str:
+        """The persisted sort key for ``pane`` (defaults to name order).
+
+        Satisfies: FR-134.
+        """
+        value = self._settings.value(f"filter/{pane}/sort_key", "name")
+        return value if isinstance(value, str) and value else "name"
+
+    def set_sort_key(self, pane: str, key: str) -> None:
+        """
+        Satisfies: FR-134.
+        """
+        self._settings.setValue(f"filter/{pane}/sort_key", key)
+
+    def sort_descending(self, pane: str) -> bool:
+        """Whether ``pane`` sorts descending (defaults to ascending).
+
+        QSettings round-trips booleans as the strings "true"/"false" through an
+        INI backend, so accept either a real bool or that string form.
+
+        Satisfies: FR-134.
+        """
+        value = self._settings.value(f"filter/{pane}/sort_desc", False)
+        if isinstance(value, bool):
+            return value
+        return str(value).strip().lower() in ("1", "true", "yes")
+
+    def set_sort_descending(self, pane: str, descending: bool) -> None:
+        """
+        Satisfies: FR-134.
+        """
+        self._settings.setValue(f"filter/{pane}/sort_desc", bool(descending))

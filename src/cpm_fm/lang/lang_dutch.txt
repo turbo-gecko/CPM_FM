@@ -166,3 +166,11 @@ config.general.host_directory = Standaard hostmap
 # --- About dialog --------------------------------------------------------------
 about.title = Over
 about.version = Versie {version}
+
+# --- File list filter / sort (Feature 3) --------------------------------------
+main.filter_placeholder = Bestanden filteren…
+main.filter_tooltip = Filter op naam; gebruik * en ? als jokertekens
+main.sort.name = Naam
+main.sort.extension = Extensie
+main.sort_by_tooltip = Sorteren op
+main.sort_direction_tooltip = Oplopende/aflopende volgorde wisselen
