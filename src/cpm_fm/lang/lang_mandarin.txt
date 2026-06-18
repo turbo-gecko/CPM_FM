@@ -166,3 +166,11 @@ config.general.host_directory = 默认主机目录
 # --- About dialog --------------------------------------------------------------
 about.title = 关于
 about.version = 版本 {version}
+
+# --- File list filter / sort (Feature 3) --------------------------------------
+main.filter_placeholder = 筛选文件…
+main.filter_tooltip = 按名称筛选；使用 * 和 ? 作为通配符
+main.sort.name = 名称
+main.sort.extension = 扩展名
+main.sort_by_tooltip = 排序方式
+main.sort_direction_tooltip = 切换升序/降序

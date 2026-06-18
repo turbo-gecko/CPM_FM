@@ -7,9 +7,9 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.11 |
-| Scorecard for plan version | 1.11 (`docs/manual_test_plan.md`) |
-| SRS version | (e.g. 2.5.2) |
+| Scorecard version | 1.12 |
+| Scorecard for plan version | 1.12 (`docs/manual_test_plan.md`) |
+| SRS version | (e.g. 2.6.0) |
 | Tester | |
 | Date(s) of run | |
 
@@ -122,6 +122,19 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-H03 | Host "Update" button acts on BOTH lists | FR-063 | | | |
 | MT-H04 | Host group title shows current dir, left-elided | FR-126/UIR-011 | | | |
 
+### §9.1 File list filter & sort (visual)
+| ID | Title | Req | Result | Env | Notes |
+|----|-------|-----|:------:|:---:|-------|
+| MT-FS01 | Substring filter narrows list; × clears | FR-130/131, UIR-079 | | | |
+| MT-FS02 | Wildcard `*`/`?` whole-name glob | FR-131 | | | |
+| MT-FS03 | Filter debounced (~150 ms), no lag | FR-131 | | | |
+| MT-FS04 | Sort Name/Extension + direction arrow | FR-132, UIR-080 | | | |
+| MT-FS05 | Combined filter + sort (filter then sort) | FR-133 | | | |
+| MT-FS06 | Active-filter visual indicator | FR-135, UIR-079 | | | |
+| MT-FS07 | Filter/sort persist per pane across sessions | FR-134 | | | |
+| MT-FS08 | Cleared remote list stays empty (no stale) | FR-135 | | | |
+| MT-FS09 | Sort labels/placeholder retranslate | UIR-080, FR-123 | | | |
+
 ### §10 Remote listing & drive selection (live)
 | ID | Title | Req | Result | Env | Notes |
 |----|-------|-----|:------:|:---:|-------|
@@ -219,6 +232,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | §7 General config | | | | | |
 | §8 Load/save | | | | | |
 | §9 Host files | | | | | |
+| §9.1 Filter & sort | | | | | |
 | §10 Remote listing | | | | | |
 | §11 Transfers | | | | | |
 | §12 Terminal Window | | | | | |

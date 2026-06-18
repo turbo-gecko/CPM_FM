@@ -43,6 +43,14 @@ main.remote_files = Remote Files
 main.update = Update
 main.copy_to_host = Copy to Host
 
+# --- File list filter / sort (Feature 3) --------------------------------------
+main.filter_placeholder = Filter files…
+main.filter_tooltip = Filter by name; use * and ? as wildcards
+main.sort.name = Name
+main.sort.extension = Extension
+main.sort_by_tooltip = Sort by
+main.sort_direction_tooltip = Toggle ascending/descending order
+
 # --- Connection indicators -----------------------------------------------------
 indicator.terminal = Terminal
 indicator.transport = Transport

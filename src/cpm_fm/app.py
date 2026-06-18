@@ -11,7 +11,7 @@ import time
 from typing import Callable, cast
 
 import serial.tools.list_ports
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QFontMetrics
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QGroupBox,
     QHBoxLayout,
+    QLineEdit,
     QListWidget,
     QMainWindow,
     QMenu,
@@ -29,6 +30,7 @@ from PySide6.QtWidgets import (
     QSplitter,
     QStyle,
     QToolBar,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -44,6 +46,7 @@ from cpm_fm.terminal.cpm_parser import CPMParser
 from cpm_fm.terminal.serial_manager import SerialManager
 from cpm_fm.terminal.xmodem import XModem
 from cpm_fm.utils.config_handler import DEFAULT_SETTINGS, ConfigHandler
+from cpm_fm.utils.file_filter import SORT_EXTENSION, SORT_NAME, filter_and_sort
 from cpm_fm.utils.i18n import (
     available_languages,
     current_language,
@@ -167,6 +170,14 @@ class MainWindow(QMainWindow):
         # transfer worker thread to abort the in-progress transfer.
         self._transfer_cancel = threading.Event()
         self.host_dir = os.getcwd()
+        # FR-130/FR-133: the canonical, unfiltered file names for each pane. The
+        # visible QListWidget rows are derived from these by filter_and_sort, so
+        # filtering/sorting can be re-applied without re-reading the source.
+        self._host_files: list[str] = []
+        self._remote_files: list[str] = []
+        # FR-134: guards persistence while restoring saved filter/sort state, so
+        # the restore does not immediately re-write what it just read.
+        self._restoring_filter_sort = False
         self._remote_capture_buffer = ""
         self._capture_active = False
         # Cached Local Echo state so worker threads read a plain bool rather
@@ -183,6 +194,11 @@ class MainWindow(QMainWindow):
         self.setup_layout()
         self.setup_status_bar()
         self._connect_signals()
+
+        # FR-134: load each pane's saved filter text and sort settings into the
+        # newly-built controls before the first list is populated, so the very
+        # first render already reflects the restored preferences.
+        self._restore_filter_sort()
 
         # FR-090 / FR-074: capture received data regardless of whether the
         # Terminal Window has been opened (the window may not exist yet).
@@ -229,6 +245,12 @@ class MainWindow(QMainWindow):
         """
         for setter, key in self._i18n_registry:
             setter(tr(key))
+        # FR-123: the sort drop-down item *labels* are translated, but their
+        # userData (the SORT_* keys) is not; re-apply the labels by row so the
+        # current selection and key are preserved across a language switch.
+        for combo in (self.host_sort_combo, self.remote_sort_combo):
+            combo.setItemText(0, tr("main.sort.name"))
+            combo.setItemText(1, tr("main.sort.extension"))
         self._update_indicators()
         # FR-125/FR-126: composite titles (combining translated text with a
         # filename/path) are re-applied here rather than via the registry, like
@@ -424,6 +446,12 @@ class MainWindow(QMainWindow):
         host_top.addWidget(refresh_btn, 1)
         host_layout.addLayout(host_top)
 
+        # UIR-079/UIR-080: filter field + sort controls above the Host list.
+        host_fs, self.host_filter, self.host_sort_combo, self.host_sort_dir_btn = (
+            self._build_filter_sort_row("host")
+        )
+        host_layout.addLayout(host_fs)
+
         self.host_list = QListWidget()
         self.host_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         # UIR-018: right-click context menu (View/Edit, Rename, Delete) on host files.
@@ -462,6 +490,12 @@ class MainWindow(QMainWindow):
         remote_top.addWidget(update_btn, 1)
         remote_layout.addLayout(remote_top)
 
+        # UIR-079/UIR-080: filter field + sort controls above the Remote list.
+        remote_fs, self.remote_filter, self.remote_sort_combo, self.remote_sort_dir_btn = (
+            self._build_filter_sort_row("remote")
+        )
+        remote_layout.addLayout(remote_fs)
+
         self.remote_list = QListWidget()
         self.remote_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         # UIR-019: right-click context menu (View, Rename, Delete) on remote files.
@@ -483,6 +517,174 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(container)
         layout.addWidget(splitter)
         self.setCentralWidget(container)
+
+    # ------------------------------------------------- file-list filter / sort
+
+    def _build_filter_sort_row(self, pane: str):
+        """Build the filter field and sort controls for one file pane.
+
+        Returns ``(layout, filter_edit, sort_combo, dir_btn)``. ``pane`` is
+        "host" or "remote" and selects which view-apply slot the controls drive.
+        The filter field carries a built-in clear (X) button (FR-135) and its
+        input is debounced ~150 ms so a render is not run on every keystroke
+        (FR-131). The sort drop-down offers Name/Extension (FR-132, userData =
+        the SORT_* key) and the checkable direction button toggles
+        ascending/descending.
+
+        Satisfies: FR-130, FR-132, FR-135, UIR-079, UIR-080.
+        """
+        row = QHBoxLayout()
+
+        filter_edit = QLineEdit()
+        filter_edit.setClearButtonEnabled(True)  # FR-135: clear (X) button.
+        self._register_text(filter_edit.setPlaceholderText, "main.filter_placeholder")
+        self._register_text(filter_edit.setToolTip, "main.filter_tooltip")
+        row.addWidget(filter_edit, 1)
+
+        sort_combo = QComboBox()
+        sort_combo.addItem(tr("main.sort.name"), SORT_NAME)
+        sort_combo.addItem(tr("main.sort.extension"), SORT_EXTENSION)
+        self._register_text(sort_combo.setToolTip, "main.sort_by_tooltip")
+        row.addWidget(sort_combo)
+
+        dir_btn = QToolButton()
+        dir_btn.setCheckable(True)
+        dir_btn.setText("↑")  # ascending; flipped to ↓ when checked.
+        self._register_text(dir_btn.setToolTip, "main.sort_direction_tooltip")
+        row.addWidget(dir_btn)
+
+        apply_fn = self._apply_host_view if pane == "host" else self._apply_remote_view
+
+        # FR-131: debounce filter typing so the list re-renders ~150 ms after the
+        # user pauses, not on every character.
+        timer = QTimer(self)
+        timer.setSingleShot(True)
+        timer.setInterval(150)
+        timer.timeout.connect(apply_fn)
+        filter_edit.textChanged.connect(lambda _text, tm=timer: tm.start())
+        # FR-132: a sort change re-renders immediately (no debounce needed).
+        sort_combo.currentIndexChanged.connect(apply_fn)
+        dir_btn.toggled.connect(lambda checked, b=dir_btn: self._update_sort_arrow(b, checked))
+        dir_btn.toggled.connect(apply_fn)
+
+        return row, filter_edit, sort_combo, dir_btn
+
+    @staticmethod
+    def _update_sort_arrow(button, checked: bool) -> None:
+        """Show ``↓`` for descending, ``↑`` for ascending (UIR-080).
+
+        The arrow glyph is a directional indicator, not translatable prose, so
+        it is set directly (CR-015).
+
+        Satisfies: UIR-080.
+        """
+        button.setText("↓" if checked else "↑")
+
+    def _render_file_list(self, list_widget, names, filter_edit, sort_combo, dir_btn) -> None:
+        """Filter+sort ``names`` per the pane's controls and show them.
+
+        Applies the shared filter_and_sort logic (FR-133) and flags an active
+        (non-empty) filter with a coloured border on the field (UIR-079).
+
+        Satisfies: FR-130, FR-131, FR-132, FR-133, UIR-079.
+        """
+        pattern = filter_edit.text()
+        key = sort_combo.currentData() or SORT_NAME
+        descending = dir_btn.isChecked()
+        visible = filter_and_sort(names, pattern, key=key, descending=descending)
+        list_widget.clear()
+        list_widget.addItems(visible)
+        # UIR-079: a coloured border marks an active filter so it is obvious why
+        # files may be hidden.
+        active = bool(pattern.strip())
+        filter_edit.setStyleSheet("QLineEdit { border: 1px solid #4caf50; }" if active else "")
+
+    def _apply_host_view(self) -> None:
+        """Re-render the Host list from the current filter/sort controls (FR-133).
+
+        Satisfies: FR-133, FR-134.
+        """
+        self._render_file_list(
+            self.host_list,
+            self._host_files,
+            self.host_filter,
+            self.host_sort_combo,
+            self.host_sort_dir_btn,
+        )
+        self._persist_filter_sort()
+
+    def _apply_remote_view(self) -> None:
+        """Re-render the Remote list from the current filter/sort controls (FR-133).
+
+        Satisfies: FR-133, FR-134.
+        """
+        self._render_file_list(
+            self.remote_list,
+            self._remote_files,
+            self.remote_filter,
+            self.remote_sort_combo,
+            self.remote_sort_dir_btn,
+        )
+        self._persist_filter_sort()
+
+    def _clear_remote_files(self) -> None:
+        """Empty both the canonical Remote file list and the visible widget.
+
+        Used wherever a stale remote listing must be discarded (load, disconnect,
+        drive-not-found, terminal closed, File > New) so the filter/sort source
+        does not retain entries that are no longer valid.
+
+        Satisfies: FR-017, FR-058, FR-074, FR-103, FR-104.
+        """
+        self._remote_files = []
+        self.remote_list.clear()
+
+    def _persist_filter_sort(self) -> None:
+        """Persist both panes' filter text and sort settings (FR-134).
+
+        A no-op while restoring (so the restore does not overwrite itself).
+
+        Satisfies: FR-134.
+        """
+        if self._restoring_filter_sort:
+            return
+        ws = self.window_state
+        ws.set_filter_text("host", self.host_filter.text())
+        ws.set_sort_key("host", self.host_sort_combo.currentData() or SORT_NAME)
+        ws.set_sort_descending("host", self.host_sort_dir_btn.isChecked())
+        ws.set_filter_text("remote", self.remote_filter.text())
+        ws.set_sort_key("remote", self.remote_sort_combo.currentData() or SORT_NAME)
+        ws.set_sort_descending("remote", self.remote_sort_dir_btn.isChecked())
+
+    def _restore_filter_sort(self) -> None:
+        """Load each pane's saved filter text and sort settings into its controls.
+
+        Signals are blocked during the restore so it does not trigger a premature
+        render or a self-overwriting persist; the first real render happens when
+        the lists are next populated.
+
+        Satisfies: FR-134.
+        """
+        self._restoring_filter_sort = True
+        try:
+            ws = self.window_state
+            panes = (
+                ("host", self.host_filter, self.host_sort_combo, self.host_sort_dir_btn),
+                ("remote", self.remote_filter, self.remote_sort_combo, self.remote_sort_dir_btn),
+            )
+            for pane, edit, combo, btn in panes:
+                for widget in (edit, combo, btn):
+                    widget.blockSignals(True)
+                edit.setText(ws.filter_text(pane))
+                idx = combo.findData(ws.sort_key(pane))
+                combo.setCurrentIndex(idx if idx >= 0 else 0)
+                descending = ws.sort_descending(pane)
+                btn.setChecked(descending)
+                self._update_sort_arrow(btn, descending)
+                for widget in (edit, combo, btn):
+                    widget.blockSignals(False)
+        finally:
+            self._restoring_filter_sort = False
 
     def setup_status_bar(self):
         """
@@ -660,22 +862,27 @@ class MainWindow(QMainWindow):
 
     def refresh_host_files(self):
         """
-        Satisfies: FR-060, FR-126.
+        Satisfies: FR-060, FR-126, FR-133.
         """
         # FR-126: the host directory may have changed; reflect it in the group
         # title. This is the single point through which every host-directory
         # change passes.
         self._update_host_group_title()
-        self.host_list.clear()
         try:
             files = [
                 f
                 for f in os.listdir(self.host_dir)
                 if os.path.isfile(os.path.join(self.host_dir, f))
             ]
-            self.host_list.addItems(files)
         except Exception as e:
+            self._host_files = []
+            self.host_list.clear()
             self.set_status(tr("status.error_reading_host", error=e))
+            return
+        # FR-133: keep the canonical list and render it through the active
+        # filter/sort controls.
+        self._host_files = files
+        self._apply_host_view()
 
     def change_host_dir(self):
         """
@@ -1152,7 +1359,7 @@ class MainWindow(QMainWindow):
             self.set_status(tr("status.terminal_port_closed"))
             # FR-058: the remote listing was read over the now-closed Terminal
             # Port, so it is stale — clear it.
-            self.remote_list.clear()
+            self._clear_remote_files()
 
         # FR-054: same physical port — clear the Transport flag, no separate
         # close. Also drop the shared reference so it cannot point at the
@@ -1196,7 +1403,7 @@ class MainWindow(QMainWindow):
         """
         if not self.serial_mgr.terminal_connected:
             self.set_status(tr("status.terminal_not_open_list"))
-            self.remote_list.clear()
+            self._clear_remote_files()
             return
         drive = self.drive_combo.currentText()[0]  # 'A'..'P'
         threading.Thread(target=self._do_change_drive_logic, args=(drive,), daemon=True).start()
@@ -1248,7 +1455,7 @@ class MainWindow(QMainWindow):
         """
         if not self.serial_mgr.terminal_connected:
             self.set_status(tr("status.terminal_not_open_list"))
-            self.remote_list.clear()
+            self._clear_remote_files()
             return
         drive = self.drive_combo.itemText(index)[0]  # 'A'..'P'
         threading.Thread(target=self._do_change_drive_logic, args=(drive,), daemon=True).start()
@@ -1277,17 +1484,21 @@ class MainWindow(QMainWindow):
 
         FR-103: runs on the GUI thread (queued from the drive-change worker).
         """
-        self.remote_list.clear()
+        self._clear_remote_files()
         QMessageBox.warning(
             self, tr("dialog.drive_not_found.title"), tr("error.drive_not_found_body", drive=drive)
         )
 
     def _update_remote_list_ui(self, files_dict):
         """
-        Satisfies: FR-078, FR-079.
+        Satisfies: FR-078, FR-079, FR-133.
         """
-        self.remote_list.clear()
-        self.remote_list.addItems(sorted(files_dict.keys()))
+        # FR-133: store the parsed names as the canonical list and render them
+        # through the active filter/sort controls. With the default settings
+        # (no filter, sort by name ascending) this reproduces the FR-078
+        # ascending-alphabetical display.
+        self._remote_files = list(files_dict.keys())
+        self._apply_remote_view()
         self.set_status(tr("status.remote_list_updated"))
 
     # -------------------------------------------------------------- transfers
@@ -1714,7 +1925,7 @@ class MainWindow(QMainWindow):
 
         # FR-017: the prior remote listing was captured under the previous
         # configuration and is no longer valid — clear it.
-        self.remote_list.clear()
+        self._clear_remote_files()
         self.set_status(tr("status.loaded_config", filename=filename))
 
     def menu_load(self):
@@ -1820,7 +2031,7 @@ class MainWindow(QMainWindow):
         self.refresh_host_files()
 
         # FR-019: ensure the Remote Files list is empty even if no port was open.
-        self.remote_list.clear()
+        self._clear_remote_files()
         self.set_status(tr("status.new_config_created"))
 
     def menu_serial_config(self):

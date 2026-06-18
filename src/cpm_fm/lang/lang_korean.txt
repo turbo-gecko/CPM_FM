@@ -166,3 +166,11 @@ config.general.host_directory = 기본 호스트 디렉터리
 # --- About dialog -------------------------------------------------------------
 about.title = 정보
 about.version = 버전 {version}
+
+# --- File list filter / sort (Feature 3) --------------------------------------
+main.filter_placeholder = 파일 필터…
+main.filter_tooltip = 이름으로 필터링; * 및 ? 와일드카드 사용
+main.sort.name = 이름
+main.sort.extension = 확장자
+main.sort_by_tooltip = 정렬 기준
+main.sort_direction_tooltip = 오름차순/내림차순 전환

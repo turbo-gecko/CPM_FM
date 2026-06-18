@@ -166,3 +166,11 @@ config.general.host_directory = Προεπιλεγμένος κατάλογος 
 # --- About dialog --------------------------------------------------------------
 about.title = Πληροφορίες
 about.version = Έκδοση {version}
+
+# --- File list filter / sort (Feature 3) --------------------------------------
+main.filter_placeholder = Φιλτράρισμα αρχείων…
+main.filter_tooltip = Φιλτράρισμα κατά όνομα· χρησιμοποιήστε * και ? ως μπαλαντέρ
+main.sort.name = Όνομα
+main.sort.extension = Επέκταση
+main.sort_by_tooltip = Ταξινόμηση κατά
+main.sort_direction_tooltip = Εναλλαγή αύξουσας/φθίνουσας σειράς
