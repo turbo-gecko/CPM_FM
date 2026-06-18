@@ -95,6 +95,9 @@ dialog.load_config.title = 설정 불러오기
 dialog.save_config.title = 설정 저장하기
 dialog.json_filter = JSON 파일 (*.json)
 dialog.select_directory.title = 디렉터리 선택
+dialog.dnd_confirm.title = 전송 확인
+dialog.dnd_confirm.to_remote = 파일 {count}개를 원격 시스템으로 복사할까요?
+dialog.dnd_confirm.to_host = 파일 {count}개를 호스트로 복사할까요?
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = 전송 포트가 연결되지 않았습니다

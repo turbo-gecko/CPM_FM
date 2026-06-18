@@ -1648,6 +1648,206 @@ def test_sort_combo_labels_retranslate_live(qapp, state):
         win.deleteLater()
 
 
+# ----------------------------------------------- drag-and-drop transfer (F1)
+
+
+def _cpm_mime(pane, names):
+    # Build the internal drag payload a FileListWidget produces (FR-136).
+    from PySide6.QtCore import QMimeData
+
+    from cpm_fm.gui.file_list_widget import MIME_CPM_FILES
+
+    mime = QMimeData()
+    mime.setData(MIME_CPM_FILES, "\n".join([pane, *names]).encode("utf-8"))
+    return mime
+
+
+def _url_mime(paths):
+    # Build an external OS file-manager drag payload (file URLs) (FR-138).
+    from PySide6.QtCore import QMimeData, QUrl
+
+    mime = QMimeData()
+    mime.setUrls([QUrl.fromLocalFile(p) for p in paths])
+    return mime
+
+
+def test_file_lists_are_drag_drop_capable(qapp, state):
+    # FR-136/FR-137/UIR-081: both panes are drag-enabled, accept drops, and are
+    # FileListWidget instances tagged with their pane.
+    from cpm_fm.gui.file_list_widget import FileListWidget
+
+    win = MainWindow(state)
+    try:
+        for lst, pane in ((win.host_list, "host"), (win.remote_list, "remote")):
+            assert isinstance(lst, FileListWidget)
+            assert lst._pane == pane
+            assert lst.dragEnabled()
+            assert lst.acceptDrops()
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_decode_drop_internal_cross_pane(qapp, state):
+    # FR-137: a pane accepts an internal drag from the OTHER pane and reports the
+    # source pane, names, and external=False.
+    win = MainWindow(state)
+    try:
+        assert win.remote_list.decode_drop(_cpm_mime("host", ["A.TXT", "B.TXT"])) == (
+            "host",
+            ["A.TXT", "B.TXT"],
+            False,
+        )
+        assert win.host_list.decode_drop(_cpm_mime("remote", ["X.COM"])) == (
+            "remote",
+            ["X.COM"],
+            False,
+        )
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_decode_drop_same_pane_rejected(qapp, state):
+    # FR-137: dropping a pane's own files back onto itself is a no-op (rejected).
+    win = MainWindow(state)
+    try:
+        assert win.host_list.decode_drop(_cpm_mime("host", ["A.TXT"])) is None
+        assert win.remote_list.decode_drop(_cpm_mime("remote", ["A.TXT"])) is None
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_decode_drop_external_files_remote_only(qapp, state, tmp_path):
+    # FR-138: external OS file drops are accepted on the Remote pane (as absolute
+    # paths, external=True) but rejected on the Host pane.
+    f = tmp_path / "EXT.TXT"
+    f.write_text("x")
+    win = MainWindow(state)
+    try:
+        source, paths, external = win.remote_list.decode_drop(_url_mime([str(f)]))
+        # QUrl.toLocalFile normalises to forward slashes on Windows; compare by
+        # normalised path so the test is separator-agnostic.
+        assert source is None and external is True
+        assert [os.path.normpath(p) for p in paths] == [os.path.normpath(str(f))]
+        assert win.host_list.decode_drop(_url_mime([str(f)])) is None
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_drop_host_to_remote_starts_copy_to_remote(qapp, monkeypatch, state):
+    # FR-137: dropping host files onto the Remote pane (confirmed) starts the
+    # Copy to Remote batch worker with host-dir-joined paths.
+    from PySide6.QtWidgets import QMessageBox
+
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+        monkeypatch.setattr(
+            "cpm_fm.app.QMessageBox.question", lambda *a, **k: QMessageBox.StandardButton.Yes
+        )
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._on_files_dropped("remote", "host", ["A.TXT", "B.TXT"], False)
+        t = _RecordingThread.instances[0]
+        assert t.target == win._transfer_to_remote_batch
+        assert t.args == (
+            [os.path.join(win.host_dir, "A.TXT"), os.path.join(win.host_dir, "B.TXT")],
+        )
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_drop_remote_to_host_starts_copy_to_host(qapp, monkeypatch, state):
+    # FR-137: dropping remote files onto the Host pane (confirmed) starts the
+    # Copy to Host batch worker.
+    from PySide6.QtWidgets import QMessageBox
+
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+        monkeypatch.setattr(
+            "cpm_fm.app.QMessageBox.question", lambda *a, **k: QMessageBox.StandardButton.Yes
+        )
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._on_files_dropped("host", "remote", ["F.TXT"], False)
+        t = _RecordingThread.instances[0]
+        assert t.target == win._transfer_to_host_batch
+        assert t.args == ([os.path.join(win.host_dir, "F.TXT")],)
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_drop_external_files_use_absolute_paths(qapp, monkeypatch, state):
+    # FR-138: an external OS drop onto the Remote pane transfers the dropped
+    # absolute paths verbatim (not re-joined under the host directory).
+    from PySide6.QtWidgets import QMessageBox
+
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+        monkeypatch.setattr(
+            "cpm_fm.app.QMessageBox.question", lambda *a, **k: QMessageBox.StandardButton.Yes
+        )
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        abs_paths = [os.path.join("C:", os.sep, "ext", "A.TXT")]
+        win._on_files_dropped("remote", None, abs_paths, True)
+        t = _RecordingThread.instances[0]
+        assert t.target == win._transfer_to_remote_batch
+        assert t.args == (abs_paths,)
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_drop_requires_both_flags(qapp, monkeypatch, state):
+    # FR-137/CR-010: a drop with the transport disconnected errors and starts no
+    # transfer (and never even prompts for confirmation).
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = False
+        errors = []
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:]))
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._on_files_dropped("remote", "host", ["A.TXT"], False)
+        assert _RecordingThread.instances == []
+        assert errors == [("Error", "Transport port not connected")]
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_drop_cancelled_confirmation_starts_no_transfer(qapp, monkeypatch, state):
+    # FR-137: declining the confirmation dialog starts no transfer.
+    from PySide6.QtWidgets import QMessageBox
+
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+        monkeypatch.setattr(
+            "cpm_fm.app.QMessageBox.question", lambda *a, **k: QMessageBox.StandardButton.No
+        )
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._on_files_dropped("remote", "host", ["A.TXT"], False)
+        assert _RecordingThread.instances == []
+    finally:
+        win.close()
+        win.deleteLater()
+
+
 def test_app_icon_resource_present_and_loadable(qapp):
     # UIR-078/DR-044: the runtime icon ships as package data and app_icon()
     # returns a real (non-null) QIcon loaded from it.
