@@ -95,6 +95,9 @@ dialog.load_config.title = Configuratie laden
 dialog.save_config.title = Configuratie opslaan
 dialog.json_filter = JSON-bestanden (*.json)
 dialog.select_directory.title = Map selecteren
+dialog.dnd_confirm.title = Overdracht bevestigen
+dialog.dnd_confirm.to_remote = {count} bestand(en) naar het externe systeem kopiëren?
+dialog.dnd_confirm.to_host = {count} bestand(en) naar de host kopiëren?
 
 # --- Error / warning message bodies -------------------------------------------
 error.transport_not_connected = Transportpoort niet verbonden

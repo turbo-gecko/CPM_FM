@@ -95,6 +95,9 @@ dialog.load_config.title = Konfiguration laden
 dialog.save_config.title = Konfiguration speichern
 dialog.json_filter = JSON-Dateien (*.json)
 dialog.select_directory.title = Verzeichnis auswählen
+dialog.dnd_confirm.title = Übertragung bestätigen
+dialog.dnd_confirm.to_remote = {count} Datei(en) auf das Gerät kopieren?
+dialog.dnd_confirm.to_host = {count} Datei(en) auf den Host kopieren?
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Transport-Port nicht verbunden

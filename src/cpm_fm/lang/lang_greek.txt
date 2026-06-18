@@ -95,6 +95,9 @@ dialog.load_config.title = Φόρτωση ρυθμίσεων
 dialog.save_config.title = Αποθήκευση ρυθμίσεων
 dialog.json_filter = Αρχεία JSON (*.json)
 dialog.select_directory.title = Επιλογή καταλόγου
+dialog.dnd_confirm.title = Επιβεβαίωση μεταφοράς
+dialog.dnd_confirm.to_remote = Αντιγραφή {count} αρχείου(ων) στο απομακρυσμένο σύστημα;
+dialog.dnd_confirm.to_host = Αντιγραφή {count} αρχείου(ων) στον κεντρικό υπολογιστή;
 
 # --- Error / warning message bodies ---------------------------------------------
 error.transport_not_connected = Η θύρα μεταφοράς δεν είναι συνδεδεμένη

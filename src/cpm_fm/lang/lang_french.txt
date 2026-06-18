@@ -95,6 +95,9 @@ dialog.load_config.title = Charger la configuration
 dialog.save_config.title = Enregistrer la configuration
 dialog.json_filter = Fichiers JSON (*.json)
 dialog.select_directory.title = Sélectionner un répertoire
+dialog.dnd_confirm.title = Confirmer le transfert
+dialog.dnd_confirm.to_remote = Copier {count} fichier(s) vers le système distant ?
+dialog.dnd_confirm.to_host = Copier {count} fichier(s) vers l'hôte ?
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Port de transport non connecté

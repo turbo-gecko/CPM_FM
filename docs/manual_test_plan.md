@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.12 |
+| Version | 1.13 |
 | Status | Draft |
 | Date | 2026-06-18 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.6.0) |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.7.0) |
 
 ---
 
@@ -262,6 +262,24 @@ CP/M side. Use the multi-block (≥1 KB) file plus small files from §2.3.
 
 ---
 
+## 11.1 Drag-and-drop file transfer  **[CP/M]**
+
+Drag-and-drop is an alternative trigger for the same Copy to Remote / Copy to Host transfers (§11), so
+the transfer mechanics themselves are covered by §11 and the unit tests (`tests/test_gui_smoke.py`).
+These cases confirm the live drag/drop wiring, the drop-zone highlight, the confirmation step, and the
+guard rails. The decode/handoff logic is unit-tested; MT-D03..D06 need a connected CP/M peer (**[CP/M]**).
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-D01 | FR-136, FR-139, UIR-081 | Connected, select one or more **Host** files and drag them; hover over the **Remote** pane, then over the **Host** pane (the source). | While dragging over the Remote pane it shows a green drop-zone border; hovering back over the originating Host pane shows **no** highlight (a same-pane drop is rejected). The source files are never moved/removed. |
+| MT-D02 | FR-138, FR-139 | From the OS file manager (Explorer/Finder), drag one or more files over the **Remote** pane, then over the **Host** pane. | The Remote pane highlights as a valid drop zone; the Host pane does **not** accept the external files (no highlight). |
+| MT-D03 [CP/M] | FR-137, FR-080, CR-010 | Select Host file(s) and **drop them onto the Remote pane**; confirm the dialog. | A "Confirm Transfer" dialog asks to copy N file(s) to the remote; on **Yes** the files transfer exactly as Copy to Remote (progress dialog, sequential, Remote list refreshes). On **No**, nothing transfers. With Transport disconnected, the drop instead shows "Transport port not connected" and starts no transfer. |
+| MT-D04 [CP/M] | FR-137 | Select Remote file(s) and **drop them onto the Host pane**; confirm. | "Confirm Transfer" asks to copy N file(s) to the host; on **Yes** they transfer exactly as Copy to Host (progress dialog; Host list refreshes); on **No**, nothing transfers. |
+| MT-D05 [CP/M] | FR-138 | Drag file(s) from the OS file manager and **drop them onto the Remote pane**; confirm. | The dropped files (by their real OS paths, even outside the current host directory) transfer to the remote as Copy to Remote. |
+| MT-D06 [CP/M] | FR-137 | Drag Host file(s) onto the Remote pane but click **No** / press Esc on the confirmation. | No transfer starts; no progress dialog appears; the lists are unchanged. |
+
+---
+
 ## 12. Terminal Window (live)  **[CP/M or loopback]**
 
 | ID | Req | Steps | Expected |
@@ -362,6 +380,7 @@ or real cross-session persistence:
 - About dialog (on-screen render + live browser launch): `FR-022`, `UIR-004`, `UIR-076` (the version-sourcing `DR-040`/`DR-041` are covered automatically by `tests/test_version.py`; MT-V10 confirms the displayed version matches end-to-end).
 - Internationalisation (live on-screen re-translation, real menu, cross-session language persistence): `FR-122`, `FR-123`, `FR-124` (live), `UIR-003`, `UIR-077`, `CR-015`, `NFR-005` (the translator, parsing, and fallback in `FR-121`/`DR-042`/`DR-043` are covered automatically by `tests/test_i18n.py`; the manual cases confirm the rendered UI switches language live and that the choice persists).
 - File list filter & sort (live on-screen filtering/sorting, debounce timing, active-filter indicator, cross-session persistence): `FR-130`–`FR-135` (live), `UIR-079`, `UIR-080` (the filter/sort logic itself in `utils/file_filter.py` and the GUI wiring are covered automatically by `tests/test_file_filter.py` and `tests/test_gui_smoke.py`; the manual cases confirm the on-screen rendering, the debounce feel, and real cross-session restore).
+- Drag-and-drop file transfer (live drag gesture, drop-zone highlight, external OS drops, real transfer round-trip): `FR-136`–`FR-139` (live), `UIR-081` (the decode/handoff logic — drag payload, cross-pane vs same-pane, external-vs-host acceptance, flag-gating, confirmation — is covered automatically by `tests/test_gui_smoke.py`; the manual cases confirm the on-screen highlight, the real drag from the OS file manager, and the live transfer).
 - Non-functional (real): `NFR-001`, `NFR-004` (live), `STR-003`, `FR-088`.
 
 Purely algorithmic and headless-logic requirements (`DR-*`, the X-Modem progress/handshake internals,

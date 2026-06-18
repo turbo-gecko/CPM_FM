@@ -95,6 +95,9 @@ dialog.load_config.title = 加载配置
 dialog.save_config.title = 保存配置
 dialog.json_filter = JSON 文件 (*.json)
 dialog.select_directory.title = 选择目录
+dialog.dnd_confirm.title = 确认传输
+dialog.dnd_confirm.to_remote = 将 {count} 个文件复制到远程系统？
+dialog.dnd_confirm.to_host = 将 {count} 个文件复制到主机？
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = 传输端口未连接

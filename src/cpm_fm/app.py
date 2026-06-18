@@ -14,7 +14,6 @@ import serial.tools.list_ports
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QFontMetrics
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QApplication,
     QComboBox,
     QDialog,
@@ -22,7 +21,6 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLineEdit,
-    QListWidget,
     QMainWindow,
     QMenu,
     QMessageBox,
@@ -38,6 +36,7 @@ from PySide6.QtWidgets import (
 from cpm_fm.gui.about_dialog import AboutDialog
 from cpm_fm.gui.config_dialogs import GeneralConfigDialog, SerialConfigDialog
 from cpm_fm.gui.file_action_dialog import FileActionDialog
+from cpm_fm.gui.file_list_widget import FileListWidget
 from cpm_fm.gui.terminal_window import TerminalWindow
 from cpm_fm.gui.theme import app_icon, apply_theme
 from cpm_fm.gui.transfer_dialog import TransferProgressDialog
@@ -452,8 +451,10 @@ class MainWindow(QMainWindow):
         )
         host_layout.addLayout(host_fs)
 
-        self.host_list = QListWidget()
-        self.host_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        # FR-136/FR-137: a drag-and-drop-capable multi-select list (the
+        # ExtendedSelection mode is set by FileListWidget). Dropping remote files
+        # here downloads them to the host (handled by _on_files_dropped).
+        self.host_list = FileListWidget("host", self._on_files_dropped)
         # UIR-018: right-click context menu (View/Edit, Rename, Delete) on host files.
         self.host_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.host_list.customContextMenuRequested.connect(self._host_context_menu)
@@ -496,8 +497,10 @@ class MainWindow(QMainWindow):
         )
         remote_layout.addLayout(remote_fs)
 
-        self.remote_list = QListWidget()
-        self.remote_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        # FR-136/FR-137/FR-138: a drag-and-drop-capable multi-select list.
+        # Dropping host files (or external OS files) here uploads them to the
+        # remote CP/M system (handled by _on_files_dropped).
+        self.remote_list = FileListWidget("remote", self._on_files_dropped)
         # UIR-019: right-click context menu (View, Rename, Delete) on remote files.
         self.remote_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.remote_list.customContextMenuRequested.connect(self._remote_context_menu)
@@ -1516,6 +1519,66 @@ class MainWindow(QMainWindow):
             for row in range(list_widget.count())
             if list_widget.item(row).isSelected()
         ]
+
+    def _on_files_dropped(self, target_pane, source_pane, payload, external):
+        """Start a drag-and-drop file transfer from a pane drop (FR-137, FR-138).
+
+        Runs on the GUI thread (the drop event), then hands the actual transfer
+        to the same batch worker threads as the Copy buttons, marshalling UI
+        updates back via the existing signals (NFR-004). ``payload`` is a list
+        of file names for an internal drag or absolute host paths for an
+        external OS drop (``external``). Dropping onto the **Remote** pane sends
+        to the remote (Copy to Remote); dropping onto the **Host** pane receives
+        from the remote (Copy to Host). A transfer is permitted only when both
+        the Terminal and Transport status flags are true (FR-080/CR-010), and is
+        confirmed first (FR-137).
+
+        Satisfies: FR-137, FR-138, FR-080, FR-106, FR-107, CR-010.
+        """
+        if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
+            QMessageBox.critical(
+                self, tr("dialog.error.title"), tr("error.transport_not_connected")
+            )
+            return
+        if not payload:
+            return
+        if target_pane == "remote":
+            if not self._confirm_dnd_transfer("remote", len(payload)):
+                return
+            # FR-138: external drops already carry absolute paths; an internal
+            # drag from the Host pane carries names relative to the host dir.
+            filepaths = (
+                list(payload)
+                if external
+                else [os.path.join(self.host_dir, name) for name in payload]
+            )
+            threading.Thread(
+                target=self._transfer_to_remote_batch, args=(filepaths,), daemon=True
+            ).start()
+        elif target_pane == "host":
+            if not self._confirm_dnd_transfer("host", len(payload)):
+                return
+            save_paths = [os.path.join(self.host_dir, name) for name in payload]
+            threading.Thread(
+                target=self._transfer_to_host_batch, args=(save_paths,), daemon=True
+            ).start()
+
+    def _confirm_dnd_transfer(self, direction: str, count: int) -> bool:
+        """Ask the user to confirm a drag-and-drop transfer (FR-137).
+
+        Drag-and-drop is easy to trigger by accident and a serial transfer is
+        slow, so each drop is confirmed before it starts. Returns True when the
+        user accepts.
+
+        Satisfies: FR-137.
+        """
+        key = (
+            "dialog.dnd_confirm.to_remote"
+            if direction == "remote"
+            else "dialog.dnd_confirm.to_host"
+        )
+        reply = QMessageBox.question(self, tr("dialog.dnd_confirm.title"), tr(key, count=count))
+        return reply == QMessageBox.StandardButton.Yes
 
     def do_copy_to_remote(self):
         """

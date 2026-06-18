@@ -100,6 +100,9 @@ dialog.load_config.title = Uncover Orders
 dialog.save_config.title = Stash Orders
 dialog.json_filter = JSON Treasures (*.json)
 dialog.select_directory.title = Pick a Port
+dialog.dnd_confirm.title = Confirm the Haul
+dialog.dnd_confirm.to_remote = Heave {count} file(s) over to yonder remote vessel?
+dialog.dnd_confirm.to_host = Haul {count} file(s) back to home port?
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Ship's route be unlinked!

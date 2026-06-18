@@ -7,9 +7,9 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.12 |
-| Scorecard for plan version | 1.12 (`docs/manual_test_plan.md`) |
-| SRS version | (e.g. 2.6.0) |
+| Scorecard version | 1.13 |
+| Scorecard for plan version | 1.13 (`docs/manual_test_plan.md`) |
+| SRS version | (e.g. 2.7.0) |
 | Tester | |
 | Date(s) of run | |
 
@@ -163,6 +163,16 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-T12 | Context-menu To Remote / To Host | FR-119 | | | |
 | MT-T13 | Cancel single live transfer; CAN abort; no error | FR-120, NFR-003 | | | |
 | MT-T14 | Cancel mid-batch; skip rest; refresh; no partial file | FR-120 | | | |
+
+### §11.1 Drag-and-drop file transfer
+| ID | Title | Req | Result | Env | Notes |
+|----|-------|-----|:------:|:---:|-------|
+| MT-D01 | Drag host files; drop-zone highlight; same-pane rejected | FR-136/139, UIR-081 | | | |
+| MT-D02 | External OS drag highlights Remote only, not Host | FR-138/139 | | | |
+| MT-D03 | Drop host→remote transfers (confirm); guard when disconnected | FR-137, FR-080, CR-010 | | | |
+| MT-D04 | Drop remote→host transfers (confirm) | FR-137 | | | |
+| MT-D05 | External OS files dropped on Remote upload | FR-138 | | | |
+| MT-D06 | Declining confirmation starts no transfer | FR-137 | | | |
 
 ### §12 Terminal Window (live)
 | ID | Title | Req | Result | Env | Notes |
