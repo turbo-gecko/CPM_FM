@@ -121,6 +121,8 @@ When editing requirements:
 - Ensure changes don't introduce new issues
 - Always increment the document version number when making edits
 - Always add an entry to the Change History table summarising every requirement modified, added, or deleted, including the requirement IDs affected
+- After editing, review `AGENTS.md` and update any architecture, component, or behaviour descriptions that are no longer accurate given the changed requirements
+- After editing, review the test suite (`tests/`) and update or add tests so that every new or modified requirement has corresponding test coverage; if tests are added or changed, run the full test suite (`pytest`) and record any failures in a new plan file at `temp\fixes.md` listing the failing tests and the code changes needed to resolve them
 
 ## Usage
 
@@ -134,6 +136,8 @@ When the user provides requirements for analysis:
 7. Suggest specific improvements
 8. Edit requirements if requested
 9. After editing, increment the document version number and add a Change History entry summarising all changes made (requirement IDs, nature of change)
+10. After editing, update `AGENTS.md` to reflect any changed architecture, component descriptions, or cross-cutting behaviours introduced or modified by the new/changed requirements
+11. After editing, update or add tests in `tests/` to cover every new or modified requirement; if any tests are added or changed, run `pytest` and — if there are failures — create `temp\fixes.md` as a plan listing each failing test, the root cause, and the code changes required to fix it
 
 ## Output Format
 
@@ -158,6 +162,15 @@ When the user provides requirements for analysis:
 - Incremented document version number
 - Change History table entry added to the document listing all affected requirement IDs and the nature of each change
 
+**AGENTS.md Update:**
+- Sections updated to reflect any new or changed architecture, components, or cross-cutting behaviours
+- No update needed if the requirement change has no impact on the architecture description
+
+**Test Update:**
+- New or modified test cases listed, with the requirement ID each covers
+- `pytest` run result (pass count, failure count)
+- If failures exist: `temp\fixes.md` created as a plan with one entry per failing test — failing test name, root cause, and the code change needed to fix it
+
 ## Notes
 
 - Always reference specific requirement IDs when providing feedback
@@ -168,3 +181,4 @@ When the user provides requirements for analysis:
 - Maintain professional, constructive tone
 - When editing, preserve stakeholder intent while improving quality
 - Never delete existing entries in the version history
+- Steps 10 and 11 (AGENTS.md and test updates) are mandatory whenever requirements are edited — do not skip them even for minor or cosmetic changes

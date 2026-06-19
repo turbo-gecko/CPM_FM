@@ -1349,9 +1349,10 @@ class MainWindow(QMainWindow):
         self.serial_mgr.send_data("terminal", text)
         # FR-092: store transmitted data (with EOL) in the transmit buffer.
         self._tx_buffer += text
-        # FR-093: local echo copies transmitted data to the receive area only.
+        # FR-093: local echo copies transmitted data (a byte-for-byte copy,
+        # including its EOL) to the receive area only.
         if self._local_echo:
-            self.term_write.emit(f"\n{text}")
+            self.term_write.emit(text)
 
     def handle_terminal_recv(self, text):
         """
@@ -2394,12 +2395,13 @@ class MainWindow(QMainWindow):
         # FR-152: refresh the destination (host) pane before prompting, and the
         # source (remote) listing that tells us what to download.
         self.transfer_completed.emit("host")  # refresh Host pane on the GUI thread
+        host_files = self._host_dir_files()  # FR-152 destination snapshot to wipe
         names = self._list_remote_file_names()
         if not self._confirm_backup_restore("backup"):
             self.set_status(tr("status.backup_restore_cancelled"))
             return
-        # FR-153: empty the destination first.
-        self._wipe_host_dir()
+        # FR-153: empty the destination first, operating on the FR-152 snapshot.
+        self._wipe_host_dir(host_files)
         save_paths = [os.path.join(self.host_dir, name) for name in names]
         if not save_paths:
             # FR-154: nothing to copy; the wipe already emptied the host pane.
@@ -2528,16 +2530,18 @@ class MainWindow(QMainWindow):
         self.remote_files_ready.emit(files_dict)
         return list(files_dict.keys())
 
-    def _wipe_host_dir(self) -> None:
+    def _wipe_host_dir(self, names) -> None:
         """Delete every file in the host directory (Backup destination wipe).
 
-        Runs on the Backup worker thread. Reads the directory fresh so it acts
-        on the current contents (FR-152). A file that fails to delete is logged
-        and skipped rather than aborting the wipe.
+        Runs on the Backup worker thread. Operates on ``names`` — the host
+        listing refreshed in FR-152 before the confirmation prompt — rather than
+        re-reading the directory, so the wipe acts on exactly the set the user
+        was warned about. A file that fails to delete is logged and skipped
+        rather than aborting the wipe.
 
         Satisfies: FR-150, FR-153.
         """
-        for name in self._host_dir_files():
+        for name in names:
             self.set_status(tr("status.wiping_destination", name=name))
             try:
                 os.remove(os.path.join(self.host_dir, name))
@@ -2548,7 +2552,7 @@ class MainWindow(QMainWindow):
         """Delete every named remote file (Restore destination wipe).
 
         Runs on the Restore worker thread. Sends the configured delete command
-        (``delete_remote_cmd``, default ``ERA $1``, FR-111) once per file on the
+        (``delete_remote_cmd``, default ``ERA $1``, FR-117) once per file on the
         Terminal Port, waiting for each to go idle via the capture mechanism.
         Deleting per file avoids the interactive ``ERA *.*`` confirmation on the
         CP/M side.
@@ -2729,7 +2733,7 @@ class MainWindow(QMainWindow):
 
     def menu_about(self):
         """
-        Satisfies: FR-022, UIR-004, UIR-076.
+        Satisfies: FR-022, UIR-076.
 
         Present the modal About dialog (program name, version, GitHub link, OK).
         """

@@ -40,8 +40,10 @@ Three layers, intentionally decoupled from the GUI so they are unit-testable wit
   CP/M commands) and a **transport** port (for X-Modem transfers). They may be the same physical port.
   A background daemon thread (`_read_loop`) polls the terminal port and pushes received text to the
   `on_data_received` callback.
-- `terminal/xmodem.py` — `XModem` is a hand-rolled X-Modem implementation (128-byte packets,
-  **checksum** mode, not CRC). `send_file`/`receive_file` are blocking and run on worker threads.
+- `terminal/xmodem.py` — `XModem` is a hand-rolled X-Modem implementation (128-byte SOH-framed
+  packets, supporting both **checksum** and **CRC** modes selected by the receiver-driven handshake;
+  receive also accepts STX/1024-byte XMODEM-1K frames). `send_file`/`receive_file` are blocking and
+  run on worker threads.
 - `terminal/cpm_parser.py` — `CPMParser.parse_dir_output` is a pure static method that scrapes
   filenames from CP/M 2.2 four-column `DIR` text output. This is the most-tested logic.
 - `utils/config_handler.py` — `ConfigHandler` loads/saves settings as JSON.
@@ -57,7 +59,8 @@ Three layers, intentionally decoupled from the GUI so they are unit-testable wit
   - `terminal_window.py` (`TerminalWindow`, a non-modal `QMainWindow` serial console).
   - `config_dialogs.py` (`ConfigDialog` base `QDialog` + `SerialConfigDialog`/`GeneralConfigDialog`,
     which build `QFormLayout` forms from declarative field lists).
-  - `file_list_widget.py` — the per-pane file list (selection, filter/sort, drag-and-drop source/target).
+  - `file_list_widget.py` — the per-pane file list widget (`FileListWidget(QListWidget)`) that adds
+    drag-and-drop source/target behaviour; filter/sort is handled in `app.py` + `utils/file_filter.py`.
   - `transfer_dialog.py` — modal per-batch transfer-progress dialog with a Cancel button.
   - `conflict_dialog.py` — destination-exists prompt (Overwrite/Skip/Cancel, apply-to-rest).
   - `filename_validation_dialog.py` — CP/M 8.3 rename/skip/cancel prompt on upload.
@@ -77,10 +80,11 @@ Three layers, intentionally decoupled from the GUI so they are unit-testable wit
   backup/restore confirm) drive a **modal prompt on the GUI thread while the worker thread blocks**
   awaiting the user's decision. Follow this signal pattern when adding background work, or Qt will
   crash/misbehave.
-- **Remote file listing is capture-based, not request/response:** `_do_refresh_remote_logic` sets a
-  `_capture_active` flag, sends the list command (default `DIR`), `time.sleep(1.5)` to let output
-  accumulate in `_remote_capture_buffer` via the read callback, then parses it. There is no end
-  marker — the fixed sleep is the synchronization mechanism.
+- **Remote file listing is capture-based, not request/response:** `_capture_terminal_response`
+  sets a `_capture_active` flag, sends the command, waits 1 s for output to begin accumulating in
+  `_remote_capture_buffer` via the read callback, then polls every 0.5 s and stops once the buffer
+  has not grown within an idle window (max total wait 10 s). `_do_refresh_remote_logic` calls this
+  for the `DIR` command and then parses the captured text.
 - **Two config JSON formats coexist** and both must keep working:
   - *Flat* (what the dialogs read/write, see `examples/serial_settings.json`): `terminal_port`,
     `transport_port`, `speed`, `data`, `parity`, `stopbits`, `flow`, `msec_char`, `msec_line`.

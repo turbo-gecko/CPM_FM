@@ -70,7 +70,7 @@ def test_backup_order_refresh_confirm_wipe_transfer(qapp, monkeypatch, state, tm
         monkeypatch.setattr(
             win, "_confirm_backup_restore", lambda op: order.append("confirm") or True
         )
-        monkeypatch.setattr(win, "_wipe_host_dir", lambda: order.append("wipe"))
+        monkeypatch.setattr(win, "_wipe_host_dir", lambda names: order.append("wipe"))
         monkeypatch.setattr(
             win,
             "_transfer_to_host_batch",
@@ -94,7 +94,7 @@ def test_backup_cancel_stops_before_wipe(qapp, monkeypatch, state, tmp_path):
         order = []
         monkeypatch.setattr(win, "_list_remote_file_names", lambda: ["A.TXT"])
         monkeypatch.setattr(win, "_confirm_backup_restore", lambda op: False)
-        monkeypatch.setattr(win, "_wipe_host_dir", lambda: order.append("wipe"))
+        monkeypatch.setattr(win, "_wipe_host_dir", lambda names: order.append("wipe"))
         monkeypatch.setattr(win, "_transfer_to_host_batch", lambda paths: order.append("transfer"))
         win._backup_drive()
         assert order == []
@@ -110,7 +110,7 @@ def test_backup_empty_source_wipes_but_skips_transfer(qapp, monkeypatch, state, 
         order = []
         monkeypatch.setattr(win, "_list_remote_file_names", lambda: [])
         monkeypatch.setattr(win, "_confirm_backup_restore", lambda op: True)
-        monkeypatch.setattr(win, "_wipe_host_dir", lambda: order.append("wipe"))
+        monkeypatch.setattr(win, "_wipe_host_dir", lambda names: order.append("wipe"))
         monkeypatch.setattr(win, "_transfer_to_host_batch", lambda paths: order.append("transfer"))
         win._backup_drive()
         assert order == ["wipe"]
@@ -175,14 +175,31 @@ def test_restore_cancel_stops_before_wipe(qapp, monkeypatch, state, tmp_path):
 
 
 def test_wipe_host_dir_removes_all_files(qapp, monkeypatch, state, tmp_path):
-    # FR-153: every file in the host directory is deleted.
+    # FR-153: every regular file in the host directory is deleted.
     win = MainWindow(state)
     try:
         _arm(win, monkeypatch, tmp_path)
         for name in ("A.TXT", "B.DAT", "C"):
             (tmp_path / name).write_text("x", encoding="utf-8")
-        win._wipe_host_dir()
+        win._wipe_host_dir(win._host_dir_files())
         assert os.listdir(str(tmp_path)) == []
+    finally:
+        win.close()
+
+
+def test_wipe_host_dir_preserves_subdirectories(qapp, monkeypatch, state, tmp_path):
+    # FR-153: subdirectories within the host directory are NOT removed.
+    win = MainWindow(state)
+    try:
+        _arm(win, monkeypatch, tmp_path)
+        (tmp_path / "FILE.TXT").write_text("x", encoding="utf-8")
+        subdir = tmp_path / "subdir"
+        subdir.mkdir()
+        (subdir / "nested.txt").write_text("y", encoding="utf-8")
+        win._wipe_host_dir(win._host_dir_files())
+        remaining = os.listdir(str(tmp_path))
+        assert "FILE.TXT" not in remaining
+        assert "subdir" in remaining
     finally:
         win.close()
 
