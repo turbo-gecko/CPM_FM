@@ -47,7 +47,9 @@ DEFAULT_MAX_AGE_DAYS = 30
 # mirrors the value used throughout app.py: "remote" = host→remote upload (Copy
 # to Remote), "host" = remote→host download (Copy to Host).
 DIRECTIONS = ("remote", "host")
-STATUSES = ("success", "failure", "cancelled")
+# FR-146: "skipped" records a file the user declined to overwrite at the
+# destination (the conflict prompt's Skip action).
+STATUSES = ("success", "failure", "cancelled", "skipped")
 
 
 def default_history_path() -> str:
@@ -119,7 +121,7 @@ class TransferHistory:
           * ``path`` — the host-side absolute path involved, retained so the
             transfer can be re-initiated later (FR-144).
           * ``direction`` — "remote" (Copy to Remote) or "host" (Copy to Host).
-          * ``status`` — "success", "failure", or "cancelled".
+          * ``status`` — "success", "failure", "cancelled", or "skipped".
           * ``size`` — byte count (0 when unknown, e.g. a failed/cancelled
             download whose length X-Modem never carried).
           * ``error`` — the error message for a failure ("" otherwise).

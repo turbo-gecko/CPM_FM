@@ -98,6 +98,14 @@ dialog.select_directory.title = Επιλογή καταλόγου
 dialog.dnd_confirm.title = Επιβεβαίωση μεταφοράς
 dialog.dnd_confirm.to_remote = Αντιγραφή {count} αρχείου(ων) στο απομακρυσμένο σύστημα;
 dialog.dnd_confirm.to_host = Αντιγραφή {count} αρχείου(ων) στον κεντρικό υπολογιστή;
+dialog.conflict.title = Το αρχείο υπάρχει
+dialog.conflict.message = Υπάρχει ήδη αρχείο με όνομα "{name}" σε {dest}. Τι θέλετε να κάνετε;
+dialog.conflict.dest.remote = το απομακρυσμένο σύστημα
+dialog.conflict.dest.host = τον κατάλογο του κεντρικού υπολογιστή
+dialog.conflict.overwrite = Αντικατάσταση
+dialog.conflict.skip = Παράλειψη
+dialog.conflict.cancel = Άκυρο
+dialog.conflict.apply_all = Εφαρμογή σε όλες τις υπόλοιπες διενέξεις
 
 # --- Error / warning message bodies ---------------------------------------------
 error.transport_not_connected = Η θύρα μεταφοράς δεν είναι συνδεδεμένη
@@ -180,6 +188,7 @@ history.dir.host = Προς κεντρικό
 history.status.success = Επιτυχία
 history.status.failure = Αποτυχία
 history.status.cancelled = Ακυρώθηκε
+history.status.skipped = Παραλείφθηκε
 history.status.retry_suffix = {status} (επανάληψη)
 history.filter.direction = Κατεύθυνση:
 history.filter.status = Κατάσταση:

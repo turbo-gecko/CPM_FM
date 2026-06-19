@@ -121,6 +121,7 @@ class TransferHistoryDialog(QDialog):
         self._status_filter.addItem(tr("history.status.success"), "success")
         self._status_filter.addItem(tr("history.status.failure"), "failure")
         self._status_filter.addItem(tr("history.status.cancelled"), "cancelled")
+        self._status_filter.addItem(tr("history.status.skipped"), "skipped")
         self._status_filter.currentIndexChanged.connect(self._reload)
         filter_row.addWidget(self._status_filter)
         filter_row.addStretch()
@@ -208,7 +209,7 @@ class TransferHistoryDialog(QDialog):
         if field == "status":
             text = (
                 tr(f"history.status.{value}")
-                if value in ("success", "failure", "cancelled")
+                if value in ("success", "failure", "cancelled", "skipped")
                 else str(value)
             )
             # FR-144: flag re-transfers so a retried attempt is distinguishable.

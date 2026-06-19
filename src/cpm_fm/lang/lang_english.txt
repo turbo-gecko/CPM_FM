@@ -112,6 +112,14 @@ dialog.select_directory.title = Select Directory
 dialog.dnd_confirm.title = Confirm Transfer
 dialog.dnd_confirm.to_remote = Copy {count} file(s) to the remote system?
 dialog.dnd_confirm.to_host = Copy {count} file(s) to the host?
+dialog.conflict.title = File Exists
+dialog.conflict.message = A file named "{name}" already exists at {dest}. What would you like to do?
+dialog.conflict.dest.remote = the remote system
+dialog.conflict.dest.host = the host directory
+dialog.conflict.overwrite = Overwrite
+dialog.conflict.skip = Skip
+dialog.conflict.cancel = Cancel
+dialog.conflict.apply_all = Apply to all remaining conflicts
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Transport port not connected
@@ -193,6 +201,7 @@ history.dir.host = To Host
 history.status.success = Success
 history.status.failure = Failure
 history.status.cancelled = Cancelled
+history.status.skipped = Skipped
 history.status.retry_suffix = {status} (retry)
 history.filter.direction = Direction:
 history.filter.status = Status:

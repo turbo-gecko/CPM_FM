@@ -98,6 +98,14 @@ dialog.select_directory.title = 选择目录
 dialog.dnd_confirm.title = 确认传输
 dialog.dnd_confirm.to_remote = 将 {count} 个文件复制到远程系统？
 dialog.dnd_confirm.to_host = 将 {count} 个文件复制到主机？
+dialog.conflict.title = 文件已存在
+dialog.conflict.message = 名为"{name}"的文件已存在于{dest}。您想怎么做？
+dialog.conflict.dest.remote = 远程系统
+dialog.conflict.dest.host = 主机目录
+dialog.conflict.overwrite = 覆盖
+dialog.conflict.skip = 跳过
+dialog.conflict.cancel = 取消
+dialog.conflict.apply_all = 应用于所有剩余冲突
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = 传输端口未连接
@@ -180,6 +188,7 @@ history.dir.host = 到主机
 history.status.success = 成功
 history.status.failure = 失败
 history.status.cancelled = 已取消
+history.status.skipped = 已跳过
 history.status.retry_suffix = {status}（重试）
 history.filter.direction = 方向：
 history.filter.status = 状态：

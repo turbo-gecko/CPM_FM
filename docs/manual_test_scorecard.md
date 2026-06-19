@@ -7,9 +7,9 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.14 |
-| Scorecard for plan version | 1.14 (`docs/manual_test_plan.md`) |
-| SRS version | (e.g. 2.8.0) |
+| Scorecard version | 1.15 |
+| Scorecard for plan version | 1.15 (`docs/manual_test_plan.md`) |
+| SRS version | (e.g. 2.9.0) |
 | Tester | |
 | Date(s) of run | |
 
@@ -183,6 +183,17 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-TH04 | Clear history (with confirmation) | FR-143 | | | |
 | MT-TH05 | History persists across sessions | FR-141 | | | |
 | MT-TH06 | Re-transfer entry; guards; marked retry | FR-144, FR-080 | | | |
+
+### §11.3 File-conflict prompt on transfer
+| ID | Title | Req | Result | Env | Notes |
+|----|-------|-----|:------:|:---:|-------|
+| MT-CF01 | Download conflict shows Overwrite/Skip/Cancel + apply-all dialog | FR-145/146, UIR-084 | | | |
+| MT-CF02 | Overwrite replaces the host file (success recorded) | FR-146 | | | |
+| MT-CF03 | Skip leaves host file untouched (skipped recorded) | FR-146 | | | |
+| MT-CF04 | Upload conflict detected against fresh remote DIR | FR-145 | | | |
+| MT-CF05 | "Apply to all" prompts once, applies to remaining conflicts | FR-147 | | | |
+| MT-CF06 | Cancel/close at a conflict aborts the whole batch | FR-146, FR-120 | | | |
+| MT-CF07 | No prompt when the destination has no matching file | FR-145 | | | |
 
 ### §12 Terminal Window (live)
 | ID | Title | Req | Result | Env | Notes |

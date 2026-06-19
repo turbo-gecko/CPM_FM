@@ -98,6 +98,14 @@ dialog.select_directory.title = Wybierz katalog
 dialog.dnd_confirm.title = Potwierdź transfer
 dialog.dnd_confirm.to_remote = Skopiować {count} plik(ów) do systemu zdalnego?
 dialog.dnd_confirm.to_host = Skopiować {count} plik(ów) na host?
+dialog.conflict.title = Plik istnieje
+dialog.conflict.message = Plik o nazwie "{name}" już istnieje w {dest}. Co chcesz zrobić?
+dialog.conflict.dest.remote = systemie zdalnym
+dialog.conflict.dest.host = katalogu hosta
+dialog.conflict.overwrite = Zastąp
+dialog.conflict.skip = Pomiń
+dialog.conflict.cancel = Anuluj
+dialog.conflict.apply_all = Zastosuj do wszystkich pozostałych konfliktów
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Port transportu nie jest połączony
@@ -180,6 +188,7 @@ history.dir.host = Do hosta
 history.status.success = Sukces
 history.status.failure = Niepowodzenie
 history.status.cancelled = Anulowano
+history.status.skipped = Pominięto
 history.status.retry_suffix = {status} (ponowna próba)
 history.filter.direction = Kierunek:
 history.filter.status = Status:

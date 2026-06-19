@@ -98,6 +98,14 @@ dialog.select_directory.title = Verzeichnis auswählen
 dialog.dnd_confirm.title = Übertragung bestätigen
 dialog.dnd_confirm.to_remote = {count} Datei(en) auf das Gerät kopieren?
 dialog.dnd_confirm.to_host = {count} Datei(en) auf den Host kopieren?
+dialog.conflict.title = Datei existiert
+dialog.conflict.message = Eine Datei mit dem Namen "{name}" existiert bereits in {dest}. Was möchten Sie tun?
+dialog.conflict.dest.remote = dem Remote-System
+dialog.conflict.dest.host = dem Host-Verzeichnis
+dialog.conflict.overwrite = Überschreiben
+dialog.conflict.skip = Überspringen
+dialog.conflict.cancel = Abbrechen
+dialog.conflict.apply_all = Auf alle verbleibenden Konflikte anwenden
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Transport-Port nicht verbunden
@@ -180,6 +188,7 @@ history.dir.host = Zum Host
 history.status.success = Erfolg
 history.status.failure = Fehler
 history.status.cancelled = Abgebrochen
+history.status.skipped = Übersprungen
 history.status.retry_suffix = {status} (Wiederholung)
 history.filter.direction = Richtung:
 history.filter.status = Status:

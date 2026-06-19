@@ -14,11 +14,22 @@ import json
 import threading
 from datetime import datetime, timedelta
 
-from cpm_fm.utils.transfer_history import TransferHistory
+from cpm_fm.utils.transfer_history import STATUSES, TransferHistory
 
 
 def _history(tmp_path, **kwargs):
     return TransferHistory(str(tmp_path / "history.json"), **kwargs)
+
+
+def test_skipped_is_a_recognised_status(tmp_path):
+    # FR-146: a file the user declined to overwrite is recorded as "skipped".
+    assert "skipped" in STATUSES
+    h = _history(tmp_path)
+    entry = h.add_entry(
+        filename="FOO.TXT", path="/host/FOO.TXT", direction="host", status="skipped"
+    )
+    assert entry["status"] == "skipped"
+    assert h.get_entries()[0]["status"] == "skipped"
 
 
 def test_add_entry_records_all_fields(tmp_path):

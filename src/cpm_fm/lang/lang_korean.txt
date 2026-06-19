@@ -98,6 +98,14 @@ dialog.select_directory.title = 디렉터리 선택
 dialog.dnd_confirm.title = 전송 확인
 dialog.dnd_confirm.to_remote = 파일 {count}개를 원격 시스템으로 복사할까요?
 dialog.dnd_confirm.to_host = 파일 {count}개를 호스트로 복사할까요?
+dialog.conflict.title = 파일이 이미 있음
+dialog.conflict.message = "{name}"(이)라는 파일이 {dest}에 이미 있습니다. 어떻게 하시겠습니까?
+dialog.conflict.dest.remote = 원격 시스템
+dialog.conflict.dest.host = 호스트 디렉터리
+dialog.conflict.overwrite = 덮어쓰기
+dialog.conflict.skip = 건너뛰기
+dialog.conflict.cancel = 취소
+dialog.conflict.apply_all = 남은 모든 충돌에 적용
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = 전송 포트가 연결되지 않았습니다
@@ -180,6 +188,7 @@ history.dir.host = 호스트로
 history.status.success = 성공
 history.status.failure = 실패
 history.status.cancelled = 취소됨
+history.status.skipped = 건너뜀
 history.status.retry_suffix = {status} (재시도)
 history.filter.direction = 방향:
 history.filter.status = 상태:

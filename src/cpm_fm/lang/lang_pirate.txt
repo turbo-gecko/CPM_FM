@@ -103,6 +103,14 @@ dialog.select_directory.title = Pick a Port
 dialog.dnd_confirm.title = Confirm the Haul
 dialog.dnd_confirm.to_remote = Heave {count} file(s) over to yonder remote vessel?
 dialog.dnd_confirm.to_host = Haul {count} file(s) back to home port?
+dialog.conflict.title = Booty Already Aboard
+dialog.conflict.message = A file named "{name}" already be stowed at {dest}, matey. What be yer orders?
+dialog.conflict.dest.remote = the faraway ship
+dialog.conflict.dest.host = yer home port
+dialog.conflict.overwrite = Plunder over it
+dialog.conflict.skip = Sail past
+dialog.conflict.cancel = Abandon
+dialog.conflict.apply_all = Do this fer all the rest o' the conflicts
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Ship's route be unlinked!
@@ -185,6 +193,7 @@ history.dir.host = To th' Host
 history.status.success = Victory
 history.status.failure = Shipwreck
 history.status.cancelled = Abandoned
+history.status.skipped = Sailed past
 history.status.retry_suffix = {status} (another go)
 history.filter.direction = Heading:
 history.filter.status = Fate:

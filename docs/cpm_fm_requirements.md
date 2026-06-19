@@ -4,11 +4,11 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 2.8.0 |
+| Version | 2.9.0 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
-| Date | 2026-06-18 |
+| Date | 2026-06-19 |
 | Source documents | `docs/legacy/App_Requirements.md`, `docs/legacy/App_Design.md` (archived) |
 
 ---
@@ -297,11 +297,26 @@ Transfer History dialog (UIR-082/UIR-083) is the GUI view over it.)*
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| FR-140 | The application shall maintain a **transfer history** in which each entry records one file-transfer attempt with: the file's base **name**, the host-side **path** involved (retained so the transfer can be re-initiated — FR-144), the **direction** (`remote` = Copy to Remote / host→remote upload, `host` = Copy to Host / remote→host download), a **timestamp** (ISO-8601 local time), the **status** (`success`, `failure`, or `cancelled`), the transferred **size** in bytes (0 when unknown — e.g. a failed/cancelled download, whose length the X-Modem stream never carried), an **error** message (for a failure; empty otherwise), and a **retry** flag (true when the entry resulted from a re-transfer — FR-144). *(v2.8.)* | Mandatory | T | impl. `utils/transfer_history.py:TransferHistory.add_entry`; `app.py:_record_history`; tests `test_transfer_history.py` |
+| FR-140 | The application shall maintain a **transfer history** in which each entry records one file-transfer attempt with: the file's base **name**, the host-side **path** involved (retained so the transfer can be re-initiated — FR-144), the **direction** (`remote` = Copy to Remote / host→remote upload, `host` = Copy to Host / remote→host download), a **timestamp** (ISO-8601 local time), the **status** (`success`, `failure`, `cancelled`, or `skipped` — the last when the user declined to overwrite an existing destination file, FR-146), the transferred **size** in bytes (0 when unknown — e.g. a failed/cancelled/skipped download, whose length the X-Modem stream never carried), an **error** message (for a failure; empty otherwise), and a **retry** flag (true when the entry resulted from a re-transfer — FR-144). *(v2.8.)* | Mandatory | T | impl. `utils/transfer_history.py:TransferHistory.add_entry`; `app.py:_record_history`; tests `test_transfer_history.py` |
 | FR-141 | The transfer history shall be **persisted** as a JSON list of entries (oldest first) in a file in the user's home directory (`~/.cpm_fm_history.json`, DR-045) and restored on the next start, kept separate from the per-configuration serial JSON (`ConfigHandler`) and the `QSettings`-backed UI/session state (`WindowState`). A **retention policy** shall bound the file: at most 500 entries are kept (the oldest dropped first) and entries older than 30 days are pruned. A missing, unreadable, or malformed history file shall degrade to an empty history rather than raising, and a write failure shall never abort a transfer. *(v2.8.)* | Mandatory | T | impl. `utils/transfer_history.py:TransferHistory` (`_read_file`, `_write_file`, `_prune_locked`, `prune_old_entries`); tests `test_transfer_history.py` |
-| FR-142 | Each transfer shall record its per-file outcome in the history (FR-140) as it completes: a **success** entry (with the transferred size) for each file that transfers, a **failure** entry (with the error message) for a file that errors or fails, and a **cancelled** entry for the in-progress file when the user cancels the batch (FR-120). Recording occurs on the transfer worker threads, so the history store shall be **thread-safe**; no Qt-signal marshalling is required for the record itself. *(v2.8.)* | Mandatory | T | impl. `app.py:_transfer_to_remote_batch`, `_transfer_to_host_batch`, `_record_history`; `utils/transfer_history.py:TransferHistory.add_entry` (lock); tests `test_transfer_history.py`, `test_gui_smoke.py` |
+| FR-142 | Each transfer shall record its per-file outcome in the history (FR-140) as it completes: a **success** entry (with the transferred size) for each file that transfers, a **failure** entry (with the error message) for a file that errors or fails, and a **cancelled** entry for the in-progress file when the user cancels the batch (FR-120), and a **skipped** entry for a file the user chose not to overwrite at the destination (FR-146). Recording occurs on the transfer worker threads, so the history store shall be **thread-safe**; no Qt-signal marshalling is required for the record itself. *(v2.8.)* | Mandatory | T | impl. `app.py:_transfer_to_remote_batch`, `_transfer_to_host_batch`, `_record_history`; `utils/transfer_history.py:TransferHistory.add_entry` (lock); tests `test_transfer_history.py`, `test_gui_smoke.py` |
 | FR-143 | The application shall present a modal **Transfer History dialog** (UIR-082/UIR-083) showing the recorded entries (FR-140) newest-first in a table, with controls to **filter** by direction and by status, to **export** the history to a user-chosen JSON file, and to **clear** the entire history after a confirmation. *(v2.8.)* | Mandatory | T | impl. `gui/transfer_history_dialog.py:TransferHistoryDialog`; `app.py:show_history`; tests `test_gui_smoke.py` |
 | FR-144 | The Transfer History dialog shall allow the user to **re-transfer** a selected entry: the application shall restore the file path and direction from the entry and re-initiate the transfer through the existing batch flow (a `remote` entry re-runs Copy to Remote, a `host` entry re-runs Copy to Host), gated on both connection flags (FR-080/CR-010) exactly as the Copy actions, with an upload additionally requiring its source host file to still exist. The new attempt shall be recorded in the history marked as a re-transfer (`retry`). Re-transfer shall start only after the History dialog has closed, so its own modal progress dialog (FR-105) is not obscured. *(v2.8.)* | Mandatory | T | impl. `gui/transfer_history_dialog.py:TransferHistoryDialog` (`_on_retransfer`, `retransfer_entry`); `app.py:show_history`, `_retransfer`, `_transfer_to_remote_batch`/`_transfer_to_host_batch` (`retry`); tests `test_gui_smoke.py` |
+
+### 3.15 Transfer file-conflict handling
+
+*(v2.9. Feature: when a file being transferred already exists at the destination, the user is prompted
+to Overwrite, Skip, or Cancel — standard operating-system file-copy behaviour — with the option to apply
+the chosen Overwrite/Skip action to all remaining conflicts in the batch. The detection differs by
+direction: a remote→host download checks the host filesystem; a host→remote upload first refreshes the
+remote directory listing so the check is against the live remote contents rather than a possibly-stale
+cached list.)*
+
+| ID | Requirement | Priority | Verification | Source |
+|----|-------------|----------|--------------|--------|
+| FR-145 | Before transferring each file in a batch (FR-106), the application shall determine whether a file of the same name already exists at the **destination**. For a remote→host download (`host`), the destination is the host directory and the check is the existence of the target path on the host filesystem. For a host→remote upload (`remote`), the destination is the remote CP/M drive: the application shall **refresh the remote directory listing once at the start of the upload batch** (reusing the listing/parse mechanism of FR-077–FR-079, which also updates the displayed Remote Files list and so satisfies FR-099 for the pre-transfer state) and check the file's base name, upper-cased (CP/M names are upper-case 8.3), against that fresh listing. If the remote refresh yields no names (e.g. the capture failed or the listing could not be parsed), no conflict shall be detected and the upload shall proceed as before (overwrite-by-default). *(v2.9.)* | Mandatory | T | impl. `app.py:_destination_conflict`, `_fresh_remote_names`, `_transfer_to_remote_batch`, `_transfer_to_host_batch`; tests `test_conflict_resolution.py` |
+| FR-146 | When a destination conflict is detected (FR-145) and no batch-wide policy is in effect (FR-147), the application shall **prompt** the user with a modal dialog (UIR-084) naming the conflicting file and offering three actions: **Overwrite** (proceed with the transfer, replacing the destination file), **Skip** (do not transfer this file and continue with the next), and **Cancel** (abort the whole batch, identical to the Cancel of FR-120). A skipped file shall be recorded in the transfer history (FR-142) with the status `skipped`. Because the batch runs on a worker thread, the prompt shall be raised on the GUI thread and the worker shall block until the user answers, marshalled via a Qt signal and a thread-safe event (NFR-004). *(v2.9.)* | Mandatory | T | impl. `app.py:_resolve_conflict`, `_on_conflict_detected`, `conflict_detected` signal; `gui/conflict_dialog.py:FileConflictDialog`; tests `test_conflict_resolution.py`, `test_gui_smoke.py` |
+| FR-147 | The conflict prompt (FR-146) shall offer an **"apply to all remaining conflicts"** option (a checkbox). When the user resolves a conflict with that option ticked, the chosen action (Overwrite or Skip) shall be remembered as a **batch-wide policy** and applied automatically to every subsequent conflict in the same batch without prompting again. The policy shall be reset at the start of each batch so it never carries across separate transfers. Cancel always ends the batch immediately and so is unaffected by the option. *(v2.9.)* | Mandatory | T | impl. `app.py:_resolve_conflict`, `_conflict_policy`; `gui/conflict_dialog.py:FileConflictDialog` (`apply_to_all`); tests `test_conflict_resolution.py` |
 
 ---
 
@@ -433,7 +448,13 @@ Transfer History dialog (UIR-082/UIR-083) is the GUI view over it.)*
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
 | UIR-082 | The main-window toolbar (UIR-071) shall provide a **History** action that opens the Transfer History dialog (FR-143). *(v2.8.)* | Mandatory | I | impl. `app.py:setup_toolbar`, `show_history`; `lang/*.txt` (`toolbar.history`) |
-| UIR-083 | The Transfer History dialog (FR-143) shall be a modal dialog titled "Transfer History" containing: a **filter row** with a **Direction** drop-down (All / To Remote / To Host) and a **Status** drop-down (All / Success / Failure / Cancelled) whose option labels are translated while their underlying filter values are not (CR-015); a read-only **table** with the columns Time, File, Direction, Status, Size, and Error, one row per entry, newest-first, with whole-row single selection; and a button row with **Re-transfer** (enabled only when a row is selected — FR-144), **Export** and **Clear** (enabled only when the history is non-empty), and a **Close** button. Its geometry shall persist across sessions (FR-004). *(v2.8.)* | Mandatory | T | impl. `gui/transfer_history_dialog.py:TransferHistoryDialog`; `lang/*.txt` (`history.*`) |
+| UIR-083 | The Transfer History dialog (FR-143) shall be a modal dialog titled "Transfer History" containing: a **filter row** with a **Direction** drop-down (All / To Remote / To Host) and a **Status** drop-down (All / Success / Failure / Cancelled / Skipped) whose option labels are translated while their underlying filter values are not (CR-015); a read-only **table** with the columns Time, File, Direction, Status, Size, and Error, one row per entry, newest-first, with whole-row single selection; and a button row with **Re-transfer** (enabled only when a row is selected — FR-144), **Export** and **Clear** (enabled only when the history is non-empty), and a **Close** button. Its geometry shall persist across sessions (FR-004). *(v2.8; Skipped status added v2.9.)* | Mandatory | T | impl. `gui/transfer_history_dialog.py:TransferHistoryDialog`; `lang/*.txt` (`history.*`) |
+
+### 4.13 Transfer File-Conflict Dialog
+
+| ID | Requirement | Priority | Verification | Source |
+|----|-------------|----------|--------------|--------|
+| UIR-084 | The Transfer File-Conflict Dialog (FR-146) shall be a modal dialog titled "File Exists" that names the conflicting file and explains that it already exists at the destination, and presents three buttons — **Overwrite**, **Skip**, and **Cancel** — together with an **"Apply to all remaining conflicts"** checkbox (FR-147). The dialog shall not present a window manual-close control; closing it via the window manager shall be equivalent to **Cancel** (the safest default). *(v2.9.)* | Mandatory | T | impl. `gui/conflict_dialog.py:FileConflictDialog`; `lang/*.txt` (`dialog.conflict.*`); FR-146, FR-147 |
 
 ---
 
@@ -523,7 +544,7 @@ whitespace/CRLF robustness, de-duplication, empty/edge inputs, and drive-prompt 
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| DR-045 | The transfer history (FR-140/FR-141) shall be stored as a UTF-8 JSON file — a list of entry objects, oldest first — at `~/.cpm_fm_history.json` by default (the path is injectable for testing). Each entry object holds the flat fields of FR-140 (`timestamp`, `filename`, `path`, `direction`, `status`, `size`, `error`, `retry`). The file is rewritten after each mutation (add/clear) and re-read on construction; a missing/unreadable/malformed file, or a document that is not a JSON list, yields an empty history. *(v2.8.)* | Mandatory | T | impl. `utils/transfer_history.py` (`DEFAULT_HISTORY_FILENAME`, `default_history_path`, `_read_file`, `_write_file`); tests `test_transfer_history.py` |
+| DR-045 | The transfer history (FR-140/FR-141) shall be stored as a UTF-8 JSON file — a list of entry objects, oldest first — at `~/.cpm_fm_history.json` by default (the path is injectable for testing). Each entry object holds the flat fields of FR-140 (`timestamp`, `filename`, `path`, `direction`, `status` — one of `success`/`failure`/`cancelled`/`skipped`, `size`, `error`, `retry`). The file is rewritten after each mutation (add/clear) and re-read on construction; a missing/unreadable/malformed file, or a document that is not a JSON list, yields an empty history. *(v2.8.)* | Mandatory | T | impl. `utils/transfer_history.py` (`DEFAULT_HISTORY_FILENAME`, `default_history_path`, `_read_file`, `_write_file`); tests `test_transfer_history.py` |
 
 ---
 
@@ -599,6 +620,7 @@ whitespace/CRLF robustness, de-duplication, empty/edge inputs, and drive-prompt 
 | v2.6 file list filter / sort | FR-130 – FR-135, UIR-079, UIR-080; revises FR-078, DR-041 |
 | v2.7 drag-and-drop file transfer | FR-136 – FR-139, UIR-081; revises DR-041 |
 | v2.8 transfer history | FR-140 – FR-144, UIR-082, UIR-083, DR-045; revises DR-041 |
+| v2.9 transfer file-conflict handling | FR-145 – FR-147, UIR-084; revises FR-140, FR-142, UIR-083, DR-045 |
 
 ---
 

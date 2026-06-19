@@ -98,6 +98,14 @@ dialog.select_directory.title = 選擇目錄
 dialog.dnd_confirm.title = 確認傳輸
 dialog.dnd_confirm.to_remote = 將 {count} 個檔案複製到遠端系統？
 dialog.dnd_confirm.to_host = 將 {count} 個檔案複製到主機？
+dialog.conflict.title = 檔案已存在
+dialog.conflict.message = 名為「{name}」嘅檔案已經喺{dest}存在。你想點做？
+dialog.conflict.dest.remote = 遠端系統
+dialog.conflict.dest.host = 主機目錄
+dialog.conflict.overwrite = 覆寫
+dialog.conflict.skip = 略過
+dialog.conflict.cancel = 取消
+dialog.conflict.apply_all = 套用至所有剩餘衝突
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = 傳輸端口未連接
@@ -180,6 +188,7 @@ history.dir.host = 去主機
 history.status.success = 成功
 history.status.failure = 失敗
 history.status.cancelled = 已取消
+history.status.skipped = 已略過
 history.status.retry_suffix = {status}（重試）
 history.filter.direction = 方向：
 history.filter.status = 狀態：
