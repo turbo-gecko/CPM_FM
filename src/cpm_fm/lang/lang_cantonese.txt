@@ -106,6 +106,12 @@ dialog.conflict.overwrite = 覆寫
 dialog.conflict.skip = 略過
 dialog.conflict.cancel = 取消
 dialog.conflict.apply_all = 套用至所有剩餘衝突
+dialog.invalid_name.title = 無效嘅 CP/M 檔案名
+dialog.invalid_name.message = 名稱「{name}」唔符合 CP/M 8.3 檔案命名慣例（主檔名最多 8 個字元，可選副檔名最多 3 個，唔可以有空格或保留字元）。請輸入有效名稱嚟重新命名、略過呢個檔案，或者取消傳輸。
+dialog.invalid_name.rename = 重新命名
+dialog.invalid_name.skip = 略過
+dialog.invalid_name.cancel = 取消
+dialog.invalid_name.still_invalid = 呢個仍然唔係有效嘅 CP/M 8.3 檔案名。請再試一次。
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = 傳輸端口未連接

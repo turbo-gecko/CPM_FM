@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.15 |
+| Version | 1.16 |
 | Status | Draft |
 | Date | 2026-06-19 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.9.0) |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.10.0) |
 
 ---
 
@@ -321,6 +321,27 @@ these cases confirm the live dialog and the real overwrite/skip/refresh behaviou
 
 ---
 
+## 11.4 Host→remote filename validation  **[CP/M]**
+
+Before each host→remote upload the app checks the file's name against the CP/M 8.3 convention
+(FR-148, DR-046) and, if it does not conform, prompts to **Rename / Skip / Cancel** (FR-149, UIR-085).
+The validation, suggestion, and batch handling are unit-tested (`tests/test_filename_validation.py`);
+these cases confirm the live dialog and the real upload-under-new-name behaviour. To create a
+non-conforming host file, use a name with a space or an over-length base/extension (e.g.
+`bad name.txt` or `longfilename.text`).
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-FV01 [CP/M] | FR-148, FR-149, UIR-085 | Select a host file whose name does **not** meet CP/M 8.3 (e.g. `bad name.txt`) and Copy to Remote. | Before uploading, a modal **"Invalid CP/M File Name"** dialog names the file, explains the 8.3 convention, shows an editable field pre-filled with a conforming suggestion (e.g. `BADNAME.TXT`), and offers **Rename**, **Skip**, **Cancel**. It has no window close (X) control. |
+| MT-FV02 [CP/M] | FR-149 | At the MT-FV01 prompt, edit the field to a **valid** 8.3 name and click **Rename**. | The dialog closes and the file is uploaded to the remote under the entered name (verify via Update on the Remote pane); a **success** history entry is recorded under the new name. |
+| MT-FV03 | FR-149 | At the prompt, type an **invalid** name (e.g. `still bad.text`) and click **Rename**. | The dialog stays open and shows an inline error; no transfer starts until a valid name is entered (or Skip/Cancel chosen). |
+| MT-FV04 [CP/M] | FR-149, FR-142 | In a multi-file batch, at an invalid-name prompt click **Skip**. | The offending file is not uploaded; the batch continues with the next file; a **skipped** history entry is recorded for it. |
+| MT-FV05 [CP/M] | FR-149, FR-120 | At an invalid-name prompt click **Cancel** (or close via the window manager). | The whole batch aborts immediately like the transfer Cancel: no further files upload; the progress dialog closes; the status bar shows a cancellation message; no error dialog. |
+| MT-FV06 [CP/M] | FR-148 | Copy to Remote a host file whose name **already** meets CP/M 8.3 (e.g. `GOOD.TXT`). | **No** validation prompt appears; the upload proceeds directly. |
+| MT-FV07 [CP/M] | FR-149, FR-145 | Rename an invalid-named upload to a name that **already exists** on the remote drive. | After Rename, the normal **"File Exists"** conflict prompt (UIR-084) appears for the new name; Overwrite/Skip/Cancel behave as in §11.3. |
+
+---
+
 ## 12. Terminal Window (live)  **[CP/M or loopback]**
 
 | ID | Req | Steps | Expected |
@@ -424,6 +445,7 @@ or real cross-session persistence:
 - Drag-and-drop file transfer (live drag gesture, drop-zone highlight, external OS drops, real transfer round-trip): `FR-136`–`FR-139` (live), `UIR-081` (the decode/handoff logic — drag payload, cross-pane vs same-pane, external-vs-host acceptance, flag-gating, confirmation — is covered automatically by `tests/test_gui_smoke.py`; the manual cases confirm the on-screen highlight, the real drag from the OS file manager, and the live transfer).
 - Transfer history (on-screen dialog render, real cross-session persistence, real Export file, live re-transfer round-trip): `FR-140`–`FR-144` (live), `UIR-082`, `UIR-083`, `DR-045` (the history store — schema, persistence, retention, thread-safe recording, export — and the dialog's list/filter/clear/re-transfer wiring are covered automatically by `tests/test_transfer_history.py` and `tests/test_gui_smoke.py`; the manual cases confirm the rendered dialog, real `~/.cpm_fm_history.json` persistence across sessions, the real exported file, and a live re-transfer).
 - File-conflict prompt on transfer (live dialog render, real overwrite/skip on the filesystem & remote, real pre-upload `DIR` refresh): `FR-145`–`FR-147` (live), `UIR-084` (the detection, the batch-wide policy, and the Skip/Cancel batch handling are covered automatically by `tests/test_conflict_resolution.py`; the manual cases confirm the on-screen dialog, that Overwrite/Skip really replace/preserve the destination file, and that an upload conflict is detected against a freshly refreshed remote listing).
+- Host→remote filename validation (live dialog render, real upload under a renamed name, inline re-validation): `FR-148`, `FR-149` (live), `UIR-085` (the 8.3 validation/suggestion logic and the rename/skip/cancel batch handling are covered automatically by `tests/test_filename_validation.py`; the manual cases confirm the on-screen dialog, that Rename really uploads the file to the remote under the new name, and that a still-invalid replacement is rejected inline).
 - Non-functional (real): `NFR-001`, `NFR-004` (live), `STR-003`, `FR-088`.
 
 Purely algorithmic and headless-logic requirements (`DR-*`, the X-Modem progress/handshake internals,

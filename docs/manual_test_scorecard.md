@@ -7,9 +7,9 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.15 |
-| Scorecard for plan version | 1.15 (`docs/manual_test_plan.md`) |
-| SRS version | (e.g. 2.9.0) |
+| Scorecard version | 1.16 |
+| Scorecard for plan version | 1.16 (`docs/manual_test_plan.md`) |
+| SRS version | (e.g. 2.10.0) |
 | Tester | |
 | Date(s) of run | |
 
@@ -194,6 +194,17 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-CF05 | "Apply to all" prompts once, applies to remaining conflicts | FR-147 | | | |
 | MT-CF06 | Cancel/close at a conflict aborts the whole batch | FR-146, FR-120 | | | |
 | MT-CF07 | No prompt when the destination has no matching file | FR-145 | | | |
+
+### §11.4 Host→remote filename validation
+| ID | Title | Req | Result | Env | Notes |
+|----|-------|-----|:------:|:---:|-------|
+| MT-FV01 | Invalid 8.3 name shows Rename/Skip/Cancel dialog with suggestion | FR-148, FR-149, UIR-085 | | | |
+| MT-FV02 | Rename uploads the file under the new name (success recorded) | FR-149 | | | |
+| MT-FV03 | Still-invalid replacement is rejected inline (dialog stays open) | FR-149 | | | |
+| MT-FV04 | Skip leaves file unsent and continues (skipped recorded) | FR-149, FR-142 | | | |
+| MT-FV05 | Cancel/close at an invalid name aborts the whole batch | FR-149, FR-120 | | | |
+| MT-FV06 | No prompt when the upload name already meets 8.3 | FR-148 | | | |
+| MT-FV07 | Renamed name onto an existing remote file triggers the conflict prompt | FR-149, FR-145 | | | |
 
 ### §12 Terminal Window (live)
 | ID | Title | Req | Result | Env | Notes |

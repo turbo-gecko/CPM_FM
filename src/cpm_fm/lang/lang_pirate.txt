@@ -111,6 +111,12 @@ dialog.conflict.overwrite = Plunder over it
 dialog.conflict.skip = Sail past
 dialog.conflict.cancel = Abandon
 dialog.conflict.apply_all = Do this fer all the rest o' the conflicts
+dialog.invalid_name.title = Scurvy CP/M File Name
+dialog.invalid_name.message = The name "{name}" don't be fit fer the CP/M 8.3 namin' code (a base o' no more than 8 letters and a wee extension o' up to 3, with no blank spaces nor forbidden marks). Enter a proper name to re-christen it, sail past this file, or abandon the whole haul.
+dialog.invalid_name.rename = Re-christen
+dialog.invalid_name.skip = Sail past
+dialog.invalid_name.cancel = Abandon
+dialog.invalid_name.still_invalid = That still not be a proper CP/M 8.3 file name, matey. Try again.
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Ship's route be unlinked!

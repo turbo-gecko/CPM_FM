@@ -106,6 +106,12 @@ dialog.conflict.overwrite = Αντικατάσταση
 dialog.conflict.skip = Παράλειψη
 dialog.conflict.cancel = Άκυρο
 dialog.conflict.apply_all = Εφαρμογή σε όλες τις υπόλοιπες διενέξεις
+dialog.invalid_name.title = Μη έγκυρο όνομα αρχείου CP/M
+dialog.invalid_name.message = Το όνομα "{name}" δεν πληροί τη σύμβαση ονομασίας CP/M 8.3 (βασικό όνομα έως 8 χαρακτήρες και προαιρετική επέκταση έως 3, χωρίς κενά ή δεσμευμένους χαρακτήρες). Εισαγάγετε ένα έγκυρο όνομα για μετονομασία, παραλείψτε αυτό το αρχείο ή ακυρώστε τη μεταφορά.
+dialog.invalid_name.rename = Μετονομασία
+dialog.invalid_name.skip = Παράλειψη
+dialog.invalid_name.cancel = Άκυρο
+dialog.invalid_name.still_invalid = Αυτό εξακολουθεί να μην είναι έγκυρο όνομα αρχείου CP/M 8.3. Δοκιμάστε ξανά.
 
 # --- Error / warning message bodies ---------------------------------------------
 error.transport_not_connected = Η θύρα μεταφοράς δεν είναι συνδεδεμένη

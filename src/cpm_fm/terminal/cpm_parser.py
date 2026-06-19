@@ -1,3 +1,12 @@
+# CP/M 2.2 file names are upper-case 8.3 names drawn from a restricted
+# character set. These characters are reserved by CP/M as command-line / FCB
+# delimiters and wildcards and may not appear in a file name (FR-148, DR-046).
+# A space is also disallowed. Lower-case letters are *not* listed here: the CP/M
+# CCP folds command-line arguments to upper case, so a lower-case host name is
+# accepted by the remote unchanged and is treated as conforming.
+CPM_INVALID_CHARS = frozenset(" <>.,;:=?*[]|/\\")
+
+
 class CPMParser:
     """
     Implements the algorithm for extracting remote file names from the
@@ -6,6 +15,57 @@ class CPMParser:
 
     Satisfies: DR-001-DR-032.
     """
+
+    @staticmethod
+    def is_valid_8_3(name: str) -> bool:
+        """Return True if ``name`` conforms to the CP/M 2.2 8.3 naming convention.
+
+        A conforming name has a base of 1–8 characters and an optional extension
+        of up to 3 characters, separated by a single dot, with every character
+        drawn from the permitted set (no spaces or reserved characters, see
+        ``CPM_INVALID_CHARS``). A name with no dot is valid when its base is
+        1–8 characters; a trailing dot (an empty extension, e.g. ``FOO.``) is
+        rejected because CP/M cannot represent it distinctly. Case is not
+        checked — the CP/M CCP folds command-line arguments to upper case, so a
+        lower-case host name uploads unchanged.
+
+        Satisfies: FR-148, DR-046.
+        """
+        if not name or name.count(".") > 1:
+            return False
+        base, dot, ext = name.partition(".")
+        if not (1 <= len(base) <= 8) or len(ext) > 3:
+            return False
+        # A dot with no extension ("FOO.") cannot be stored by CP/M.
+        if dot and not ext:
+            return False
+        return all(ch not in CPM_INVALID_CHARS and 0x20 < ord(ch) < 0x7F for ch in base + ext)
+
+    @staticmethod
+    def suggest_8_3(name: str) -> str:
+        """Derive a CP/M 8.3-conforming suggestion from ``name``.
+
+        Used to pre-fill the rename field when an upload's name is rejected
+        (FR-149): the base and extension are split on the final dot, stripped of
+        reserved/invalid characters, upper-cased, and truncated to 8 and 3
+        characters respectively. An empty base falls back to ``FILE`` so the
+        suggestion is always itself valid (:meth:`is_valid_8_3`).
+
+        Satisfies: FR-149.
+        """
+        base, dot, ext = name.rpartition(".")
+        if not dot:  # no extension separator -> the whole name is the base
+            base, ext = name, ""
+
+        def clean(part: str, limit: int) -> str:
+            kept = [
+                ch for ch in part.upper() if ch not in CPM_INVALID_CHARS and 0x20 < ord(ch) < 0x7F
+            ]
+            return "".join(kept)[:limit]
+
+        clean_base = clean(base, 8) or "FILE"
+        clean_ext = clean(ext, 3)
+        return f"{clean_base}.{clean_ext}" if clean_ext else clean_base
 
     @staticmethod
     def parse_dir_output(text: str) -> dict[str, bool]:

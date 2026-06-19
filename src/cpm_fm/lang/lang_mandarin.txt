@@ -106,6 +106,12 @@ dialog.conflict.overwrite = 覆盖
 dialog.conflict.skip = 跳过
 dialog.conflict.cancel = 取消
 dialog.conflict.apply_all = 应用于所有剩余冲突
+dialog.invalid_name.title = 无效的 CP/M 文件名
+dialog.invalid_name.message = 名称"{name}"不符合 CP/M 8.3 文件命名规范（主名最多 8 个字符，可选扩展名最多 3 个字符，不含空格或保留字符）。请输入有效名称以重命名、跳过此文件或取消传输。
+dialog.invalid_name.rename = 重命名
+dialog.invalid_name.skip = 跳过
+dialog.invalid_name.cancel = 取消
+dialog.invalid_name.still_invalid = 这仍然不是有效的 CP/M 8.3 文件名。请重试。
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = 传输端口未连接
