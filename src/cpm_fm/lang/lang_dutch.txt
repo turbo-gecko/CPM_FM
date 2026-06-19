@@ -106,6 +106,12 @@ dialog.conflict.overwrite = Overschrijven
 dialog.conflict.skip = Overslaan
 dialog.conflict.cancel = Annuleren
 dialog.conflict.apply_all = Toepassen op alle resterende conflicten
+dialog.invalid_name.title = Ongeldige CP/M-bestandsnaam
+dialog.invalid_name.message = De naam "{name}" voldoet niet aan de CP/M 8.3-naamgevingsconventie (een basisnaam van maximaal 8 tekens en een optionele extensie van maximaal 3, zonder spaties of gereserveerde tekens). Voer een geldige naam in om het bestand te hernoemen, sla dit bestand over of annuleer de overdracht.
+dialog.invalid_name.rename = Hernoemen
+dialog.invalid_name.skip = Overslaan
+dialog.invalid_name.cancel = Annuleren
+dialog.invalid_name.still_invalid = Dat is nog steeds geen geldige CP/M 8.3-bestandsnaam. Probeer het opnieuw.
 
 # --- Error / warning message bodies -------------------------------------------
 error.transport_not_connected = Transportpoort niet verbonden

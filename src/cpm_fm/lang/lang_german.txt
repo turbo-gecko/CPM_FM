@@ -106,6 +106,12 @@ dialog.conflict.overwrite = Überschreiben
 dialog.conflict.skip = Überspringen
 dialog.conflict.cancel = Abbrechen
 dialog.conflict.apply_all = Auf alle verbleibenden Konflikte anwenden
+dialog.invalid_name.title = Ungültiger CP/M-Dateiname
+dialog.invalid_name.message = Der Name "{name}" entspricht nicht der CP/M-8.3-Namenskonvention (ein Basisname mit höchstens 8 Zeichen und eine optionale Erweiterung mit höchstens 3 Zeichen, ohne Leerzeichen oder reservierte Zeichen). Geben Sie einen gültigen Namen ein, um die Datei umzubenennen, überspringen Sie sie oder brechen Sie die Übertragung ab.
+dialog.invalid_name.rename = Umbenennen
+dialog.invalid_name.skip = Überspringen
+dialog.invalid_name.cancel = Abbrechen
+dialog.invalid_name.still_invalid = Das ist immer noch kein gültiger CP/M-8.3-Dateiname. Bitte versuchen Sie es erneut.
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Transport-Port nicht verbunden

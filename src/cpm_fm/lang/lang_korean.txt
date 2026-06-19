@@ -106,6 +106,12 @@ dialog.conflict.overwrite = 덮어쓰기
 dialog.conflict.skip = 건너뛰기
 dialog.conflict.cancel = 취소
 dialog.conflict.apply_all = 남은 모든 충돌에 적용
+dialog.invalid_name.title = 잘못된 CP/M 파일 이름
+dialog.invalid_name.message = 이름 "{name}"이(가) CP/M 8.3 파일 이름 규칙(기본 이름 최대 8자, 선택적 확장자 최대 3자, 공백이나 예약 문자 없음)에 맞지 않습니다. 이름을 바꾸려면 올바른 이름을 입력하거나, 이 파일을 건너뛰거나, 전송을 취소하십시오.
+dialog.invalid_name.rename = 이름 바꾸기
+dialog.invalid_name.skip = 건너뛰기
+dialog.invalid_name.cancel = 취소
+dialog.invalid_name.still_invalid = 여전히 유효한 CP/M 8.3 파일 이름이 아닙니다. 다시 시도하십시오.
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = 전송 포트가 연결되지 않았습니다

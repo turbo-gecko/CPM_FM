@@ -38,6 +38,7 @@ from cpm_fm.gui.config_dialogs import GeneralConfigDialog, SerialConfigDialog
 from cpm_fm.gui.conflict_dialog import CANCEL, SKIP, FileConflictDialog
 from cpm_fm.gui.file_action_dialog import FileActionDialog
 from cpm_fm.gui.file_list_widget import FileListWidget
+from cpm_fm.gui.filename_validation_dialog import FilenameValidationDialog
 from cpm_fm.gui.terminal_window import TerminalWindow
 from cpm_fm.gui.theme import app_icon, apply_theme
 from cpm_fm.gui.transfer_dialog import TransferProgressDialog
@@ -140,6 +141,11 @@ class MainWindow(QMainWindow):
     # dialog runs on the GUI thread (NFR-004). The worker blocks on
     # _conflict_answered until the GUI thread records the user's choice.
     conflict_detected = Signal(str, str)
+    # FR-148/FR-149: emitted from the upload worker thread when a file's name
+    # does not meet the CP/M 8.3 convention, carrying (filename), so the modal
+    # rename/skip/cancel dialog runs on the GUI thread (NFR-004). The worker
+    # blocks on _invalid_name_answered until the GUI thread records the choice.
+    invalid_name_detected = Signal(str)
 
     def __init__(
         self,
@@ -194,6 +200,12 @@ class MainWindow(QMainWindow):
         self._conflict_answered = threading.Event()
         self._conflict_result: tuple[str, bool] = (CANCEL, False)
         self._conflict_policy: str | None = None
+        # FR-148/FR-149: CP/M 8.3 name-validation prompt. The upload worker emits
+        # invalid_name_detected and blocks on _invalid_name_answered; the GUI
+        # thread shows the dialog (NFR-004) and stores (action, new_name) in
+        # _invalid_name_result before setting the event.
+        self._invalid_name_answered = threading.Event()
+        self._invalid_name_result: tuple[str, str] = (CANCEL, "")
         self.host_dir = os.getcwd()
         # FR-130/FR-133: the canonical, unfiltered file names for each pane. The
         # visible QListWidget rows are derived from these by filter_and_sort, so
@@ -345,6 +357,7 @@ class MainWindow(QMainWindow):
         self.view_file_ready.connect(self._on_view_file_ready)
         self.transfer_cancelled.connect(self._on_transfer_cancelled)
         self.conflict_detected.connect(self._on_conflict_detected)
+        self.invalid_name_detected.connect(self._on_invalid_name_detected)
 
     def setup_menu(self):
         """
@@ -1795,34 +1808,50 @@ class MainWindow(QMainWindow):
         succeeded = 0
         for index, filepath in enumerate(filepaths, start=1):
             name = os.path.basename(filepath)
+            # The name the file will be given on the remote; differs from the
+            # host base name when the user renames it to satisfy CP/M 8.3.
+            remote_name = name
             # FR-120: stop before starting the next file if cancellation is requested.
             if self._transfer_cancel.is_set():
                 self._finish_cancelled_batch("remote", succeeded)
                 return
-            # FR-145/FR-146: prompt when the file already exists on the remote.
-            if self._destination_conflict("remote", filepath, remote_names):
-                action = self._resolve_conflict(name, "remote")
+            # FR-148/FR-149: a name that does not meet the CP/M 8.3 convention
+            # prompts the user to rename the file, skip it, or cancel the batch.
+            if not CPMParser.is_valid_8_3(name):
+                action, new_name = self._prompt_invalid_name(name)
                 if action == CANCEL:
                     self._finish_cancelled_batch("remote", succeeded)
                     return
                 if action == SKIP:
                     self._record_history(name, filepath, "remote", "skipped", 0, "", retry)
                     continue
+                # RENAME: upload under the (validated) replacement name. The
+                # renamed name is itself subject to conflict detection below.
+                remote_name = new_name
+            # FR-145/FR-146: prompt when the file already exists on the remote.
+            if self._destination_conflict("remote", filepath, remote_names, remote_name):
+                action = self._resolve_conflict(remote_name, "remote")
+                if action == CANCEL:
+                    self._finish_cancelled_batch("remote", succeeded)
+                    return
+                if action == SKIP:
+                    self._record_history(remote_name, filepath, "remote", "skipped", 0, "", retry)
+                    continue
             # FR-109: let CP/M return to its prompt before the next command.
             if index > 1:
                 self._wait_for_terminal_idle()
-            self.set_status(tr("status.uploading", name=name, index=index, count=count))
+            self.set_status(tr("status.uploading", name=remote_name, index=index, count=count))
             try:
                 total_bytes = os.path.getsize(filepath)
             except OSError:
                 total_bytes = 0
-            self.transfer_file_started.emit(name, total_bytes, index)
+            self.transfer_file_started.emit(remote_name, total_bytes, index)
             try:
-                ok = self._send_one_to_remote(filepath)
+                ok = self._send_one_to_remote(filepath, remote_name)
             except Exception as e:
                 self._debug(f"[copy-to-remote] EXCEPTION: {e!r}")
                 # FR-142: record the failed file with its error message.
-                self._record_history(name, filepath, "remote", "failure", 0, str(e), retry)
+                self._record_history(remote_name, filepath, "remote", "failure", 0, str(e), retry)
                 if succeeded:
                     self.transfer_completed.emit("remote")
                 self.error_raised.emit(tr("dialog.error.title"), str(e))
@@ -1830,28 +1859,28 @@ class MainWindow(QMainWindow):
             if not ok:
                 # FR-120: a cancelled transfer is not a failure.
                 if self._transfer_cancel.is_set():
-                    self._record_history(name, filepath, "remote", "cancelled", 0, "", retry)
+                    self._record_history(remote_name, filepath, "remote", "cancelled", 0, "", retry)
                     self._finish_cancelled_batch("remote", succeeded)
                     return
                 # FR-142: record the failed file.
                 self._record_history(
-                    name,
+                    remote_name,
                     filepath,
                     "remote",
                     "failure",
                     0,
-                    tr("error.transfer_failed", name=name),
+                    tr("error.transfer_failed", name=remote_name),
                     retry,
                 )
                 # FR-108: abort the batch and refresh if anything got through.
                 if succeeded:
                     self.transfer_completed.emit("remote")
                 self.error_raised.emit(
-                    tr("dialog.xmodem_error.title"), tr("error.transfer_failed", name=name)
+                    tr("dialog.xmodem_error.title"), tr("error.transfer_failed", name=remote_name)
                 )
                 return
             # FR-142: record the successful upload with its size.
-            self._record_history(name, filepath, "remote", "success", total_bytes, "", retry)
+            self._record_history(remote_name, filepath, "remote", "success", total_bytes, "", retry)
             succeeded += 1
         self.set_status(tr("status.successfully_uploaded", count=succeeded))
         # FR-099: refresh the Remote Files list so the uploaded files show.
@@ -1895,19 +1924,26 @@ class MainWindow(QMainWindow):
         return {name.upper() for name in files_dict}
 
     @staticmethod
-    def _destination_conflict(direction: str, path: str, remote_names: set[str]) -> bool:
+    def _destination_conflict(
+        direction: str, path: str, remote_names: set[str], dest_name: str | None = None
+    ) -> bool:
         """Whether a file of this name already exists at the destination (FR-145).
 
         For a download (``host``) the destination is the host filesystem, so the
         check is ``os.path.exists``. For an upload (``remote``) the destination
-        is the remote drive, so the base name (upper-cased — CP/M is upper-case
-        8.3) is checked against ``remote_names`` (the fresh listing).
+        is the remote drive, so the destination name (upper-cased — CP/M is
+        upper-case 8.3) is checked against ``remote_names`` (the fresh listing).
+        ``dest_name`` overrides the name checked for an upload; it is the
+        effective remote name, which differs from the host base name when the
+        file was renamed to satisfy the CP/M 8.3 convention (FR-149). When
+        omitted the host base name is used.
 
-        Satisfies: FR-145.
+        Satisfies: FR-145, FR-149.
         """
         if direction == "host":
             return os.path.exists(path)
-        return os.path.basename(path).upper() in remote_names
+        name = dest_name if dest_name is not None else os.path.basename(path)
+        return name.upper() in remote_names
 
     def _resolve_conflict(self, name: str, direction: str) -> str:
         """Decide how to handle a destination conflict for ``name`` (FR-146/FR-147).
@@ -1959,18 +1995,59 @@ class MainWindow(QMainWindow):
         finally:
             self._conflict_answered.set()
 
-    def _send_one_to_remote(self, filepath) -> bool:
+    # ------------------------------------------------- CP/M name validation
+
+    def _prompt_invalid_name(self, name: str) -> tuple[str, str]:
+        """Raise the CP/M 8.3 name-validation dialog and block until answered.
+
+        Marshals the modal dialog onto the GUI thread via
+        ``invalid_name_detected`` (NFR-004) and blocks this upload worker thread
+        on ``_invalid_name_answered`` until the GUI thread records the user's
+        (action, new_name) choice. Split out so the batch loop's handling of the
+        result can be tested without the Qt signal/thread round-trip.
+
+        Satisfies: FR-148, FR-149.
         """
-        Satisfies: FR-081, FR-082, FR-083, FR-087.
+        self._invalid_name_answered.clear()
+        self.invalid_name_detected.emit(name)
+        self._invalid_name_answered.wait()
+        return self._invalid_name_result
+
+    def _on_invalid_name_detected(self, name: str) -> None:
+        """Show the modal name-validation dialog and record the user's choice.
+
+        Runs on the GUI thread (queued from the upload worker). Pre-fills the
+        rename field with a CP/M 8.3-conforming suggestion (FR-149), stores
+        (action, new_name) in ``_invalid_name_result``, and releases the worker
+        by setting ``_invalid_name_answered`` (NFR-004).
+
+        Satisfies: FR-148, FR-149, UIR-085.
+        """
+        try:
+            suggested = CPMParser.suggest_8_3(name)
+            dialog = FilenameValidationDialog(self, name, suggested)
+            dialog.exec()
+            self._invalid_name_result = (dialog.action, dialog.new_name)
+        finally:
+            self._invalid_name_answered.set()
+
+    def _send_one_to_remote(self, filepath, remote_name: str | None = None) -> bool:
+        """
+        Satisfies: FR-081, FR-082, FR-083, FR-087, FR-149.
 
         Launch the CP/M receiver (PCGET) and send one file over X-Modem.
         Returns True on success. Runs on the batch worker thread; it does not
         touch the progress dialog or refresh (the batch driver owns those).
+        ``remote_name`` is the name the file is given on the remote (the PCGET
+        argument); it defaults to the host base name and differs only when the
+        file was renamed to satisfy the CP/M 8.3 convention (FR-149).
         """
         ser = self.serial_mgr.transport_port
+        if remote_name is None:
+            remote_name = os.path.basename(filepath)
         delay = self._launch_delay()
         self._debug(
-            f"[copy-to-remote] start file={os.path.basename(filepath)} "
+            f"[copy-to-remote] start file={remote_name} "
             f"cmd={self.settings.get('send_remote_cmd', 'PCGET $1')!r} "
             f"launch_delay={delay}s transport={ser}"
         )
@@ -1986,7 +2063,7 @@ class MainWindow(QMainWindow):
             # buffer that send_file does not flush.
             if ser:
                 ser.reset_input_buffer()
-            self._issue_remote_cmd("send_remote_cmd", "PCGET $1", os.path.basename(filepath))
+            self._issue_remote_cmd("send_remote_cmd", "PCGET $1", remote_name)
             self._debug(f"[copy-to-remote] launched PCGET; waiting {delay}s before handshake")
             time.sleep(delay)
             self._debug("[copy-to-remote] starting X-Modem send")

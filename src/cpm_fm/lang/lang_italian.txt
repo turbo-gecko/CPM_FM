@@ -106,6 +106,12 @@ dialog.conflict.overwrite = Sovrascrivi
 dialog.conflict.skip = Salta
 dialog.conflict.cancel = Annulla
 dialog.conflict.apply_all = Applica a tutti i conflitti rimanenti
+dialog.invalid_name.title = Nome file CP/M non valido
+dialog.invalid_name.message = Il nome "{name}" non rispetta la convenzione di denominazione CP/M 8.3 (un nome di base fino a 8 caratteri e un'estensione facoltativa fino a 3, senza spazi né caratteri riservati). Inserisci un nome valido per rinominarlo, salta questo file o annulla il trasferimento.
+dialog.invalid_name.rename = Rinomina
+dialog.invalid_name.skip = Salta
+dialog.invalid_name.cancel = Annulla
+dialog.invalid_name.still_invalid = Questo non è ancora un nome file CP/M 8.3 valido. Riprova.
 
 # --- Error / warning message bodies -------------------------------------------
 error.transport_not_connected = Porta di trasporto non connessa

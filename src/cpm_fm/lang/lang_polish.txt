@@ -106,6 +106,12 @@ dialog.conflict.overwrite = Zastąp
 dialog.conflict.skip = Pomiń
 dialog.conflict.cancel = Anuluj
 dialog.conflict.apply_all = Zastosuj do wszystkich pozostałych konfliktów
+dialog.invalid_name.title = Nieprawidłowa nazwa pliku CP/M
+dialog.invalid_name.message = Nazwa "{name}" nie spełnia konwencji nazw CP/M 8.3 (nazwa podstawowa do 8 znaków i opcjonalne rozszerzenie do 3 znaków, bez spacji i znaków zastrzeżonych). Wprowadź prawidłową nazwę, aby zmienić nazwę pliku, pomiń ten plik lub anuluj transfer.
+dialog.invalid_name.rename = Zmień nazwę
+dialog.invalid_name.skip = Pomiń
+dialog.invalid_name.cancel = Anuluj
+dialog.invalid_name.still_invalid = To nadal nie jest prawidłowa nazwa pliku CP/M 8.3. Spróbuj ponownie.
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Port transportu nie jest połączony
