@@ -1306,6 +1306,48 @@ def test_general_config_remote_group_first(qapp, monkeypatch):
         dlg.deleteLater()
 
 
+def test_general_config_save_keeps_current_host_dir(qapp, state, monkeypatch):
+    # Regression: with a host directory saved in the config and a *different*
+    # directory currently selected (e.g. via Change Directory), saving the
+    # General Config dialog without touching the host-directory field must not
+    # revert the current selection, nor change the stored config value.
+    import cpm_fm.app as app_module
+
+    win = MainWindow(state)
+    try:
+        # refresh_host_files lists the directory off disk; the paths here are
+        # synthetic, so neutralise it and just observe that host_dir tracks.
+        monkeypatch.setattr(win, "refresh_host_files", lambda: None)
+
+        win.settings = dict(win.settings)
+        win.settings["host_directory"] = "/path/A"
+        win.host_dir = "/path/B"  # diverged from config (Change Directory)
+
+        # Capture the callback the dialog would receive without building it.
+        captured = {}
+
+        def fake_dialog(parent, settings, callback, window_state):
+            captured["callback"] = callback
+
+        monkeypatch.setattr(app_module, "GeneralConfigDialog", fake_dialog)
+        win.menu_general_config()
+        callback = captured["callback"]
+
+        # Save with the host-directory field unchanged (it carries the stored
+        # config value back) plus an unrelated edit.
+        callback({"host_directory": "/path/A", "eol": "LF"})
+        assert win.host_dir == "/path/B"  # current selection preserved
+        assert win.settings["host_directory"] == "/path/A"  # config preserved
+        assert win.settings["eol"] == "LF"  # unrelated edit applied
+
+        # Editing the field to a new value does follow it.
+        callback({"host_directory": "/path/C"})
+        assert win.host_dir == "/path/C"
+        assert win.settings["host_directory"] == "/path/C"
+    finally:
+        win.close()
+
+
 def test_transfer_byte_echo_respects_setting(qapp, state):
     # FR-086/UIR-058: the <HH> transfer-byte echo is emitted only when
     # echo_transfer_data is affirmative (default off) and suppressed otherwise.

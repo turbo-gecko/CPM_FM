@@ -2718,14 +2718,23 @@ class MainWindow(QMainWindow):
         """
 
         def update_settings(new_set):
+            # The dialog seeds its host-directory field from the value stored in
+            # settings and returns every field on save, so an unchanged field
+            # carries the stored value back unchanged. Capture the stored value
+            # before updating to tell an actual edit from an untouched field.
+            old_host_dir = self.settings.get("host_directory", "")
+
             self.settings.update(new_set)
 
-            # If the default host directory was changed, apply it immediately
-            if "host_directory" in new_set:
-                path = new_set["host_directory"]
-                if path:
-                    self.host_dir = path
-                    self.refresh_host_files()
+            # Only follow a host directory the user actually edited in the
+            # dialog. If the field came back unchanged, leave the currently
+            # selected directory alone — it may have been changed via Change
+            # Directory since the config was loaded, and saving unrelated
+            # general settings must not revert it.
+            new_host_dir = new_set.get("host_directory", old_host_dir)
+            if new_host_dir and new_host_dir != old_host_dir:
+                self.host_dir = new_host_dir
+                self.refresh_host_files()
 
             self.set_status(tr("status.general_settings_updated"))
 
