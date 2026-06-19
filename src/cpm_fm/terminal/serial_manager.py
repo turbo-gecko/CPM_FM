@@ -97,6 +97,12 @@ class SerialManager:
 
             return True
         except Exception as e:
+            # FR-033/FR-040: on a failed open, explicitly clear the matching
+            # status flag rather than relying on it never having been set.
+            if port_type == "terminal":
+                self.terminal_connected = False
+            else:
+                self.transport_connected = False
             print(f"Failed to open {port_type} port: {e}")
             return False
 
