@@ -6,19 +6,35 @@ A cross-platform PySide6 desktop app for transferring files between a modern hos
 ## Features
 
 - Browse host and remote (CP/M) file listings side by side, with a draggable splitter.
-- Transfer single or multiple files in both directions over X-Modem.
-- Manage files on both sides from a right-click context menu: rename, delete, and
-  view/edit (host) or view (remote).
-- Built-in non-modal serial terminal for issuing CP/M commands.
+  Each pane has a wildcard/substring **filter** and a **sort** control (by name or
+  extension, ascending or descending); the filter and sort are remembered per pane.
+- Transfer single or multiple selected files in both directions over X-Modem, with a
+  modal progress dialog (file name, block/byte counts, batch position) and a **Cancel**
+  button to abort an in-progress transfer.
+- **Drag and drop** to transfer: drag selected files between the panes, or drop files
+  from the host OS file manager onto the Remote pane to upload them.
+- **File-conflict handling:** when a file already exists at the destination you are
+  prompted to Overwrite, Skip, or Cancel, with an option to apply the choice to the
+  rest of the batch.
+- **CP/M 8.3 filename validation** on upload: a host file whose name CP/M can't store
+  prompts you to rename (with a suggested conforming name), skip, or cancel.
+- **Transfer history:** every transfer attempt (success, failure, cancelled, or skipped)
+  is recorded to a persistent history you can review, filter, export, clear, and
+  re-transfer from (**History** toolbar button).
+- Manage files on both sides from a right-click context menu: transfer, rename, delete,
+  and view/edit (host) or view (remote); transfer and delete act on every selected file.
+- Built-in non-modal serial terminal for issuing CP/M commands, with a remote
+  drive-selection drop-down (A:–P:).
 - Separate terminal and transport serial ports (which may be the same physical port).
 - Configurable serial parameters and CP/M commands via Serial and General config
   dialogs, saved/loaded as JSON.
-- Remembers and auto-reloads the last-used configuration on startup, and persists each
-  window's size and position between runs.
+- Remembers and auto-reloads the last-used configuration on startup, shows its name in
+  the title bar, and persists each window's size and position between runs.
 - Material Design theme that follows the host OS light/dark mode.
 - Multi-language user interface (12 languages, selectable from **Config > Language**):
   English, Spanish, French, German, Italian, Dutch, Polish, Greek, Mandarin, Cantonese,
   Korean — and Pirate.
+- **Help > About** dialog showing the version and a link to the project repository.
 
 ## Requirements
 
@@ -47,8 +63,9 @@ The app starts unconfigured (unless it can reload the last-used configuration). 
 parameters via the **Config** menu and **File > Save** them. **File > New** resets to defaults.
 The loaded configuration's name is shown in the title bar.
 
-Connect, disconnect, and open the terminal from the toolbar. Right-click a file in either pane
-for transfer, rename, delete, and view actions.
+Connect, disconnect, open the terminal, and view the transfer history from the toolbar. Right-click
+a file in either pane for transfer, rename, delete, and view actions, or drag files between the
+panes to transfer them.
 
 ## Test
 
