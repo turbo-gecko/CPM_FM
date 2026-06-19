@@ -220,3 +220,17 @@ main.sort.name = Name
 main.sort.extension = Erweiterung
 main.sort_by_tooltip = Sortieren nach
 main.sort_direction_tooltip = Auf-/absteigende Reihenfolge umschalten
+
+# --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
+toolbar.backup = Sichern
+toolbar.restore = Wiederherstellen
+status.backing_up = Sichere Remote-Laufwerk auf Host...
+status.restoring = Stelle Host-Dateien auf Remote-Laufwerk wieder her...
+status.wiping_destination = Lösche {name}...
+status.backup_restore_cancelled = Vorgang abgebrochen
+status.nothing_to_transfer = Nichts zu übertragen
+dialog.backup_restore.backup_title = Sicherung bestätigen
+dialog.backup_restore.restore_title = Wiederherstellung bestätigen
+dialog.backup_restore.backup = Beim Sichern werden ALLE Dateien im Host-Verzeichnis GELÖSCHT und durch alle Dateien des Remote-Laufwerks ersetzt. Dies kann nicht rückgängig gemacht werden. Fortfahren?
+dialog.backup_restore.restore = Beim Wiederherstellen werden ALLE Dateien auf dem Remote-Laufwerk GELÖSCHT und durch alle Dateien des Host-Verzeichnisses ersetzt. Dies kann nicht rückgängig gemacht werden. Fortfahren?
+button.continue = Fortfahren

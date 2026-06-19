@@ -220,3 +220,17 @@ main.sort.name = Naam
 main.sort.extension = Extensie
 main.sort_by_tooltip = Sorteren op
 main.sort_direction_tooltip = Oplopende/aflopende volgorde wisselen
+
+# --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
+toolbar.backup = Back-up
+toolbar.restore = Herstellen
+status.backing_up = Back-up van extern station naar host...
+status.restoring = Hostbestanden herstellen naar extern station...
+status.wiping_destination = {name} verwijderen...
+status.backup_restore_cancelled = Bewerking geannuleerd
+status.nothing_to_transfer = Niets om over te dragen
+dialog.backup_restore.backup_title = Back-up bevestigen
+dialog.backup_restore.restore_title = Herstellen bevestigen
+dialog.backup_restore.backup = Back-up maken VERWIJDERT ALLE bestanden in de hostmap en vervangt ze door alle bestanden van het externe station. Dit kan niet ongedaan worden gemaakt. Doorgaan?
+dialog.backup_restore.restore = Herstellen VERWIJDERT ALLE bestanden op het externe station en vervangt ze door alle bestanden uit de hostmap. Dit kan niet ongedaan worden gemaakt. Doorgaan?
+button.continue = Doorgaan

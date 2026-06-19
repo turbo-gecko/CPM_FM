@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.16 |
+| Version | 1.17 |
 | Status | Draft |
 | Date | 2026-06-19 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.10.0) |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.11.0) |
 
 ---
 
@@ -119,7 +119,7 @@ that need two physical ports are marked **[2-port]**; visual-only cases are mark
 | MT-S01 | STR-002, CR-012, CR-013 | Launch `cpm-fm` with QSettings cleared (§2.4). | Main window appears; no console error; the Material theme is visibly applied (not the default Qt/native look). |
 | MT-S02 | FR-003, FR-060, FR-070 | Observe the freshly-launched window. | App is unconfigured (no settings loaded); Host Files list shows the current working directory's files; Remote Files list is **empty**. |
 | MT-S03 | UIR-001, UIR-002, UIR-003, UIR-004 | Inspect the menu bar. | A **File** menu with **New, Load, Save, Exit** (New at top), a **Config** menu with **Serial, General**, and a **Help** menu with **About**. |
-| MT-S04 | UIR-013, UIR-071, UIR-015, UIR-016 | Inspect the top toolbar. | A toolbar with **Connect, Disconnect, Terminal** as labelled, icon-bearing buttons; Connect and Disconnect both enabled at startup. |
+| MT-S04 | UIR-013, UIR-071, UIR-015, UIR-016, UIR-082, UIR-086, UIR-087 | Inspect the top toolbar. | A toolbar with **Connect, Disconnect, Terminal, History, Backup, Restore** as labelled, icon-bearing buttons; Connect and Disconnect both enabled at startup. |
 | MT-S05 | UIR-011, UIR-012, UIR-017, UIR-061..067 | Inspect the panes. | Host Files group (title shows **Host Files — `<current directory>`**, FR-126; top row with equally-sized **Change Directory** + **Update** buttons, multi-select list, row with **Copy to Remote**); Remote Files group (equally-sized drive drop-down + **Update** button, multi-select list, **Copy to Host** row). |
 
 ---
@@ -342,6 +342,32 @@ non-conforming host file, use a name with a space or an over-length base/extensi
 
 ---
 
+## 11.5 Whole-drive backup and restore  **[CP/M]**
+
+Two toolbar actions mirror every file between the remote drive and the host directory as a single
+destructive operation: **Backup** copies the whole remote drive to the host (remote→host); **Restore**
+copies the whole host directory to the remote drive (host→remote). Each first refreshes the destination
+listing, then warns that ALL files at the destination will be deleted and re-written and requires
+confirmation; on Continue it deletes every file at the destination and copies every file from the
+source, reusing the normal batch-transfer progress dialog and Cancel (FR-150–FR-154, UIR-086–UIR-088).
+The orchestration, wipe helpers, and confirmation slot are unit-tested (`tests/test_backup_restore.py`);
+these cases confirm the live destructive behaviour. **Use scratch folders/drives with disposable
+files** — these tests delete data by design.
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-BR01 [CP/M] | FR-150, FR-152, UIR-088 | With both ports connected and the host folder + remote drive each holding a few different files, press **Backup**. | The Remote pane refreshes (source) and the Host pane refreshes (destination); then a modal **"Confirm Backup"** dialog warns that ALL files in the host directory will be deleted and replaced, with **Continue** and **Cancel** (Cancel default). No deletion has happened yet. |
+| MT-BR02 [CP/M] | FR-152 | At the MT-BR01 prompt, press **Cancel** (or close via the window manager). | Nothing is deleted or transferred; the host folder is unchanged; status shows the operation was cancelled. |
+| MT-BR03 [CP/M] | FR-150, FR-153, FR-154 | At the MT-BR01 prompt, press **Continue**. | Every file in the host folder is deleted first; then each remote file downloads via the normal progress dialog (one file at a time). On completion the host folder contains exactly the remote drive's files. |
+| MT-BR04 [CP/M] | FR-151, FR-152, UIR-088 | Press **Restore**. | The Remote pane refreshes (destination); a modal **"Confirm Restore"** dialog warns that ALL files on the remote drive will be deleted and replaced, with **Continue**/**Cancel**. Cancel leaves the remote drive unchanged. |
+| MT-BR05 [CP/M] | FR-151, FR-153, FR-154 | At the Restore prompt, press **Continue**. | Each remote file is deleted (one `ERA` per file on the Terminal Port); then each host file uploads via the normal progress dialog. On completion the remote drive contains exactly the host folder's files. |
+| MT-BR06 [CP/M] | FR-154, FR-120 | During a Backup or Restore transfer, press **Cancel** in the progress dialog. | The transfer aborts like a normal batch cancel (the destination was already wiped; remaining files are not copied); status shows a cancellation message; no error dialog. |
+| MT-BR07 [CP/M] | FR-151, FR-148, FR-149 | Restore a host folder containing a file whose name is **not** CP/M 8.3 (e.g. `bad name.txt`). | During the upload phase the normal **"Invalid CP/M File Name"** prompt (UIR-085) appears for that file; Rename/Skip/Cancel behave as in §11.4. |
+| MT-BR08 | FR-080, CR-010 | Press **Backup** or **Restore** with a port **disconnected**. | "Transport port not connected" error; no refresh, no deletion, no transfer. |
+| MT-BR09 [CP/M] | FR-154 | Backup with an **empty** remote drive (or Restore with an **empty** host folder). | After confirmation the destination is still wiped; nothing is transferred; status shows "Nothing to transfer"; the destination pane ends empty. |
+
+---
+
 ## 12. Terminal Window (live)  **[CP/M or loopback]**
 
 | ID | Req | Steps | Expected |
@@ -446,6 +472,7 @@ or real cross-session persistence:
 - Transfer history (on-screen dialog render, real cross-session persistence, real Export file, live re-transfer round-trip): `FR-140`–`FR-144` (live), `UIR-082`, `UIR-083`, `DR-045` (the history store — schema, persistence, retention, thread-safe recording, export — and the dialog's list/filter/clear/re-transfer wiring are covered automatically by `tests/test_transfer_history.py` and `tests/test_gui_smoke.py`; the manual cases confirm the rendered dialog, real `~/.cpm_fm_history.json` persistence across sessions, the real exported file, and a live re-transfer).
 - File-conflict prompt on transfer (live dialog render, real overwrite/skip on the filesystem & remote, real pre-upload `DIR` refresh): `FR-145`–`FR-147` (live), `UIR-084` (the detection, the batch-wide policy, and the Skip/Cancel batch handling are covered automatically by `tests/test_conflict_resolution.py`; the manual cases confirm the on-screen dialog, that Overwrite/Skip really replace/preserve the destination file, and that an upload conflict is detected against a freshly refreshed remote listing).
 - Host→remote filename validation (live dialog render, real upload under a renamed name, inline re-validation): `FR-148`, `FR-149` (live), `UIR-085` (the 8.3 validation/suggestion logic and the rename/skip/cancel batch handling are covered automatically by `tests/test_filename_validation.py`; the manual cases confirm the on-screen dialog, that Rename really uploads the file to the remote under the new name, and that a still-invalid replacement is rejected inline).
+- Whole-drive backup and restore (live destructive round-trip, real destination wipe, on-screen confirmation): `FR-150`–`FR-154` (live), `UIR-086`–`UIR-088` (the orchestration ordering, the wipe helpers, the empty-source short-circuit, the connection guard, and the confirmation slot are covered automatically by `tests/test_backup_restore.py`; the manual cases confirm the on-screen confirmation dialog, that the destination is really emptied first, and the live transfer round-trip in both directions).
 - Non-functional (real): `NFR-001`, `NFR-004` (live), `STR-003`, `FR-088`.
 
 Purely algorithmic and headless-logic requirements (`DR-*`, the X-Modem progress/handshake internals,

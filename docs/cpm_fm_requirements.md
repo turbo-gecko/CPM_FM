@@ -4,7 +4,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 2.10.0 |
+| Version | 2.11.0 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
@@ -31,7 +31,7 @@ baselines used Tkinter.
 
 ### 1.3 Product overview
 The product presents a host file list and a remote file list side by side, with controls to connect
-to the remote CP/M system, list remote files, and transfer single or multiple files in both directions via the X-Modem protocol. It provides basic file management capabilities, including renaming, deleting, and viewing local and remote files.
+to the remote CP/M system, list remote files, and transfer single or multiple files in both directions via the X-Modem protocol. It provides basic file management capabilities, including renaming, deleting, and viewing local and remote files, and whole-drive **Backup** and **Restore** operations that mirror every file between the remote drive and the host directory.
 A non-modal terminal window enables direct serial interaction with the remote system.
 The application includes comprehensive serial and general configuration management and supports a multi-language user interface.
 
@@ -333,6 +333,24 @@ restriction.)*
 | FR-148 | Before transferring each file in a host→remote upload batch (FR-106), and before the destination-conflict check of FR-145, the application shall validate the file's base name against the **CP/M 8.3 naming convention** (DR-046). A name that conforms shall be uploaded without prompting. The validation shall apply to the upload (`remote`) direction only; a remote→host download (`host`) shall not be validated. *(v2.10.)* | Mandatory | T | impl. `app.py:_transfer_to_remote_batch`; `terminal/cpm_parser.py:CPMParser.is_valid_8_3`; tests `test_filename_validation.py` |
 | FR-149 | When an upload file's name does not conform (FR-148), the application shall **prompt** the user with a modal dialog (UIR-085) naming the offending file and offering three actions: **Rename** (supply a replacement name, which the dialog shall pre-fill with a conforming suggestion derived from the original name and accept only once it is itself a valid CP/M 8.3 name), **Skip** (do not transfer this file and continue with the next, recording a `skipped` history entry per FR-142), and **Cancel** (abort the whole batch, identical to the Cancel of FR-120). On Rename, the file shall be uploaded to the remote under the replacement name (the PCGET launch argument and the transfer-history record shall use it), and that name shall then be subject to the destination-conflict handling of FR-145–FR-147. Because the batch runs on a worker thread, the prompt shall be raised on the GUI thread and the worker shall block until the user answers, marshalled via a Qt signal and a thread-safe event (NFR-004). *(v2.10.)* | Mandatory | T | impl. `app.py:_prompt_invalid_name`, `_on_invalid_name_detected`, `invalid_name_detected` signal, `_transfer_to_remote_batch`, `_send_one_to_remote`, `_destination_conflict`; `gui/filename_validation_dialog.py:FilenameValidationDialog`; `terminal/cpm_parser.py:CPMParser.suggest_8_3`; tests `test_filename_validation.py` |
 
+### 3.17 Whole-drive backup and restore
+
+*(v2.11. Feature: two toolbar actions that mirror every file between the remote drive and the host
+directory as a single destructive operation. **Backup** copies the whole remote drive to the host
+(remote→host); **Restore** copies the whole host directory to the remote drive (host→remote). Each first
+refreshes the destination listing, then warns the user that ALL files at the destination will be deleted
+and re-written and requires explicit confirmation; on confirmation it deletes every file at the
+destination and then copies every file from the source, reusing the existing batch-transfer engine so the
+operation shows the standard progress dialog and can be cancelled.)*
+
+| ID | Requirement | Priority | Verification | Source |
+|----|-------------|----------|--------------|--------|
+| FR-150 | The application shall provide a **Backup** action (UIR-086) that mirrors the currently-selected remote drive to the current host directory (remote→host). Backup shall, in order: refresh the destination (host) directory listing and the source (remote) drive listing (the latter reusing the FR-077–FR-079 listing/parse mechanism, which also updates the displayed Remote Files list); obtain the user's confirmation of the destructive operation (FR-152); on confirmation, delete every file in the host directory (FR-153); and then download every file on the remote drive into the host directory, reusing the Copy to Host batch transfer (FR-099/FR-105/FR-106/FR-107/FR-120/FR-154). Backup shall run off the GUI thread and is permitted only when both the Terminal and Transport status flags are true (FR-080/CR-010); otherwise it shall show the "Transport port not connected" error and not proceed. *(v2.11.)* | Mandatory | T | impl. `app.py:do_backup`, `_backup_drive`, `_list_remote_file_names`, `_wipe_host_dir`, `_transfer_to_host_batch`; tests `test_backup_restore.py` |
+| FR-151 | The application shall provide a **Restore** action (UIR-087) that mirrors the current host directory to the currently-selected remote drive (host→remote). Restore shall, in order: snapshot the source (host) directory listing and refresh the destination (remote) drive listing (reusing the FR-077–FR-079 mechanism, which also yields the set of remote files to delete and updates the displayed Remote Files list); obtain the user's confirmation of the destructive operation (FR-152); on confirmation, delete every file on the remote drive (FR-153); and then upload every file in the host directory to the remote drive, reusing the Copy to Remote batch transfer (FR-099/FR-105/FR-106/FR-107/FR-120/FR-154), which continues to apply the host→remote filename validation of FR-148/FR-149. Restore shall run off the GUI thread and is permitted only when both status flags are true (FR-080/CR-010); otherwise it shall show the "Transport port not connected" error and not proceed. *(v2.11.)* | Mandatory | T | impl. `app.py:do_restore`, `_restore_drive`, `_list_remote_file_names`, `_wipe_remote_drive`, `_transfer_to_remote_batch`; tests `test_backup_restore.py` |
+| FR-152 | Before a Backup (FR-150) or Restore (FR-151) deletes anything, the application shall **refresh the destination listing** and then display a modal **confirmation** dialog (UIR-088) warning that ALL files at the destination (the host directory for Backup, the remote drive for Restore) will be deleted and re-written, and offering **Continue** and **Cancel**. Cancel (and a window-manager close) shall abort the operation before any deletion or transfer occurs; Continue shall proceed. The destination refresh shall complete and be reflected in the relevant file pane before the prompt is shown. Because Backup/Restore run on a worker thread, the prompt shall be raised on the GUI thread and the worker shall block until the user answers, marshalled via a Qt signal and a thread-safe event (NFR-004). *(v2.11.)* | Mandatory | T | impl. `app.py:_confirm_backup_restore`, `_on_backup_restore_confirm`, `backup_restore_confirm` signal; tests `test_backup_restore.py` |
+| FR-153 | On confirmation (FR-152), the application shall **delete every file at the destination** before transferring. For Backup the destination is the host directory: each file in it shall be removed from the host filesystem. For Restore the destination is the remote drive: each file in the freshly-refreshed remote listing shall be removed by sending the configured delete command (`delete_remote_cmd`, default `ERA $1`, FR-111) once per file on the Terminal Port. The wipe shall operate on the destination listing refreshed in FR-152, deleting files individually (the per-file delete avoids the interactive `ERA *.*` confirmation on the CP/M side). *(v2.11.)* | Mandatory | T | impl. `app.py:_wipe_host_dir`, `_wipe_remote_drive`; tests `test_backup_restore.py` |
+| FR-154 | The file-copying phase of Backup and Restore shall **reuse the existing batch-transfer engine** (`_transfer_to_host_batch` / `_transfer_to_remote_batch`), so that a single modal Transfer Progress Dialog (FR-105/UIR-051) serves the whole operation, files transfer sequentially over the single Transport Port (FR-106/FR-107), the operation can be **cancelled** mid-transfer via the dialog's Cancel button (FR-120), and each file's outcome is recorded in the transfer history (FR-142). Because the destination is emptied first (FR-153), the destination-conflict handling of FR-145–FR-147 detects no conflicts during a Backup/Restore. When the source contains no files, the operation completes after the wipe with nothing to transfer and refreshes the destination pane (FR-099). *(v2.11.)* | Mandatory | T | impl. `app.py:_backup_drive`, `_restore_drive`, `_transfer_to_host_batch`, `_transfer_to_remote_batch`; tests `test_backup_restore.py` |
+
 ---
 
 ## 4. User Interface Requirements
@@ -477,6 +495,14 @@ restriction.)*
 |----|-------------|----------|--------------|--------|
 | UIR-085 | The Invalid Filename Dialog (FR-149) shall be a modal dialog titled "Invalid CP/M File Name" that names the offending file and explains the CP/M 8.3 naming convention, and presents an **editable name field** (pre-filled with a conforming suggestion) together with three buttons — **Rename**, **Skip**, and **Cancel**. **Rename** shall be accepted only when the entered name is a valid CP/M 8.3 name (DR-046); otherwise the dialog shall show an inline error and remain open. The dialog shall not present a window manual-close control; closing it via the window manager shall be equivalent to **Cancel** (the safest default). *(v2.10.)* | Mandatory | T | impl. `gui/filename_validation_dialog.py:FilenameValidationDialog`; `lang/*.txt` (`dialog.invalid_name.*`); FR-148, FR-149 |
 
+### 4.15 Backup and Restore
+
+| ID | Requirement | Priority | Verification | Source |
+|----|-------------|----------|--------------|--------|
+| UIR-086 | The main-window toolbar (UIR-071) shall provide a **Backup** action — a labelled, icon-bearing button — that initiates the whole-drive backup of FR-150 (remote→host). *(v2.11.)* | Mandatory | I | impl. `app.py:setup_toolbar`, `do_backup`; `lang/*.txt` (`toolbar.backup`) |
+| UIR-087 | The main-window toolbar (UIR-071) shall provide a **Restore** action — a labelled, icon-bearing button — that initiates the whole-drive restore of FR-151 (host→remote). *(v2.11.)* | Mandatory | I | impl. `app.py:setup_toolbar`, `do_restore`; `lang/*.txt` (`toolbar.restore`) |
+| UIR-088 | The Backup/Restore confirmation dialog (FR-152) shall be a modal dialog titled "Confirm Backup"/"Confirm Restore" that warns that ALL files at the destination will be deleted and re-written, and presents a **Continue** button and a **Cancel** button with **Cancel** as the default (the safest choice). Closing the dialog via the window manager shall be equivalent to **Cancel**. *(v2.11.)* | Mandatory | T | impl. `app.py:_on_backup_restore_confirm`; `lang/*.txt` (`dialog.backup_restore.*`, `button.continue`); FR-152 |
+
 ---
 
 ## 5. External Interface Requirements
@@ -546,7 +572,7 @@ whitespace/CRLF robustness, de-duplication, empty/edge inputs, and drive-prompt 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
 | DR-040 | The application version number shall be stored in a plain-text file named `version.txt` located in the `src/` folder (a sibling of the `cpm_fm` package). The file shall contain a single semantic-version string (e.g. `2.0.0`); surrounding whitespace is insignificant. The application shall read its version from this file. *(v1.10.)* | Mandatory | T | impl. `version.py:get_version` |
-| DR-041 | The application version (DR-040) shall match the version of this SRS (the document Version field). If `version.txt` cannot be read, the application shall fall back to the sentinel version string `0.0.0` and continue to operate rather than failing to start. *(v1.10; version 2.0.0 at v2.0; version 2.1.0 at v2.1; version 2.1.1 at v2.1.1; version 2.2.0 at v2.2; version 2.4.0 at v2.4; version 2.5.0 at v2.5; version 2.5.1 at v2.5.1; version 2.5.2 at v2.5.2; version 2.6.0 at v2.6; version 2.7.0 at v2.7; version 2.8.0 at v2.8; version 2.9.0 at v2.9; version 2.10.0 at v2.10.)* | Mandatory | T | impl. `version.py:get_version`, `__init__.py:__version__` |
+| DR-041 | The application version (DR-040) shall match the version of this SRS (the document Version field). If `version.txt` cannot be read, the application shall fall back to the sentinel version string `0.0.0` and continue to operate rather than failing to start. *(v1.10; version 2.0.0 at v2.0; version 2.1.0 at v2.1; version 2.1.1 at v2.1.1; version 2.2.0 at v2.2; version 2.4.0 at v2.4; version 2.5.0 at v2.5; version 2.5.1 at v2.5.1; version 2.5.2 at v2.5.2; version 2.6.0 at v2.6; version 2.7.0 at v2.7; version 2.8.0 at v2.8; version 2.9.0 at v2.9; version 2.10.0 at v2.10; version 2.11.0 at v2.11.)* | Mandatory | T | impl. `version.py:get_version`, `__init__.py:__version__` |
 
 ### 6.6 Language files
 
@@ -649,6 +675,7 @@ whitespace/CRLF robustness, de-duplication, empty/edge inputs, and drive-prompt 
 | v2.8 transfer history | FR-140 – FR-144, UIR-082, UIR-083, DR-045; revises DR-041 |
 | v2.9 transfer file-conflict handling | FR-145 – FR-147, UIR-084; revises FR-140, FR-142, UIR-083, DR-045 |
 | v2.10 host→remote filename validation | FR-148, FR-149, UIR-085, DR-046; revises FR-140, FR-142 |
+| v2.11 whole-drive backup and restore | FR-150 – FR-154, UIR-086 – UIR-088; revises DR-041 |
 
 ---
 

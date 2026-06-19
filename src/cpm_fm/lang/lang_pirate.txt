@@ -225,3 +225,17 @@ main.sort.name = Name
 main.sort.extension = Tail End
 main.sort_by_tooltip = Sort by
 main.sort_direction_tooltip = Flip 'twixt high tide an' low
+
+# --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
+toolbar.backup = Stow Booty
+toolbar.restore = Haul Back
+status.backing_up = Stowin' the remote hold onto yer host...
+status.restoring = Haulin' host booty back to the remote hold...
+status.wiping_destination = Sinkin' {name}...
+status.backup_restore_cancelled = Operation be scuttled
+status.nothing_to_transfer = Naught to ferry
+dialog.backup_restore.backup_title = Confirm Stowin' Booty
+dialog.backup_restore.restore_title = Confirm Haulin' Back
+dialog.backup_restore.backup = Stowin' booty will SEND ALL files in the host hold to Davy Jones an' replace 'em with every file from the remote hold. There be no turnin' back. Sail on?
+dialog.backup_restore.restore = Haulin' back will SEND ALL files on the remote hold to Davy Jones an' replace 'em with every file from the host hold. There be no turnin' back. Sail on?
+button.continue = Sail On

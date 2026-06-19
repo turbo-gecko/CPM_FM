@@ -220,3 +220,17 @@ main.sort.name = 이름
 main.sort.extension = 확장자
 main.sort_by_tooltip = 정렬 기준
 main.sort_direction_tooltip = 오름차순/내림차순 전환
+
+# --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
+toolbar.backup = 백업
+toolbar.restore = 복원
+status.backing_up = 원격 드라이브를 호스트로 백업 중...
+status.restoring = 호스트 파일을 원격 드라이브로 복원 중...
+status.wiping_destination = {name} 삭제 중...
+status.backup_restore_cancelled = 작업이 취소되었습니다
+status.nothing_to_transfer = 전송할 항목이 없습니다
+dialog.backup_restore.backup_title = 백업 확인
+dialog.backup_restore.restore_title = 복원 확인
+dialog.backup_restore.backup = 백업하면 호스트 디렉터리의 모든 파일이 삭제되고 원격 드라이브의 모든 파일로 대체됩니다. 이 작업은 취소할 수 없습니다. 계속하시겠습니까?
+dialog.backup_restore.restore = 복원하면 원격 드라이브의 모든 파일이 삭제되고 호스트 디렉터리의 모든 파일로 대체됩니다. 이 작업은 취소할 수 없습니다. 계속하시겠습니까?
+button.continue = 계속
