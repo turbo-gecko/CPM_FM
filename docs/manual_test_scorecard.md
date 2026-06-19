@@ -7,9 +7,9 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.13 |
-| Scorecard for plan version | 1.13 (`docs/manual_test_plan.md`) |
-| SRS version | (e.g. 2.7.0) |
+| Scorecard version | 1.14 |
+| Scorecard for plan version | 1.14 (`docs/manual_test_plan.md`) |
+| SRS version | (e.g. 2.8.0) |
 | Tester | |
 | Date(s) of run | |
 
@@ -173,6 +173,16 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-D04 | Drop remote→host transfers (confirm) | FR-137 | | | |
 | MT-D05 | External OS files dropped on Remote upload | FR-138 | | | |
 | MT-D06 | Declining confirmation starts no transfer | FR-137 | | | |
+
+### §11.2 Transfer history
+| ID | Title | Req | Result | Env | Notes |
+|----|-------|-----|:------:|:---:|-------|
+| MT-TH01 | History button opens dialog; entries newest-first | FR-140/142, UIR-082 | | | |
+| MT-TH02 | Filter by direction and status | FR-143, UIR-083 | | | |
+| MT-TH03 | Export history to JSON file | FR-143 | | | |
+| MT-TH04 | Clear history (with confirmation) | FR-143 | | | |
+| MT-TH05 | History persists across sessions | FR-141 | | | |
+| MT-TH06 | Re-transfer entry; guards; marked retry | FR-144, FR-080 | | | |
 
 ### §12 Terminal Window (live)
 | ID | Title | Req | Result | Env | Notes |

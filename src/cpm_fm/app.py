@@ -40,6 +40,7 @@ from cpm_fm.gui.file_list_widget import FileListWidget
 from cpm_fm.gui.terminal_window import TerminalWindow
 from cpm_fm.gui.theme import app_icon, apply_theme
 from cpm_fm.gui.transfer_dialog import TransferProgressDialog
+from cpm_fm.gui.transfer_history_dialog import TransferHistoryDialog
 from cpm_fm.gui.window_state import APP, ORG, WindowState
 from cpm_fm.terminal.cpm_parser import CPMParser
 from cpm_fm.terminal.serial_manager import SerialManager
@@ -53,6 +54,7 @@ from cpm_fm.utils.i18n import (
     set_language,
     tr,
 )
+from cpm_fm.utils.transfer_history import TransferHistory
 
 EOL_MAP = {"CR": "\r", "LF": "\n", "CRLF": "\r\n"}
 
@@ -133,9 +135,13 @@ class MainWindow(QMainWindow):
     # destination-list refresh run on the GUI thread (NFR-004).
     transfer_cancelled = Signal(str, bool)
 
-    def __init__(self, window_state: WindowState | None = None):
+    def __init__(
+        self,
+        window_state: WindowState | None = None,
+        transfer_history: TransferHistory | None = None,
+    ):
         """
-        Satisfies: FR-003, FR-004, FR-005, FR-124.
+        Satisfies: FR-003, FR-004, FR-005, FR-124, FR-141.
         """
         super().__init__()
 
@@ -145,6 +151,11 @@ class MainWindow(QMainWindow):
         # FR-004/FR-005: persisted window geometry and last-used config file.
         # Injectable so tests can isolate the store from the host's real settings.
         self.window_state = window_state if window_state is not None else WindowState()
+        # FR-140/FR-141: persistent per-file transfer history. Injectable so tests
+        # use an isolated temporary file rather than the host's real history.
+        self.transfer_history = (
+            transfer_history if transfer_history is not None else TransferHistory()
+        )
         self.settings: dict = {}
 
         # FR-124: activate the persisted GUI language before any widget text is
@@ -412,6 +423,8 @@ class MainWindow(QMainWindow):
             ("toolbar.connect", Pix.SP_DialogApplyButton, self.do_connect),
             ("toolbar.disconnect", Pix.SP_DialogCancelButton, self.do_disconnect),
             ("toolbar.terminal", Pix.SP_ComputerIcon, self.show_terminal),
+            # UIR-082: opens the Transfer History dialog (Feature 2).
+            ("toolbar.history", Pix.SP_FileDialogDetailedView, self.show_history),
         ]
         for key, pixmap, handler in actions:
             action = QAction(sp(pixmap), "", self, triggered=handler)
@@ -1743,14 +1756,16 @@ class MainWindow(QMainWindow):
         if self._debug_enabled():
             print(msg, flush=True)
 
-    def _transfer_to_remote_batch(self, filepaths):
+    def _transfer_to_remote_batch(self, filepaths, retry: bool = False):
         """
-        Satisfies: FR-099, FR-105, FR-106, FR-107, FR-108, FR-109.
+        Satisfies: FR-099, FR-105, FR-106, FR-107, FR-108, FR-109, FR-142.
 
         Transfer each selected file sequentially over the
         single Transport Port. Runs on a worker thread. One progress
         dialog serves the whole batch. Abort on the first failure, or when the
-        user cancels (FR-120).
+        user cancels (FR-120). Each file's outcome (success, failure, or
+        cancellation) is recorded in the transfer history (FR-142); ``retry``
+        marks the records as a re-transfer (FR-144).
         """
         count = len(filepaths)
         self._transfer_cancel.clear()  # FR-120: start each batch un-cancelled.
@@ -1775,6 +1790,8 @@ class MainWindow(QMainWindow):
                 ok = self._send_one_to_remote(filepath)
             except Exception as e:
                 self._debug(f"[copy-to-remote] EXCEPTION: {e!r}")
+                # FR-142: record the failed file with its error message.
+                self._record_history(name, filepath, "remote", "failure", 0, str(e), retry)
                 if succeeded:
                     self.transfer_completed.emit("remote")
                 self.error_raised.emit(tr("dialog.error.title"), str(e))
@@ -1782,8 +1799,19 @@ class MainWindow(QMainWindow):
             if not ok:
                 # FR-120: a cancelled transfer is not a failure.
                 if self._transfer_cancel.is_set():
+                    self._record_history(name, filepath, "remote", "cancelled", 0, "", retry)
                     self._finish_cancelled_batch("remote", succeeded)
                     return
+                # FR-142: record the failed file.
+                self._record_history(
+                    name,
+                    filepath,
+                    "remote",
+                    "failure",
+                    0,
+                    tr("error.transfer_failed", name=name),
+                    retry,
+                )
                 # FR-108: abort the batch and refresh if anything got through.
                 if succeeded:
                     self.transfer_completed.emit("remote")
@@ -1791,6 +1819,8 @@ class MainWindow(QMainWindow):
                     tr("dialog.xmodem_error.title"), tr("error.transfer_failed", name=name)
                 )
                 return
+            # FR-142: record the successful upload with its size.
+            self._record_history(name, filepath, "remote", "success", total_bytes, "", retry)
             succeeded += 1
         self.set_status(tr("status.successfully_uploaded", count=succeeded))
         # FR-099: refresh the Remote Files list so the uploaded files show.
@@ -1874,14 +1904,16 @@ class MainWindow(QMainWindow):
             target=self._transfer_to_host_batch, args=(save_paths,), daemon=True
         ).start()
 
-    def _transfer_to_host_batch(self, save_paths):
+    def _transfer_to_host_batch(self, save_paths, retry: bool = False):
         """
-        Satisfies: FR-099, FR-105, FR-106, FR-107, FR-108, FR-109.
+        Satisfies: FR-099, FR-105, FR-106, FR-107, FR-108, FR-109, FR-142.
 
         Receive each selected file sequentially over the single
         Transport Port. Runs on a worker thread. One progress dialog
         serves the whole batch. Abort on the first failure, or when the user
-        cancels (FR-120).
+        cancels (FR-120). Each file's outcome (success, failure, or
+        cancellation) is recorded in the transfer history (FR-142); ``retry``
+        marks the records as a re-transfer (FR-144).
         """
         count = len(save_paths)
         self._transfer_cancel.clear()  # FR-120: start each batch un-cancelled.
@@ -1904,6 +1936,8 @@ class MainWindow(QMainWindow):
                 ok = self._recv_one_to_host(save_path)
             except Exception as e:
                 self._debug(f"[copy-to-host] EXCEPTION: {e!r}")
+                # FR-142: record the failed file with its error message.
+                self._record_history(name, save_path, "host", "failure", 0, str(e), retry)
                 if succeeded:
                     self.transfer_completed.emit("host")
                 self.error_raised.emit(tr("dialog.error.title"), str(e))
@@ -1911,8 +1945,19 @@ class MainWindow(QMainWindow):
             if not ok:
                 # FR-120: a cancelled transfer is not a failure.
                 if self._transfer_cancel.is_set():
+                    self._record_history(name, save_path, "host", "cancelled", 0, "", retry)
                     self._finish_cancelled_batch("host", succeeded)
                     return
+                # FR-142: record the failed file.
+                self._record_history(
+                    name,
+                    save_path,
+                    "host",
+                    "failure",
+                    0,
+                    tr("error.transfer_failed", name=name),
+                    retry,
+                )
                 # FR-108: abort the batch and refresh if anything got through.
                 if succeeded:
                     self.transfer_completed.emit("host")
@@ -1920,6 +1965,11 @@ class MainWindow(QMainWindow):
                     tr("dialog.xmodem_error.title"), tr("error.transfer_failed", name=name)
                 )
                 return
+            # FR-142: record the successful download with the received file size
+            # (the X-Modem stream carries no length, so read it from disk).
+            self._record_history(
+                name, save_path, "host", "success", self._file_size(save_path), "", retry
+            )
             succeeded += 1
         self.set_status(tr("status.successfully_downloaded", count=succeeded))
         # FR-099: refresh the Host Files list so the downloaded files show.
@@ -1964,6 +2014,108 @@ class MainWindow(QMainWindow):
         finally:
             if shared:
                 self.serial_mgr.resume_terminal_reads()
+
+    # ------------------------------------------------------- transfer history
+
+    @staticmethod
+    def _file_size(path: str) -> int:
+        """Return the size of ``path`` in bytes, or 0 if it cannot be read.
+
+        Satisfies: FR-140, FR-142.
+        """
+        try:
+            return os.path.getsize(path)
+        except OSError:
+            return 0
+
+    def _record_history(
+        self,
+        filename: str,
+        path: str,
+        direction: str,
+        status: str,
+        size: int,
+        error: str,
+        retry: bool,
+    ) -> None:
+        """Record one file's transfer outcome in the persistent history.
+
+        Called from the transfer worker threads (FR-142); the underlying store
+        is thread-safe so no Qt-signal marshalling is needed here. A history
+        write failure must never abort a transfer, so any error is swallowed.
+
+        Satisfies: FR-140, FR-142, FR-144.
+        """
+        try:
+            self.transfer_history.add_entry(
+                filename=filename,
+                path=path,
+                direction=direction,
+                status=status,
+                size=size,
+                error=error,
+                retry=retry,
+            )
+        except Exception as e:  # pragma: no cover - defensive
+            self._debug(f"[history] failed to record entry: {e!r}")
+
+    def show_history(self):
+        """Open the modal Transfer History dialog and act on a re-transfer.
+
+        Runs on the GUI thread. The dialog records the chosen entry on
+        ``retransfer_entry`` and closes itself when Re-transfer is clicked, so
+        the transfer (and its own modal progress dialog) starts only after this
+        dialog has closed (FR-144).
+
+        Satisfies: FR-143, FR-144, UIR-082.
+        """
+        dlg = TransferHistoryDialog(self, self.transfer_history, self.window_state)
+        dlg.exec()
+        if dlg.retransfer_entry is not None:
+            self._retransfer(dlg.retransfer_entry)
+
+    def _retransfer(self, entry: dict):
+        """Re-initiate the transfer described by a history ``entry`` (FR-144).
+
+        Restores the file path and direction from the entry and reuses the
+        existing batch transfer flow, recording the new attempt as a re-transfer
+        (``retry=True``). A transfer is permitted only when both status flags are
+        true (FR-080/CR-010); an upload additionally requires the source host
+        file to still exist.
+
+        Satisfies: FR-144, FR-080, CR-010.
+        """
+        if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
+            QMessageBox.critical(
+                self, tr("dialog.error.title"), tr("error.transport_not_connected")
+            )
+            return
+        path = entry.get("path", "")
+        direction = entry.get("direction")
+        if direction == "remote":
+            # Upload: the source host file must still exist to re-send it.
+            if not path or not os.path.isfile(path):
+                QMessageBox.critical(
+                    self, tr("dialog.error.title"), tr("error.retransfer_file_missing", path=path)
+                )
+                return
+            threading.Thread(
+                target=self._transfer_to_remote_batch,
+                args=([path],),
+                kwargs={"retry": True},
+                daemon=True,
+            ).start()
+        elif direction == "host":
+            # Download: re-receive into the same host path (its base name is the
+            # remote file name PCPUT will be asked for).
+            if not path:
+                return
+            threading.Thread(
+                target=self._transfer_to_host_batch,
+                args=([path],),
+                kwargs={"retry": True},
+                daemon=True,
+            ).start()
 
     # ------------------------------------------------------------------ config
 

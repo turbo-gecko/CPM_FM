@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.13 |
+| Version | 1.14 |
 | Status | Draft |
 | Date | 2026-06-18 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.7.0) |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.8.0) |
 
 ---
 
@@ -23,8 +23,11 @@ must be verified by hand. The automated suite (`pytest`) already covers:
   `FR-120`, `NFR-003` (`tests/test_xmodem.py`), using an in-memory fake port.
 - Headless GUI logic under the `offscreen` Qt platform — transfer/batch orchestration, progress-dialog
   state, transfer cancellation wiring, dialog button layout, drive-change logic, list-clearing on
-  load/disconnect, geometry/last-config persistence, File > New, and the context-menu file actions
-  (`tests/test_gui_smoke.py`), all with serial I/O, sleeps, threads, and modal dialogs stubbed out.
+  load/disconnect, geometry/last-config persistence, File > New, the context-menu file actions, and
+  transfer-history recording/dialog/re-transfer (`tests/test_gui_smoke.py`), all with serial I/O,
+  sleeps, threads, and modal dialogs stubbed out.
+- The persistent transfer-history store — entry schema, JSON persistence, retention (count + age),
+  thread-safe recording, and export — `FR-140`–`FR-142`, `DR-045` (`tests/test_transfer_history.py`).
 
 What remains for **manual** verification, and is the subject of this plan:
 
@@ -280,6 +283,24 @@ guard rails. The decode/handoff logic is unit-tested; MT-D03..D06 need a connect
 
 ---
 
+## 11.2 Transfer history  **[CP/M for live transfers]**
+
+The transfer-history store and the dialog's list/filter/clear/re-transfer wiring are unit-tested
+(`tests/test_transfer_history.py`, `tests/test_gui_smoke.py`). These cases confirm the on-screen
+dialog, the real `~/.cpm_fm_history.json` persistence across sessions, the real Export file, and a
+live re-transfer round-trip (**[CP/M]**).
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-TH01 [CP/M] | FR-140, FR-142, UIR-082 | Do a couple of transfers (one each direction; let one fail if you can, e.g. by cancelling). Then click the toolbar **History** button. | The Transfer History dialog opens, listing one row per transferred file, **newest first**, each showing its time, file name, direction (To Remote / To Host), status (Success / Failure / Cancelled), size, and any error. |
+| MT-TH02 | FR-143, UIR-083 | In the dialog, use the **Direction** filter (To Remote / To Host) and the **Status** filter (Success / Failure / Cancelled), then set both back to **All**. | The table narrows to rows matching the chosen direction and/or status; **All** restores the full list. |
+| MT-TH03 | FR-143 | Click **Export**, choose a path, and save. Open the resulting file. | A `.json` file is written containing the history entries (the same fields shown in the table). |
+| MT-TH04 | FR-143 | Click **Clear** and confirm the prompt. | After confirming, the table empties and the history is cleared (the file holds an empty list); clicking **No**/Cancel on the prompt leaves it untouched. |
+| MT-TH05 | FR-141 | Do a transfer, close the app, relaunch, and open **History**. | The earlier transfers are still listed — the history persists across sessions (in `~/.cpm_fm_history.json`). |
+| MT-TH06 [CP/M] | FR-144, FR-080 | Select a **success** upload entry whose source host file still exists and click **Re-transfer**; confirm any prompt. | The History dialog closes, the transfer re-runs exactly as Copy to Remote (progress dialog; list refreshes), and a **new** history entry appears marked as a retry. With Transport disconnected, Re-transfer instead reports "Transport port not connected" and starts nothing; if the source file is gone, it reports a "file not found" error and starts nothing. |
+
+---
+
 ## 12. Terminal Window (live)  **[CP/M or loopback]**
 
 | ID | Req | Steps | Expected |
@@ -381,6 +402,7 @@ or real cross-session persistence:
 - Internationalisation (live on-screen re-translation, real menu, cross-session language persistence): `FR-122`, `FR-123`, `FR-124` (live), `UIR-003`, `UIR-077`, `CR-015`, `NFR-005` (the translator, parsing, and fallback in `FR-121`/`DR-042`/`DR-043` are covered automatically by `tests/test_i18n.py`; the manual cases confirm the rendered UI switches language live and that the choice persists).
 - File list filter & sort (live on-screen filtering/sorting, debounce timing, active-filter indicator, cross-session persistence): `FR-130`–`FR-135` (live), `UIR-079`, `UIR-080` (the filter/sort logic itself in `utils/file_filter.py` and the GUI wiring are covered automatically by `tests/test_file_filter.py` and `tests/test_gui_smoke.py`; the manual cases confirm the on-screen rendering, the debounce feel, and real cross-session restore).
 - Drag-and-drop file transfer (live drag gesture, drop-zone highlight, external OS drops, real transfer round-trip): `FR-136`–`FR-139` (live), `UIR-081` (the decode/handoff logic — drag payload, cross-pane vs same-pane, external-vs-host acceptance, flag-gating, confirmation — is covered automatically by `tests/test_gui_smoke.py`; the manual cases confirm the on-screen highlight, the real drag from the OS file manager, and the live transfer).
+- Transfer history (on-screen dialog render, real cross-session persistence, real Export file, live re-transfer round-trip): `FR-140`–`FR-144` (live), `UIR-082`, `UIR-083`, `DR-045` (the history store — schema, persistence, retention, thread-safe recording, export — and the dialog's list/filter/clear/re-transfer wiring are covered automatically by `tests/test_transfer_history.py` and `tests/test_gui_smoke.py`; the manual cases confirm the rendered dialog, real `~/.cpm_fm_history.json` persistence across sessions, the real exported file, and a live re-transfer).
 - Non-functional (real): `NFR-001`, `NFR-004` (live), `STR-003`, `FR-088`.
 
 Purely algorithmic and headless-logic requirements (`DR-*`, the X-Modem progress/handshake internals,

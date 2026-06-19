@@ -6,6 +6,7 @@ Run headless via the ``QT_QPA_PLATFORM=offscreen`` environment variable (set in 
 """
 
 import os
+import tempfile
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -19,9 +20,11 @@ from PySide6.QtWidgets import QApplication  # noqa: E402
 from cpm_fm.app import MainWindow  # noqa: E402
 from cpm_fm.gui.about_dialog import AboutDialog  # noqa: E402
 from cpm_fm.gui.terminal_window import TerminalWindow  # noqa: E402
+from cpm_fm.gui.transfer_history_dialog import TransferHistoryDialog  # noqa: E402
 from cpm_fm.gui.window_state import WindowState  # noqa: E402
 from cpm_fm.utils import i18n  # noqa: E402
 from cpm_fm.utils.config_handler import DEFAULT_SETTINGS  # noqa: E402
+from cpm_fm.utils.transfer_history import TransferHistory  # noqa: E402
 from cpm_fm.version import APP_NAME, REPO_URL, get_version  # noqa: E402
 
 
@@ -102,6 +105,11 @@ def _arm_transfer(win, monkeypatch, success=True, calls=None):
     win.serial_mgr.terminal_connected = True
     win.serial_mgr.transport_connected = True
     win.serial_mgr.transport_port = _FakeSerial()
+    # Isolate the transfer history to a temp file so recording during a stubbed
+    # transfer never touches the host's real ~/.cpm_fm_history.json (FR-141).
+    win.transfer_history = TransferHistory(
+        os.path.join(tempfile.mkdtemp(prefix="cpm_fm_hist_"), "history.json")
+    )
     monkeypatch.setattr(win.serial_mgr, "send_data", lambda *a, **k: None)
     monkeypatch.setattr("cpm_fm.app.XModem", _fake_xmodem_cls(success, calls))
     # Neutralise worker-thread sleeps (launch delay, FR-109 inter-file idle/settle)
@@ -1120,6 +1128,11 @@ def _arm_transfer_with_xmodem(win, monkeypatch, xmodem_cls):
     win.serial_mgr.terminal_connected = True
     win.serial_mgr.transport_connected = True
     win.serial_mgr.transport_port = _FakeSerial()
+    # Isolate the transfer history to a temp file so recording during a stubbed
+    # transfer never touches the host's real ~/.cpm_fm_history.json (FR-141).
+    win.transfer_history = TransferHistory(
+        os.path.join(tempfile.mkdtemp(prefix="cpm_fm_hist_"), "history.json")
+    )
     monkeypatch.setattr(win.serial_mgr, "send_data", lambda *a, **k: None)
     monkeypatch.setattr("cpm_fm.app.XModem", xmodem_cls)
     monkeypatch.setattr("cpm_fm.app.time.sleep", lambda *a, **k: None)
@@ -1869,3 +1882,192 @@ def test_app_icon_missing_falls_back_to_empty(qapp, monkeypatch):
     monkeypatch.setattr(theme, "APP_ICON_PATH", Path("does-not-exist.png"))
     icon = theme.app_icon()
     assert icon.isNull()
+
+
+# --------------------------------------------------------- transfer history (Feature 2)
+
+
+def test_successful_transfer_records_history(qapp, monkeypatch, state):
+    # FR-142: a successful upload records one "success" history entry with the
+    # file's name, path, direction, and size.
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: None)
+        _arm_transfer(win, monkeypatch)
+        path = os.path.join(win.host_dir, "FOO.TXT")
+        monkeypatch.setattr("cpm_fm.app.os.path.getsize", lambda p: 321)
+        win._transfer_to_remote_batch([path])
+        qapp.processEvents()
+        entries = win.transfer_history.get_entries()
+        assert len(entries) == 1
+        e = entries[0]
+        assert e["filename"] == "FOO.TXT"
+        assert e["path"] == path
+        assert e["direction"] == "remote"
+        assert e["status"] == "success"
+        assert e["size"] == 321
+        assert e["retry"] is False
+    finally:
+        win.close()
+
+
+def test_failed_transfer_records_failure_history(qapp, monkeypatch, state):
+    # FR-142: a failed transfer records a "failure" entry with an error message.
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: None)
+        _arm_transfer(win, monkeypatch, success=False)
+        win._transfer_to_host_batch([os.path.join(win.host_dir, "BAR.TXT")])
+        qapp.processEvents()
+        entries = win.transfer_history.get_entries()
+        assert len(entries) == 1
+        assert entries[0]["status"] == "failure"
+        assert entries[0]["direction"] == "host"
+        assert entries[0]["error"]  # non-empty error message
+    finally:
+        win.close()
+
+
+def test_cancelled_transfer_records_cancelled_history(qapp, monkeypatch, state):
+    # FR-142: a user-cancelled file is recorded with "cancelled" status.
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: None)
+
+        class _CancellingXModem:
+            def __init__(self, ser, monitor=None, progress=None, cancel_check=None):
+                pass
+
+            def send_file(self, path):
+                win._transfer_cancel.set()
+                return False
+
+        _arm_transfer_with_xmodem(win, monkeypatch, _CancellingXModem)
+        win.transfer_history = TransferHistory(
+            os.path.join(tempfile.mkdtemp(prefix="cpm_fm_hist_"), "history.json")
+        )
+        win._transfer_to_remote_batch([os.path.join(win.host_dir, "A.TXT")])
+        qapp.processEvents()
+        entries = win.transfer_history.get_entries()
+        assert len(entries) == 1
+        assert entries[0]["status"] == "cancelled"
+    finally:
+        win.close()
+
+
+def test_retransfer_reuses_batch_with_retry_flag(qapp, monkeypatch, state):
+    # FR-144: re-transfer of a "remote" entry re-runs the remote batch worker
+    # with retry=True for the recorded host path (which must exist).
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+        path = os.path.join(win.host_dir, "EXISTS.TXT")
+        monkeypatch.setattr("cpm_fm.app.os.path.isfile", lambda p: p == path)
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._retransfer({"path": path, "direction": "remote", "filename": "EXISTS.TXT"})
+        assert len(_RecordingThread.instances) == 1
+        t = _RecordingThread.instances[0]
+        assert t.target == win._transfer_to_remote_batch
+        assert t.args == ([path],)
+    finally:
+        win.close()
+
+
+def test_retransfer_missing_file_reports_and_starts_nothing(qapp, monkeypatch, state):
+    # FR-144: re-transfer of an upload whose source file is gone reports an error
+    # and starts no transfer.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+        errors = []
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:]))
+        monkeypatch.setattr("cpm_fm.app.os.path.isfile", lambda p: False)
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._retransfer({"path": "/gone/X.TXT", "direction": "remote", "filename": "X.TXT"})
+        assert errors  # an error was reported
+        assert _RecordingThread.instances == []  # no transfer started
+    finally:
+        win.close()
+
+
+def test_retransfer_blocked_when_not_connected(qapp, monkeypatch, state):
+    # FR-144/FR-080: re-transfer requires both connection flags.
+    win = MainWindow(state)
+    try:
+        errors = []
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:]))
+        _RecordingThread.instances = []
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win._retransfer({"path": "/h/X.TXT", "direction": "remote", "filename": "X.TXT"})
+        assert errors
+        assert _RecordingThread.instances == []
+    finally:
+        win.close()
+
+
+def test_history_toolbar_action_present(qapp, state):
+    # UIR-082: a History action is present on the toolbar.
+    win = MainWindow(state)
+    try:
+        from PySide6.QtWidgets import QToolBar
+
+        texts = []
+        for tb in win.findChildren(QToolBar):
+            texts += [a.text() for a in tb.actions()]
+        assert "History" in texts
+    finally:
+        win.close()
+
+
+def test_history_dialog_lists_filters_and_clears(qapp, state, tmp_path):
+    # FR-143: the dialog lists entries (newest first), filters by direction, and
+    # clears the history after confirmation.
+    from PySide6.QtCore import QSettings
+    from PySide6.QtWidgets import QMessageBox
+
+    history = TransferHistory(str(tmp_path / "h.json"))
+    history.add_entry(filename="UP.TXT", path="/h/UP.TXT", direction="remote", status="success")
+    history.add_entry(filename="DOWN.TXT", path="/h/DOWN.TXT", direction="host", status="failure")
+    settings = QSettings(str(tmp_path / "state.ini"), QSettings.Format.IniFormat)
+    ws = WindowState(settings)
+
+    dlg = TransferHistoryDialog(None, history, ws)
+    try:
+        # Newest-first: DOWN.TXT (added last) is row 0.
+        assert dlg._table.rowCount() == 2
+        assert dlg._table.item(0, 1).text() == "DOWN.TXT"
+
+        # Filter to remote only -> just UP.TXT remains.
+        idx = dlg._direction_filter.findData("remote")
+        dlg._direction_filter.setCurrentIndex(idx)
+        assert dlg._table.rowCount() == 1
+        assert dlg._table.item(0, 1).text() == "UP.TXT"
+
+        # Clear (confirmation stubbed to Yes) empties the history and the table.
+        import cpm_fm.gui.transfer_history_dialog as thd
+
+        thd.QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.StandardButton.Yes)
+        dlg._on_clear()
+        assert dlg._table.rowCount() == 0
+        assert history.get_entries() == []
+    finally:
+        dlg.deleteLater()
+
+
+def test_history_dialog_retransfer_sets_entry_and_accepts(qapp, state, tmp_path):
+    # FR-144: clicking Re-transfer records the selected entry and closes (accepts).
+    history = TransferHistory(str(tmp_path / "h.json"))
+    history.add_entry(filename="UP.TXT", path="/h/UP.TXT", direction="remote", status="success")
+    dlg = TransferHistoryDialog(None, history, None)
+    try:
+        dlg._table.selectRow(0)
+        dlg._on_retransfer()
+        assert dlg.retransfer_entry is not None
+        assert dlg.retransfer_entry["filename"] == "UP.TXT"
+        assert dlg.result() == dlg.DialogCode.Accepted
+    finally:
+        dlg.deleteLater()

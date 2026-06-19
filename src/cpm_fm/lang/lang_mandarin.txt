@@ -166,6 +166,34 @@ config.general.rename_remote = 重命名
 config.general.delete_remote = 删除
 config.general.host_directory = 默认主机目录
 
+# --- Transfer history (Feature 2) ----------------------------------------------
+toolbar.history = 历史
+history.title = 传输历史
+history.col.time = 时间
+history.col.file = 文件
+history.col.direction = 方向
+history.col.status = 状态
+history.col.size = 大小（字节）
+history.col.error = 错误
+history.dir.remote = 到远程
+history.dir.host = 到主机
+history.status.success = 成功
+history.status.failure = 失败
+history.status.cancelled = 已取消
+history.status.retry_suffix = {status}（重试）
+history.filter.direction = 方向：
+history.filter.status = 状态：
+history.filter.all = 全部
+history.button.retransfer = 重新传输
+history.button.export = 导出…
+history.button.clear = 清除
+history.button.close = 关闭
+history.clear_confirm.title = 清除历史
+history.clear_confirm.prompt = 清除所有传输历史？
+history.export.title = 导出传输历史
+error.history_export_failed = 无法将传输历史导出到 {path}
+error.retransfer_file_missing = 无法重新传输：找不到文件：{path}
+
 # --- About dialog --------------------------------------------------------------
 about.title = 关于
 about.version = 版本 {version}
