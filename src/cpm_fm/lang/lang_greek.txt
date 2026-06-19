@@ -166,6 +166,34 @@ config.general.rename_remote = Μετονομασία
 config.general.delete_remote = Διαγραφή
 config.general.host_directory = Προεπιλεγμένος κατάλογος ξενιστή
 
+# --- Transfer history (Feature 2) ----------------------------------------------
+toolbar.history = Ιστορικό
+history.title = Ιστορικό μεταφορών
+history.col.time = Ώρα
+history.col.file = Αρχείο
+history.col.direction = Κατεύθυνση
+history.col.status = Κατάσταση
+history.col.size = Μέγεθος (byte)
+history.col.error = Σφάλμα
+history.dir.remote = Προς απομακρυσμένο
+history.dir.host = Προς κεντρικό
+history.status.success = Επιτυχία
+history.status.failure = Αποτυχία
+history.status.cancelled = Ακυρώθηκε
+history.status.retry_suffix = {status} (επανάληψη)
+history.filter.direction = Κατεύθυνση:
+history.filter.status = Κατάσταση:
+history.filter.all = Όλα
+history.button.retransfer = Επαναμεταφορά
+history.button.export = Εξαγωγή…
+history.button.clear = Εκκαθάριση
+history.button.close = Κλείσιμο
+history.clear_confirm.title = Εκκαθάριση ιστορικού
+history.clear_confirm.prompt = Εκκαθάριση όλου του ιστορικού μεταφορών;
+history.export.title = Εξαγωγή ιστορικού μεταφορών
+error.history_export_failed = Αποτυχία εξαγωγής ιστορικού μεταφορών στο {path}
+error.retransfer_file_missing = Αδυναμία επαναμεταφοράς: το αρχείο δεν βρέθηκε: {path}
+
 # --- About dialog --------------------------------------------------------------
 about.title = Πληροφορίες
 about.version = Έκδοση {version}

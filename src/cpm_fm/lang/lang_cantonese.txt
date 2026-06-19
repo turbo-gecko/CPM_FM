@@ -166,6 +166,34 @@ config.general.rename_remote = 重命名
 config.general.delete_remote = 刪除
 config.general.host_directory = 預設主機目錄
 
+# --- Transfer history (Feature 2) ----------------------------------------------
+toolbar.history = 歷史
+history.title = 傳輸歷史
+history.col.time = 時間
+history.col.file = 檔案
+history.col.direction = 方向
+history.col.status = 狀態
+history.col.size = 大小（位元組）
+history.col.error = 錯誤
+history.dir.remote = 去遠端
+history.dir.host = 去主機
+history.status.success = 成功
+history.status.failure = 失敗
+history.status.cancelled = 已取消
+history.status.retry_suffix = {status}（重試）
+history.filter.direction = 方向：
+history.filter.status = 狀態：
+history.filter.all = 全部
+history.button.retransfer = 重新傳輸
+history.button.export = 匯出…
+history.button.clear = 清除
+history.button.close = 關閉
+history.clear_confirm.title = 清除歷史
+history.clear_confirm.prompt = 清除所有傳輸歷史？
+history.export.title = 匯出傳輸歷史
+error.history_export_failed = 無法將傳輸歷史匯出到 {path}
+error.retransfer_file_missing = 無法重新傳輸：搵唔到檔案：{path}
+
 # --- About dialog --------------------------------------------------------------
 about.title = 關於
 about.version = 版本 {version}

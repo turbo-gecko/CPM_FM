@@ -166,6 +166,34 @@ config.general.rename_remote = 이름 바꾸기
 config.general.delete_remote = 삭제
 config.general.host_directory = 기본 호스트 디렉터리
 
+# --- Transfer history (Feature 2) ----------------------------------------------
+toolbar.history = 기록
+history.title = 전송 기록
+history.col.time = 시간
+history.col.file = 파일
+history.col.direction = 방향
+history.col.status = 상태
+history.col.size = 크기 (바이트)
+history.col.error = 오류
+history.dir.remote = 원격으로
+history.dir.host = 호스트로
+history.status.success = 성공
+history.status.failure = 실패
+history.status.cancelled = 취소됨
+history.status.retry_suffix = {status} (재시도)
+history.filter.direction = 방향:
+history.filter.status = 상태:
+history.filter.all = 전체
+history.button.retransfer = 다시 전송
+history.button.export = 내보내기…
+history.button.clear = 지우기
+history.button.close = 닫기
+history.clear_confirm.title = 기록 지우기
+history.clear_confirm.prompt = 모든 전송 기록을 지우시겠습니까?
+history.export.title = 전송 기록 내보내기
+error.history_export_failed = 전송 기록을 {path}(으)로 내보내지 못했습니다
+error.retransfer_file_missing = 다시 전송할 수 없음: 파일을 찾을 수 없음: {path}
+
 # --- About dialog -------------------------------------------------------------
 about.title = 정보
 about.version = 버전 {version}

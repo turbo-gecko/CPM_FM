@@ -166,6 +166,34 @@ config.general.rename_remote = Renombrar
 config.general.delete_remote = Eliminar
 config.general.host_directory = Directorio del host por defecto
 
+# --- Transfer history (Feature 2) ----------------------------------------------
+toolbar.history = Historial
+history.title = Historial de transferencias
+history.col.time = Hora
+history.col.file = Archivo
+history.col.direction = Dirección
+history.col.status = Estado
+history.col.size = Tamaño (bytes)
+history.col.error = Error
+history.dir.remote = Al remoto
+history.dir.host = Al host
+history.status.success = Correcto
+history.status.failure = Fallo
+history.status.cancelled = Cancelado
+history.status.retry_suffix = {status} (reintento)
+history.filter.direction = Dirección:
+history.filter.status = Estado:
+history.filter.all = Todos
+history.button.retransfer = Retransferir
+history.button.export = Exportar…
+history.button.clear = Borrar
+history.button.close = Cerrar
+history.clear_confirm.title = Borrar historial
+history.clear_confirm.prompt = ¿Borrar todo el historial de transferencias?
+history.export.title = Exportar historial de transferencias
+error.history_export_failed = No se pudo exportar el historial de transferencias a {path}
+error.retransfer_file_missing = No se puede retransferir: archivo no encontrado: {path}
+
 # --- About dialog --------------------------------------------------------------
 about.title = Acerca de
 about.version = Versión {version}

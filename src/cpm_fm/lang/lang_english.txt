@@ -33,6 +33,7 @@ menu.help.about = About
 toolbar.connect = Connect
 toolbar.disconnect = Disconnect
 toolbar.terminal = Terminal
+toolbar.history = History
 
 # --- Main window ---------------------------------------------------------------
 main.host_files = Host Files
@@ -178,6 +179,33 @@ config.general.viewer = Viewer/Editor
 config.general.rename_remote = Rename
 config.general.delete_remote = Delete
 config.general.host_directory = Default Host Directory
+
+# --- Transfer history (Feature 2) ----------------------------------------------
+history.title = Transfer History
+history.col.time = Time
+history.col.file = File
+history.col.direction = Direction
+history.col.status = Status
+history.col.size = Size (bytes)
+history.col.error = Error
+history.dir.remote = To Remote
+history.dir.host = To Host
+history.status.success = Success
+history.status.failure = Failure
+history.status.cancelled = Cancelled
+history.status.retry_suffix = {status} (retry)
+history.filter.direction = Direction:
+history.filter.status = Status:
+history.filter.all = All
+history.button.retransfer = Re-transfer
+history.button.export = Export…
+history.button.clear = Clear
+history.button.close = Close
+history.clear_confirm.title = Clear History
+history.clear_confirm.prompt = Clear all transfer history?
+history.export.title = Export Transfer History
+error.history_export_failed = Failed to export transfer history to {path}
+error.retransfer_file_missing = Cannot re-transfer: file not found: {path}
 
 # --- About dialog --------------------------------------------------------------
 about.title = About

@@ -171,6 +171,34 @@ config.general.rename_remote = Rename
 config.general.delete_remote = Delete
 config.general.host_directory = Home Port Directory
 
+# --- Transfer history (Feature 2) ----------------------------------------------
+toolbar.history = Logbook
+history.title = Transfer Logbook
+history.col.time = Bell
+history.col.file = File
+history.col.direction = Heading
+history.col.status = Fate
+history.col.size = Heft (bytes)
+history.col.error = Blunder
+history.dir.remote = To th' Remote
+history.dir.host = To th' Host
+history.status.success = Victory
+history.status.failure = Shipwreck
+history.status.cancelled = Abandoned
+history.status.retry_suffix = {status} (another go)
+history.filter.direction = Heading:
+history.filter.status = Fate:
+history.filter.all = All Hands
+history.button.retransfer = Sail Again
+history.button.export = Cast Out…
+history.button.clear = Swab Clean
+history.button.close = Belay
+history.clear_confirm.title = Swab th' Logbook
+history.clear_confirm.prompt = Swab th' whole transfer logbook, matey?
+history.export.title = Cast Out th' Transfer Logbook
+error.history_export_failed = Could nae cast out th' transfer logbook to {path}
+error.retransfer_file_missing = Cannae sail again: file be lost at sea: {path}
+
 # --- About dialog --------------------------------------------------------------
 about.title = The Legend
 about.version = Era {version}

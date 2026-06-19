@@ -166,6 +166,34 @@ config.general.rename_remote = Hernoemen
 config.general.delete_remote = Verwijderen
 config.general.host_directory = Standaard hostmap
 
+# --- Transfer history (Feature 2) ----------------------------------------------
+toolbar.history = Geschiedenis
+history.title = Overdrachtsgeschiedenis
+history.col.time = Tijd
+history.col.file = Bestand
+history.col.direction = Richting
+history.col.status = Status
+history.col.size = Grootte (bytes)
+history.col.error = Fout
+history.dir.remote = Naar extern
+history.dir.host = Naar host
+history.status.success = Geslaagd
+history.status.failure = Mislukt
+history.status.cancelled = Geannuleerd
+history.status.retry_suffix = {status} (opnieuw)
+history.filter.direction = Richting:
+history.filter.status = Status:
+history.filter.all = Alle
+history.button.retransfer = Opnieuw overdragen
+history.button.export = Exporteren…
+history.button.clear = Wissen
+history.button.close = Sluiten
+history.clear_confirm.title = Geschiedenis wissen
+history.clear_confirm.prompt = Alle overdrachtsgeschiedenis wissen?
+history.export.title = Overdrachtsgeschiedenis exporteren
+error.history_export_failed = Overdrachtsgeschiedenis kon niet naar {path} worden geëxporteerd
+error.retransfer_file_missing = Opnieuw overdragen niet mogelijk: bestand niet gevonden: {path}
+
 # --- About dialog --------------------------------------------------------------
 about.title = Over
 about.version = Versie {version}
