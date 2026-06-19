@@ -98,6 +98,14 @@ dialog.select_directory.title = Map selecteren
 dialog.dnd_confirm.title = Overdracht bevestigen
 dialog.dnd_confirm.to_remote = {count} bestand(en) naar het externe systeem kopiëren?
 dialog.dnd_confirm.to_host = {count} bestand(en) naar de host kopiëren?
+dialog.conflict.title = Bestand bestaat al
+dialog.conflict.message = Er bestaat al een bestand met de naam "{name}" in {dest}. Wat wilt u doen?
+dialog.conflict.dest.remote = het externe systeem
+dialog.conflict.dest.host = de hostmap
+dialog.conflict.overwrite = Overschrijven
+dialog.conflict.skip = Overslaan
+dialog.conflict.cancel = Annuleren
+dialog.conflict.apply_all = Toepassen op alle resterende conflicten
 
 # --- Error / warning message bodies -------------------------------------------
 error.transport_not_connected = Transportpoort niet verbonden
@@ -180,6 +188,7 @@ history.dir.host = Naar host
 history.status.success = Geslaagd
 history.status.failure = Mislukt
 history.status.cancelled = Geannuleerd
+history.status.skipped = Overgeslagen
 history.status.retry_suffix = {status} (opnieuw)
 history.filter.direction = Richting:
 history.filter.status = Status:

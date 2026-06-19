@@ -98,6 +98,14 @@ dialog.select_directory.title = Sélectionner un répertoire
 dialog.dnd_confirm.title = Confirmer le transfert
 dialog.dnd_confirm.to_remote = Copier {count} fichier(s) vers le système distant ?
 dialog.dnd_confirm.to_host = Copier {count} fichier(s) vers l'hôte ?
+dialog.conflict.title = Le fichier existe
+dialog.conflict.message = Un fichier nommé « {name} » existe déjà dans {dest}. Que voulez-vous faire ?
+dialog.conflict.dest.remote = le système distant
+dialog.conflict.dest.host = le répertoire de l'hôte
+dialog.conflict.overwrite = Remplacer
+dialog.conflict.skip = Ignorer
+dialog.conflict.cancel = Annuler
+dialog.conflict.apply_all = Appliquer à tous les conflits restants
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Port de transport non connecté
@@ -180,6 +188,7 @@ history.dir.host = Vers l'hôte
 history.status.success = Réussi
 history.status.failure = Échec
 history.status.cancelled = Annulé
+history.status.skipped = Ignoré
 history.status.retry_suffix = {status} (nouvel essai)
 history.filter.direction = Direction :
 history.filter.status = État :

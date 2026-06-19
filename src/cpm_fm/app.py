@@ -35,6 +35,7 @@ from PySide6.QtWidgets import (
 
 from cpm_fm.gui.about_dialog import AboutDialog
 from cpm_fm.gui.config_dialogs import GeneralConfigDialog, SerialConfigDialog
+from cpm_fm.gui.conflict_dialog import CANCEL, SKIP, FileConflictDialog
 from cpm_fm.gui.file_action_dialog import FileActionDialog
 from cpm_fm.gui.file_list_widget import FileListWidget
 from cpm_fm.gui.terminal_window import TerminalWindow
@@ -134,6 +135,11 @@ class MainWindow(QMainWindow):
     # carrying (direction, any_succeeded), so the dialog teardown and any
     # destination-list refresh run on the GUI thread (NFR-004).
     transfer_cancelled = Signal(str, bool)
+    # FR-146: emitted from a transfer worker thread when a destination file
+    # already exists, carrying (filename, direction), so the modal conflict
+    # dialog runs on the GUI thread (NFR-004). The worker blocks on
+    # _conflict_answered until the GUI thread records the user's choice.
+    conflict_detected = Signal(str, str)
 
     def __init__(
         self,
@@ -179,6 +185,15 @@ class MainWindow(QMainWindow):
         # FR-120: set on the GUI thread (Cancel button) and polled by the
         # transfer worker thread to abort the in-progress transfer.
         self._transfer_cancel = threading.Event()
+        # FR-146/FR-147: file-conflict resolution. The transfer worker thread
+        # emits conflict_detected and blocks on _conflict_answered; the GUI
+        # thread shows the dialog (NFR-004) and stores (action, apply_to_all) in
+        # _conflict_result before setting the event. _conflict_policy holds a
+        # batch-wide Overwrite/Skip decision once the user ticks "apply to all";
+        # it is reset at the start of each batch so it never crosses transfers.
+        self._conflict_answered = threading.Event()
+        self._conflict_result: tuple[str, bool] = (CANCEL, False)
+        self._conflict_policy: str | None = None
         self.host_dir = os.getcwd()
         # FR-130/FR-133: the canonical, unfiltered file names for each pane. The
         # visible QListWidget rows are derived from these by filter_and_sort, so
@@ -329,6 +344,7 @@ class MainWindow(QMainWindow):
         self.drive_not_found.connect(self._on_drive_not_found)
         self.view_file_ready.connect(self._on_view_file_ready)
         self.transfer_cancelled.connect(self._on_transfer_cancelled)
+        self.conflict_detected.connect(self._on_conflict_detected)
 
     def setup_menu(self):
         """
@@ -1763,13 +1779,19 @@ class MainWindow(QMainWindow):
         Transfer each selected file sequentially over the
         single Transport Port. Runs on a worker thread. One progress
         dialog serves the whole batch. Abort on the first failure, or when the
-        user cancels (FR-120). Each file's outcome (success, failure, or
-        cancellation) is recorded in the transfer history (FR-142); ``retry``
-        marks the records as a re-transfer (FR-144).
+        user cancels (FR-120). Each file's outcome (success, failure,
+        cancellation, or skip) is recorded in the transfer history (FR-142);
+        ``retry`` marks the records as a re-transfer (FR-144). Before sending,
+        an existing destination file prompts the user to Overwrite/Skip/Cancel
+        (FR-145/FR-146/FR-147).
         """
         count = len(filepaths)
         self._transfer_cancel.clear()  # FR-120: start each batch un-cancelled.
+        self._conflict_policy = None  # FR-147: no carry-over between batches.
         self.batch_started.emit("remote", count)
+        # FR-145: refresh the remote listing once so conflict detection checks
+        # the live remote contents (empty set => no conflicts detected).
+        remote_names = self._fresh_remote_names()
         succeeded = 0
         for index, filepath in enumerate(filepaths, start=1):
             name = os.path.basename(filepath)
@@ -1777,6 +1799,15 @@ class MainWindow(QMainWindow):
             if self._transfer_cancel.is_set():
                 self._finish_cancelled_batch("remote", succeeded)
                 return
+            # FR-145/FR-146: prompt when the file already exists on the remote.
+            if self._destination_conflict("remote", filepath, remote_names):
+                action = self._resolve_conflict(name, "remote")
+                if action == CANCEL:
+                    self._finish_cancelled_batch("remote", succeeded)
+                    return
+                if action == SKIP:
+                    self._record_history(name, filepath, "remote", "skipped", 0, "", retry)
+                    continue
             # FR-109: let CP/M return to its prompt before the next command.
             if index > 1:
                 self._wait_for_terminal_idle()
@@ -1837,6 +1868,96 @@ class MainWindow(QMainWindow):
         """
         self.set_status(tr("status.transfer_cancelled", count=succeeded))
         self.transfer_cancelled.emit(direction, succeeded > 0)
+
+    # ----------------------------------------------------- conflict resolution
+
+    def _fresh_remote_names(self) -> set[str]:
+        """Refresh the remote directory listing and return its names, upper-cased.
+
+        Runs on the upload worker thread (FR-145). Reuses the FR-077–FR-079
+        listing/parse mechanism synchronously (``_capture_terminal_response``
+        blocks on this thread), and also emits ``remote_files_ready`` so the
+        displayed Remote Files list reflects the just-read contents (NFR-004).
+        Returns an empty set if nothing could be captured/parsed, in which case
+        the caller detects no conflicts and uploads proceed as before.
+
+        Satisfies: FR-145.
+        """
+        try:
+            cmd = self.settings.get("list_files_cmd", "DIR")
+            text = self._capture_terminal_response(cmd)
+            files_dict = CPMParser.parse_dir_output(text)
+        except Exception as e:  # pragma: no cover - defensive
+            self._debug(f"[conflict] remote refresh failed: {e!r}")
+            return set()
+        # Mirror _do_refresh_remote_logic: update the on-screen list too.
+        self.remote_files_ready.emit(files_dict)
+        return {name.upper() for name in files_dict}
+
+    @staticmethod
+    def _destination_conflict(direction: str, path: str, remote_names: set[str]) -> bool:
+        """Whether a file of this name already exists at the destination (FR-145).
+
+        For a download (``host``) the destination is the host filesystem, so the
+        check is ``os.path.exists``. For an upload (``remote``) the destination
+        is the remote drive, so the base name (upper-cased — CP/M is upper-case
+        8.3) is checked against ``remote_names`` (the fresh listing).
+
+        Satisfies: FR-145.
+        """
+        if direction == "host":
+            return os.path.exists(path)
+        return os.path.basename(path).upper() in remote_names
+
+    def _resolve_conflict(self, name: str, direction: str) -> str:
+        """Decide how to handle a destination conflict for ``name`` (FR-146/FR-147).
+
+        Returns one of OVERWRITE / SKIP / CANCEL. Honours the batch-wide policy
+        (FR-147) without prompting when one is in effect; otherwise raises the
+        modal dialog on the GUI thread via ``conflict_detected`` and blocks this
+        worker thread until the user answers (NFR-004). When the user ticks
+        "apply to all", the chosen Overwrite/Skip becomes the batch policy.
+
+        Satisfies: FR-146, FR-147.
+        """
+        if self._conflict_policy is not None:
+            return self._conflict_policy
+        action, apply_to_all = self._prompt_conflict(name, direction)
+        if apply_to_all and action != CANCEL:
+            self._conflict_policy = action
+        return action
+
+    def _prompt_conflict(self, name: str, direction: str) -> tuple[str, bool]:
+        """Raise the conflict dialog on the GUI thread and block until answered.
+
+        Marshals the modal dialog onto the GUI thread via ``conflict_detected``
+        (NFR-004) and blocks this worker thread on ``_conflict_answered`` until
+        the GUI thread records the user's (action, apply_to_all) choice. Split
+        from :meth:`_resolve_conflict` so the batch-wide policy logic can be
+        tested without the Qt signal/thread round-trip.
+
+        Satisfies: FR-146, FR-147.
+        """
+        self._conflict_answered.clear()
+        self.conflict_detected.emit(name, direction)
+        self._conflict_answered.wait()
+        return self._conflict_result
+
+    def _on_conflict_detected(self, name: str, direction: str) -> None:
+        """Show the modal conflict dialog and record the user's choice (FR-146).
+
+        Runs on the GUI thread (queued from the transfer worker). Stores
+        (action, apply_to_all) in ``_conflict_result`` and releases the worker
+        by setting ``_conflict_answered`` (NFR-004).
+
+        Satisfies: FR-146, FR-147, UIR-084.
+        """
+        try:
+            dialog = FileConflictDialog(self, name, direction)
+            dialog.exec()
+            self._conflict_result = (dialog.action, dialog.apply_to_all)
+        finally:
+            self._conflict_answered.set()
 
     def _send_one_to_remote(self, filepath) -> bool:
         """
@@ -1911,12 +2032,14 @@ class MainWindow(QMainWindow):
         Receive each selected file sequentially over the single
         Transport Port. Runs on a worker thread. One progress dialog
         serves the whole batch. Abort on the first failure, or when the user
-        cancels (FR-120). Each file's outcome (success, failure, or
-        cancellation) is recorded in the transfer history (FR-142); ``retry``
-        marks the records as a re-transfer (FR-144).
+        cancels (FR-120). Each file's outcome (success, failure, cancellation,
+        or skip) is recorded in the transfer history (FR-142); ``retry`` marks
+        the records as a re-transfer (FR-144). Before receiving, an existing
+        host file prompts the user to Overwrite/Skip/Cancel (FR-145/FR-146/FR-147).
         """
         count = len(save_paths)
         self._transfer_cancel.clear()  # FR-120: start each batch un-cancelled.
+        self._conflict_policy = None  # FR-147: no carry-over between batches.
         self.batch_started.emit("host", count)
         succeeded = 0
         for index, save_path in enumerate(save_paths, start=1):
@@ -1925,6 +2048,15 @@ class MainWindow(QMainWindow):
             if self._transfer_cancel.is_set():
                 self._finish_cancelled_batch("host", succeeded)
                 return
+            # FR-145/FR-146: prompt when the file already exists on the host.
+            if self._destination_conflict("host", save_path, set()):
+                action = self._resolve_conflict(name, "host")
+                if action == CANCEL:
+                    self._finish_cancelled_batch("host", succeeded)
+                    return
+                if action == SKIP:
+                    self._record_history(name, save_path, "host", "skipped", 0, "", retry)
+                    continue
             # FR-109: let CP/M return to its prompt before the next command.
             if index > 1:
                 self._wait_for_terminal_idle()

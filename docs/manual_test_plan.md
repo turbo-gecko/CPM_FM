@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.14 |
+| Version | 1.15 |
 | Status | Draft |
-| Date | 2026-06-18 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.8.0) |
+| Date | 2026-06-19 |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.9.0) |
 
 ---
 
@@ -293,11 +293,31 @@ live re-transfer round-trip (**[CP/M]**).
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
 | MT-TH01 [CP/M] | FR-140, FR-142, UIR-082 | Do a couple of transfers (one each direction; let one fail if you can, e.g. by cancelling). Then click the toolbar **History** button. | The Transfer History dialog opens, listing one row per transferred file, **newest first**, each showing its time, file name, direction (To Remote / To Host), status (Success / Failure / Cancelled), size, and any error. |
-| MT-TH02 | FR-143, UIR-083 | In the dialog, use the **Direction** filter (To Remote / To Host) and the **Status** filter (Success / Failure / Cancelled), then set both back to **All**. | The table narrows to rows matching the chosen direction and/or status; **All** restores the full list. |
+| MT-TH02 | FR-143, UIR-083 | In the dialog, use the **Direction** filter (To Remote / To Host) and the **Status** filter (Success / Failure / Cancelled / Skipped), then set both back to **All**. | The table narrows to rows matching the chosen direction and/or status (including **Skipped** for files declined at a conflict); **All** restores the full list. |
 | MT-TH03 | FR-143 | Click **Export**, choose a path, and save. Open the resulting file. | A `.json` file is written containing the history entries (the same fields shown in the table). |
 | MT-TH04 | FR-143 | Click **Clear** and confirm the prompt. | After confirming, the table empties and the history is cleared (the file holds an empty list); clicking **No**/Cancel on the prompt leaves it untouched. |
 | MT-TH05 | FR-141 | Do a transfer, close the app, relaunch, and open **History**. | The earlier transfers are still listed — the history persists across sessions (in `~/.cpm_fm_history.json`). |
 | MT-TH06 [CP/M] | FR-144, FR-080 | Select a **success** upload entry whose source host file still exists and click **Re-transfer**; confirm any prompt. | The History dialog closes, the transfer re-runs exactly as Copy to Remote (progress dialog; list refreshes), and a **new** history entry appears marked as a retry. With Transport disconnected, Re-transfer instead reports "Transport port not connected" and starts nothing; if the source file is gone, it reports a "file not found" error and starts nothing. |
+
+---
+
+## 11.3 File-conflict prompt on transfer  **[CP/M]**
+
+When a file being transferred already exists at the destination the app prompts with a standard
+Overwrite / Skip / Cancel dialog plus an "apply to all remaining conflicts" option (FR-145–FR-147,
+UIR-084). Detection differs by direction: a download checks the host folder; an upload refreshes the
+remote `DIR` listing first. The policy/skip/cancel logic is unit-tested (`tests/test_conflict_resolution.py`);
+these cases confirm the live dialog and the real overwrite/skip/refresh behaviour.
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-CF01 [CP/M] | FR-145, FR-146, UIR-084 | Ensure a file named `FOO.TXT` exists on the **host**. Select `FOO.TXT` on the **Remote** pane and Copy to Host. | Before receiving, a modal **"File Exists"** dialog names `FOO.TXT`, states it already exists at the host directory, and offers **Overwrite**, **Skip**, **Cancel**, and an "Apply to all remaining conflicts" checkbox. It has no window close (X) control. |
+| MT-CF02 [CP/M] | FR-146 | At the MT-CF01 prompt, click **Overwrite**. | The transfer proceeds and the host file is replaced with the downloaded version; the Host list refreshes; a **success** history entry is recorded. |
+| MT-CF03 [CP/M] | FR-146 | Trigger the prompt again and click **Skip**. | The existing host file is left untouched (unchanged contents/timestamp); the batch continues with the next file; a **skipped** history entry is recorded for the skipped file. |
+| MT-CF04 [CP/M] | FR-145 | Ensure a file `BAR.TXT` exists on the **remote** drive (check via Update). Select host `BAR.TXT` and Copy to Remote. | The app first refreshes the remote listing, detects the existing remote `BAR.TXT`, and shows the conflict prompt naming it (destination wording = the remote system). Overwrite proceeds (PCGET overwrites); Skip leaves it and records skipped. |
+| MT-CF05 [CP/M] | FR-147 | Multi-select several files that **all** already exist at the destination. At the first prompt, tick **"Apply to all remaining conflicts"** and click **Skip** (then repeat the run choosing **Overwrite**). | Only **one** prompt appears; the chosen action is applied automatically to every remaining conflict (all skipped, or all overwritten) with no further prompts. Skipped files get skipped history entries; overwritten files get success entries. |
+| MT-CF06 [CP/M] | FR-146, FR-120 | In a multi-file batch with conflicts, at a conflict prompt click **Cancel** (or close the dialog via the window manager). | The whole batch aborts immediately like the transfer Cancel (FR-120): no further files are transferred; the progress dialog closes; the status bar shows a cancellation message; no error dialog. |
+| MT-CF07 [CP/M] | FR-145 | Copy to Host / Copy to Remote a file whose name does **not** exist at the destination. | **No** conflict prompt appears; the transfer proceeds directly as before. |
 
 ---
 
@@ -403,6 +423,7 @@ or real cross-session persistence:
 - File list filter & sort (live on-screen filtering/sorting, debounce timing, active-filter indicator, cross-session persistence): `FR-130`–`FR-135` (live), `UIR-079`, `UIR-080` (the filter/sort logic itself in `utils/file_filter.py` and the GUI wiring are covered automatically by `tests/test_file_filter.py` and `tests/test_gui_smoke.py`; the manual cases confirm the on-screen rendering, the debounce feel, and real cross-session restore).
 - Drag-and-drop file transfer (live drag gesture, drop-zone highlight, external OS drops, real transfer round-trip): `FR-136`–`FR-139` (live), `UIR-081` (the decode/handoff logic — drag payload, cross-pane vs same-pane, external-vs-host acceptance, flag-gating, confirmation — is covered automatically by `tests/test_gui_smoke.py`; the manual cases confirm the on-screen highlight, the real drag from the OS file manager, and the live transfer).
 - Transfer history (on-screen dialog render, real cross-session persistence, real Export file, live re-transfer round-trip): `FR-140`–`FR-144` (live), `UIR-082`, `UIR-083`, `DR-045` (the history store — schema, persistence, retention, thread-safe recording, export — and the dialog's list/filter/clear/re-transfer wiring are covered automatically by `tests/test_transfer_history.py` and `tests/test_gui_smoke.py`; the manual cases confirm the rendered dialog, real `~/.cpm_fm_history.json` persistence across sessions, the real exported file, and a live re-transfer).
+- File-conflict prompt on transfer (live dialog render, real overwrite/skip on the filesystem & remote, real pre-upload `DIR` refresh): `FR-145`–`FR-147` (live), `UIR-084` (the detection, the batch-wide policy, and the Skip/Cancel batch handling are covered automatically by `tests/test_conflict_resolution.py`; the manual cases confirm the on-screen dialog, that Overwrite/Skip really replace/preserve the destination file, and that an upload conflict is detected against a freshly refreshed remote listing).
 - Non-functional (real): `NFR-001`, `NFR-004` (live), `STR-003`, `FR-088`.
 
 Purely algorithmic and headless-logic requirements (`DR-*`, the X-Modem progress/handshake internals,
