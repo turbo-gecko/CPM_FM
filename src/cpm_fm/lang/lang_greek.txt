@@ -220,3 +220,17 @@ main.sort.name = Όνομα
 main.sort.extension = Επέκταση
 main.sort_by_tooltip = Ταξινόμηση κατά
 main.sort_direction_tooltip = Εναλλαγή αύξουσας/φθίνουσας σειράς
+
+# --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
+toolbar.backup = Αντίγραφο ασφαλείας
+toolbar.restore = Επαναφορά
+status.backing_up = Δημιουργία αντιγράφου ασφαλείας του απομακρυσμένου δίσκου στον κεντρικό υπολογιστή...
+status.restoring = Επαναφορά αρχείων κεντρικού υπολογιστή στον απομακρυσμένο δίσκο...
+status.wiping_destination = Διαγραφή {name}...
+status.backup_restore_cancelled = Η λειτουργία ακυρώθηκε
+status.nothing_to_transfer = Τίποτα προς μεταφορά
+dialog.backup_restore.backup_title = Επιβεβαίωση αντιγράφου ασφαλείας
+dialog.backup_restore.restore_title = Επιβεβαίωση επαναφοράς
+dialog.backup_restore.backup = Η δημιουργία αντιγράφου ασφαλείας θα ΔΙΑΓΡΑΨΕΙ ΟΛΑ τα αρχεία στον κατάλογο του κεντρικού υπολογιστή και θα τα αντικαταστήσει με όλα τα αρχεία από τον απομακρυσμένο δίσκο. Αυτό δεν μπορεί να αναιρεθεί. Συνέχεια;
+dialog.backup_restore.restore = Η επαναφορά θα ΔΙΑΓΡΑΨΕΙ ΟΛΑ τα αρχεία στον απομακρυσμένο δίσκο και θα τα αντικαταστήσει με όλα τα αρχεία από τον κατάλογο του κεντρικού υπολογιστή. Αυτό δεν μπορεί να αναιρεθεί. Συνέχεια;
+button.continue = Συνέχεια

@@ -34,6 +34,8 @@ toolbar.connect = Connect
 toolbar.disconnect = Disconnect
 toolbar.terminal = Terminal
 toolbar.history = History
+toolbar.backup = Backup
+toolbar.restore = Restore
 
 # --- Main window ---------------------------------------------------------------
 main.host_files = Host Files
@@ -90,6 +92,11 @@ status.saved_config = Saved config to {path}
 status.new_config_created = New configuration created
 status.serial_settings_updated = Serial settings updated
 status.general_settings_updated = General settings updated
+status.backing_up = Backing up remote drive to host...
+status.restoring = Restoring host files to remote drive...
+status.wiping_destination = Deleting {name}...
+status.backup_restore_cancelled = Operation cancelled
+status.nothing_to_transfer = Nothing to transfer
 
 # --- Dialog titles -------------------------------------------------------------
 dialog.error.title = Error
@@ -112,6 +119,10 @@ dialog.select_directory.title = Select Directory
 dialog.dnd_confirm.title = Confirm Transfer
 dialog.dnd_confirm.to_remote = Copy {count} file(s) to the remote system?
 dialog.dnd_confirm.to_host = Copy {count} file(s) to the host?
+dialog.backup_restore.backup_title = Confirm Backup
+dialog.backup_restore.restore_title = Confirm Restore
+dialog.backup_restore.backup = Backing up will DELETE ALL files in the host directory and replace them with every file from the remote drive. This cannot be undone. Continue?
+dialog.backup_restore.restore = Restoring will DELETE ALL files on the remote drive and replace them with every file from the host directory. This cannot be undone. Continue?
 dialog.conflict.title = File Exists
 dialog.conflict.message = A file named "{name}" already exists at {dest}. What would you like to do?
 dialog.conflict.dest.remote = the remote system
@@ -148,6 +159,7 @@ button.cancel = Cancel
 button.save = Save
 button.ok = OK
 button.cancelling = Cancelling…
+button.continue = Continue
 
 # --- Transfer progress dialog --------------------------------------------------
 transfer.title.send = Sending File

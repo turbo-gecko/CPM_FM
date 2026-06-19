@@ -220,3 +220,17 @@ main.sort.name = 名称
 main.sort.extension = 扩展名
 main.sort_by_tooltip = 排序方式
 main.sort_direction_tooltip = 切换升序/降序
+
+# --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
+toolbar.backup = 备份
+toolbar.restore = 还原
+status.backing_up = 正在将远程驱动器备份到主机...
+status.restoring = 正在将主机文件还原到远程驱动器...
+status.wiping_destination = 正在删除 {name}...
+status.backup_restore_cancelled = 操作已取消
+status.nothing_to_transfer = 没有可传输的内容
+dialog.backup_restore.backup_title = 确认备份
+dialog.backup_restore.restore_title = 确认还原
+dialog.backup_restore.backup = 备份将删除主机目录中的所有文件，并用远程驱动器中的所有文件替换它们。此操作无法撤消。是否继续？
+dialog.backup_restore.restore = 还原将删除远程驱动器上的所有文件，并用主机目录中的所有文件替换它们。此操作无法撤消。是否继续？
+button.continue = 继续

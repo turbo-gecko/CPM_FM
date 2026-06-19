@@ -220,3 +220,17 @@ main.sort.name = Nazwa
 main.sort.extension = Rozszerzenie
 main.sort_by_tooltip = Sortuj według
 main.sort_direction_tooltip = Przełącz kolejność rosnącą/malejącą
+
+# --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
+toolbar.backup = Kopia zapasowa
+toolbar.restore = Przywróć
+status.backing_up = Tworzenie kopii zapasowej napędu zdalnego na hoście...
+status.restoring = Przywracanie plików hosta na napęd zdalny...
+status.wiping_destination = Usuwanie {name}...
+status.backup_restore_cancelled = Operacja anulowana
+status.nothing_to_transfer = Nie ma nic do przesłania
+dialog.backup_restore.backup_title = Potwierdź kopię zapasową
+dialog.backup_restore.restore_title = Potwierdź przywracanie
+dialog.backup_restore.backup = Tworzenie kopii zapasowej USUNIE WSZYSTKIE pliki w katalogu hosta i zastąpi je wszystkimi plikami z napędu zdalnego. Tej operacji nie można cofnąć. Kontynuować?
+dialog.backup_restore.restore = Przywracanie USUNIE WSZYSTKIE pliki na napędzie zdalnym i zastąpi je wszystkimi plikami z katalogu hosta. Tej operacji nie można cofnąć. Kontynuować?
+button.continue = Kontynuuj

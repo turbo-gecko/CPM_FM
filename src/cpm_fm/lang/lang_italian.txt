@@ -220,3 +220,17 @@ main.sort.name = Nome
 main.sort.extension = Estensione
 main.sort_by_tooltip = Ordina per
 main.sort_direction_tooltip = Alterna ordine crescente/decrescente
+
+# --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
+toolbar.backup = Backup
+toolbar.restore = Ripristina
+status.backing_up = Backup dell'unità remota sull'host...
+status.restoring = Ripristino dei file dell'host sull'unità remota...
+status.wiping_destination = Eliminazione di {name}...
+status.backup_restore_cancelled = Operazione annullata
+status.nothing_to_transfer = Niente da trasferire
+dialog.backup_restore.backup_title = Conferma backup
+dialog.backup_restore.restore_title = Conferma ripristino
+dialog.backup_restore.backup = Il backup ELIMINERÀ TUTTI i file nella directory host e li sostituirà con tutti i file dell'unità remota. L'operazione non può essere annullata. Continuare?
+dialog.backup_restore.restore = Il ripristino ELIMINERÀ TUTTI i file sull'unità remota e li sostituirà con tutti i file della directory host. L'operazione non può essere annullata. Continuare?
+button.continue = Continua

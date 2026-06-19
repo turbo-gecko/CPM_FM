@@ -1,15 +1,17 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI agents when working with code in this repository.
 
 ## What this is
 
 `cpm-fm` is a **PySide6 (Qt for Python)** desktop app that transfers files between a modern host and
-legacy [CP/M](https://en.wikipedia.org/wiki/CP/M) systems over a serial link using X-Modem. The GUI
+legacy [CP/M](https://en.wikipedia.org/wiki/CP/M) systems over a serial link using X-Modem. Beyond
+single/multi-file transfers it offers drag-and-drop, file-conflict resolution, CP/M 8.3 filename
+validation, a persistent transfer history, whole-drive backup/restore, and a 12-language UI. The GUI
 applies a Material Design theme via the `qt-material` package (set centrally at start-up in
 `gui/theme.py`; the light/dark variant follows the host OS — UIR-070/UIR-073). As of v1.3 the UI was
 migrated from Tkinter to PySide6; there is no remaining `tkinter` code, and the stray `wxPython` in
-`.venv` is unused (ignore it).
+`.venv` is unused (ignore it). The current version is in `src/version.txt`.
 
 ## Commands
 
@@ -43,18 +45,38 @@ Three layers, intentionally decoupled from the GUI so they are unit-testable wit
 - `terminal/cpm_parser.py` — `CPMParser.parse_dir_output` is a pure static method that scrapes
   filenames from CP/M 2.2 four-column `DIR` text output. This is the most-tested logic.
 - `utils/config_handler.py` — `ConfigHandler` loads/saves settings as JSON.
-- `gui/` — `theme.py` (`apply_theme`, the central `qt-material` setup), `terminal_window.py`
-  (`TerminalWindow`, a non-modal `QMainWindow` serial console) and `config_dialogs.py` (`ConfigDialog`
-  base `QDialog` + `SerialConfigDialog`/`GeneralConfigDialog`, which build `QFormLayout` forms from
-  declarative field lists).
+- `utils/i18n.py` — process-wide internationalisation singleton: `tr(key, ...)` resolves a placeholder
+  key to text in the active language, `set_language` switches it. Strings live in `lang/lang_<language>.txt`
+  (`key = value`, UTF-8); `lang_english.txt` is the complete reference/fallback (FR-121, FR-124, DR-042/043).
+- `utils/file_filter.py` — pure wildcard/substring filtering and sorting used by both file panes.
+- `utils/transfer_history.py` — `TransferHistory`, a GUI-free, thread-safe JSON persistence layer
+  (default `~/.cpm_fm_history.json`) recording one entry per transfer *attempt* with retention pruning
+  (FR-140–FR-142, DR-045). Distinct from the raw serial `_rx_buffer`/`_tx_buffer` in `app.py`.
+- `gui/` — Qt-only widgets/dialogs:
+  - `theme.py` (`apply_theme`, the central `qt-material` setup).
+  - `terminal_window.py` (`TerminalWindow`, a non-modal `QMainWindow` serial console).
+  - `config_dialogs.py` (`ConfigDialog` base `QDialog` + `SerialConfigDialog`/`GeneralConfigDialog`,
+    which build `QFormLayout` forms from declarative field lists).
+  - `file_list_widget.py` — the per-pane file list (selection, filter/sort, drag-and-drop source/target).
+  - `transfer_dialog.py` — modal per-batch transfer-progress dialog with a Cancel button.
+  - `conflict_dialog.py` — destination-exists prompt (Overwrite/Skip/Cancel, apply-to-rest).
+  - `filename_validation_dialog.py` — CP/M 8.3 rename/skip/cancel prompt on upload.
+  - `transfer_history_dialog.py` — review/filter/export/clear/re-transfer from `TransferHistory`.
+  - `file_action_dialog.py`, `about_dialog.py`, `dialog_buttons.py` (shared button helpers),
+    `window_state.py` (`WindowState`: QSettings-backed window geometry + last-used config dir/file).
 
 ### Key cross-cutting behaviors
 
 - **Threading model:** Serial reads, and both transfer directions, run off the Qt GUI thread (daemon
   threads). Any UI update from those threads must be marshalled onto the GUI thread by **emitting a Qt
-  signal** (`MainWindow` defines `status_changed`, `term_write`, `remote_files_ready`, `error_raised`;
-  cross-thread emits are auto-queued) — never touch a widget directly from a worker thread (NFR-004).
-  Follow this signal pattern when adding background work, or Qt will crash/misbehave.
+  signal** — never touch a widget directly from a worker thread (NFR-004). `MainWindow` defines a
+  growing set of these (all auto-queued across threads): `status_changed`, `term_write`,
+  `remote_files_ready`, `error_raised`, `transfer_completed`, `batch_started`, `transfer_file_started`,
+  `transfer_progress`, `drive_not_found`, `view_file_ready`, `transfer_cancelled`, `conflict_detected`,
+  `invalid_name_detected`, `backup_restore_confirm`. Note that some of these (conflict, invalid-name,
+  backup/restore confirm) drive a **modal prompt on the GUI thread while the worker thread blocks**
+  awaiting the user's decision. Follow this signal pattern when adding background work, or Qt will
+  crash/misbehave.
 - **Remote file listing is capture-based, not request/response:** `_do_refresh_remote_logic` sets a
   `_capture_active` flag, sends the list command (default `DIR`), `time.sleep(1.5)` to let output
   accumulate in `_remote_capture_buffer` via the read callback, then parses it. There is no end
@@ -69,6 +91,15 @@ Three layers, intentionally decoupled from the GUI so they are unit-testable wit
   preserve compatibility with both shapes.
 - The app **starts unconfigured** (`self.settings = {}`); settings come from File > Load or the
   Config dialogs. `eol` setting maps `CR`/`LF`/`CRLF` to terminator chars in `app.py`.
+- **Three separate persistence stores, deliberately not merged:** the per-configuration serial/general
+  JSON (`ConfigHandler`), the QSettings-backed UI/session state (`WindowState` — window geometry,
+  last-used config dir/file), and the transfer-history JSON (`TransferHistory`). Keep them distinct.
+- **Whole-drive Backup/Restore** (`app.py:_backup_drive`/`_restore_drive`, FR-150–FR-154, UIR-086–088):
+  mirror every file between the remote drive and the host directory. Each refreshes the destination,
+  emits `backup_restore_confirm` for a modal "all destination files will be deleted" warning (Cancel is
+  the default), then wipes and re-copies via the normal batch transfer path.
+- **GUI strings are never hard-coded** — route every user-facing string through `i18n.tr(key)` and add
+  the key to **all** `lang/lang_*.txt` files (English is mandatory; missing keys fall back to English).
 
 ## Design docs and workflows
 
@@ -80,7 +111,8 @@ ISO/IEC/IEEE 29148 SRS with uniquely identified, traceable requirements (`FR-`/`
 empty stubs, but the SRS and code implement working X-Modem transfers — see `FR-080`–`FR-085`,
 `CR-010`).
 `Workflows/` holds repo-specific multi-agent workflow definitions (`requirements-check`,
-`code-requirements-align`, `defect-investigator`) for checking code against the SRS.
+`code-requirements-align`, `defect-investigator`, `test-quality-checker`) for checking code and tests
+against the SRS.
 
 ## Requirement-change workflow (MANDATORY)
 

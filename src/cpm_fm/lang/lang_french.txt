@@ -220,3 +220,17 @@ main.sort.name = Nom
 main.sort.extension = Extension
 main.sort_by_tooltip = Trier par
 main.sort_direction_tooltip = Basculer l'ordre croissant/décroissant
+
+# --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
+toolbar.backup = Sauvegarder
+toolbar.restore = Restaurer
+status.backing_up = Sauvegarde du lecteur distant vers l'hôte...
+status.restoring = Restauration des fichiers de l'hôte vers le lecteur distant...
+status.wiping_destination = Suppression de {name}...
+status.backup_restore_cancelled = Opération annulée
+status.nothing_to_transfer = Rien à transférer
+dialog.backup_restore.backup_title = Confirmer la sauvegarde
+dialog.backup_restore.restore_title = Confirmer la restauration
+dialog.backup_restore.backup = La sauvegarde SUPPRIMERA TOUS les fichiers du répertoire hôte et les remplacera par tous les fichiers du lecteur distant. Cette action est irréversible. Continuer ?
+dialog.backup_restore.restore = La restauration SUPPRIMERA TOUS les fichiers du lecteur distant et les remplacera par tous les fichiers du répertoire hôte. Cette action est irréversible. Continuer ?
+button.continue = Continuer

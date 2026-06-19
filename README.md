@@ -21,6 +21,13 @@ A cross-platform PySide6 desktop app for transferring files between a modern hos
 - **Transfer history:** every transfer attempt (success, failure, cancelled, or skipped)
   is recorded to a persistent history you can review, filter, export, clear, and
   re-transfer from (**History** toolbar button).
+- **Whole-drive Backup and Restore** (toolbar buttons): mirror every file between the
+  remote drive and the host directory in one operation. **Backup** copies the whole
+  remote drive to the host; **Restore** copies the whole host directory to the remote
+  drive. Each first refreshes the destination, then warns that **all** files at the
+  destination will be deleted and re-written and asks you to continue or cancel; on
+  confirmation it wipes the destination and copies the source across, with the usual
+  progress dialog and a Cancel button.
 - Manage files on both sides from a right-click context menu: transfer, rename, delete,
   and view/edit (host) or view (remote); transfer and delete act on every selected file.
 - Built-in non-modal serial terminal for issuing CP/M commands, with a remote
@@ -63,9 +70,9 @@ The app starts unconfigured (unless it can reload the last-used configuration). 
 parameters via the **Config** menu and **File > Save** them. **File > New** resets to defaults.
 The loaded configuration's name is shown in the title bar.
 
-Connect, disconnect, open the terminal, and view the transfer history from the toolbar. Right-click
-a file in either pane for transfer, rename, delete, and view actions, or drag files between the
-panes to transfer them.
+Connect, disconnect, open the terminal, view the transfer history, and run a whole-drive **Backup**
+or **Restore** from the toolbar. Right-click a file in either pane for transfer, rename, delete, and
+view actions, or drag files between the panes to transfer them.
 
 ## Test
 

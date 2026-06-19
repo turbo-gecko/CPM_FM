@@ -7,9 +7,9 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.16 |
-| Scorecard for plan version | 1.16 (`docs/manual_test_plan.md`) |
-| SRS version | (e.g. 2.10.0) |
+| Scorecard version | 1.17 |
+| Scorecard for plan version | 1.17 (`docs/manual_test_plan.md`) |
+| SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
 
@@ -58,7 +58,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-S01 | Launch + Material theme applied | STR-002, CR-012/013 | | | |
 | MT-S02 | Unconfigured start; host populated; remote empty | FR-003/060/070 | | | |
 | MT-S03 | File, Config & Help menus present | UIR-001/002/003/004 | | | |
-| MT-S04 | Toolbar Connect/Disconnect/Terminal enabled | UIR-013/071/015/016 | | | |
+| MT-S04 | Toolbar Connect/Disconnect/Terminal/History/Backup/Restore enabled | UIR-013/071/015/016/082/086/087 | | | |
 | MT-S05 | Pane layout correct (equal Change Dir/Update; equal drive/Update) | UIR-011/012/017/061-067 | | | |
 
 ### §5 Connect / disconnect (real ports)
@@ -206,6 +206,19 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-FV06 | No prompt when the upload name already meets 8.3 | FR-148 | | | |
 | MT-FV07 | Renamed name onto an existing remote file triggers the conflict prompt | FR-149, FR-145 | | | |
 
+### §11.5 Whole-drive backup and restore
+| ID | Title | Req | Result | Env | Notes |
+|----|-------|-----|:------:|:---:|-------|
+| MT-BR01 | Backup refreshes panes then warns before any delete | FR-150, FR-152, UIR-088 | | | |
+| MT-BR02 | Backup Cancel/close leaves host folder unchanged | FR-152 | | | |
+| MT-BR03 | Backup Continue wipes host then downloads all remote files | FR-150, FR-153, FR-154 | | | |
+| MT-BR04 | Restore refreshes remote then warns before any delete | FR-151, FR-152, UIR-088 | | | |
+| MT-BR05 | Restore Continue ERA-wipes remote then uploads all host files | FR-151, FR-153, FR-154 | | | |
+| MT-BR06 | Cancel mid-transfer aborts the batch | FR-154, FR-120 | | | |
+| MT-BR07 | Restore of a non-8.3 host name triggers the validation prompt | FR-151, FR-148, FR-149 | | | |
+| MT-BR08 | Backup/Restore with a port disconnected → error, no action | FR-080, CR-010 | | | |
+| MT-BR09 | Empty source still wipes; nothing transferred | FR-154 | | | |
+
 ### §12 Terminal Window (live)
 | ID | Title | Req | Result | Env | Notes |
 |----|-------|-----|:------:|:---:|-------|
@@ -277,6 +290,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | §9.1 Filter & sort | | | | | |
 | §10 Remote listing | | | | | |
 | §11 Transfers | | | | | |
+| §11.5 Backup & restore | | | | | |
 | §12 Terminal Window | | | | | |
 | §13 Context actions | | | | | |
 | §14 Internationalisation | | | | | |

@@ -146,6 +146,11 @@ class MainWindow(QMainWindow):
     # rename/skip/cancel dialog runs on the GUI thread (NFR-004). The worker
     # blocks on _invalid_name_answered until the GUI thread records the choice.
     invalid_name_detected = Signal(str)
+    # FR-152: emitted from a Backup/Restore worker thread, carrying the
+    # operation ("backup" or "restore"), so the destructive-operation
+    # confirmation dialog runs on the GUI thread (NFR-004). The worker blocks on
+    # _backup_confirm_answered until the GUI thread records the user's choice.
+    backup_restore_confirm = Signal(str)
 
     def __init__(
         self,
@@ -206,6 +211,12 @@ class MainWindow(QMainWindow):
         # _invalid_name_result before setting the event.
         self._invalid_name_answered = threading.Event()
         self._invalid_name_result: tuple[str, str] = (CANCEL, "")
+        # FR-152: Backup/Restore destructive-operation confirmation. The worker
+        # emits backup_restore_confirm and blocks on _backup_confirm_answered;
+        # the GUI thread shows the dialog (NFR-004) and stores the boolean
+        # (Continue) choice in _backup_confirm_result before setting the event.
+        self._backup_confirm_answered = threading.Event()
+        self._backup_confirm_result = False
         self.host_dir = os.getcwd()
         # FR-130/FR-133: the canonical, unfiltered file names for each pane. The
         # visible QListWidget rows are derived from these by filter_and_sort, so
@@ -358,6 +369,7 @@ class MainWindow(QMainWindow):
         self.transfer_cancelled.connect(self._on_transfer_cancelled)
         self.conflict_detected.connect(self._on_conflict_detected)
         self.invalid_name_detected.connect(self._on_invalid_name_detected)
+        self.backup_restore_confirm.connect(self._on_backup_restore_confirm)
 
     def setup_menu(self):
         """
@@ -437,7 +449,7 @@ class MainWindow(QMainWindow):
 
     def setup_toolbar(self):
         """
-        Satisfies: UIR-013, UIR-071.
+        Satisfies: UIR-013, UIR-071, UIR-082, UIR-086, UIR-087.
 
         The main-window actions are presented as a top toolbar.
         """
@@ -454,6 +466,12 @@ class MainWindow(QMainWindow):
             ("toolbar.terminal", Pix.SP_ComputerIcon, self.show_terminal),
             # UIR-082: opens the Transfer History dialog (Feature 2).
             ("toolbar.history", Pix.SP_FileDialogDetailedView, self.show_history),
+            # UIR-086/UIR-087: whole-drive Backup (remote→host) and Restore
+            # (host→remote). The arrows match the panes' left/right layout: the
+            # Host pane is on the left and the Remote pane on the right, so
+            # Backup points left (remote→host) and Restore points right (host→remote).
+            ("toolbar.backup", Pix.SP_ArrowLeft, self.do_backup),
+            ("toolbar.restore", Pix.SP_ArrowRight, self.do_restore),
         ]
         for key, pixmap, handler in actions:
             action = QAction(sp(pixmap), "", self, triggered=handler)
@@ -2325,6 +2343,224 @@ class MainWindow(QMainWindow):
                 kwargs={"retry": True},
                 daemon=True,
             ).start()
+
+    # ------------------------------------------------------- backup / restore
+
+    def do_backup(self):
+        """Start a whole-drive Backup (remote→host) on a worker thread.
+
+        FR-080/CR-010: permitted only when both status flags are true. The
+        worker refreshes the destination, confirms the destructive operation,
+        wipes the host directory, and downloads every remote file.
+
+        Satisfies: FR-150, FR-152, FR-154, CR-010.
+        """
+        if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
+            QMessageBox.critical(
+                self, tr("dialog.error.title"), tr("error.transport_not_connected")
+            )
+            return
+        threading.Thread(target=self._backup_drive, daemon=True).start()
+
+    def do_restore(self):
+        """Start a whole-drive Restore (host→remote) on a worker thread.
+
+        FR-080/CR-010: permitted only when both status flags are true. The
+        worker refreshes the destination, confirms the destructive operation,
+        wipes the remote drive, and uploads every host file.
+
+        Satisfies: FR-151, FR-152, FR-154, CR-010.
+        """
+        if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
+            QMessageBox.critical(
+                self, tr("dialog.error.title"), tr("error.transport_not_connected")
+            )
+            return
+        threading.Thread(target=self._restore_drive, daemon=True).start()
+
+    def _backup_drive(self):
+        """Worker: mirror the remote drive to the host directory (remote→host).
+
+        FR-150/FR-152: refresh the destination (host) and source (remote)
+        listings, then confirm before any deletion. FR-153: on confirmation
+        delete every host file. FR-154: download every remote file by reusing
+        the Copy to Host batch transfer (its progress dialog, cancel, and
+        history recording). The remote listing is captured before the wipe so it
+        also serves as the set of files to back up.
+
+        Satisfies: FR-150, FR-152, FR-153, FR-154.
+        """
+        self.set_status(tr("status.backing_up"))
+        # FR-152: refresh the destination (host) pane before prompting, and the
+        # source (remote) listing that tells us what to download.
+        self.transfer_completed.emit("host")  # refresh Host pane on the GUI thread
+        names = self._list_remote_file_names()
+        if not self._confirm_backup_restore("backup"):
+            self.set_status(tr("status.backup_restore_cancelled"))
+            return
+        # FR-153: empty the destination first.
+        self._wipe_host_dir()
+        save_paths = [os.path.join(self.host_dir, name) for name in names]
+        if not save_paths:
+            # FR-154: nothing to copy; the wipe already emptied the host pane.
+            self.set_status(tr("status.nothing_to_transfer"))
+            self.transfer_completed.emit("host")
+            return
+        # FR-154: reuse the batch engine (progress dialog + cancel + history).
+        self._transfer_to_host_batch(save_paths)
+
+    def _restore_drive(self):
+        """Worker: mirror the host directory to the remote drive (host→remote).
+
+        FR-151/FR-152: snapshot the source (host) files and refresh the
+        destination (remote) listing, then confirm before any deletion.
+        FR-153: on confirmation delete every remote file. FR-154: upload every
+        host file by reusing the Copy to Remote batch transfer (its progress
+        dialog, cancel, filename validation, and history recording).
+
+        Satisfies: FR-151, FR-152, FR-153, FR-154.
+        """
+        self.set_status(tr("status.restoring"))
+        host_files = self._host_dir_files()
+        # FR-152: refresh the destination (remote) pane before prompting; the
+        # returned names are also the set of remote files to delete.
+        remote_names = self._list_remote_file_names()
+        if not self._confirm_backup_restore("restore"):
+            self.set_status(tr("status.backup_restore_cancelled"))
+            return
+        # FR-153: empty the destination first.
+        self._wipe_remote_drive(remote_names)
+        filepaths = [os.path.join(self.host_dir, name) for name in host_files]
+        if not filepaths:
+            # FR-154: nothing to copy; refresh the now-empty remote pane.
+            self.set_status(tr("status.nothing_to_transfer"))
+            self.transfer_completed.emit("remote")
+            return
+        # FR-154: reuse the batch engine (progress dialog + cancel + history).
+        self._transfer_to_remote_batch(filepaths)
+
+    def _confirm_backup_restore(self, operation: str) -> bool:
+        """Raise the destructive-operation confirmation and block until answered.
+
+        Marshals the modal warning onto the GUI thread via
+        ``backup_restore_confirm`` (NFR-004) and blocks this worker thread on
+        ``_backup_confirm_answered`` until the GUI thread records the user's
+        choice. Returns True when the user chose Continue. ``operation`` is
+        "backup" or "restore" and selects the destination wording.
+
+        Satisfies: FR-152.
+        """
+        self._backup_confirm_answered.clear()
+        self.backup_restore_confirm.emit(operation)
+        self._backup_confirm_answered.wait()
+        return self._backup_confirm_result
+
+    def _on_backup_restore_confirm(self, operation: str) -> None:
+        """Show the destructive-operation warning and record the user's choice.
+
+        Runs on the GUI thread (queued from the Backup/Restore worker). Presents
+        a modal warning with Continue and Cancel (Cancel default and the
+        window-manager close equivalent — the safest choice, UIR-088), stores
+        the boolean result, and releases the worker by setting
+        ``_backup_confirm_answered`` (NFR-004).
+
+        Satisfies: FR-152, UIR-088.
+        """
+        try:
+            title_key = (
+                "dialog.backup_restore.backup_title"
+                if operation == "backup"
+                else "dialog.backup_restore.restore_title"
+            )
+            msg_key = (
+                "dialog.backup_restore.backup"
+                if operation == "backup"
+                else "dialog.backup_restore.restore"
+            )
+            box = QMessageBox(self)
+            box.setIcon(QMessageBox.Icon.Warning)
+            box.setWindowTitle(tr(title_key))
+            box.setText(tr(msg_key))
+            continue_btn = box.addButton(tr("button.continue"), QMessageBox.ButtonRole.AcceptRole)
+            cancel_btn = box.addButton(tr("button.cancel"), QMessageBox.ButtonRole.RejectRole)
+            box.setDefaultButton(cancel_btn)
+            box.exec()
+            self._backup_confirm_result = box.clickedButton() is continue_btn
+        finally:
+            self._backup_confirm_answered.set()
+
+    def _host_dir_files(self) -> list[str]:
+        """Return the names of the files (not sub-directories) in the host dir.
+
+        Runs on a worker thread (reads the filesystem only, touches no widget).
+        Returns an empty list if the directory cannot be read.
+
+        Satisfies: FR-151, FR-153.
+        """
+        try:
+            return [
+                f
+                for f in os.listdir(self.host_dir)
+                if os.path.isfile(os.path.join(self.host_dir, f))
+            ]
+        except OSError as e:
+            self._debug(f"[backup/restore] host listing failed: {e!r}")
+            return []
+
+    def _list_remote_file_names(self) -> list[str]:
+        """Refresh the remote listing and return its file names (display order).
+
+        Runs on the Backup/Restore worker thread. Reuses the FR-077–FR-079
+        listing/parse mechanism synchronously (``_capture_terminal_response``
+        blocks on this thread) and emits ``remote_files_ready`` so the displayed
+        Remote Files list reflects the just-read contents (NFR-004, FR-152).
+        Returns an empty list if nothing could be captured or parsed.
+
+        Satisfies: FR-150, FR-151, FR-152.
+        """
+        try:
+            cmd = self.settings.get("list_files_cmd", "DIR")
+            text = self._capture_terminal_response(cmd)
+            files_dict = CPMParser.parse_dir_output(text)
+        except Exception as e:  # pragma: no cover - defensive
+            self._debug(f"[backup/restore] remote listing failed: {e!r}")
+            return []
+        self.remote_files_ready.emit(files_dict)
+        return list(files_dict.keys())
+
+    def _wipe_host_dir(self) -> None:
+        """Delete every file in the host directory (Backup destination wipe).
+
+        Runs on the Backup worker thread. Reads the directory fresh so it acts
+        on the current contents (FR-152). A file that fails to delete is logged
+        and skipped rather than aborting the wipe.
+
+        Satisfies: FR-150, FR-153.
+        """
+        for name in self._host_dir_files():
+            self.set_status(tr("status.wiping_destination", name=name))
+            try:
+                os.remove(os.path.join(self.host_dir, name))
+            except OSError as e:
+                self._debug(f"[backup] failed to delete {name}: {e!r}")
+
+    def _wipe_remote_drive(self, names) -> None:
+        """Delete every named remote file (Restore destination wipe).
+
+        Runs on the Restore worker thread. Sends the configured delete command
+        (``delete_remote_cmd``, default ``ERA $1``, FR-111) once per file on the
+        Terminal Port, waiting for each to go idle via the capture mechanism.
+        Deleting per file avoids the interactive ``ERA *.*`` confirmation on the
+        CP/M side.
+
+        Satisfies: FR-151, FR-153.
+        """
+        template = self.settings.get("delete_remote_cmd", "ERA $1")
+        if not template:
+            return
+        for name in names:
+            self.set_status(tr("status.wiping_destination", name=name))
+            self._capture_terminal_response(template.replace("$1", name))
 
     # ------------------------------------------------------------------ config
 

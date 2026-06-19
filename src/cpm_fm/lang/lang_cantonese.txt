@@ -220,3 +220,17 @@ main.sort.name = 名稱
 main.sort.extension = 副檔名
 main.sort_by_tooltip = 排序方式
 main.sort_direction_tooltip = 切換升序/降序
+
+# --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
+toolbar.backup = 備份
+toolbar.restore = 還原
+status.backing_up = 正在將遠端磁碟機備份到主機...
+status.restoring = 正在將主機檔案還原到遠端磁碟機...
+status.wiping_destination = 正在刪除 {name}...
+status.backup_restore_cancelled = 操作已取消
+status.nothing_to_transfer = 冇嘢可傳輸
+dialog.backup_restore.backup_title = 確認備份
+dialog.backup_restore.restore_title = 確認還原
+dialog.backup_restore.backup = 備份會刪除主機目錄入面所有檔案，並用遠端磁碟機嘅所有檔案取代佢哋。呢個操作無法復原。要繼續嗎？
+dialog.backup_restore.restore = 還原會刪除遠端磁碟機上所有檔案，並用主機目錄嘅所有檔案取代佢哋。呢個操作無法復原。要繼續嗎？
+button.continue = 繼續
