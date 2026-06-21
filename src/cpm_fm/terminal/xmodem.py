@@ -305,6 +305,14 @@ class XModem:
         else:
             return False
 
+        # A sender that goes silent after the last packet — e.g. its EOT was
+        # lost or garbled on the wire, with every data byte already received —
+        # must not hang the receive forever. Bound the consecutive non-frame
+        # reads (timeouts/garbage) so that once the budget is spent the receive
+        # finishes with the data it has rather than NAKing indefinitely. A frame
+        # start resets the budget, since it proves the sender is still alive.
+        stalls = 0
+        max_stalls = 6
         while True:
             # FR-120: abort the receive (and discard the partial file) on cancel.
             if self._cancelled():
@@ -316,13 +324,22 @@ class XModem:
                 break
 
             if char not in (self.SOH, self.STX):
-                # Unexpected/garbage byte — NAK and wait for the next frame.
+                # Neither a frame nor EOT: a read timeout (b"") or a stray byte.
+                # NAK to prompt a resend of a lost EOT/packet, but give up after
+                # max_stalls so a silent sender cannot hang the transfer; finish
+                # with the received data (or fail if nothing arrived at all).
+                stalls += 1
+                if stalls > max_stalls:
+                    if not received_data:
+                        return False
+                    break
                 self._write(self.NAK)
-                char = self._read_byte(timeout=10.0)
+                char = self._read_byte(timeout=3.0)
                 continue
 
             # Read the rest of the frame: Seq + ~Seq + data + trailer. SOH
             # frames hold 128 data bytes, STX frames hold 1024 (XMODEM-1K).
+            stalls = 0  # a frame start proves the sender is alive; reset budget
             size = 128 if char == self.SOH else 1024
             header = self._read(2)
             payload = self._read(size)
