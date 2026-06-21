@@ -8,7 +8,7 @@ caught rather than silently swallowed (both methods only print on failure).
 
 import json
 
-from cpm_fm.utils.config_handler import ConfigHandler
+from cpm_fm.utils.config_handler import DEFAULT_SETTINGS, ConfigHandler
 
 
 def test_load_json_reads_valid_object(tmp_path):
@@ -44,6 +44,13 @@ def test_save_then_load_round_trips(tmp_path):
     data = {"speed": "115200", "data": "8", "parity": "EVEN", "eol": "CRLF"}
     assert ConfigHandler.save_json(str(path), data) is True
     assert ConfigHandler.load_json(str(path)) == data
+
+
+def test_default_settings_include_xmodem_1k_keys():
+    # UIR-089/UIR-090: XMODEM-1K mode is off by default with blank 1K commands.
+    assert DEFAULT_SETTINGS["xmodem_1k"] == "OFF"
+    assert DEFAULT_SETTINGS["recv_remote_cmd_1k"] == ""
+    assert DEFAULT_SETTINGS["send_remote_cmd_1k"] == ""
 
 
 def test_save_json_to_unwritable_path_returns_false(tmp_path):

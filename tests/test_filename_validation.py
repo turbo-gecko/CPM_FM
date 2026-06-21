@@ -120,11 +120,11 @@ def _fake_xmodem_cls(calls):
         def __init__(self, ser, monitor=None, progress=None, cancel_check=None):
             pass
 
-        def send_file(self, path):
+        def send_file(self, path, use_1k=False):
             calls.append(path)
             return True
 
-        def receive_file(self, path):
+        def receive_file(self, path, use_1k=False):
             calls.append(path)
             return True
 

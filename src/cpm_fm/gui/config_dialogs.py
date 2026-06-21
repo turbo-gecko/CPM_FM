@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from PySide6.QtGui import QIntValidator
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDialog,
     QFileDialog,
@@ -28,8 +29,8 @@ class ConfigDialog(QDialog):
 
     Builds a two-column form (UIR-021) from a declarative field list. Each
     field is a dict with keys: ``key``, ``label_key`` (an i18n key resolved via
-    :func:`tr` at build time — FR-121), ``type`` ("dropdown", "text" or
-    "directory"), ``default``, and optionally ``options`` (dropdown),
+    :func:`tr` at build time — FR-121), ``type`` ("dropdown", "text",
+    "directory" or "checkbox"), ``default``, and optionally ``options`` (dropdown),
     ``maxlength`` (text), ``int_range`` (text, an inclusive ``(lo, hi)`` tuple)
     and ``group`` (an i18n key for a titled :class:`QGroupBox` the field is
     placed in). Fields that share a ``group`` value are gathered into one boxed,
@@ -144,6 +145,14 @@ class ConfigDialog(QDialog):
             combo.setCurrentText(current)
             self.entries[key] = combo
             widget = combo
+        elif field["type"] == "checkbox":
+            # Boolean toggle persisted as the string "ON"/"OFF" (consistent with
+            # the dropdown-backed OFF/ON settings), so the flat config format and
+            # settings.get(...) call sites stay uniform.
+            check = QCheckBox()
+            check.setChecked(current.upper() == "ON")
+            self.entries[key] = check
+            widget = check
         elif field["type"] == "directory":
             # Create a horizontal layout for the path and the browse button
             dir_container = QWidget()
@@ -189,6 +198,8 @@ class ConfigDialog(QDialog):
     def _value(self, widget) -> str:
         if isinstance(widget, QComboBox):
             return widget.currentText()
+        if isinstance(widget, QCheckBox):
+            return "ON" if widget.isChecked() else "OFF"
         return widget.text()
 
     def save(self):
@@ -351,6 +362,33 @@ class GeneralConfigDialog(ConfigDialog):
                 "label_key": "config.general.send_remote",
                 "type": "text",
                 "default": "PCGET $1",
+                "maxlength": 79,
+                "group": REMOTE,
+            },
+            # XMODEM-1K mode: when checked, host->remote sends use 1024-byte STX
+            # frames and the _1k commands below replace the standard send/recv
+            # launch commands (a blank _1k field falls back to its standard
+            # counterpart). Default unchecked.
+            {
+                "key": "xmodem_1k",
+                "label_key": "config.general.xmodem_1k",
+                "type": "checkbox",
+                "default": "OFF",
+                "group": REMOTE,
+            },
+            {
+                "key": "recv_remote_cmd_1k",
+                "label_key": "config.general.recv_remote_1k",
+                "type": "text",
+                "default": "",
+                "maxlength": 79,
+                "group": REMOTE,
+            },
+            {
+                "key": "send_remote_cmd_1k",
+                "label_key": "config.general.send_remote_1k",
+                "type": "text",
+                "default": "",
                 "maxlength": 79,
                 "group": REMOTE,
             },

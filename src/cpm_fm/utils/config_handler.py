@@ -19,6 +19,14 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "list_files_cmd": "DIR",
     "recv_remote_cmd": "PCPUT $1",
     "send_remote_cmd": "PCGET $1",
+    # XMODEM-1K mode. When `xmodem_1k` is ON, host->remote sends use 1024-byte
+    # STX frames instead of 128-byte SOH (the receive side already auto-detects
+    # frame size), and the `_1k` launch commands below replace the standard
+    # send/recv commands. A blank `_1k` command falls back to its standard
+    # counterpart (the 1K framing still applies).
+    "xmodem_1k": "OFF",
+    "recv_remote_cmd_1k": "",
+    "send_remote_cmd_1k": "",
     "xfer_launch_delay": "3",
     "xfer_interfile_delay": "2",
     "eol": "CR",

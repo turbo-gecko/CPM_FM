@@ -160,18 +160,24 @@ class XModem:
             return len(trailer) == 2 and ((trailer[0] << 8) | trailer[1]) == self._crc16(payload)
         return len(trailer) == 1 and trailer[0] == self._calculate_checksum(payload)
 
-    def send_file(self, filepath: str) -> bool:
+    def send_file(self, filepath: str, use_1k: bool = False) -> bool:
         """Sends a file from Host to Remote (e.g. into CP/M PCGET).
 
         X-Modem is receiver-driven: the sender waits for the receiver's start
         character before transmitting. That character also selects the mode —
         'C' (0x43) requests CRC, NAK (0x15) requests checksum — and we frame
-        the trailer to match (NFR-003). 128-byte SOH packets either way.
+        the trailer to match (NFR-003). When ``use_1k`` is True the data field is
+        1024 bytes framed with STX (XMODEM-1K); otherwise it is 128 bytes framed
+        with SOH. The frame size is independent of the CRC/checksum mode.
 
         Satisfies: FR-081, FR-082, FR-083, FR-086, FR-105, FR-120, NFR-003.
         """
         if not os.path.exists(filepath):
             return False
+
+        # XMODEM-1K (NFR-003): STX-framed 1024-byte data fields, else SOH/128.
+        frame_size = 1024 if use_1k else 128
+        start_byte = self.STX if use_1k else self.SOH
 
         with open(filepath, "rb") as f:
             data = f.read()
@@ -203,16 +209,17 @@ class XModem:
                 self._abort()
                 return False
 
-            # Create packet: SOH + Seq + ~Seq + Data (128 bytes) + trailer.
-            # NFR-003: the final short chunk is padded to a full 128-byte data
-            # field with the PAD byte before the trailer is computed.
-            chunk = data[offset : offset + 128]
+            # Create packet: start_byte + Seq + ~Seq + Data + trailer.
+            # NFR-003: the final short chunk is padded to a full data field
+            # (128 or 1024 bytes) with the PAD byte before the trailer is
+            # computed.
+            chunk = data[offset : offset + frame_size]
             real_len = len(chunk)  # bytes from the file, before padding
-            if real_len < 128:
-                chunk = chunk + bytes([self.PAD]) * (128 - real_len)
+            if real_len < frame_size:
+                chunk = chunk + bytes([self.PAD]) * (frame_size - real_len)
 
             packet = (
-                self.SOH
+                start_byte
                 + bytes([packet_num])
                 + bytes([255 - packet_num])
                 + chunk
@@ -238,7 +245,7 @@ class XModem:
             if self.progress:
                 self.progress(blocks, bytes_done, total)
 
-            offset += 128
+            offset += frame_size
             packet_num = (packet_num + 1) % 256
 
         # Send EOT, retransmitting until the receiver ACKs it (bounded).
@@ -248,16 +255,21 @@ class XModem:
                 break
         return True
 
-    def receive_file(self, save_path: str) -> bool:
+    def receive_file(self, save_path: str, use_1k: bool = False) -> bool:
         """Receives a file from Remote to Host (e.g. from CP/M PCPUT).
 
-        The CP/M-side senders (PCPUT V1.0) speak **checksum** X-Modem and do not
-        understand the CRC start character 'C' — sending it makes them abort
-        with "Unknown response from host". So we poll with NAK (checksum) first
-        and only fall back to 'C' (CRC) if the sender does not answer NAK at all
-        (NFR-003; "checksum mode, not CRC"). The mode is fixed by whichever
-        prompt the sender answers. SOH frames carry 128 data bytes; STX frames
-        carry 1024 (XMODEM-1K), so the 1K sender variants are accepted too.
+        X-Modem is receiver-driven and the receiver's start character selects
+        the mode. The CP/M-side senders (PCPUT V1.0) speak **checksum** X-Modem
+        and do not understand the CRC start character 'C' — sending it makes
+        them abort with "Unknown response from host" — so by default we poll
+        with NAK (checksum) first and only fall back to 'C' (CRC) if the sender
+        does not answer NAK at all (NFR-003; "checksum mode, not CRC").
+
+        XMODEM-1K, however, is a CRC protocol: a 1K-capable sender only switches
+        to 1024-byte STX frames once the receiver requests CRC mode with 'C'. So
+        when ``use_1k`` is set we poll 'C' **first** (falling back to NAK), which
+        is what coaxes the sender into 1K blocks. Either way SOH frames carry
+        128 data bytes and STX frames carry 1024, so both sizes are accepted.
 
         Satisfies: FR-081, FR-082, FR-083, FR-105, FR-120, NFR-003.
         """
@@ -269,13 +281,15 @@ class XModem:
         # so the first frame byte we read is genuinely the start of a packet.
         self.ser.reset_input_buffer()
 
-        # 1. Establish the connection and the trailer mode. Try checksum (NAK)
-        #    then CRC ('C'), waiting for the first frame byte (SOH/STX data, or
-        #    EOT for an empty transfer). NAK is tried first because the CP/M
-        #    senders are checksum-only and abort on a stray 'C'.
+        # 1. Establish the connection and the trailer mode by waiting for the
+        #    first frame byte (SOH/STX data, or EOT for an empty transfer).
+        #    For 1K we poll 'C' (CRC) first so 1K-capable senders use 1024-byte
+        #    STX frames; otherwise NAK (checksum) is tried first because the
+        #    CP/M senders are checksum-only and abort on a stray 'C'.
         char = b""
         crc_mode = False
-        for prompt, is_crc in ((self.NAK, False), (b"C", True)):
+        prompts = ((b"C", True), (self.NAK, False)) if use_1k else ((self.NAK, False), (b"C", True))
+        for prompt, is_crc in prompts:
             for _ in range(6):
                 # FR-120: a cancellation during the handshake aborts the receive.
                 if self._cancelled():

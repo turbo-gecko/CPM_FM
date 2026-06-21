@@ -1722,7 +1722,17 @@ class MainWindow(QMainWindow):
         """
         self.transfer_progress.emit(blocks, bytes_done)
 
-    def _issue_remote_cmd(self, cmd_key: str, default: str, filename: str) -> None:
+    def _xmodem_1k_enabled(self) -> bool:
+        """Whether XMODEM-1K mode is selected (the ``xmodem_1k`` setting).
+
+        When enabled, host->remote sends use 1024-byte STX frames and the
+        ``_1k`` launch commands replace the standard send/recv commands.
+        """
+        return str(self.settings.get("xmodem_1k", "OFF")).upper() == "ON"
+
+    def _issue_remote_cmd(
+        self, cmd_key: str, default: str, filename: str, cmd_key_1k: str | None = None
+    ) -> None:
         """
         Satisfies: FR-087.
 
@@ -1731,7 +1741,16 @@ class MainWindow(QMainWindow):
         side of the transfer (PCPUT/PCGET), with "$1" replaced by the
         filename. Runs on the transfer worker thread; handle_terminal_send is
         safe to call from there (it marshals its display write via a signal).
+
+        When ``cmd_key_1k`` is given and XMODEM-1K mode is enabled, its non-blank
+        template is used instead; a blank ``cmd_key_1k`` template falls back to
+        the standard ``cmd_key``/``default``.
         """
+        if cmd_key_1k is not None and self._xmodem_1k_enabled():
+            template_1k = str(self.settings.get(cmd_key_1k, "")).strip()
+            if template_1k:
+                self.handle_terminal_send(template_1k.replace("$1", filename))
+                return
         template = self.settings.get(cmd_key, default)
         if not template:
             return
@@ -1866,6 +1885,13 @@ class MainWindow(QMainWindow):
                 if action == SKIP:
                     self._record_history(remote_name, filepath, "remote", "skipped", 0, "", retry)
                     continue
+                # FR-146 (Overwrite): erase the existing remote file first so the
+                # receiver writes to a clean slate. Some CP/M receivers — notably
+                # XMODEM-1K variants — prompt or stall on an existing file rather
+                # than overwriting silently, which would block the X-Modem
+                # handshake and hang the transfer. Deleting first mirrors the
+                # per-file ERA the Restore wipe uses (FR-153).
+                self._erase_remote_file(remote_name)
             # FR-109: let CP/M return to its prompt before the next command.
             if index > 1:
                 self._wait_for_terminal_idle()
@@ -2092,7 +2118,9 @@ class MainWindow(QMainWindow):
             # buffer that send_file does not flush.
             if ser:
                 ser.reset_input_buffer()
-            self._issue_remote_cmd("send_remote_cmd", "PCGET $1", remote_name)
+            self._issue_remote_cmd(
+                "send_remote_cmd", "PCGET $1", remote_name, cmd_key_1k="send_remote_cmd_1k"
+            )
             self._debug(f"[copy-to-remote] launched PCGET; waiting {delay}s before handshake")
             time.sleep(delay)
             self._debug("[copy-to-remote] starting X-Modem send")
@@ -2102,7 +2130,7 @@ class MainWindow(QMainWindow):
                 progress=self._on_transfer_progress_cb,
                 cancel_check=self._transfer_cancel.is_set,
             )
-            return xm.send_file(filepath)
+            return xm.send_file(filepath, use_1k=self._xmodem_1k_enabled())
         finally:
             if shared:
                 self.serial_mgr.resume_terminal_reads()
@@ -2238,7 +2266,12 @@ class MainWindow(QMainWindow):
             # Launch the CP/M sender (PCPUT) on the Terminal Port, then receive.
             # receive_file drives the handshake (polls with NAK first, then 'C'
             # per NFR-003), so it tolerates PCPUT taking several seconds to arm.
-            self._issue_remote_cmd("recv_remote_cmd", "PCPUT $1", os.path.basename(save_path))
+            self._issue_remote_cmd(
+                "recv_remote_cmd",
+                "PCPUT $1",
+                os.path.basename(save_path),
+                cmd_key_1k="recv_remote_cmd_1k",
+            )
             self._debug(f"[copy-to-host] launched PCPUT; waiting {delay}s before handshake")
             time.sleep(delay)
             self._debug("[copy-to-host] starting X-Modem receive")
@@ -2248,7 +2281,7 @@ class MainWindow(QMainWindow):
                 progress=self._on_transfer_progress_cb,
                 cancel_check=self._transfer_cancel.is_set,
             )
-            return xm.receive_file(save_path)
+            return xm.receive_file(save_path, use_1k=self._xmodem_1k_enabled())
         finally:
             if shared:
                 self.serial_mgr.resume_terminal_reads()
@@ -2604,6 +2637,22 @@ class MainWindow(QMainWindow):
                 os.remove(os.path.join(self.host_dir, name))
             except OSError as e:
                 self._debug(f"[backup] failed to delete {name}: {e!r}")
+
+    def _erase_remote_file(self, name: str) -> None:
+        """Delete a single remote file before an Overwrite upload (FR-146).
+
+        Runs on the upload worker thread. Sends the configured delete command
+        (``delete_remote_cmd``, default ``ERA $1``, FR-117) on the Terminal Port
+        and waits for it to go idle via the capture mechanism, so the receiver
+        program is launched against a name that no longer exists. A blank delete
+        command is a no-op (the upload then relies on overwrite-by-default).
+
+        Satisfies: FR-146.
+        """
+        template = self.settings.get("delete_remote_cmd", "ERA $1")
+        if not template:
+            return
+        self._capture_terminal_response(template.replace("$1", name))
 
     def _wipe_remote_drive(self, names) -> None:
         """Delete every named remote file (Restore destination wipe).
