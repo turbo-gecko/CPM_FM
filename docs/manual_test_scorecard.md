@@ -119,7 +119,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 |----|-------|-----|:------:|:---:|-------|
 | MT-H01 | Host list = default host dir at startup | FR-060 | | | |
 | MT-H02 | Change Directory reloads host list | FR-061/062 | | | |
-| MT-H03 | Host "Update" button acts on BOTH lists | FR-063 | | | |
+| MT-H03 | Host "Update" button refreshes Host list ONLY | FR-063 | | | |
 | MT-H04 | Host group title shows current dir, left-elided | FR-126/UIR-011 | | | |
 
 ### §9.1 File list filter & sort (visual)
@@ -229,6 +229,8 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-W05 | Autoscroll behaviour | UIR-066/062 | | | |
 | MT-W06 | Clear empties area + buffers | FR-095 | | | |
 | MT-W07 | Send with port closed → status msg | FR-098 | | | |
+| MT-W08 | Empty field Send transmits bare EOL | FR-155 | | | |
+| MT-W09 | Caret notation sends control chars (no EOL) | FR-156 | | | |
 
 ### §13 File context-menu actions
 | ID | Title | Req | Result | Env | Notes |

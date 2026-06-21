@@ -17,11 +17,16 @@ import pytest
 pytest.importorskip("PySide6")
 
 from PySide6.QtCore import QSettings  # noqa: E402
-from PySide6.QtWidgets import QApplication, QMessageBox  # noqa: E402
+from PySide6.QtWidgets import (  # noqa: E402
+    QApplication,
+    QDialog,
+    QPushButton,
+)
 
 from cpm_fm.app import MainWindow  # noqa: E402
 from cpm_fm.gui.window_state import WindowState  # noqa: E402
 from cpm_fm.utils import i18n  # noqa: E402
+from cpm_fm.utils.i18n import tr  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
@@ -242,61 +247,68 @@ def test_do_backup_requires_connection(qapp, monkeypatch, state, tmp_path):
 # ------------------------------------------------------ confirmation slot (UIR-088)
 
 
-class _FakeBox:
-    Icon = QMessageBox.Icon
-    ButtonRole = QMessageBox.ButtonRole
-    # The test sets which button the user "clicks": "continue", "cancel", or
-    # "close" (window-manager close, which returns no clicked button).
-    choice = "continue"
+class _StubDialog(QDialog):
+    """A real QDialog subclass whose ``exec`` returns a preset code without
+    entering a modal event loop, and which records the last instance built so a
+    test can inspect its button layout.
 
-    def __init__(self, parent):
-        self._buttons = []
-        self._clicked = None
+    The confirmation slot (`_on_backup_restore_confirm`) builds a genuine
+    QDialog with nested layouts, so the stub must be a real QWidget — replacing
+    the whole class with a plain object would break ``QVBoxLayout(dlg)``.
+    """
 
-    def setIcon(self, icon):
-        pass
-
-    def setWindowTitle(self, title):
-        pass
-
-    def setText(self, text):
-        pass
-
-    def addButton(self, text, role):
-        btn = object()
-        self._buttons.append((role, btn))
-        return btn
-
-    def setDefaultButton(self, btn):
-        pass
+    exec_result = QDialog.DialogCode.Rejected
+    last_instance = None
 
     def exec(self):
-        if _FakeBox.choice == "continue":
-            self._clicked = self._buttons[0][1]
-        elif _FakeBox.choice == "cancel":
-            self._clicked = self._buttons[1][1]
-        else:  # window-manager close
-            self._clicked = None
-        return 0
-
-    def clickedButton(self):
-        return self._clicked
+        type(self).last_instance = self
+        return int(self.exec_result)
 
 
 @pytest.mark.parametrize(
-    "choice,expected",
-    [("continue", True), ("cancel", False), ("close", False)],
+    "result,expected",
+    [
+        (QDialog.DialogCode.Accepted, True),  # user chose Continue
+        (QDialog.DialogCode.Rejected, False),  # Cancel or a window-manager close
+    ],
 )
-def test_on_backup_restore_confirm_records_choice(qapp, monkeypatch, state, choice, expected):
-    # FR-152/UIR-088: Continue => True; Cancel and a window-manager close => False.
+def test_on_backup_restore_confirm_records_choice(qapp, monkeypatch, state, result, expected):
+    # FR-152/UIR-088: Continue => True; Cancel / window-manager close => False.
     # The worker is released by the answered event in every case.
     win = MainWindow(state)
     try:
-        _FakeBox.choice = choice
-        monkeypatch.setattr("cpm_fm.app.QMessageBox", _FakeBox)
+        _StubDialog.exec_result = result
+        monkeypatch.setattr("cpm_fm.app.QDialog", _StubDialog)
         win._backup_confirm_answered.clear()
         win._on_backup_restore_confirm("backup")
         assert win._backup_confirm_result is expected
         assert win._backup_confirm_answered.is_set()
+    finally:
+        win.close()
+
+
+def test_on_backup_restore_confirm_button_order(qapp, monkeypatch, state):
+    # UIR-075: the confirmation dialog places Cancel at the far left and Continue
+    # at the far right. Regression for the old QMessageBox, whose buttons were
+    # ordered by the native platform style and could not honour the convention.
+    win = MainWindow(state)
+    try:
+        _StubDialog.exec_result = QDialog.DialogCode.Rejected
+        _StubDialog.last_instance = None
+        monkeypatch.setattr("cpm_fm.app.QDialog", _StubDialog)
+        win._backup_confirm_answered.clear()
+        win._on_backup_restore_confirm("backup")
+
+        dlg = _StubDialog.last_instance
+        assert dlg is not None
+        # The button row is the last item in the dialog's top-level layout.
+        row = dlg.layout().itemAt(dlg.layout().count() - 1).layout()
+        buttons = [
+            row.itemAt(i).widget()
+            for i in range(row.count())
+            if isinstance(row.itemAt(i).widget(), QPushButton)
+        ]
+        assert buttons[0].text() == tr("button.cancel")
+        assert buttons[-1].text() == tr("button.continue")
     finally:
         win.close()
