@@ -372,6 +372,21 @@ def test_receive_file_recovers_from_corrupt_trailer(tmp_path):
     assert fake.written.count(0x15) == 2
 
 
+def test_receive_file_completes_when_eot_is_lost(tmp_path):
+    # Regression: if the sender goes silent after the last packet (its EOT lost
+    # or garbled) with every byte already received, the receive must finish with
+    # the data rather than NAK forever. Trailing noise (never an EOT) stands in
+    # for the post-packet bytes so the bounded stall loop exits promptly.
+    save = tmp_path / "DOWN.TXT"
+    helper = XModem(_FakeSerial())
+    payload = bytes(range(128))
+    fake = _FakeSerial(_checksum_packet(helper, 1, payload) + b"\x07" * 12)
+    xm = XModem(fake)
+
+    assert xm.receive_file(str(save)) is True
+    assert save.read_bytes() == payload  # the fully-received file is written
+
+
 def test_receive_file_empty_transfer_writes_empty_file(tmp_path):
     # NFR-003: an immediate EOT (no data packets) is a valid, empty transfer.
     save = tmp_path / "EMPTY.TXT"
