@@ -198,7 +198,7 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 |----|-----|-------|----------|
 | MT-H01 | FR-060 | Launch with a config whose Default Host Directory points at your scratch folder. | Host Files list shows that folder's files at startup. |
 | MT-H02 | FR-061, FR-062 | Press **Change Directory**, pick a different folder. | Folder-select dialog appears; Host Files list reloads from the chosen folder (session-only; not written to the config until Save). |
-| MT-H03 [CP/M] | FR-063 | Connect; press the Host Files group's **Update** button (beside **Change Directory**). | Host list refreshes **and** the Remote list is (re)populated via the remote-listing process — this button acts on **both** lists. |
+| MT-H03 [CP/M] | FR-063 | Connect; populate the Remote list; then press the Host Files group's **Update** button (beside **Change Directory**). | Only the Host list refreshes; the Remote list is left untouched (this button acts on the Host list **only**). |
 | MT-H04 | FR-126, UIR-011 | Observe the Host Files group title. Then **Change Directory** to a folder with a **long** absolute path, then narrow the window. | The group title reads **Host Files — `<current directory>`**, tracking the directory each time it changes. When the path is too wide for the group, its **leading** portion is replaced by `…` while the trailing (most specific) part stays visible; narrowing the window elides more, widening it reveals more. |
 
 ---
@@ -276,10 +276,10 @@ guard rails. The decode/handoff logic is unit-tested; MT-D03..D06 need a connect
 |----|-----|-------|----------|
 | MT-D01 | FR-136, FR-139, UIR-081 | Connected, select one or more **Host** files and drag them; hover over the **Remote** pane, then over the **Host** pane (the source). | While dragging over the Remote pane it shows a green drop-zone border; hovering back over the originating Host pane shows **no** highlight (a same-pane drop is rejected). The source files are never moved/removed. |
 | MT-D02 | FR-138, FR-139 | From the OS file manager (Explorer/Finder), drag one or more files over the **Remote** pane, then over the **Host** pane. | The Remote pane highlights as a valid drop zone; the Host pane does **not** accept the external files (no highlight). |
-| MT-D03 [CP/M] | FR-137, FR-080, CR-010 | Select Host file(s) and **drop them onto the Remote pane**; confirm the dialog. | A "Confirm Transfer" dialog asks to copy N file(s) to the remote; on **Yes** the files transfer exactly as Copy to Remote (progress dialog, sequential, Remote list refreshes). On **No**, nothing transfers. With Transport disconnected, the drop instead shows "Transport port not connected" and starts no transfer. |
-| MT-D04 [CP/M] | FR-137 | Select Remote file(s) and **drop them onto the Host pane**; confirm. | "Confirm Transfer" asks to copy N file(s) to the host; on **Yes** they transfer exactly as Copy to Host (progress dialog; Host list refreshes); on **No**, nothing transfers. |
+| MT-D03 [CP/M] | FR-137, FR-080, CR-010 | Select Host file(s) and **drop them onto the Remote pane**; confirm the dialog. | A "Confirm Transfer" dialog asks to copy N file(s) to the remote, with **Cancel** (far left) and **OK** (far right) per UIR-075; on **OK** the files transfer exactly as Copy to Remote (progress dialog, sequential, Remote list refreshes). On **Cancel**, nothing transfers. With Transport disconnected, the drop instead shows "Transport port not connected" and starts no transfer. |
+| MT-D04 [CP/M] | FR-137 | Select Remote file(s) and **drop them onto the Host pane**; confirm. | "Confirm Transfer" asks to copy N file(s) to the host (Cancel left, OK right); on **OK** they transfer exactly as Copy to Host (progress dialog; Host list refreshes); on **Cancel**, nothing transfers. |
 | MT-D05 [CP/M] | FR-138 | Drag file(s) from the OS file manager and **drop them onto the Remote pane**; confirm. | The dropped files (by their real OS paths, even outside the current host directory) transfer to the remote as Copy to Remote. |
-| MT-D06 [CP/M] | FR-137 | Drag Host file(s) onto the Remote pane but click **No** / press Esc on the confirmation. | No transfer starts; no progress dialog appears; the lists are unchanged. |
+| MT-D06 [CP/M] | FR-137 | Drag Host file(s) onto the Remote pane but click **Cancel** / press Esc on the confirmation. | No transfer starts; no progress dialog appears; the lists are unchanged. |
 
 ---
 
@@ -379,6 +379,8 @@ files** — these tests delete data by design.
 | MT-W05 | UIR-066, UIR-062 | Autoscroll (on by default): send enough to overflow; then toggle Autoscroll off. | With Autoscroll on, the view follows new text to the bottom; with it off, the view stays put. |
 | MT-W06 | FR-095 | After traffic, press **Clear**. | Receive area clears; the retained RX/TX buffers are also cleared (subsequent behaviour reflects an empty buffer). |
 | MT-W07 | FR-098 | With the Terminal Port **closed**, type text and press Send. | Status bar: "Terminal port not open - cannot send"; nothing transmitted. |
+| MT-W08 | FR-155 | Connected: with the transmit field **empty**, press Send (or <Enter> in the field). | A bare end-of-line (the configured EOL) is transmitted on its own; on a CP/M remote this advances to a fresh CCP prompt. |
+| MT-W09 [CP/M] | FR-156 | Connected to a program that responds to Ctrl-C (e.g. during a running command): type `^C` in the transmit field and press Send. | The single control byte 0x03 is sent with **no** trailing EOL; the remote receives an interrupt. Also verify `^^` sends a literal caret (with EOL) and `^[` sends ESC (0x1B). |
 
 ---
 

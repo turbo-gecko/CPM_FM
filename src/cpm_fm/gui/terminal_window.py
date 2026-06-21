@@ -111,23 +111,107 @@ class TerminalWindow(QMainWindow):
             self.clear_callback()
 
     def send_text(self):
-        """Satisfies: FR-096."""
-        text = self.tx_entry.text()
-        if text:
-            self.send_callback(text)
-            self.tx_entry.clear()
+        """Satisfies: FR-096.
+
+        Sends the contents of the transmit field. Two behaviours beyond a plain
+        text send:
+
+        * An empty field sends a bare end-of-line (the owner appends the
+          configured EOL), so the user can transmit a lone <Enter>.
+        * Caret notation (``^A``..``^Z``, ``^@``, ``^[``, ``^\\``, ``^]``,
+          ``^_``, ``^?``) is interpreted as the corresponding control byte;
+          ``^^`` is an escape for a literal caret. When the field resolves to
+          control bytes only, no EOL is appended so the control character is
+          sent exactly on its own.
+        """
+        text, is_pure_control = self._parse_send_text(self.tx_entry.text())
+        self.send_callback(text, not is_pure_control)
+        self.tx_entry.clear()
+
+    @staticmethod
+    def _parse_send_text(raw: str) -> tuple[str, bool]:
+        """Interpret caret control-character notation in the transmit field.
+
+        Returns ``(text, is_pure_control)`` where ``text`` is the field with
+        recognised ``^X`` escapes replaced by their control bytes, and
+        ``is_pure_control`` is True when the result is non-empty and contains
+        only control characters (so the caller can suppress the trailing EOL).
+        """
+        out: list[str] = []
+        has_printable = False
+        has_control = False
+        i = 0
+        n = len(raw)
+        while i < n:
+            ch = raw[i]
+            if ch == "^" and i + 1 < n:
+                nxt = raw[i + 1]
+                if nxt == "^":
+                    # ^^ is the escape for a literal caret.
+                    out.append("^")
+                    has_printable = True
+                    i += 2
+                    continue
+                code = ord(nxt.upper())
+                if 0x40 <= code <= 0x5F:
+                    # ^@ -> 0x00, ^A -> 0x01, ... ^Z -> 0x1A, ^[ -> 0x1B (ESC),
+                    # ^\ -> 0x1C, ^] -> 0x1D, ^_ -> 0x1F. (^^ handled above.)
+                    out.append(chr(code - 0x40))
+                    has_control = True
+                    i += 2
+                    continue
+                if nxt == "?":
+                    # ^? -> DEL (0x7F).
+                    out.append("\x7f")
+                    has_control = True
+                    i += 2
+                    continue
+                # Unrecognised escape: keep the caret as a literal character.
+                out.append(ch)
+                has_printable = True
+                i += 1
+                continue
+            out.append(ch)
+            if ord(ch) < 0x20 or ord(ch) == 0x7F:
+                has_control = True
+            else:
+                has_printable = True
+            i += 1
+        text = "".join(out)
+        is_pure_control = bool(text) and has_control and not has_printable
+        return text, is_pure_control
 
     def write_text(self, text):
         """
-        Appends text to the receive area.
+        Appends text to the receive area, processing backspaces (\b).
 
         Satisfies: FR-091, UIR-062.
-
-        insertPlainText preserves existing content and does not add newlines.
         """
         cursor = self.receive_area.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
-        cursor.insertText(text)
+
+        # Insert character by character so backspaces (\b) can erase the
+        # preceding character. Line endings are normalised so that CR, LF, and
+        # the CRLF pair each produce exactly one new line — inserting '\r' and
+        # '\n' separately would otherwise yield a blank line between every line.
+        i = 0
+        n = len(text)
+        while i < n:
+            char = text[i]
+            if char == '\b':
+                cursor.deletePreviousChar()
+            elif char == '\r':
+                # Collapse a CRLF pair into a single line break.
+                if i + 1 < n and text[i + 1] == '\n':
+                    i += 1
+                cursor.insertText('\n')
+            else:
+                cursor.insertText(char)
+            i += 1
+
+        # Ensure the cursor is updated in the widget
+        self.receive_area.setTextCursor(cursor)
+
         if self.chk_scroll.isChecked():  # UIR-062: autoscroll when enabled.
             self.receive_area.moveCursor(QTextCursor.MoveOperation.End)
             self.receive_area.ensureCursorVisible()

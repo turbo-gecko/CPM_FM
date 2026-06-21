@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QGroupBox,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QMainWindow,
     QMenu,
@@ -36,6 +37,7 @@ from PySide6.QtWidgets import (
 from cpm_fm.gui.about_dialog import AboutDialog
 from cpm_fm.gui.config_dialogs import GeneralConfigDialog, SerialConfigDialog
 from cpm_fm.gui.conflict_dialog import CANCEL, SKIP, FileConflictDialog
+from cpm_fm.gui.dialog_buttons import build_button_row
 from cpm_fm.gui.file_action_dialog import FileActionDialog
 from cpm_fm.gui.file_list_widget import FileListWidget
 from cpm_fm.gui.filename_validation_dialog import FilenameValidationDialog
@@ -495,12 +497,13 @@ class MainWindow(QMainWindow):
         host_layout = QVBoxLayout(host_group)
 
         # UIR-011: a top row with the "Change Directory" and "Update" (refresh
-        # both lists, FR-063) buttons sized equally (stretch factor 1 each).
+        # the Host Files list only, FR-063) buttons sized equally (stretch
+        # factor 1 each).
         host_top = QHBoxLayout()
         change_dir_btn = QPushButton(clicked=self.change_host_dir)
         self._register_text(change_dir_btn.setText, "main.change_directory")
         host_top.addWidget(change_dir_btn, 1)
-        refresh_btn = QPushButton(clicked=self.refresh_all)
+        refresh_btn = QPushButton(clicked=self.refresh_host_files)
         self._register_text(refresh_btn.setText, "main.update")
         host_top.addWidget(refresh_btn, 1)
         host_layout.addLayout(host_top)
@@ -1327,13 +1330,17 @@ class MainWindow(QMainWindow):
         """
         self._local_echo = enabled
 
-    def handle_terminal_send(self, text):
+    def handle_terminal_send(self, text, append_eol: bool = True):
         """
         Satisfies: FR-092, FR-093, FR-094, FR-098.
 
         May be called from the GUI thread (Send button) or a worker thread
         (the remote-list refresh). Sends data and buffers it directly; the
         local-echo display is marshalled to the GUI thread via term_write.
+
+        ``append_eol`` is set False by the Terminal window when the transmit
+        field resolves to a bare control character (e.g. ``^C``), so that the
+        control byte is sent on its own without a trailing EOL.
         """
         if not self.serial_mgr.terminal_connected:
             self.set_status(tr("status.terminal_not_open_send"))
@@ -1343,7 +1350,7 @@ class MainWindow(QMainWindow):
         eol_char = EOL_MAP.get(eol, "\r")
 
         # Prevent double-terminators if already appended (e.g. in _do_refresh_remote_logic)
-        if not text.endswith(eol_char):
+        if append_eol and not text.endswith(eol_char):
             text += eol_char
 
         self.serial_mgr.send_data("terminal", text)
@@ -1406,33 +1413,41 @@ class MainWindow(QMainWindow):
     def do_disconnect(self):
         """
         Satisfies: FR-050-FR-058.
+
+        Robustness: the close attempts are unconditional — they do NOT depend
+        on the terminal_connected / transport_connected status flags. Those
+        flags can drift out of sync with the real port state (e.g. the port is
+        still open and communicating but a flag was cleared), and a guarded
+        disconnect would then refuse to act, leaving the comms sessions open.
+        The underlying close_*_port() methods are safe to call when the port is
+        already closed (they no-op and return True), so always attempting the
+        close is the correct, defensive behaviour.
         """
         term_port = self.settings.get("terminal_port")
         trans_port = self.settings.get("transport_port")
 
-        # FR-050/FR-051: close the Terminal Port if open; on failure show an
-        # error dialog and cancel the current workflow.
-        if self.serial_mgr.terminal_connected:
-            if not self.serial_mgr.close_terminal_port():
-                QMessageBox.critical(
-                    self, tr("dialog.error.title"), tr("error.terminal_unable_close")
-                )
-                self._update_indicators()
-                return
-            # FR-052 (flag cleared by close_terminal_port) / FR-053 (status text).
-            self.set_status(tr("status.terminal_port_closed"))
-            # FR-058: the remote listing was read over the now-closed Terminal
-            # Port, so it is stale — clear it.
-            self._clear_remote_files()
+        # FR-050/FR-051: close the Terminal Port; on failure show an error
+        # dialog and cancel the current workflow.
+        if not self.serial_mgr.close_terminal_port():
+            QMessageBox.critical(
+                self, tr("dialog.error.title"), tr("error.terminal_unable_close")
+            )
+            self._update_indicators()
+            return
+        # FR-052 (flag cleared by close_terminal_port) / FR-053 (status text).
+        self.set_status(tr("status.terminal_port_closed"))
+        # FR-058: the remote listing was read over the now-closed Terminal
+        # Port, so it is stale — clear it.
+        self._clear_remote_files()
 
-        # FR-054: same physical port — clear the Transport flag, no separate
-        # close. Also drop the shared reference so it cannot point at the
-        # now-closed Terminal Port object.
         if trans_port == term_port:
+            # FR-054: same physical port — it was just closed above as the
+            # Terminal Port. Clear the Transport flag and drop the shared
+            # reference so it cannot point at the now-closed port object.
             self.serial_mgr.transport_port = None
             self.serial_mgr.transport_connected = False
-        # FR-055/FR-056/FR-057: different port — close it if open.
-        elif self.serial_mgr.transport_connected:
+        else:
+            # FR-055/FR-056/FR-057: different port — always attempt to close it.
             if not self.serial_mgr.close_transport_port():
                 QMessageBox.critical(
                     self, tr("dialog.error.title"), tr("error.transport_unable_close")
@@ -1443,16 +1458,6 @@ class MainWindow(QMainWindow):
         self._update_indicators()
 
     # ----------------------------------------------------------- remote files
-
-    def refresh_all(self):
-        """
-        Satisfies: FR-063.
-
-        FR-063: the central Refresh button refreshes both lists; the Update
-        button (Remote Files group) refreshes the remote list only (FR-073).
-        """
-        self.refresh_host_files()
-        self.refresh_remote_files()
 
     def refresh_remote_files(self):
         """
@@ -1638,8 +1643,13 @@ class MainWindow(QMainWindow):
             if direction == "remote"
             else "dialog.dnd_confirm.to_host"
         )
-        reply = QMessageBox.question(self, tr("dialog.dnd_confirm.title"), tr(key, count=count))
-        return reply == QMessageBox.StandardButton.Yes
+        # UIR-075: Cancel far left, OK far right (was a Yes/No QMessageBox whose
+        # order followed the native platform style).
+        return self._confirm_dialog(
+            tr("dialog.dnd_confirm.title"),
+            tr(key, count=count),
+            tr("button.ok"),
+        )
 
     def do_copy_to_remote(self):
         """
@@ -2457,6 +2467,54 @@ class MainWindow(QMainWindow):
         self._backup_confirm_answered.wait()
         return self._backup_confirm_result
 
+    def _confirm_dialog(
+        self,
+        title: str,
+        message: str,
+        accept_label: str,
+        *,
+        warning: bool = False,
+        default_accept: bool = True,
+    ) -> bool:
+        """Modal Cancel/<accept> confirmation honouring the house button order.
+
+        A custom QDialog (not QMessageBox) is used so the buttons obey the house
+        convention — Cancel at the far left, the affirmative button at the far
+        right (UIR-075). QMessageBox orders its buttons by the native platform
+        style and would not honour that. Returns True when the user chose the
+        affirmative button (False on Cancel or a window-manager close).
+
+        Satisfies: UIR-075.
+        """
+        dlg = QDialog(self)
+        dlg.setWindowTitle(title)
+        dlg.setModal(True)
+        dlg_layout = QVBoxLayout(dlg)
+
+        msg_row = QHBoxLayout()
+        if warning:
+            # Warning icon beside the message text, mirroring QMessageBox.Warning.
+            icon_label = QLabel()
+            icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning)
+            icon_label.setPixmap(icon.pixmap(48, 48))
+            icon_label.setAlignment(Qt.AlignmentFlag.AlignTop)
+            msg_row.addWidget(icon_label)
+        text_label = QLabel(message)
+        text_label.setWordWrap(True)
+        msg_row.addWidget(text_label, 1)
+        dlg_layout.addLayout(msg_row)
+
+        accept_btn = QPushButton(accept_label)
+        accept_btn.clicked.connect(dlg.accept)
+        cancel_btn = QPushButton(tr("button.cancel"))
+        cancel_btn.clicked.connect(dlg.reject)
+        (accept_btn if default_accept else cancel_btn).setDefault(True)
+        dlg_layout.addLayout(
+            build_button_row(accept_button=accept_btn, reject_button=cancel_btn)
+        )
+
+        return dlg.exec() == QDialog.DialogCode.Accepted
+
     def _on_backup_restore_confirm(self, operation: str) -> None:
         """Show the destructive-operation warning and record the user's choice.
 
@@ -2479,15 +2537,14 @@ class MainWindow(QMainWindow):
                 if operation == "backup"
                 else "dialog.backup_restore.restore"
             )
-            box = QMessageBox(self)
-            box.setIcon(QMessageBox.Icon.Warning)
-            box.setWindowTitle(tr(title_key))
-            box.setText(tr(msg_key))
-            continue_btn = box.addButton(tr("button.continue"), QMessageBox.ButtonRole.AcceptRole)
-            cancel_btn = box.addButton(tr("button.cancel"), QMessageBox.ButtonRole.RejectRole)
-            box.setDefaultButton(cancel_btn)
-            box.exec()
-            self._backup_confirm_result = box.clickedButton() is continue_btn
+            # Cancel is the safe default for a destructive operation (UIR-088).
+            self._backup_confirm_result = self._confirm_dialog(
+                tr(title_key),
+                tr(msg_key),
+                tr("button.continue"),
+                warning=True,
+                default_accept=False,
+            )
         finally:
             self._backup_confirm_answered.set()
 

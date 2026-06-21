@@ -502,6 +502,51 @@ def test_disconnect_keeps_remote_list_when_close_fails(qapp, monkeypatch, state)
         win.close()
 
 
+def test_host_update_button_refreshes_host_only(qapp, monkeypatch, state):
+    # FR-063 (OI-14, v2.12): the Host Files group's Update button refreshes the
+    # Host list only and must NOT re-populate the Remote list.
+    from PySide6.QtWidgets import QPushButton
+
+    win = MainWindow(state)
+    try:
+        calls = []
+        monkeypatch.setattr(win, "refresh_host_files", lambda: calls.append("host"))
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: calls.append("remote"))
+        update_btn = next(
+            b
+            for b in win.host_group.findChildren(QPushButton)
+            if b.text() == i18n.tr("main.update")
+        )
+        update_btn.click()
+        qapp.processEvents()
+        assert calls == ["host"]
+    finally:
+        win.close()
+
+
+def test_disconnect_attempts_close_when_flags_false(qapp, monkeypatch, state):
+    # FR-050/FR-055 (OI-24): the close attempts are unconditional. Even when the
+    # status flags read disconnected (they may have drifted out of sync with the
+    # real port state), pressing Disconnect must still try to close both ports.
+    win = MainWindow(state)
+    try:
+        win.settings = {"terminal_port": "COM3", "transport_port": "COM4"}
+        win.serial_mgr.terminal_connected = False
+        win.serial_mgr.transport_connected = False
+        closed = []
+        monkeypatch.setattr(
+            win.serial_mgr, "close_terminal_port", lambda: (closed.append("term"), True)[1]
+        )
+        monkeypatch.setattr(
+            win.serial_mgr, "close_transport_port", lambda: (closed.append("trans"), True)[1]
+        )
+        win.do_disconnect()
+        qapp.processEvents()
+        assert closed == ["term", "trans"]
+    finally:
+        win.close()
+
+
 def test_connect_shared_port_assigns_transport_port(qapp, monkeypatch, state):
     # FR-037: when the Transport and Terminal Ports are the same physical port,
     # connecting must point transport_port at the open terminal port object (not
@@ -568,6 +613,85 @@ def test_terminal_window_write_and_clear(qapp):
         assert cleared == [1]  # FR-095: Clear invokes the buffer-clear callback.
     finally:
         term.deleteLater()
+
+
+def test_terminal_write_text_line_endings(qapp):
+    # FR-091: CR, LF, and the CRLF pair each produce exactly one new line in the
+    # receive area — no blank line between lines. Backspaces erase a character.
+    term = TerminalWindow(None, send_callback=lambda t, eol: None)
+    try:
+        term.write_text("L1\r\nL2\r\nL3")
+        assert term.receive_area.toPlainText() == "L1\nL2\nL3"
+        assert term.receive_area.document().blockCount() == 3
+
+        term.clear_text()
+        term.write_text("A\rB\rC")  # lone CR also a single break
+        assert term.receive_area.toPlainText() == "A\nB\nC"
+
+        term.clear_text()
+        term.write_text("AB\bC")  # backspace erases the B
+        assert term.receive_area.toPlainText() == "AC"
+    finally:
+        term.deleteLater()
+
+
+def test_parse_send_text_control_characters(qapp):
+    # FR-156: caret notation maps to control bytes; ^^ is a literal caret; an
+    # unrecognised escape is left literal. is_pure_control is True only when the
+    # result is non-empty and contains no printable characters.
+    parse = TerminalWindow._parse_send_text
+    assert parse("^C") == ("\x03", True)  # Ctrl-C, pure control
+    assert parse("^c") == ("\x03", True)  # case-insensitive
+    assert parse("^@") == ("\x00", True)  # NUL
+    assert parse("^[") == ("\x1b", True)  # ESC
+    assert parse("^?") == ("\x7f", True)  # DEL
+    assert parse("^^") == ("^", False)  # literal caret (printable)
+    assert parse("DIR") == ("DIR", False)  # plain text
+    assert parse("AT^C") == ("AT\x03", False)  # mixed -> not pure control
+    assert parse("") == ("", False)  # empty -> not pure control
+    assert parse("^") == ("^", False)  # trailing lone caret kept literal
+    assert parse("^9") == ("^9", False)  # unrecognised escape kept literal
+
+
+def test_terminal_send_bare_enter_and_control(qapp):
+    # FR-155/FR-156: send_text forwards the (parsed) text and an append_eol flag.
+    sent = []
+    term = TerminalWindow(None, send_callback=lambda t, eol: sent.append((t, eol)))
+    try:
+        # Empty field -> bare EOL (text empty, append_eol True so the owner adds EOL).
+        term.tx_entry.setText("")
+        term.send_text()
+        assert sent[-1] == ("", True)
+        # Pure control -> sent verbatim, no EOL appended.
+        term.tx_entry.setText("^C")
+        term.send_text()
+        assert sent[-1] == ("\x03", False)
+        # Plain text -> EOL appended.
+        term.tx_entry.setText("DIR")
+        term.send_text()
+        assert sent[-1] == ("DIR", True)
+        assert term.tx_entry.text() == ""  # field cleared after each send
+    finally:
+        term.deleteLater()
+
+
+def test_handle_terminal_send_append_eol_flag(qapp, monkeypatch, state):
+    # FR-094/FR-156: handle_terminal_send appends the configured EOL by default,
+    # but sends the data verbatim when append_eol is False.
+    win = MainWindow(state)
+    try:
+        win.settings = {"eol": "CR"}
+        win.serial_mgr.terminal_connected = True
+        sent = []
+        monkeypatch.setattr(
+            win.serial_mgr, "send_data", lambda port, data: sent.append(data) or True
+        )
+        win.handle_terminal_send("DIR")
+        assert sent[-1] == "DIR\r"  # default: EOL appended
+        win.handle_terminal_send("\x03", append_eol=False)
+        assert sent[-1] == "\x03"  # bare control byte, no EOL
+    finally:
+        win.close()
 
 
 def test_geometry_and_last_config_persist_across_sessions(qapp, state, tmp_path):
@@ -1795,15 +1919,11 @@ def test_decode_drop_external_files_remote_only(qapp, state, tmp_path):
 def test_drop_host_to_remote_starts_copy_to_remote(qapp, monkeypatch, state):
     # FR-137: dropping host files onto the Remote pane (confirmed) starts the
     # Copy to Remote batch worker with host-dir-joined paths.
-    from PySide6.QtWidgets import QMessageBox
-
     win = MainWindow(state)
     try:
         win.serial_mgr.terminal_connected = True
         win.serial_mgr.transport_connected = True
-        monkeypatch.setattr(
-            "cpm_fm.app.QMessageBox.question", lambda *a, **k: QMessageBox.StandardButton.Yes
-        )
+        monkeypatch.setattr(win, "_confirm_dnd_transfer", lambda *a, **k: True)
         _RecordingThread.instances = []
         monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
         win._on_files_dropped("remote", "host", ["A.TXT", "B.TXT"], False)
@@ -1820,15 +1940,11 @@ def test_drop_host_to_remote_starts_copy_to_remote(qapp, monkeypatch, state):
 def test_drop_remote_to_host_starts_copy_to_host(qapp, monkeypatch, state):
     # FR-137: dropping remote files onto the Host pane (confirmed) starts the
     # Copy to Host batch worker.
-    from PySide6.QtWidgets import QMessageBox
-
     win = MainWindow(state)
     try:
         win.serial_mgr.terminal_connected = True
         win.serial_mgr.transport_connected = True
-        monkeypatch.setattr(
-            "cpm_fm.app.QMessageBox.question", lambda *a, **k: QMessageBox.StandardButton.Yes
-        )
+        monkeypatch.setattr(win, "_confirm_dnd_transfer", lambda *a, **k: True)
         _RecordingThread.instances = []
         monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
         win._on_files_dropped("host", "remote", ["F.TXT"], False)
@@ -1843,15 +1959,11 @@ def test_drop_remote_to_host_starts_copy_to_host(qapp, monkeypatch, state):
 def test_drop_external_files_use_absolute_paths(qapp, monkeypatch, state):
     # FR-138: an external OS drop onto the Remote pane transfers the dropped
     # absolute paths verbatim (not re-joined under the host directory).
-    from PySide6.QtWidgets import QMessageBox
-
     win = MainWindow(state)
     try:
         win.serial_mgr.terminal_connected = True
         win.serial_mgr.transport_connected = True
-        monkeypatch.setattr(
-            "cpm_fm.app.QMessageBox.question", lambda *a, **k: QMessageBox.StandardButton.Yes
-        )
+        monkeypatch.setattr(win, "_confirm_dnd_transfer", lambda *a, **k: True)
         _RecordingThread.instances = []
         monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
         abs_paths = [os.path.join("C:", os.sep, "ext", "A.TXT")]
@@ -1885,15 +1997,11 @@ def test_drop_requires_both_flags(qapp, monkeypatch, state):
 
 def test_drop_cancelled_confirmation_starts_no_transfer(qapp, monkeypatch, state):
     # FR-137: declining the confirmation dialog starts no transfer.
-    from PySide6.QtWidgets import QMessageBox
-
     win = MainWindow(state)
     try:
         win.serial_mgr.terminal_connected = True
         win.serial_mgr.transport_connected = True
-        monkeypatch.setattr(
-            "cpm_fm.app.QMessageBox.question", lambda *a, **k: QMessageBox.StandardButton.No
-        )
+        monkeypatch.setattr(win, "_confirm_dnd_transfer", lambda *a, **k: False)
         _RecordingThread.instances = []
         monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
         win._on_files_dropped("remote", "host", ["A.TXT"], False)
@@ -1901,6 +2009,37 @@ def test_drop_cancelled_confirmation_starts_no_transfer(qapp, monkeypatch, state
     finally:
         win.close()
         win.deleteLater()
+
+
+def test_dnd_confirm_dialog_button_order_and_labels(qapp, monkeypatch, state):
+    # UIR-075: the drag-and-drop transfer confirmation puts Cancel at the far
+    # left and OK at the far right (was a Yes/No QMessageBox ordered by the
+    # native platform style).
+    from PySide6.QtWidgets import QDialog, QPushButton
+
+    class _StubDialog(QDialog):
+        last = None
+
+        def exec(self):
+            type(self).last = self
+            return QDialog.DialogCode.Rejected.value
+
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr("cpm_fm.app.QDialog", _StubDialog)
+        assert win._confirm_dnd_transfer("remote", 2) is False  # Rejected
+        dlg = _StubDialog.last
+        assert dlg is not None
+        row = dlg.layout().itemAt(dlg.layout().count() - 1).layout()
+        buttons = [
+            row.itemAt(i).widget()
+            for i in range(row.count())
+            if isinstance(row.itemAt(i).widget(), QPushButton)
+        ]
+        assert buttons[0].text() == i18n.tr("button.cancel")
+        assert buttons[-1].text() == i18n.tr("button.ok")
+    finally:
+        win.close()
 
 
 def test_app_icon_resource_present_and_loadable(qapp):
