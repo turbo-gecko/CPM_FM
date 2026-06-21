@@ -60,6 +60,28 @@ def test_send_file_reports_progress_per_packet(tmp_path):
     assert calls == [(1, 128, 300), (2, 256, 300), (3, 300, 300)]
 
 
+def test_send_file_1k_uses_stx_1024_byte_frames(tmp_path):
+    # NFR-003/UIR-089: with use_1k, host->remote sends use 1024-byte STX frames.
+    # 1100 bytes -> two 1024-byte packets (1024 real, 76 real + 948 pad).
+    path = tmp_path / "UP1K.TXT"
+    path.write_bytes(bytes(range(256)) * 4 + bytes(76))  # 1100 bytes
+
+    # Receiver requests CRC ('C'), then one ACK per packet + EOT ACK.
+    fake = _FakeSerial(b"C" + ACK * 3)
+    calls: list[tuple[int, int, int | None]] = []
+    xm = XModem(fake, progress=lambda b, n, t: calls.append((b, n, t)))
+
+    assert xm.send_file(str(path), use_1k=True) is True
+    # Progress counts real file bytes; total is the 1100-byte file size.
+    assert calls == [(1, 1024, 1100), (2, 1100, 1100)]
+    # Frames are STX-led 1K packets (1 STX + 2 seq + 1024 data + 2 CRC = 1029),
+    # never the 128-byte SOH form.
+    assert xm.STX in fake.written
+    assert fake.written[:1] == STX
+    first_frame = fake.written[: 1 + 2 + 1024 + 2]
+    assert len(first_frame) == 1029
+
+
 def _checksum_packet(helper: XModem, seq: int, payload: bytes) -> bytes:
     # A checksum-mode SOH packet: SOH + seq + ~seq + 128 data + 1-byte checksum.
     chk = helper._calculate_checksum(payload)
@@ -289,6 +311,28 @@ def test_receive_file_accepts_1k_stx_frame(tmp_path):
     payload = bytes([0x5A]) * 1024
     fake = _FakeSerial(_checksum_packet_1k(helper, 1, payload) + EOT)
     assert XModem(fake).receive_file(str(save)) is True
+    assert save.read_bytes() == payload
+
+
+def _crc_packet_1k(helper: XModem, seq: int, payload: bytes) -> bytes:
+    # A CRC-mode STX (1024-byte) packet: 2-byte big-endian CRC trailer.
+    crc = helper._crc16(payload)
+    return STX + bytes([seq, 255 - seq]) + payload + bytes([(crc >> 8) & 0xFF, crc & 0xFF])
+
+
+def test_receive_file_1k_polls_crc_first(tmp_path):
+    # NFR-003/UIR-089: XMODEM-1K is a CRC protocol — with use_1k the receiver
+    # must lead with 'C' (not NAK) so a 1K-capable sender switches to 1024-byte
+    # STX frames. The default (checksum-first) path is pinned separately by
+    # test_receive_file_polls_checksum_not_crc_first.
+    save = tmp_path / "DOWN.BIN"
+    helper = XModem(_FakeSerial())
+    payload = bytes([0x5A]) * 1024
+    fake = _FakeSerial(_crc_packet_1k(helper, 1, payload) + EOT)
+    xm = XModem(fake)
+
+    assert xm.receive_file(str(save), use_1k=True) is True
+    assert fake.written[:1] == b"C"  # first poll is the CRC start character
     assert save.read_bytes() == payload
 
 

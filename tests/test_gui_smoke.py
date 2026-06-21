@@ -82,13 +82,13 @@ def _fake_xmodem_cls(success=True, calls=None):
         def _result(self):
             return next(seq) if seq is not None else success
 
-        def send_file(self, path):
+        def send_file(self, path, use_1k=False):
             if calls is not None:
                 calls.append(path)
             self._report()
             return self._result()
 
-        def receive_file(self, path):
+        def receive_file(self, path, use_1k=False):
             if calls is not None:
                 calls.append(path)
             self._report()
@@ -1276,7 +1276,7 @@ def test_cancelled_transfer_is_not_reported_as_error(qapp, monkeypatch, state):
             def __init__(self, ser, monitor=None, progress=None, cancel_check=None):
                 pass
 
-            def send_file(self, path):
+            def send_file(self, path, use_1k=False):
                 win._transfer_cancel.set()  # user cancels during the transfer
                 return False  # X-Modem aborted
 
@@ -1305,7 +1305,7 @@ def test_cancel_after_partial_batch_refreshes_and_skips_rest(qapp, monkeypatch, 
             def __init__(self, ser, monitor=None, progress=None, cancel_check=None):
                 pass
 
-            def send_file(self, path):
+            def send_file(self, path, use_1k=False):
                 calls.append(os.path.basename(path))
                 if len(calls) == 1:
                     return True  # first file succeeds
@@ -1401,8 +1401,10 @@ def test_file_action_dialog_multi_file_shows_readonly_list(qapp):
 
 def test_general_config_remote_group_first(qapp, monkeypatch):
     # UIR-041: the General Config dialog gathers the remote command fields
-    # (List Files, Receive/Send, Rename, Delete) into a "Remote" group placed
-    # first, with Rename/Delete labelled without the "Remote" suffix.
+    # (List Files, Receive/Send, the XMODEM-1K toggle + 1K commands, Rename,
+    # Delete) into a "Remote" group placed first, with Rename/Delete labelled
+    # without the "Remote" suffix. UIR-089/UIR-090: the 1K toggle and its two
+    # command fields sit directly below Send to Remote.
     from PySide6.QtWidgets import QFormLayout, QGroupBox
 
     from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
@@ -1417,13 +1419,23 @@ def test_general_config_remote_group_first(qapp, monkeypatch):
         first = layout.itemAt(0).widget()
         assert isinstance(first, QGroupBox)
         assert first.title() == "Remote"
-        # Its rows hold exactly the five remote command fields, in order.
+        # Its rows hold the remote command fields, in order, with the XMODEM-1K
+        # toggle and its 1K command fields directly below Send to Remote.
         form = first.layout()
         labels = [
             form.itemAt(i, QFormLayout.ItemRole.LabelRole).widget().text()
             for i in range(form.rowCount())
         ]
-        assert labels == ["List Files", "Receive from Remote", "Send to Remote", "Rename", "Delete"]
+        assert labels == [
+            "List Files",
+            "Receive from Remote",
+            "Send to Remote",
+            "Use XMODEM-1K",
+            "Receive from Remote (1K)",
+            "Send to Remote (1K)",
+            "Rename",
+            "Delete",
+        ]
         # The non-remote settings remain reachable for saving (e.g. EOL).
         assert "eol" in dlg.entries and "host_directory" in dlg.entries
     finally:
@@ -1468,6 +1480,39 @@ def test_general_config_save_keeps_current_host_dir(qapp, state, monkeypatch):
         callback({"host_directory": "/path/C"})
         assert win.host_dir == "/path/C"
         assert win.settings["host_directory"] == "/path/C"
+    finally:
+        win.close()
+
+
+def test_issue_remote_cmd_uses_1k_command_when_enabled(qapp, state, monkeypatch):
+    # UIR-089/UIR-090: with XMODEM-1K on, a non-blank _1k command replaces the
+    # standard launch command; a blank _1k command falls back to the standard
+    # one; with 1K off the standard command is always used.
+    win = MainWindow(state)
+    try:
+        sent: list[str] = []
+        monkeypatch.setattr(win, "handle_terminal_send", sent.append)
+
+        # 1K off -> standard command regardless of any _1k value.
+        win.settings = {
+            "xmodem_1k": "OFF",
+            "send_remote_cmd": "PCGET $1",
+            "send_remote_cmd_1k": "PCGET1K $1",
+        }
+        win._issue_remote_cmd("send_remote_cmd", "PCGET $1", "A.TXT", cmd_key_1k="send_remote_cmd_1k")
+        assert sent == ["PCGET A.TXT"]
+
+        # 1K on with a non-blank _1k command -> the 1K command is used.
+        sent.clear()
+        win.settings["xmodem_1k"] = "ON"
+        win._issue_remote_cmd("send_remote_cmd", "PCGET $1", "A.TXT", cmd_key_1k="send_remote_cmd_1k")
+        assert sent == ["PCGET1K A.TXT"]
+
+        # 1K on but the _1k command blank -> fall back to the standard command.
+        sent.clear()
+        win.settings["send_remote_cmd_1k"] = ""
+        win._issue_remote_cmd("send_remote_cmd", "PCGET $1", "A.TXT", cmd_key_1k="send_remote_cmd_1k")
+        assert sent == ["PCGET A.TXT"]
     finally:
         win.close()
 
@@ -1518,6 +1563,39 @@ def test_general_config_has_echo_transfer_field(qapp, monkeypatch):
         assert combo.currentText() == "OFF"  # default
     finally:
         dlg.deleteLater()
+
+
+def test_general_config_xmodem_1k_checkbox_round_trips(qapp, monkeypatch):
+    # UIR-089/UIR-090: the dialog exposes a "Use XMODEM-1K" checkbox persisted as
+    # xmodem_1k ("OFF"/"ON") plus two blank-by-default 1K command fields. The
+    # checkbox reflects the current setting and saves back as "ON"/"OFF".
+    from PySide6.QtWidgets import QCheckBox
+
+    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+
+    monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
+
+    # Default (no setting): unchecked, blank 1K command fields.
+    saved: dict = {}
+    dlg = GeneralConfigDialog(None, {}, saved.update)
+    try:
+        chk = dlg.entries["xmodem_1k"]
+        assert isinstance(chk, QCheckBox)
+        assert chk.isChecked() is False
+        assert dlg.entries["recv_remote_cmd_1k"].text() == ""
+        assert dlg.entries["send_remote_cmd_1k"].text() == ""
+        chk.setChecked(True)
+        dlg.save()
+        assert saved["xmodem_1k"] == "ON"
+    finally:
+        dlg.deleteLater()
+
+    # An existing "ON" setting renders the checkbox checked.
+    dlg2 = GeneralConfigDialog(None, {"xmodem_1k": "ON"}, lambda s: None)
+    try:
+        assert dlg2.entries["xmodem_1k"].isChecked() is True
+    finally:
+        dlg2.deleteLater()
 
 
 def test_config_menu_has_language_submenu(qapp, state):
@@ -2119,7 +2197,7 @@ def test_cancelled_transfer_records_cancelled_history(qapp, monkeypatch, state):
             def __init__(self, ser, monitor=None, progress=None, cancel_check=None):
                 pass
 
-            def send_file(self, path):
+            def send_file(self, path, use_1k=False):
                 win._transfer_cancel.set()
                 return False
 

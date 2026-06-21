@@ -57,11 +57,11 @@ def _fake_xmodem_cls(calls):
         def __init__(self, ser, monitor=None, progress=None, cancel_check=None):
             pass
 
-        def send_file(self, path):
+        def send_file(self, path, use_1k=False):
             calls.append(path)
             return True
 
-        def receive_file(self, path):
+        def receive_file(self, path, use_1k=False):
             calls.append(path)
             return True
 
@@ -267,6 +267,31 @@ def test_remote_batch_skips_existing_file(qapp, monkeypatch, state, tmp_path):
         statuses = {(e["filename"], e["status"]) for e in win.transfer_history.get_entries()}
         assert ("FOO.TXT", "skipped") in statuses
         assert ("BAR.TXT", "success") in statuses
+    finally:
+        win.close()
+
+
+def test_remote_batch_overwrite_erases_then_sends(qapp, monkeypatch, state, tmp_path):
+    # FR-146: choosing Overwrite on an upload conflict erases the existing remote
+    # file first (so a receiver that won't silently overwrite cannot stall the
+    # handshake) and then sends the file.
+    win = MainWindow(state)
+    try:
+        calls = []
+        _arm(win, monkeypatch, calls)
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: None)
+        monkeypatch.setattr(win, "_fresh_remote_names", lambda: {"FOO.TXT"})
+        erased = []
+        monkeypatch.setattr(win, "_erase_remote_file", lambda name: erased.append(name))
+        monkeypatch.setattr(win, "_prompt_conflict", lambda name, direction: (OVERWRITE, False))
+        foo = tmp_path / "FOO.TXT"
+        foo.write_text("x", encoding="utf-8")
+        win._transfer_to_remote_batch([str(foo)])
+        qapp.processEvents()
+        assert erased == ["FOO.TXT"]  # erased before the send
+        assert calls == [str(foo)]  # then sent
+        statuses = {(e["filename"], e["status"]) for e in win.transfer_history.get_entries()}
+        assert ("FOO.TXT", "success") in statuses
     finally:
         win.close()
 
