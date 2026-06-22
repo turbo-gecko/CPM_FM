@@ -121,7 +121,7 @@ A draggable splitter sits between the panes so you can resize them.
 
 ## 6. Getting Started — A Typical Session
 
-1. **Configure your serial port(s).** Open **Config → Serial**, select the correct port(s) and matching speed/parity/etc., and click Save. (See [Section 7](#7-configuration).)
+1. **Configure your serial port(s).** Open **Config → Serial**, select the correct port(s) and matching speed/parity/etc., and click Save to apply them. (On a first run, before you have saved a configuration file, a notice reminds you that these settings apply to this session only until you do **File → Save** in step 3.) (See [Section 7](#7-configuration).)
 2. **Set your host working directory.** Open **Config → General** and choose a Host Directory, or use the **Change Directory** button in the Host pane later.
 3. **Save your configuration** via **File → Save** so it reloads automatically next time.
 4. **Connect** using the toolbar **Connect** button. Watch the status-bar indicators turn green.
@@ -181,11 +181,13 @@ Configure CP/M command templates and behavior:
 | **Viewer Command** | The program used to view/edit a file; `$1` is replaced with the file path. | `notepad $1` |
 | **Host Directory** | The host working directory, saved with the configuration. | — |
 
+> **The Save button in each dialog.** The **Save** button in the Serial dialog writes **only the serial settings** to the configuration file you currently have loaded, leaving the general settings in that file untouched. Likewise, the **Save** button in the General dialog writes **only the general settings**, leaving the serial settings untouched. Neither button opens a file picker. If no configuration file is loaded yet, the change is applied to the current session only and a warning reminds you to use **File → Save** to write it to a file. To save *everything* to a file (or to a new file), use **File → Save**.
+
 ### File Menu Actions
 
 - **New** — Saves the current configuration, then resets all settings to their defaults and closes any open ports.
 - **Load** — Opens a saved JSON configuration. The loaded file's name appears in the title bar, and its host directory (if stored) is restored.
-- **Save** — Writes the current settings to a JSON file. The saved configuration is remembered and reloaded automatically on the next launch.
+- **Save** — Writes the **entire** current configuration (all serial and general settings) to a JSON file you choose. The saved configuration is remembered and reloaded automatically on the next launch.
 - **Exit** — Closes all ports and saves your window geometry and the current configuration name.
 
 ---

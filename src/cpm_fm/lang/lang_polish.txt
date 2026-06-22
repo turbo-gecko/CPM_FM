@@ -76,6 +76,8 @@ status.saved_config = Konfiguracja zapisana w {path}
 status.new_config_created = Utworzono nową konfigurację
 status.serial_settings_updated = Zaktualizowano ustawienia portu szeregowego
 status.general_settings_updated = Zaktualizowano ustawienia ogólne
+status.serial_settings_saved = Zapisano ustawienia portu szeregowego w {path}
+status.general_settings_saved = Zapisano ustawienia ogólne w {path}
 
 # --- Dialog titles -------------------------------------------------------------
 dialog.error.title = Błąd
@@ -127,6 +129,7 @@ error.download_failed = Błąd pobierania {name}
 error.transfer_failed = Błąd transferu {name}; pomijanie pozostałych plików
 warning.select_upload = Proszę wybrać jeden lub więcej plików do wysłania
 warning.select_download = Proszę wybrać jeden lub więcej plików do pobrania
+warning.no_config_loaded = Nie wczytano żadnego pliku konfiguracyjnego. Ustawienia zastosowano tylko w bieżącej sesji. Użyj Plik > Zapisz, aby zapisać je do pliku konfiguracyjnego.
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = Zastosuj

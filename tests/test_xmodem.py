@@ -372,19 +372,69 @@ def test_receive_file_recovers_from_corrupt_trailer(tmp_path):
     assert fake.written.count(0x15) == 2
 
 
+class _SilentTailSerial:
+    """Serves seeded bytes, then returns b"" *immediately* to simulate a sender
+    that has finished and gone quiet. ``in_waiting`` always reports readable so
+    ``_read_byte`` never sleeps to a real timeout — once the buffer is exhausted
+    every read is an instant empty "timeout", exercising the silent-retry bound
+    without slow tests.
+    """
+
+    def __init__(self, to_read: bytes):
+        self._inbuf = bytearray(to_read)
+        self.written = bytearray()
+
+    @property
+    def in_waiting(self) -> int:
+        return 1
+
+    def read(self, n: int = 1) -> bytes:
+        chunk = bytes(self._inbuf[:n])
+        del self._inbuf[:n]
+        return chunk
+
+    def write(self, data: bytes) -> int:
+        self.written += data
+        return len(data)
+
+    def reset_input_buffer(self) -> None:
+        pass
+
+
 def test_receive_file_completes_when_eot_is_lost(tmp_path):
-    # Regression: if the sender goes silent after the last packet (its EOT lost
+    # Regression: if the sender goes SILENT after the last packet (its EOT lost
     # or garbled) with every byte already received, the receive must finish with
-    # the data rather than NAK forever. Trailing noise (never an EOT) stands in
-    # for the post-packet bytes so the bounded stall loop exits promptly.
+    # the data after a bounded number of silent NAK retries rather than hang.
     save = tmp_path / "DOWN.TXT"
     helper = XModem(_FakeSerial())
     payload = bytes(range(128))
-    fake = _FakeSerial(_checksum_packet(helper, 1, payload) + b"\x07" * 12)
+    fake = _SilentTailSerial(_checksum_packet(helper, 1, payload))  # no EOT
     xm = XModem(fake)
 
     assert xm.receive_file(str(save)) is True
     assert save.read_bytes() == payload  # the fully-received file is written
+
+
+def test_receive_file_resyncs_after_stray_bytes_between_packets(tmp_path):
+    # Regression: a burst of stray bytes mid-transfer (e.g. a lost frame-start
+    # turning a 1K payload into noise) must NOT truncate the receive — while the
+    # sender is still transmitting the receiver keeps NAKing and resyncs on the
+    # next real frame. A bound that counted stray bytes (not just silence) would
+    # wrongly give up here and write a short file.
+    save = tmp_path / "DOWN.TXT"
+    helper = XModem(_FakeSerial())
+    p1 = bytes(range(128))
+    p2 = bytes([0xAA]) * 128
+    stream = (
+        _checksum_packet(helper, 1, p1)
+        + b"\x07" * 20  # stray noise, well over any stall budget
+        + _checksum_packet(helper, 2, p2)
+        + EOT
+    )
+    xm = XModem(_FakeSerial(stream))
+
+    assert xm.receive_file(str(save)) is True
+    assert save.read_bytes() == p1 + p2  # both packets present, nothing dropped
 
 
 def test_receive_file_empty_transfer_writes_empty_file(tmp_path):

@@ -181,7 +181,7 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 | MT-L02 | FR-011, NFR-002 | Load `examples/serial_settings.json` (flat), then load `examples/settings_a.json` (nested). | Each load **fully replaces** the settings store; both shapes are accepted; serial settings normalise (Connect works with either). |
 | MT-L03 | FR-012 | Hand-edit a config to add an unknown key (e.g. `"foo": 123`), load it, then Save to a new file. | App accepts the file (no rejection); the unknown key survives verbatim in the saved output and does not change behaviour. |
 | MT-L04 | FR-017 | Update to populate the Remote list, then File > Load any config. | Remote Files list is **cleared** on load. |
-| MT-L05 | FR-013, FR-014 | File > Save to a new path; reopen the file in a text editor. | JSON file written with the current serial + general settings. |
+| MT-L05 | FR-013, FR-014 | File > Save to a new path; reopen the file in a text editor. | JSON file written with the **entire** settings store — all current serial + general settings (the full-store save, as opposed to the per-group dialog saves MT-L13/MT-L14). |
 | MT-L06 | FR-006, FR-010, FR-013 | Save into folder X; then File > Load. | The Load dialog opens in folder X (the last-used **config** folder), independent of the Host directory. |
 | MT-L07 | FR-005 | Load a config, then fully quit and relaunch (`cpm-fm`). | On next start the app auto-reloads and applies that same config file. |
 | MT-L08 | FR-005, FR-003 | After MT-L07, delete or rename the remembered config file, relaunch. | App starts **unconfigured** (no crash) because the remembered file no longer parses/exists. |
@@ -189,6 +189,9 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 | MT-L10 | FR-018 | With **no** remembered file, File > New. | A Save dialog appears first; choosing a file then resets to defaults; **cancelling** the Save dialog cancels New entirely (config, ports, lists retained). |
 | MT-L11 | FR-125, UIR-005 | Launch unconfigured, then File > Load `examples/serial_settings.json`. | Before loading, the title bar reads **CP/M File Manager** alone; after loading it reads **CP/M File Manager — serial_settings** (file base name only — no path, no `.json`). |
 | MT-L12 | FR-125 | After MT-L11, File > **New**. | The title bar reverts to **CP/M File Manager** alone (the config name is dropped). |
+| MT-L13 | FR-020a | Load a config file. Open Config > **Serial**, change a serial value (e.g. Speed), and press **Save**. Reopen the loaded file in a text editor. | **No** Save dialog appears. The serial value is updated in the file; every general setting in the file (List Files, EOL, Host Directory, etc.) is **unchanged**. Status bar confirms the serial settings were saved. |
+| MT-L14 | FR-021a | Load a config file. Open Config > **General**, change a general value (e.g. EOL), and press **Save**. Reopen the loaded file in a text editor. | **No** Save dialog appears. The general value is updated in the file; every serial setting in the file (ports, speed, parity, etc.) is **unchanged**. Status bar confirms the general settings were saved. |
+| MT-L15 | FR-020a, FR-021a | Launch **unconfigured** (or File > New so no file is loaded). Open Config > Serial (or General), change a value, and press **Save**. | A **warning** dialog states no configuration file is loaded and that File > Save must be used to persist; **no file is written**. The change still takes effect for the running session (e.g. Connect uses the new serial value). |
 
 ---
 

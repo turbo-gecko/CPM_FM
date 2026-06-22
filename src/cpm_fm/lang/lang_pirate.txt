@@ -81,6 +81,8 @@ status.saved_config = Stashed orders in {path}
 status.new_config_created = New ship's orders created
 status.serial_settings_updated = Signal flags updated
 status.general_settings_updated = General orders updated
+status.serial_settings_saved = Signal flags stowed in {path}
+status.general_settings_saved = General orders stowed in {path}
 
 # --- Dialog titles -------------------------------------------------------------
 dialog.error.title = Blunder!
@@ -132,6 +134,7 @@ error.download_failed = Draggin' in {name} failed
 error.transfer_failed = Loot haul of {name} failed; rest o' the booty skipped
 warning.select_upload = Hand over one or more loot items to upload!
 warning.select_download = Pick one or more treasures to bring home!
+warning.no_config_loaded = No chart be loaded, matey. Yer orders be set for this voyage only. Use File > Save to commit 'em to a chart.
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = Aye
