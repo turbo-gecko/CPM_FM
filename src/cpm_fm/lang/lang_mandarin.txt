@@ -166,6 +166,8 @@ config.serial.stop_bits = 停止位
 config.serial.flow_control = 流控
 config.serial.msec_char = 字符间隔 (ms)
 config.serial.msec_line = 行间隔 (ms)
+config.serial.terminal_timeout = 终端超时 (ms)
+config.serial.transport_timeout = 传输超时 (ms)
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = 常规配置

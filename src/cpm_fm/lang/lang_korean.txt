@@ -166,6 +166,8 @@ config.serial.stop_bits = 정지 비트
 config.serial.flow_control = 흐름 제어
 config.serial.msec_char = 문자당 ms
 config.serial.msec_line = 줄당 ms
+config.serial.terminal_timeout = 터미널 시간 초과 (ms)
+config.serial.transport_timeout = 전송 시간 초과 (ms)
 
 # --- General Configuration dialog ---------------------------------------------
 config.general.title = 일반 설정

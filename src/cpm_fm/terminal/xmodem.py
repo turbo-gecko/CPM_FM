@@ -85,6 +85,39 @@ class XModem:
             self.monitor("rx", data)
         return data
 
+    def _read_exact(self, n: int, idle_timeout: float = 3.0) -> bytes:
+        """Read exactly ``n`` bytes, reassembling them across several underlying
+        reads if necessary.
+
+        The transport port is opened with a short read timeout (0.1s), so a
+        single ``ser.read(n)`` returns only the bytes that happened to arrive in
+        that window — for a 1024-byte XMODEM-1K frame that is far fewer than ``n``
+        at any normal baud rate, which truncates the frame and desynchronises the
+        stream (a stray byte downstream then reads as EOT and ends the transfer
+        early). This accumulates until ``n`` bytes have arrived, giving up only
+        after ``idle_timeout`` seconds elapse with no new byte (a genuine stall)
+        or on cancellation (FR-120), returning whatever was gathered.
+
+        Satisfies: FR-082, FR-086, NFR-003.
+        """
+        buf = bytearray()
+        last = time.time()
+        while len(buf) < n:
+            if self._cancelled():
+                break
+            chunk = self.ser.read(n - len(buf))
+            if chunk:
+                buf += chunk
+                last = time.time()
+            elif (time.time() - last) >= idle_timeout:
+                break
+            else:
+                time.sleep(0.005)
+        data = bytes(buf)
+        if self.monitor and data:
+            self.monitor("rx", data)
+        return data
+
     def _read_byte(self, timeout: Optional[float] = None) -> bytes:
         """
         Return the next byte to arrive within the timeout (b"" on timeout).
@@ -352,10 +385,13 @@ class XModem:
 
             # Read the rest of the frame: Seq + ~Seq + data + trailer. SOH
             # frames hold 128 data bytes, STX frames hold 1024 (XMODEM-1K).
+            # _read_exact reassembles each field in full even when the port's
+            # short read timeout would otherwise slice a large 1K payload across
+            # several reads and desynchronise the stream.
             size = 128 if char == self.SOH else 1024
-            header = self._read(2)
-            payload = self._read(size)
-            trailer = self._read(2 if crc_mode else 1)
+            header = self._read_exact(2)
+            payload = self._read_exact(size)
+            trailer = self._read_exact(2 if crc_mode else 1)
 
             if (
                 len(header) < 2

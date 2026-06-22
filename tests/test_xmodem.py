@@ -320,6 +320,51 @@ def _crc_packet_1k(helper: XModem, seq: int, payload: bytes) -> bytes:
     return STX + bytes([seq, 255 - seq]) + payload + bytes([(crc >> 8) & 0xFF, crc & 0xFF])
 
 
+class _ChunkedSerial:
+    """Serves seeded bytes but returns at most ``cap`` bytes per ``read()`` call,
+    mimicking the transport port's short (0.1s) read timeout slicing a large 1K
+    frame across several reads. ``receive_file`` must reassemble the full frame
+    rather than truncating it on the first short read."""
+
+    def __init__(self, to_read: bytes, cap: int = 64):
+        self._inbuf = bytearray(to_read)
+        self._cap = cap
+        self.written = bytearray()
+
+    @property
+    def in_waiting(self) -> int:
+        return len(self._inbuf)
+
+    def read(self, n: int = 1) -> bytes:
+        k = min(n, self._cap, len(self._inbuf))
+        chunk = bytes(self._inbuf[:k])
+        del self._inbuf[:k]
+        return chunk
+
+    def write(self, data: bytes) -> int:
+        self.written += data
+        return len(data)
+
+    def reset_input_buffer(self) -> None:
+        pass
+
+
+def test_receive_file_1k_frame_split_across_short_reads(tmp_path):
+    # Regression: the transport port's 0.1s read timeout means ser.read(1024)
+    # returns only a fraction of a 1K frame, so the frame must be reassembled
+    # across several reads. A single short read would truncate the payload and
+    # desync the stream (premature EOT, short file). Here the fake returns at
+    # most 64 bytes per read; the full 1024-byte payload must still arrive whole.
+    save = tmp_path / "DOWN.BIN"
+    helper = XModem(_FakeSerial())
+    payload = bytes(range(256)) * 4  # 1024 distinct-ish bytes
+    fake = _ChunkedSerial(_crc_packet_1k(helper, 1, payload) + EOT, cap=64)
+    xm = XModem(fake)
+
+    assert xm.receive_file(str(save), use_1k=True) is True
+    assert save.read_bytes() == payload  # full 1024 bytes, nothing truncated
+
+
 def test_receive_file_1k_polls_crc_first(tmp_path):
     # NFR-003/UIR-089: XMODEM-1K is a CRC protocol — with use_1k the receiver
     # must lead with 'C' (not NAK) so a 1K-capable sender switches to 1024-byte

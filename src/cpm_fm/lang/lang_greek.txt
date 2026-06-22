@@ -166,6 +166,8 @@ config.serial.stop_bits = Stop bits
 config.serial.flow_control = Έλεγχος ροής
 config.serial.msec_char = ms/χαρακτήρα
 config.serial.msec_line = ms/γραμμή
+config.serial.terminal_timeout = Χρονικό όριο τερματικού (ms)
+config.serial.transport_timeout = Χρονικό όριο μεταφοράς (ms)
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = Γενικές Ρυθμίσεις

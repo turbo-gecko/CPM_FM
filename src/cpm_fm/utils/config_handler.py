@@ -16,6 +16,12 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "flow": "NONE",
     "msec_char": "0",
     "msec_line": "0",
+    # Per-port serial read timeouts, in milliseconds. Applied as the pyserial
+    # read timeout for each port. The transport timeout in particular bounds how
+    # long each X-Modem read waits, so it must be long enough for a frame to
+    # accumulate at the configured baud rate. Default 100 ms.
+    "terminal_timeout_ms": "100",
+    "transport_timeout_ms": "100",
     "list_files_cmd": "DIR",
     "recv_remote_cmd": "PCPUT $1",
     "send_remote_cmd": "PCGET $1",

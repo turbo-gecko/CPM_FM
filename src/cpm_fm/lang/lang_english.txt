@@ -192,6 +192,8 @@ config.serial.stop_bits = Stop Bits
 config.serial.flow_control = Flow Control
 config.serial.msec_char = msec/char
 config.serial.msec_line = msec/line
+config.serial.terminal_timeout = Terminal Timeout (ms)
+config.serial.transport_timeout = Transfer Timeout (ms)
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = General Config
