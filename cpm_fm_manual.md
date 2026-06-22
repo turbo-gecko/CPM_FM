@@ -150,10 +150,14 @@ Configure how the program talks to the serial hardware:
 | **Flow Control** | NONE, XON/XOFF, RTS/CTS, DSR/DTR | NONE |
 | **Msec per Char** | 0 – 255 | 0 |
 | **Msec per Line** | 0 – 255 | 0 |
+| **Terminal Timeout (ms)** | 10 – 5000 | 100 |
+| **Transfer Timeout (ms)** | 10 – 5000 | 100 |
 
 > **Terminal Port vs. Transport Port:** The *Terminal Port* carries interactive commands and directory listings; the *Transport Port* carries X-Modem file transfers. They may be the **same** physical port or **two different** ports. When they share one port, the program automatically pauses terminal reading during transfers to keep the data clean.
 
 > **Msec per Char / Msec per Line** add small pacing delays when sending data — useful for slower CP/M systems that can drop characters if fed too fast.
+
+> **Terminal Timeout / Transfer Timeout** set the serial read timeout (in milliseconds) for each port. The default is **100 ms**. When using **XMODEM 1K** transfers, it is recommended to increase these to **1000 ms** to improve reliability, as the larger 1024-byte blocks take longer to arrive than the default timeout allows for in a single read.
 
 ### Config → General
 
@@ -382,6 +386,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 | Stop Bits | 1 |
 | Flow Control | NONE |
 | Msec per Char / Line | 0 / 0 |
+| Terminal / Transfer Timeout | 100 ms / 100 ms |
 | List Files Cmd | `DIR` |
 | Recv from Remote | `PCPUT $1` |
 | Send to Remote | `PCGET $1` |
