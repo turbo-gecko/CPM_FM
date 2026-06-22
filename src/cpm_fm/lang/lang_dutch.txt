@@ -22,6 +22,7 @@ menu.config.serial = Serieel
 menu.config.general = Algemeen
 menu.config.language = Taal
 menu.help = Help
+menu.help.manual = Handleiding
 menu.help.about = Over
 
 # --- Toolbar -----------------------------------------------------------------
@@ -221,6 +222,8 @@ error.retransfer_file_missing = Opnieuw overdragen niet mogelijk: bestand niet g
 # --- About dialog --------------------------------------------------------------
 about.title = Over
 about.version = Versie {version}
+manual.title = Gebruikershandleiding
+manual.load_error = Kon de gebruikershandleiding niet laden van: {path}
 
 # --- File list filter / sort (Feature 3) --------------------------------------
 main.filter_placeholder = Bestanden filteren…
@@ -243,3 +246,4 @@ dialog.backup_restore.restore_title = Herstellen bevestigen
 dialog.backup_restore.backup = Back-up maken VERWIJDERT ALLE bestanden in de hostmap en vervangt ze door alle bestanden van het externe station. Dit kan niet ongedaan worden gemaakt. Doorgaan?
 dialog.backup_restore.restore = Herstellen VERWIJDERT ALLE bestanden op het externe station en vervangt ze door alle bestanden uit de hostmap. Dit kan niet ongedaan worden gemaakt. Doorgaan?
 button.continue = Doorgaan
+button.close = Sluiten

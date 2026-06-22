@@ -27,6 +27,7 @@ menu.config.serial = Serial
 menu.config.general = General
 menu.config.language = Language
 menu.help = Help
+menu.help.manual = Manual
 menu.help.about = About
 
 # --- Toolbar -------------------------------------------------------------------
@@ -164,6 +165,7 @@ button.save = Save
 button.ok = OK
 button.cancelling = Cancelling…
 button.continue = Continue
+button.close = Close
 
 # --- Transfer progress dialog --------------------------------------------------
 transfer.title.send = Sending File
@@ -246,3 +248,7 @@ error.retransfer_file_missing = Cannot re-transfer: file not found: {path}
 # --- About dialog --------------------------------------------------------------
 about.title = About
 about.version = Version {version}
+
+# --- Manual viewer -------------------------------------------------------------
+manual.title = User Manual
+manual.load_error = Could not load the user manual from: {path}
