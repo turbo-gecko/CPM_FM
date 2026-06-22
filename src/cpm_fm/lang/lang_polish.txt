@@ -22,6 +22,7 @@ menu.config.serial = Szeregowy
 menu.config.general = Ogólne
 menu.config.language = Język
 menu.help = Pomoc
+menu.help.manual = Podręcznik
 menu.help.about = O programie
 
 # --- Toolbar -------------------------------------------------------------------
@@ -221,6 +222,8 @@ error.retransfer_file_missing = Nie można przesłać ponownie: nie znaleziono p
 # --- About dialog --------------------------------------------------------------
 about.title = O programie
 about.version = Wersja {version}
+manual.title = Podręcznik użytkownika
+manual.load_error = Nie można wczytać podręcznika użytkownika z: {path}
 
 # --- File list filter / sort (Feature 3) --------------------------------------
 main.filter_placeholder = Filtruj pliki…
@@ -243,3 +246,4 @@ dialog.backup_restore.restore_title = Potwierdź przywracanie
 dialog.backup_restore.backup = Tworzenie kopii zapasowej USUNIE WSZYSTKIE pliki w katalogu hosta i zastąpi je wszystkimi plikami z napędu zdalnego. Tej operacji nie można cofnąć. Kontynuować?
 dialog.backup_restore.restore = Przywracanie USUNIE WSZYSTKIE pliki na napędzie zdalnym i zastąpi je wszystkimi plikami z katalogu hosta. Tej operacji nie można cofnąć. Kontynuować?
 button.continue = Kontynuuj
+button.close = Zamknij

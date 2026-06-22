@@ -1,10 +1,10 @@
 import ast
 import logging
-import os
 import re
 from pathlib import Path
-from typing import Dict, List, Optional
-from pydantic import BaseModel, Field
+from typing import Optional
+
+from pydantic import BaseModel
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -35,9 +35,9 @@ class RequirementExtractor(ast.NodeVisitor):
     """
     def __init__(self, module_path: str):
         self.module_path = module_path
-        self.found_elements: List[CodeElement] = []
+        self.found_elements: list[CodeElement] = []
 
-    def _extract_req_ids(self, docstring: Optional[str]) -> List[tuple]:
+    def _extract_req_ids(self, docstring: Optional[str]) -> list[tuple]:
         """
         Extracts every requirement ID from a docstring's 'Satisfies:' line.
 
@@ -62,7 +62,7 @@ class RequirementExtractor(ast.NodeVisitor):
         if not docstring:
             return []
 
-        ids: List[tuple] = []
+        ids: list[tuple] = []
         # Consider the text after the first "Satisfies:" up to the end of that
         # line, so prose elsewhere in the docstring cannot leak IDs in.
         match = re.search(r"Satisfies:\s*(.+)", docstring)
@@ -93,8 +93,8 @@ class RequirementExtractor(ast.NodeVisitor):
 
         # De-duplicate, preserving order. An explicit mention wins over a
         # range-derived one for the same ID (from_range=False is "stronger").
-        best: Dict[str, bool] = {}
-        order: List[str] = []
+        best: dict[str, bool] = {}
+        order: list[str] = []
         for req_id, from_range in ids:
             if req_id not in best:
                 order.append(req_id)
@@ -129,7 +129,7 @@ class RequirementExtractor(ast.NodeVisitor):
         self._record(node.name, ast.get_docstring(node))
         self.generic_visit(node)
 
-def scan_codebase(root_dir: str) -> List[CodeElement]:
+def scan_codebase(root_dir: str) -> list[CodeElement]:
     """
     Scans all .py files in the given directory for requirements mapped in docstrings.
     
@@ -139,7 +139,7 @@ def scan_codebase(root_dir: str) -> List[CodeElement]:
     Returns:
         A list of CodeElement objects representing the discovered mappings.
     """
-    all_elements: List[CodeElement] = []
+    all_elements: list[CodeElement] = []
     root_path = Path(root_dir)
     
     if not root_path.exists():
@@ -150,7 +150,7 @@ def scan_codebase(root_dir: str) -> List[CodeElement]:
     
     for py_file in root_path.rglob("*.py"):
         try:
-            with open(py_file, "r", encoding="utf-8") as f:
+            with open(py_file, encoding="utf-8") as f:
                 source = f.read()
             
             tree = ast.parse(source)

@@ -440,7 +440,8 @@ def test_change_drive_requires_open_terminal(qapp, monkeypatch, state):
         qapp.processEvents()
         assert started == []
         assert win.remote_list.count() == 0
-        assert win.statusBar().currentMessage() == "Terminal port not connected - cannot read file list"
+        expected_msg = "Terminal port not connected - cannot read file list"
+        assert win.statusBar().currentMessage() == expected_msg
     finally:
         win.close()
 
@@ -484,7 +485,8 @@ def test_update_button_shows_error_dialog_when_disconnected(qapp, monkeypatch, s
         qapp.processEvents()
         assert errors == [("Error", "Terminal port not connected")]
         assert win.remote_list.count() == 0
-        assert win.statusBar().currentMessage() == "Terminal port not connected - cannot read file list"
+        expected_msg = "Terminal port not connected - cannot read file list"
+        assert win.statusBar().currentMessage() == expected_msg
     finally:
         win.close()
 
@@ -891,6 +893,137 @@ def test_about_dialog_contents(qapp):
         assert link.openExternalLinks()
         buttons = [b.text() for b in dlg.findChildren(QPushButton)]
         assert buttons == ["OK"]
+    finally:
+        dlg.deleteLater()
+
+
+def test_help_menu_contains_manual_action(qapp, state):
+    # UIR-004: the Help menu lists a Manual action (FR-023).
+    from PySide6.QtWidgets import QMenu
+
+    win = MainWindow(state)
+    try:
+        help_menus = [m for m in win.menuBar().findChildren(QMenu) if m.title() == "Help"]
+        assert help_menus, "Help menu not found on the menu bar"
+        labels = [act.text() for act in help_menus[0].actions()]
+        assert "Manual" in labels
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_menu_manual_opens_dialog(qapp, monkeypatch, state):
+    # FR-023: selecting Help > Manual constructs and shows the Manual dialog.
+    win = MainWindow(state)
+    try:
+        opened = []
+
+        class _FakeManual:
+            def __init__(self, parent=None):
+                opened.append(parent)
+
+            def isVisible(self):
+                return False
+
+            def show(self):
+                pass
+
+        monkeypatch.setattr("cpm_fm.app.ManualDialog", _FakeManual)
+        win.menu_manual()
+        assert opened == [win]
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_menu_manual_reuses_open_window(qapp, monkeypatch, state):
+    # FR-023: a second Help > Manual raises the existing window instead of
+    # opening a second copy.
+    win = MainWindow(state)
+    try:
+        constructed = []
+        raised = []
+
+        class _FakeManual:
+            def __init__(self, parent=None):
+                constructed.append(parent)
+
+            def isVisible(self):
+                return True
+
+            def show(self):
+                pass
+
+            def raise_(self):
+                raised.append(True)
+
+            def activateWindow(self):
+                pass
+
+        monkeypatch.setattr("cpm_fm.app.ManualDialog", _FakeManual)
+        win.menu_manual()  # opens
+        win.menu_manual()  # should raise the existing one
+        assert len(constructed) == 1
+        assert raised == [True]
+    finally:
+        win.close()
+        win.deleteLater()
+
+
+def test_manual_dialog_contents(qapp):
+    # UIR-091: titled "User Manual", renders the manual as HTML, Close button.
+    from PySide6.QtWidgets import QPushButton, QTextBrowser
+
+    from cpm_fm.gui.manual_dialog import ManualDialog, load_manual_markdown
+
+    dlg = ManualDialog()
+    try:
+        assert dlg.windowTitle() == "User Manual"
+        assert not dlg.isModal()
+        browser = dlg.findChild(QTextBrowser)
+        assert browser is not None
+        assert browser.openExternalLinks()
+        # The manual rendered, so its text is present in the view.
+        assert "CP/M File Manager" in browser.toPlainText()
+        buttons = [b.text() for b in dlg.findChildren(QPushButton)]
+        assert buttons == ["Close"]
+    finally:
+        dlg.deleteLater()
+
+    # The manual file is bundled and readable from source.
+    assert load_manual_markdown() is not None
+
+
+def test_render_manual_html_anchors_match_toc_links(qapp):
+    # UIR-091: the manual is rendered to HTML with GitHub-style heading anchors
+    # so its table-of-contents links navigate within the document.
+    import re
+
+    from cpm_fm.gui.manual_dialog import load_manual_markdown, render_manual_html
+
+    md = load_manual_markdown()
+    assert md is not None
+    html = render_manual_html(md)
+    assert "<html>" in html
+    heading_ids = set(re.findall(r'<h[1-6][^>]*id="([^"]+)"', html))
+    toc_links = re.findall(r"\(#([a-z0-9-]+)\)", md)
+    assert toc_links, "expected the manual to contain in-document TOC links"
+    missing = [link for link in toc_links if link not in heading_ids]
+    assert missing == [], f"TOC links without a matching heading anchor: {missing}"
+
+
+def test_manual_dialog_handles_missing_file(qapp, monkeypatch):
+    # DR-047: an unreadable manual shows a message rather than crashing.
+    from PySide6.QtWidgets import QTextBrowser
+
+    from cpm_fm.gui import manual_dialog
+
+    monkeypatch.setattr(manual_dialog, "load_manual_markdown", lambda: None)
+    dlg = manual_dialog.ManualDialog()
+    try:
+        browser = dlg.findChild(QTextBrowser)
+        assert browser is not None
+        assert browser.toPlainText().strip() != ""
     finally:
         dlg.deleteLater()
 
@@ -1680,19 +1813,25 @@ def test_issue_remote_cmd_uses_1k_command_when_enabled(qapp, state, monkeypatch)
             "send_remote_cmd": "PCGET $1",
             "send_remote_cmd_1k": "PCGET1K $1",
         }
-        win._issue_remote_cmd("send_remote_cmd", "PCGET $1", "A.TXT", cmd_key_1k="send_remote_cmd_1k")
+        win._issue_remote_cmd(
+            "send_remote_cmd", "PCGET $1", "A.TXT", cmd_key_1k="send_remote_cmd_1k"
+        )
         assert sent == ["PCGET A.TXT"]
 
         # 1K on with a non-blank _1k command -> the 1K command is used.
         sent.clear()
         win.settings["xmodem_1k"] = "ON"
-        win._issue_remote_cmd("send_remote_cmd", "PCGET $1", "A.TXT", cmd_key_1k="send_remote_cmd_1k")
+        win._issue_remote_cmd(
+            "send_remote_cmd", "PCGET $1", "A.TXT", cmd_key_1k="send_remote_cmd_1k"
+        )
         assert sent == ["PCGET1K A.TXT"]
 
         # 1K on but the _1k command blank -> fall back to the standard command.
         sent.clear()
         win.settings["send_remote_cmd_1k"] = ""
-        win._issue_remote_cmd("send_remote_cmd", "PCGET $1", "A.TXT", cmd_key_1k="send_remote_cmd_1k")
+        win._issue_remote_cmd(
+            "send_remote_cmd", "PCGET $1", "A.TXT", cmd_key_1k="send_remote_cmd_1k"
+        )
         assert sent == ["PCGET A.TXT"]
     finally:
         win.close()

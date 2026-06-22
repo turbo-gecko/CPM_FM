@@ -20,6 +20,7 @@ bundle:
 
 * ``version.txt`` -> bundle root (``.``)
 * ``lang_*.txt``  -> ``cpm_fm/lang``
+* ``cpm_fm_manual.md`` -> ``cpm_fm/docs`` (see DR-047, manual_dialog.py)
 
 The ``DATAS`` list below encodes exactly that. Do not change the destinations
 without also changing the ``Path(__file__)`` logic in ``version.py`` / ``i18n.py``.
@@ -84,6 +85,12 @@ def build_datas() -> list[tuple[str, str]]:
     if os.path.isfile(runtime_icon):
         datas.append((runtime_icon, os.path.join("cpm_fm", "icons")))
 
+    # DR-047/FR-023: bundled user manual -> cpm_fm/docs, matching
+    # manual_dialog.py's __file__-relative lookup (MANUAL_PATH).
+    manual = os.path.join(ROOT, "src", "cpm_fm", "docs", "cpm_fm_manual.md")
+    if os.path.isfile(manual):
+        datas.append((manual, os.path.join("cpm_fm", "docs")))
+
     # qt-material ships its own QSS templates / icon resources that are loaded at
     # runtime; PyInstaller's static analysis won't find them, so collect them.
     datas += collect_data_files("qt_material")
@@ -97,7 +104,17 @@ def build_datas() -> list[tuple[str, str]]:
 
 #: ``serial.tools.list_ports`` is imported normally in app.py, but list it
 #: explicitly so a future refactor to a lazy import can't silently break the build.
-HIDDEN_IMPORTS = ["serial.tools.list_ports"]
+#: Python-Markdown loads its extensions by dotted path at run time (see
+#: ``manual_dialog._MD_EXTENSIONS``), so the static analyser won't see them;
+#: list them here so the manual (UIR-091) renders in a frozen build.
+HIDDEN_IMPORTS = [
+    "serial.tools.list_ports",
+    "markdown.extensions.toc",
+    "markdown.extensions.tables",
+    "markdown.extensions.fenced_code",
+    "markdown.extensions.attr_list",
+    "markdown.extensions.sane_lists",
+]
 
 #: Large optional libraries the app never uses. ``wx`` is present but unused in
 #: the dev venv (see CLAUDE.md); ``tkinter`` was fully removed at the v1.3 Qt

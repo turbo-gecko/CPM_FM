@@ -22,6 +22,7 @@ menu.config.serial = Seriale
 menu.config.general = Generale
 menu.config.language = Lingua
 menu.help = Aiuto
+menu.help.manual = Manuale
 menu.help.about = Informazioni
 
 # --- Toolbar ------------------------------------------------------------------
@@ -221,6 +222,8 @@ error.retransfer_file_missing = Impossibile ritrasferire: file non trovato: {pat
 # --- About dialog -------------------------------------------------------------
 about.title = Informazioni
 about.version = Versione {version}
+manual.title = Manuale utente
+manual.load_error = Impossibile caricare il manuale utente da: {path}
 
 # --- File list filter / sort (Feature 3) --------------------------------------
 main.filter_placeholder = Filtra file…
@@ -243,3 +246,4 @@ dialog.backup_restore.restore_title = Conferma ripristino
 dialog.backup_restore.backup = Il backup ELIMINERÀ TUTTI i file nella directory host e li sostituirà con tutti i file dell'unità remota. L'operazione non può essere annullata. Continuare?
 dialog.backup_restore.restore = Il ripristino ELIMINERÀ TUTTI i file sull'unità remota e li sostituirà con tutti i file della directory host. L'operazione non può essere annullata. Continuare?
 button.continue = Continua
+button.close = Chiudi
