@@ -61,10 +61,10 @@ status.successfully_downloaded = Pomyślnie pobrano {count} plik(i)
 status.transfer_cancelled = Transfer anulowany po {count} plik(ach)
 status.downloading_for_viewing = Pobieranie {name} do podglądu...
 status.opening_viewer = Otwieranie podglądu...
-status.terminal_not_open_rename = Port terminala nie jest otwarty - zmiana nazwy niemożliwa
-status.terminal_not_open_delete = Port terminala nie jest otwarty - usuwanie niemożliwe
-status.terminal_not_open_send = Port terminala nie jest otwarty - wysyłanie niemożliwe
-status.terminal_not_open_list = Port terminala nie jest otwarty - odczyt listy plików niemożliwy
+status.terminal_not_open_rename = Port terminala nie jest połączony - zmiana nazwy niemożliwa
+status.terminal_not_open_delete = Port terminala nie jest połączony - usuwanie niemożliwe
+status.terminal_not_open_send = Port terminala nie jest połączony - wysyłanie niemożliwe
+status.terminal_not_open_list = Port terminala nie jest połączony - odczyt listy plików niemożliwy
 status.executing = Wykonywanie: {cmd}
 status.terminal_port_open = Port terminala otwarty
 status.terminal_port_closed = Port terminala zamknięty
@@ -117,6 +117,7 @@ dialog.invalid_name.still_invalid = To nadal nie jest prawidłowa nazwa pliku CP
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Port transportu nie jest połączony
+error.terminal_not_connected = Port terminala nie jest połączony
 error.unable_open_viewer = Nie można otworzyć podglądu: {error}
 error.rename_failed = Błąd zmiany nazwy: {error}
 error.delete_failed = Błąd usuwania: {error}

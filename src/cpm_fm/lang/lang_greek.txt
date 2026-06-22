@@ -61,10 +61,10 @@ status.successfully_downloaded = {count} αρχείο(α) λήφθηκαν με 
 status.transfer_cancelled = Η μεταφορά ακυρώθηκε μετά από {count} αρχεία
 status.downloading_for_viewing = Λήψη {name} για προβολή...
 status.opening_viewer = Άνοιγμα προβολέα...
-status.terminal_not_open_rename = Ο τερματικός θύρα δεν είναι ανοιχτός - η μετονομασία είναι αδύνατη
-status.terminal_not_open_delete = Ο τερματικός θύρα δεν είναι ανοιχτός - η διαγραφή είναι αδύνατη
-status.terminal_not_open_send = Ο τερματικός θύρα δεν είναι ανοιχτός - η αποστολή είναι αδύνατη
-status.terminal_not_open_list = Ο τερματικός θύρα δεν είναι ανοιχτός - η ανάγνωση λίστας αρχείων είναι αδύνατη
+status.terminal_not_open_rename = Ο τερματικός θύρα δεν είναι συνδεδεμένος - η μετονομασία είναι αδύνατη
+status.terminal_not_open_delete = Ο τερματικός θύρα δεν είναι συνδεδεμένος - η διαγραφή είναι αδύνατη
+status.terminal_not_open_send = Ο τερματικός θύρα δεν είναι συνδεδεμένος - η αποστολή είναι αδύνατη
+status.terminal_not_open_list = Ο τερματικός θύρα δεν είναι συνδεδεμένος - η ανάγνωση λίστας αρχείων είναι αδύνατη
 status.executing = Εκτέλεση: {cmd}
 status.terminal_port_open = Ο τερματικός θύρα είναι ανοιχτός
 status.terminal_port_closed = Ο τερματικός θύρα είναι κλειστός
@@ -117,6 +117,7 @@ dialog.invalid_name.still_invalid = Αυτό εξακολουθεί να μην 
 
 # --- Error / warning message bodies ---------------------------------------------
 error.transport_not_connected = Η θύρα μεταφοράς δεν είναι συνδεδεμένη
+error.terminal_not_connected = Η τερματική θύρα δεν είναι συνδεδεμένη
 error.unable_open_viewer = Αδυναμία ανοίγματος προβολέα: {error}
 error.rename_failed = Αποτυχία μετονομασίας: {error}
 error.delete_failed = Αποτυχία διαγραφής: {error}

@@ -61,10 +61,10 @@ status.successfully_downloaded = {count} fichier(s) téléchargé(s) avec succè
 status.transfer_cancelled = Transfert annulé après {count} fichier(s)
 status.downloading_for_viewing = Téléchargement de {name} pour affichage...
 status.opening_viewer = Ouverture de la visionneuse...
-status.terminal_not_open_rename = Port terminal non ouvert - renommage impossible
-status.terminal_not_open_delete = Port terminal non ouvert - suppression impossible
-status.terminal_not_open_send = Port terminal non ouvert - envoi impossible
-status.terminal_not_open_list = Port terminal non ouvert - lecture de la liste des fichiers impossible
+status.terminal_not_open_rename = Port terminal non connecté - renommage impossible
+status.terminal_not_open_delete = Port terminal non connecté - suppression impossible
+status.terminal_not_open_send = Port terminal non connecté - envoi impossible
+status.terminal_not_open_list = Port terminal non connecté - lecture de la liste des fichiers impossible
 status.executing = Exécution : {cmd}
 status.terminal_port_open = Port terminal ouvert
 status.terminal_port_closed = Port terminal fermé
@@ -117,6 +117,7 @@ dialog.invalid_name.still_invalid = Ce n'est toujours pas un nom de fichier CP/M
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Port de transport non connecté
+error.terminal_not_connected = Port terminal non connecté
 error.unable_open_viewer = Impossible d'ouvrir la visionneuse : {error}
 error.rename_failed = Échec du renommage : {error}
 error.delete_failed = Échec de la suppression : {error}

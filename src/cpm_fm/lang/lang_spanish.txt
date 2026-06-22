@@ -61,10 +61,10 @@ status.successfully_downloaded = {count} archivo(s) descargado(s) con éxito
 status.transfer_cancelled = Transferencia cancelada después de {count} archivo(s)
 status.downloading_for_viewing = Descargando {name} para visualización...
 status.opening_viewer = Abriendo el visor...
-status.terminal_not_open_rename = Puerto de terminal no abierto - renombramiento imposible
-status.terminal_not_open_delete = Puerto de terminal no abierto - eliminación imposible
-status.terminal_not_open_send = Puerto de terminal no abierto - envío imposible
-status.terminal_not_open_list = Puerto de terminal no abierto - lectura de la lista de archivos imposible
+status.terminal_not_open_rename = Puerto de terminal no conectado - renombramiento imposible
+status.terminal_not_open_delete = Puerto de terminal no conectado - eliminación imposible
+status.terminal_not_open_send = Puerto de terminal no conectado - envío imposible
+status.terminal_not_open_list = Puerto de terminal no conectado - lectura de la lista de archivos imposible
 status.executing = Ejecutando: {cmd}
 status.terminal_port_open = Puerto de terminal abierto
 status.terminal_port_closed = Puerto de terminal cerrado
@@ -117,6 +117,7 @@ dialog.invalid_name.still_invalid = Ese nombre sigue sin ser un nombre de archiv
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Puerto de transporte no conectado
+error.terminal_not_connected = Puerto de terminal no conectado
 error.unable_open_viewer = Imposible abrir el visor: {error}
 error.rename_failed = Error al renombrar: {error}
 error.delete_failed = Error al eliminar: {error}

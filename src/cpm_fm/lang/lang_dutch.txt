@@ -61,10 +61,10 @@ status.successfully_downloaded = {count} bestand(en) succesvol gedownload
 status.transfer_cancelled = Overdracht geannuleerd na {count} bestand(en)
 status.downloading_for_viewing = Bezig met downloaden van {name} om te bekijken...
 status.opening_viewer = Viewer openen...
-status.terminal_not_open_rename = Terminalpoort niet open - hernoemen onmogelijk
-status.terminal_not_open_delete = Terminalpoort niet open - verwijderen onmogelijk
-status.terminal_not_open_send = Terminalpoort niet open - verzenden onmogelijk
-status.terminal_not_open_list = Terminalpoort niet open - bestandslijst lezen onmogelijk
+status.terminal_not_open_rename = Terminalpoort niet verbonden - hernoemen onmogelijk
+status.terminal_not_open_delete = Terminalpoort niet verbonden - verwijderen onmogelijk
+status.terminal_not_open_send = Terminalpoort niet verbonden - verzenden onmogelijk
+status.terminal_not_open_list = Terminalpoort niet verbonden - bestandslijst lezen onmogelijk
 status.executing = Uitvoeren: {cmd}
 status.terminal_port_open = Terminalpoort open
 status.terminal_port_closed = Terminalpoort gesloten
@@ -117,6 +117,7 @@ dialog.invalid_name.still_invalid = Dat is nog steeds geen geldige CP/M 8.3-best
 
 # --- Error / warning message bodies -------------------------------------------
 error.transport_not_connected = Transportpoort niet verbonden
+error.terminal_not_connected = Terminalpoort niet verbonden
 error.unable_open_viewer = Kan viewer niet openen: {error}
 error.rename_failed = Hernoemen mislukt: {error}
 error.delete_failed = Verwijderen mislukt: {error}

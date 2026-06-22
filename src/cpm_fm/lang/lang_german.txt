@@ -61,10 +61,10 @@ status.successfully_downloaded = {count} Datei(en) erfolgreich heruntergeladen
 status.transfer_cancelled = Übertragung nach {count} Datei(en) abgebrochen
 status.downloading_for_viewing = {name} wird zum Anzeigen heruntergeladen...
 status.opening_viewer = Betrachter wird geöffnet...
-status.terminal_not_open_rename = Terminal-Port nicht geöffnet - Umbenennen nicht möglich
-status.terminal_not_open_delete = Terminal-Port nicht geöffnet - Löschen nicht möglich
-status.terminal_not_open_send = Terminal-Port nicht geöffnet - Senden nicht möglich
-status.terminal_not_open_list = Terminal-Port nicht geöffnet - Dateiliste kann nicht gelesen werden
+status.terminal_not_open_rename = Terminal-Port nicht verbunden - Umbenennen nicht möglich
+status.terminal_not_open_delete = Terminal-Port nicht verbunden - Löschen nicht möglich
+status.terminal_not_open_send = Terminal-Port nicht verbunden - Senden nicht möglich
+status.terminal_not_open_list = Terminal-Port nicht verbunden - Dateiliste kann nicht gelesen werden
 status.executing = Wird ausgeführt: {cmd}
 status.terminal_port_open = Terminal-Port geöffnet
 status.terminal_port_closed = Terminal-Port geschlossen
@@ -117,6 +117,7 @@ dialog.invalid_name.still_invalid = Das ist immer noch kein gültiger CP/M-8.3-D
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Transport-Port nicht verbunden
+error.terminal_not_connected = Terminal-Port nicht verbunden
 error.unable_open_viewer = Betrachter kann nicht geöffnet werden: {error}
 error.rename_failed = Umbenennen fehlgeschlagen: {error}
 error.delete_failed = Löschen fehlgeschlagen: {error}

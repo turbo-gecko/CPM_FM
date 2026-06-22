@@ -77,10 +77,10 @@ status.successfully_downloaded = Successfully downloaded {count} file(s)
 status.transfer_cancelled = Transfer cancelled after {count} file(s)
 status.downloading_for_viewing = Downloading {name} for viewing...
 status.opening_viewer = Opening viewer...
-status.terminal_not_open_rename = Terminal port not open - cannot rename
-status.terminal_not_open_delete = Terminal port not open - cannot delete
-status.terminal_not_open_send = Terminal port not open - cannot send
-status.terminal_not_open_list = Terminal port not open - cannot read file list
+status.terminal_not_open_rename = Terminal port not connected - cannot rename
+status.terminal_not_open_delete = Terminal port not connected - cannot delete
+status.terminal_not_open_send = Terminal port not connected - cannot send
+status.terminal_not_open_list = Terminal port not connected - cannot read file list
 status.executing = Executing: {cmd}
 status.terminal_port_open = Terminal port open
 status.terminal_port_closed = Terminal port closed
@@ -142,6 +142,7 @@ dialog.invalid_name.still_invalid = That is still not a valid CP/M 8.3 file name
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Transport port not connected
+error.terminal_not_connected = Terminal port not connected
 error.unable_open_viewer = Unable to open viewer: {error}
 error.rename_failed = Rename failed: {error}
 error.delete_failed = Delete failed: {error}

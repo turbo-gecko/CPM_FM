@@ -66,10 +66,10 @@ status.successfully_downloaded = Successfully brought home {count} loot item(s)
 status.transfer_cancelled = Loot haul aborted after {count} items
 status.downloading_for_viewing = Draggin' {name} in for inspection...
 status.opening_viewer = Openin' the spyglass...
-status.terminal_not_open_rename = Captain's Log be closed - cannot rename loot
-status.terminal_not_open_delete = Captain's Log be closed - cannot walk the plank
-status.terminal_not_open_send = Captain's Log be closed - cannot send cargo
-status.terminal_not_open_list = Captain's Log be closed - cannot read charts
+status.terminal_not_open_rename = Captain's Log be unlinked - cannot rename loot
+status.terminal_not_open_delete = Captain's Log be unlinked - cannot walk the plank
+status.terminal_not_open_send = Captain's Log be unlinked - cannot send cargo
+status.terminal_not_open_list = Captain's Log be unlinked - cannot read charts
 status.executing = Executin': {cmd}
 status.terminal_port_open = Captain's Log be open
 status.terminal_port_closed = Captain's Log be shuttered
@@ -122,6 +122,7 @@ dialog.invalid_name.still_invalid = That still not be a proper CP/M 8.3 file nam
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = Ship's route be unlinked!
+error.terminal_not_connected = Captain's Log be unlinked!
 error.unable_open_viewer = Unable to open spyglass: {error}
 error.rename_failed = Renamin' failed: {error}
 error.delete_failed = Sinkin' failed: {error}
