@@ -2445,6 +2445,9 @@ class MainWindow(QMainWindow):
             return
         # FR-153: empty the destination first, operating on the FR-152 snapshot.
         self._wipe_host_dir(host_files)
+        # Refresh the Host pane now the wipe has emptied it, so the deleted
+        # files no longer linger in the list while the backup downloads.
+        self.transfer_completed.emit("host")
         save_paths = [os.path.join(self.host_dir, name) for name in names]
         if not save_paths:
             # FR-154: nothing to copy; the wipe already emptied the host pane.
