@@ -9,7 +9,7 @@ description = "CP/M File Manager - transfer files to/from legacy CP/M systems ov
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
-dependencies = ["pyserial>=3.5", "PySide6>=6.6", "qt-material>=2.14"]
+dependencies = ["pyserial>=3.5", "PySide6>=6.6", "qt-material>=2.14", "markdown>=3.5"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.5", "mypy>=1.10", "Pillow>=10"]
@@ -33,8 +33,10 @@ where = ["src"]
 # a source/editable checkout.
 # DR-044: likewise ship the runtime window icon (icons/cpm-fm.png) as package
 # data so the branded icon (UIR-078) is present in an installed wheel.
+# DR-047: and ship the user manual (docs/cpm_fm_manual.md) so Help > Manual
+# (UIR-091) works from an installed wheel.
 [tool.setuptools.package-data]
-cpm_fm = ["lang/*.txt", "icons/*.png"]
+cpm_fm = ["lang/*.txt", "icons/*.png", "docs/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

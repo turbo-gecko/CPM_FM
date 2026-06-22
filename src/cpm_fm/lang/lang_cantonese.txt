@@ -22,6 +22,7 @@ menu.config.serial = 串口
 menu.config.general = 一般
 menu.config.language = 語言
 menu.help = 幫助
+menu.help.manual = 手冊
 menu.help.about = 關於
 
 # --- Toolbar -------------------------------------------------------------------
@@ -221,6 +222,8 @@ error.retransfer_file_missing = 無法重新傳輸：搵唔到檔案：{path}
 # --- About dialog --------------------------------------------------------------
 about.title = 關於
 about.version = 版本 {version}
+manual.title = 用戶手冊
+manual.load_error = 無法從以下位置載入用戶手冊：{path}
 
 # --- File list filter / sort (Feature 3) --------------------------------------
 main.filter_placeholder = 篩選檔案…
@@ -243,3 +246,4 @@ dialog.backup_restore.restore_title = 確認還原
 dialog.backup_restore.backup = 備份會刪除主機目錄入面所有檔案，並用遠端磁碟機嘅所有檔案取代佢哋。呢個操作無法復原。要繼續嗎？
 dialog.backup_restore.restore = 還原會刪除遠端磁碟機上所有檔案，並用主機目錄嘅所有檔案取代佢哋。呢個操作無法復原。要繼續嗎？
 button.continue = 繼續
+button.close = 關閉
