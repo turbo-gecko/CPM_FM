@@ -56,12 +56,22 @@ class SerialManager:
                 # Try alternative key name from settings_a.json
                 port_name = s.get("transfer_port" if port_type == "transport" else "terminal_port")
 
+            # Per-port read timeout (UIR-032/UIR-033). Stored in milliseconds in
+            # the config; pyserial wants seconds. Each port reads its own key,
+            # falling back to the 100 ms default that was previously hard-coded.
+            timeout_key = (
+                "terminal_timeout_ms" if port_type == "terminal" else "transport_timeout_ms"
+            )
+            try:
+                timeout_ms = int(s.get(timeout_key, 100))
+            except (TypeError, ValueError):
+                timeout_ms = 100
             params = {
                 "port": port_name,
                 "baudrate": int(s.get("speed", 115200)),
                 "bytesize": int(s.get("data", s.get("data_bits", 8))),
                 "stopbits": int(s.get("stopbits", s.get("stop_bits", 1))),
-                "timeout": 0.1,
+                "timeout": max(0.01, timeout_ms / 1000.0),
             }
 
             # Handle parity mapping for pyserial

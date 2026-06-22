@@ -305,6 +305,23 @@ class SerialConfigDialog(ConfigDialog):
                 "default": "0",
                 "int_range": (0, 255),
             },
+            # UIR-032/UIR-033: per-port serial read timeouts in milliseconds.
+            # The pyserial read timeout for each port; the transport value bounds
+            # how long each X-Modem read waits for frame bytes. Default 100 ms.
+            {
+                "key": "terminal_timeout_ms",
+                "label_key": "config.serial.terminal_timeout",
+                "type": "text",
+                "default": "100",
+                "int_range": (10, 5000),
+            },
+            {
+                "key": "transport_timeout_ms",
+                "label_key": "config.serial.transport_timeout",
+                "type": "text",
+                "default": "100",
+                "int_range": (10, 5000),
+            },
         ]
         super().__init__(
             parent,

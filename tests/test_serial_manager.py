@@ -17,13 +17,20 @@ from cpm_fm.terminal.serial_manager import SerialManager
 
 
 class _CaptureSerial:
-    """Stand-in for ``serial.Serial`` that records the kwargs it was built with."""
+    """Stand-in for ``serial.Serial`` that records the kwargs it was built with.
+
+    Provides a no-op ``in_waiting``/``read`` so the terminal read loop (started
+    when a terminal port is opened) spins harmlessly instead of erroring."""
 
     last_kwargs: dict = {}
+    in_waiting = 0
 
     def __init__(self, **kwargs):
         _CaptureSerial.last_kwargs = kwargs
         self.is_open = True
+
+    def read(self, n: int = 1) -> bytes:
+        return b""
 
     def close(self):
         self.is_open = False
@@ -136,6 +143,37 @@ def test_numeric_defaults_applied_when_absent(capture):
     assert capture.last_kwargs["baudrate"] == 115200
     assert capture.last_kwargs["bytesize"] == 8
     assert capture.last_kwargs["stopbits"] == 1
+
+
+def test_read_timeout_defaults_to_100ms_when_absent(capture):
+    """UIR-032/UIR-033: with no timeout setting, the port read timeout defaults
+    to 0.1s (the previously hard-coded value)."""
+    mgr = SerialManager()
+    assert mgr.open_port("transport", {"transport_port": "COM1"})
+    assert capture.last_kwargs["timeout"] == pytest.approx(0.1)
+
+
+def test_read_timeout_is_per_port_and_converted_ms_to_seconds(capture):
+    """UIR-032/UIR-033: each port reads its own millisecond timeout setting and
+    passes it to pyserial in seconds."""
+    mgr = SerialManager()
+    settings = {
+        "terminal_port": "COM1",
+        "transport_port": "COM2",
+        "terminal_timeout_ms": "250",
+        "transport_timeout_ms": "1500",
+    }
+    assert mgr.open_port("terminal", settings)
+    assert capture.last_kwargs["timeout"] == pytest.approx(0.25)
+    assert mgr.open_port("transport", settings)
+    assert capture.last_kwargs["timeout"] == pytest.approx(1.5)
+
+
+def test_read_timeout_falls_back_on_non_numeric_value(capture):
+    """A malformed timeout value degrades to the 0.1s default rather than raising."""
+    mgr = SerialManager()
+    assert mgr.open_port("transport", {"transport_port": "COM1", "transport_timeout_ms": "abc"})
+    assert capture.last_kwargs["timeout"] == pytest.approx(0.1)
 
 
 def test_open_port_returns_false_on_serial_error(monkeypatch):
