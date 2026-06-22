@@ -61,10 +61,10 @@ status.successfully_downloaded = {count} file scaricato(i) con successo
 status.transfer_cancelled = Trasferimento annullato dopo {count} file
 status.downloading_for_viewing = Download di {name} per la visualizzazione...
 status.opening_viewer = Apertura del visualizzatore...
-status.terminal_not_open_rename = Porta terminale non aperta - rinomina impossibile
-status.terminal_not_open_delete = Porta terminale non aperta - eliminazione impossibile
-status.terminal_not_open_send = Porta terminale non aperta - invio impossibile
-status.terminal_not_open_list = Porta terminale non aperta - lettura lista file impossibile
+status.terminal_not_open_rename = Porta terminale non connessa - rinomina impossibile
+status.terminal_not_open_delete = Porta terminale non connessa - eliminazione impossibile
+status.terminal_not_open_send = Porta terminale non connessa - invio impossibile
+status.terminal_not_open_list = Porta terminale non connessa - lettura lista file impossibile
 status.executing = Esecuzione: {cmd}
 status.terminal_port_open = Porta terminale aperta
 status.terminal_port_closed = Porta terminale chiusa
@@ -117,6 +117,7 @@ dialog.invalid_name.still_invalid = Questo non è ancora un nome file CP/M 8.3 v
 
 # --- Error / warning message bodies -------------------------------------------
 error.transport_not_connected = Porta di trasporto non connessa
+error.terminal_not_connected = Porta terminale non connessa
 error.unable_open_viewer = Impossibile aprire il visualizzatore: {error}
 error.rename_failed = Errore rinomina: {error}
 error.delete_failed = Errore eliminazione: {error}

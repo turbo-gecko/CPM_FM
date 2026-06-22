@@ -440,7 +440,7 @@ def test_change_drive_requires_open_terminal(qapp, monkeypatch, state):
         qapp.processEvents()
         assert started == []
         assert win.remote_list.count() == 0
-        assert win.statusBar().currentMessage() == "Terminal port not open - cannot read file list"
+        assert win.statusBar().currentMessage() == "Terminal port not connected - cannot read file list"
     finally:
         win.close()
 
@@ -465,6 +465,43 @@ def test_update_switches_to_displayed_drive_first(qapp, monkeypatch, state):
         monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
         win.refresh_remote_files()
         assert targets == [(win._do_change_drive_logic, ("C",))]
+    finally:
+        win.close()
+
+
+def test_update_button_shows_error_dialog_when_disconnected(qapp, monkeypatch, state):
+    # Clicking Update with the port closed pops the same critical error dialog
+    # as Copy to Host, in addition to setting the status and clearing the list.
+    win = MainWindow(state)
+    try:
+        win.remote_list.addItem("STALE.TXT")
+        win.serial_mgr.terminal_connected = False
+        errors = []
+        monkeypatch.setattr(
+            "cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:])
+        )
+        win.do_refresh_remote_files()
+        qapp.processEvents()
+        assert errors == [("Error", "Terminal port not connected")]
+        assert win.remote_list.count() == 0
+        assert win.statusBar().currentMessage() == "Terminal port not connected - cannot read file list"
+    finally:
+        win.close()
+
+
+def test_update_auto_refresh_skips_error_dialog_when_disconnected(qapp, monkeypatch, state):
+    # The post-transfer auto-refresh path (refresh_remote_files) must not raise
+    # the error dialog even when the port has since closed.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = False
+        errors = []
+        monkeypatch.setattr(
+            "cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:])
+        )
+        win.refresh_remote_files()
+        qapp.processEvents()
+        assert errors == []
     finally:
         win.close()
 
@@ -1092,7 +1129,7 @@ def test_remote_rename_requires_open_terminal(qapp, monkeypatch, state):
         monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
         win._remote_rename("OLD.TXT")
         assert _RecordingThread.instances == []
-        assert win.statusBar().currentMessage() == "Terminal port not open - cannot rename"
+        assert win.statusBar().currentMessage() == "Terminal port not connected - cannot rename"
     finally:
         win.close()
 

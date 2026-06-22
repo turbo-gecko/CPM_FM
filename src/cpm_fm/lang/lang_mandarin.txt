@@ -61,10 +61,10 @@ status.successfully_downloaded = {count} 个文件下载成功
 status.transfer_cancelled = 传输在 {count} 个文件后取消
 status.downloading_for_viewing = 正在下载 {name} 以便查看...
 status.opening_viewer = 正在打开查看器...
-status.terminal_not_open_rename = 终端端口未打开 - 无法重命名
-status.terminal_not_open_delete = 终端端口未打开 - 无法删除
-status.terminal_not_open_send = 终端端口未打开 - 无法发送
-status.terminal_not_open_list = 终端端口未打开 - 无法读取文件列表
+status.terminal_not_open_rename = 终端端口未连接 - 无法重命名
+status.terminal_not_open_delete = 终端端口未连接 - 无法删除
+status.terminal_not_open_send = 终端端口未连接 - 无法发送
+status.terminal_not_open_list = 终端端口未连接 - 无法读取文件列表
 status.executing = 执行: {cmd}
 status.terminal_port_open = 终端端口已打开
 status.terminal_port_closed = 终端端口已关闭
@@ -117,6 +117,7 @@ dialog.invalid_name.still_invalid = 这仍然不是有效的 CP/M 8.3 文件名�
 
 # --- Error / warning message bodies --------------------------------------------
 error.transport_not_connected = 传输端口未连接
+error.terminal_not_connected = 终端端口未连接
 error.unable_open_viewer = 无法打开查看器: {error}
 error.rename_failed = 重命名失败: {error}
 error.delete_failed = 删除失败: {error}

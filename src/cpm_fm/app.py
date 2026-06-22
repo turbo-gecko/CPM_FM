@@ -549,7 +549,7 @@ class MainWindow(QMainWindow):
         self.drive_combo.setMinimumWidth(80)
         self.drive_combo.activated.connect(self.change_drive)
         remote_top.addWidget(self.drive_combo, 1)
-        update_btn = QPushButton(clicked=self.refresh_remote_files)
+        update_btn = QPushButton(clicked=self.do_refresh_remote_files)
         self._register_text(update_btn.setText, "main.update")
         remote_top.addWidget(update_btn, 1)
         remote_layout.addLayout(remote_top)
@@ -1458,6 +1458,21 @@ class MainWindow(QMainWindow):
         self._update_indicators()
 
     # ----------------------------------------------------------- remote files
+
+    def do_refresh_remote_files(self):
+        """Handle the Remote Files "Update" button click.
+
+        Mirrors do_copy_to_host: when the port is not open, raise the same
+        critical error dialog (in addition to the status-bar message and the
+        list being cleared by refresh_remote_files), then delegate. The
+        auto-refresh callers (post-transfer) call refresh_remote_files directly
+        so they never raise this dialog.
+        """
+        if not self.serial_mgr.terminal_connected:
+            QMessageBox.critical(
+                self, tr("dialog.error.title"), tr("error.terminal_not_connected")
+            )
+        self.refresh_remote_files()
 
     def refresh_remote_files(self):
         """
