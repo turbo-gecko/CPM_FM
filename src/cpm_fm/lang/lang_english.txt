@@ -92,6 +92,8 @@ status.saved_config = Saved config to {path}
 status.new_config_created = New configuration created
 status.serial_settings_updated = Serial settings updated
 status.general_settings_updated = General settings updated
+status.serial_settings_saved = Serial settings saved to {path}
+status.general_settings_saved = General settings saved to {path}
 status.backing_up = Backing up remote drive to host...
 status.restoring = Restoring host files to remote drive...
 status.wiping_destination = Deleting {name}...
@@ -152,6 +154,7 @@ error.download_failed = Download of {name} failed
 error.transfer_failed = Transfer of {name} failed; remaining files skipped
 warning.select_upload = Please select one or more files to upload
 warning.select_download = Please select one or more files to download
+warning.no_config_loaded = No configuration file is loaded. The settings have been applied to the current session only. Use File > Save to write them to a configuration file.
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = Apply

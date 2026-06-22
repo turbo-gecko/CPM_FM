@@ -1454,6 +1454,11 @@ def test_general_config_save_keeps_current_host_dir(qapp, state, monkeypatch):
         # refresh_host_files lists the directory off disk; the paths here are
         # synthetic, so neutralise it and just observe that host_dir tracks.
         monkeypatch.setattr(win, "refresh_host_files", lambda: None)
+        # No config file is loaded in this fixture, so the dialog Save now takes
+        # the "warn and apply to session" path (FR-021a). Neutralise the modal
+        # warning so it does not block headless; the host-dir logic under test
+        # runs regardless of whether a file was written.
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.warning", lambda *a, **k: None)
 
         win.settings = dict(win.settings)
         win.settings["host_directory"] = "/path/A"
@@ -1480,6 +1485,145 @@ def test_general_config_save_keeps_current_host_dir(qapp, state, monkeypatch):
         callback({"host_directory": "/path/C"})
         assert win.host_dir == "/path/C"
         assert win.settings["host_directory"] == "/path/C"
+    finally:
+        win.close()
+
+
+def test_serial_config_save_persists_only_serial_to_active_file(qapp, state, monkeypatch, tmp_path):
+    # FR-020a: the Serial dialog Save writes only the serial settings to the
+    # currently loaded config file, leaves the general settings in that file
+    # untouched, and never presents a Save dialog.
+    import json
+
+    import cpm_fm.app as app_module
+
+    win = MainWindow(state)
+    try:
+        cfg = tmp_path / "active.json"
+        cfg.write_text(
+            json.dumps(
+                {
+                    "terminal_port": "COM1",
+                    "speed": "9600",
+                    "eol": "CR",
+                    "list_files_cmd": "DIR",
+                    "host_directory": "/keep/me",
+                }
+            ),
+            encoding="utf-8",
+        )
+        win.window_state.last_config = str(cfg)
+
+        captured = {}
+
+        def fake_dialog(parent, settings, current_ports, callback, window_state):
+            captured["callback"] = callback
+
+        monkeypatch.setattr(app_module, "SerialConfigDialog", fake_dialog)
+        # FR-020a: no file-select dialog may be shown.
+        def _no_dialog(*a, **k):
+            raise AssertionError("Save dialog must not be presented")
+
+        monkeypatch.setattr("cpm_fm.app.QFileDialog.getSaveFileName", _no_dialog)
+
+        win.menu_serial_config()
+        captured["callback"]({"terminal_port": "COM7", "speed": "115200"})
+
+        on_disk = json.loads(cfg.read_text(encoding="utf-8"))
+        # Serial settings persisted...
+        assert on_disk["terminal_port"] == "COM7"
+        assert on_disk["speed"] == "115200"
+        # ...and every other setting in the file left untouched.
+        assert on_disk["eol"] == "CR"
+        assert on_disk["list_files_cmd"] == "DIR"
+        assert on_disk["host_directory"] == "/keep/me"
+        # The running session also reflects the change.
+        assert win.settings["terminal_port"] == "COM7"
+    finally:
+        win.close()
+
+
+def test_general_config_save_persists_general_only(qapp, state, monkeypatch, tmp_path):
+    # FR-021a: the General dialog Save writes only the general settings to the
+    # currently loaded config file, leaving the serial settings untouched.
+    import json
+
+    import cpm_fm.app as app_module
+
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(win, "refresh_host_files", lambda: None)
+        cfg = tmp_path / "active.json"
+        cfg.write_text(
+            json.dumps(
+                {
+                    "terminal_port": "COM1",
+                    "speed": "9600",
+                    "eol": "CR",
+                    "list_files_cmd": "DIR",
+                }
+            ),
+            encoding="utf-8",
+        )
+        win.window_state.last_config = str(cfg)
+
+        captured = {}
+
+        def fake_dialog(parent, settings, callback, window_state):
+            captured["callback"] = callback
+
+        monkeypatch.setattr(app_module, "GeneralConfigDialog", fake_dialog)
+
+        def _no_dialog(*a, **k):
+            raise AssertionError("Save dialog must not be presented")
+
+        monkeypatch.setattr("cpm_fm.app.QFileDialog.getSaveFileName", _no_dialog)
+
+        win.menu_general_config()
+        captured["callback"]({"eol": "LF", "list_files_cmd": "LS"})
+
+        on_disk = json.loads(cfg.read_text(encoding="utf-8"))
+        # General settings persisted...
+        assert on_disk["eol"] == "LF"
+        assert on_disk["list_files_cmd"] == "LS"
+        # ...and the serial settings in the file left untouched.
+        assert on_disk["terminal_port"] == "COM1"
+        assert on_disk["speed"] == "9600"
+    finally:
+        win.close()
+
+
+def test_dialog_save_warns_and_writes_nothing_when_no_config_loaded(qapp, state, monkeypatch):
+    # FR-020a/FR-021a: with no config file loaded there is nothing to write to;
+    # the dialog Save warns, applies the change to the session only, and writes
+    # no file (no Save dialog is shown either).
+    import cpm_fm.app as app_module
+
+    win = MainWindow(state)
+    try:
+        win.window_state.last_config = ""  # nothing loaded
+        warnings = []
+        monkeypatch.setattr(
+            "cpm_fm.app.QMessageBox.warning", lambda *a, **k: warnings.append(a[1:])
+        )
+        saved = []
+        monkeypatch.setattr(
+            app_module.ConfigHandler, "save_json", lambda self, p, d: saved.append(p) or True
+        )
+
+        captured = {}
+
+        def fake_dialog(parent, settings, current_ports, callback, window_state):
+            captured["callback"] = callback
+
+        monkeypatch.setattr(app_module, "SerialConfigDialog", fake_dialog)
+        win.menu_serial_config()
+        captured["callback"]({"terminal_port": "COM9"})
+
+        assert warnings, "a warning dialog should be shown"
+        assert not saved, "no file should be written when no config is loaded"
+        # The setting is still applied to the running session.
+        assert win.settings["terminal_port"] == "COM9"
     finally:
         win.close()
 

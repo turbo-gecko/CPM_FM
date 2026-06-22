@@ -2752,6 +2752,43 @@ class MainWindow(QMainWindow):
             return True
         return False
 
+    def _save_subset_to_active_config(self, subset: dict, status_key: str) -> bool:
+        """Persist only ``subset`` to the currently loaded config file.
+
+        Used by the per-dialog Save buttons (Config > Serial — FR-020a; Config >
+        General — FR-021a), each of which must write only its own group of
+        settings to the currently active/loaded config file and leave every
+        other setting in that file untouched. The on-disk file is read, the
+        subset keys overlaid, and the result written back, so keys outside the
+        subset keep their stored values (unlike File > Save, which writes the
+        full settings store — FR-014).
+
+        When no config file is loaded there is no active file to write to: a
+        warning is shown (FR-020a/FR-021a) and the settings remain applied to
+        the running session only (the user must use File > Save to persist
+        them). Returns True only when a file was written.
+
+        Satisfies: FR-020a, FR-021a.
+        """
+        path = self.window_state.last_config
+        if not path:
+            # No active/loaded config file: nothing to write to. Warn and leave
+            # the just-updated settings applied to the session only.
+            QMessageBox.warning(
+                self,
+                tr("dialog.warning.title"),
+                tr("warning.no_config_loaded"),
+            )
+            return False
+        # Preserve every other setting in the file: read the current on-disk
+        # contents, overlay only the subset keys, and write it back.
+        on_disk = self.config_handler.load_json(path)
+        on_disk.update(subset)
+        if self.config_handler.save_json(path, on_disk):
+            self.set_status(tr(status_key, path=path))
+            return True
+        return False
+
     def menu_new(self):
         """
         Satisfies: FR-018, FR-019.
@@ -2814,7 +2851,11 @@ class MainWindow(QMainWindow):
 
         def update_settings(new_set):
             self.settings.update(new_set)
-            self.set_status(tr("status.serial_settings_updated"))
+            # FR-020a: persist only the serial settings to the active config
+            # file, leaving the general settings in that file untouched. If no
+            # file is loaded the helper warns and the change stays session-only.
+            if not self._save_subset_to_active_config(new_set, "status.serial_settings_saved"):
+                self.set_status(tr("status.serial_settings_updated"))
 
         SerialConfigDialog(self, self.settings, ports, update_settings, self.window_state)
 
@@ -2842,7 +2883,11 @@ class MainWindow(QMainWindow):
                 self.host_dir = new_host_dir
                 self.refresh_host_files()
 
-            self.set_status(tr("status.general_settings_updated"))
+            # FR-021a: persist only the general settings to the active config
+            # file, leaving the serial settings in that file untouched. If no
+            # file is loaded the helper warns and the change stays session-only.
+            if not self._save_subset_to_active_config(new_set, "status.general_settings_saved"):
+                self.set_status(tr("status.general_settings_updated"))
 
         GeneralConfigDialog(self, self.settings, update_settings, self.window_state)
 

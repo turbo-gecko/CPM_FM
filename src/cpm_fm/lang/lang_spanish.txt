@@ -76,6 +76,8 @@ status.saved_config = Configuración guardada en {path}
 status.new_config_created = Nueva configuración creada
 status.serial_settings_updated = Ajustes de serie actualizados
 status.general_settings_updated = Ajustes generales actualizados
+status.serial_settings_saved = Ajustes de serie guardados en {path}
+status.general_settings_saved = Ajustes generales guardados en {path}
 
 # --- Dialog titles -------------------------------------------------------------
 dialog.error.title = Error
@@ -127,6 +129,7 @@ error.download_failed = Error al descargar {name}
 error.transfer_failed = Error al transferir {name}; archivos restantes ignorados
 warning.select_upload = Por favor, seleccione uno o más archivos para enviar
 warning.select_download = Por favor, seleccione uno o más archivos para descargar
+warning.no_config_loaded = No hay ningún archivo de configuración cargado. Los ajustes se han aplicado solo a la sesión actual. Use Archivo > Guardar para escribirlos en un archivo de configuración.
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = Aplicar

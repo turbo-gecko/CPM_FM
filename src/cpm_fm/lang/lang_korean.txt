@@ -76,6 +76,8 @@ status.saved_config = 설정이 {path}에 저장됨
 status.new_config_created = 새 설정이 생성됨
 status.serial_settings_updated = 시리얼 설정이 업데이트됨
 status.general_settings_updated = 일반 설정이 업데이트됨
+status.serial_settings_saved = 시리얼 설정을 {path}에 저장함
+status.general_settings_saved = 일반 설정을 {path}에 저장함
 
 # --- Dialog titles ------------------------------------------------------------
 dialog.error.title = 오류
@@ -127,6 +129,7 @@ error.download_failed = {name} 다운로드 실패
 error.transfer_failed = {name} 전송 실패; 나머지 파일은 무시됩니다
 warning.select_upload = 전송할 파일 하나 이상을 선택하십시오
 warning.select_download = 다운로드할 파일 하나 이상을 선택하십시오
+warning.no_config_loaded = 불러온 설정 파일이 없습니다. 설정이 현재 세션에만 적용되었습니다. 파일 > 저장을 사용하여 설정 파일에 기록하십시오.
 
 # --- Common buttons -----------------------------------------------------------
 button.apply = 적용

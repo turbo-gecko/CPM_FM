@@ -76,6 +76,8 @@ status.saved_config = Konfiguration gespeichert unter {path}
 status.new_config_created = Neue Konfiguration erstellt
 status.serial_settings_updated = Serielle Einstellungen aktualisiert
 status.general_settings_updated = Allgemeine Einstellungen aktualisiert
+status.serial_settings_saved = Serielle Einstellungen gespeichert in {path}
+status.general_settings_saved = Allgemeine Einstellungen gespeichert in {path}
 
 # --- Dialog titles -------------------------------------------------------------
 dialog.error.title = Fehler
@@ -127,6 +129,7 @@ error.download_failed = Herunterladen von {name} fehlgeschlagen
 error.transfer_failed = Übertragung von {name} fehlgeschlagen; restliche Dateien übersprungen
 warning.select_upload = Bitte eine oder mehrere Dateien zum Hochladen auswählen
 warning.select_download = Bitte eine oder mehrere Dateien zum Herunterladen auswählen
+warning.no_config_loaded = Es ist keine Konfigurationsdatei geladen. Die Einstellungen wurden nur auf die aktuelle Sitzung angewendet. Verwenden Sie Datei > Speichern, um sie in eine Konfigurationsdatei zu schreiben.
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = Anwenden

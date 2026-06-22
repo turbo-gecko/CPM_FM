@@ -76,6 +76,8 @@ status.saved_config = Configuratie opgeslagen in {path}
 status.new_config_created = Nieuwe configuratie aangemaakt
 status.serial_settings_updated = Seriële instellingen bijgewerkt
 status.general_settings_updated = Algemene instellingen bijgewerkt
+status.serial_settings_saved = Seriële instellingen opgeslagen in {path}
+status.general_settings_saved = Algemene instellingen opgeslagen in {path}
 
 # --- Dialog titles -----------------------------------------------------------
 dialog.error.title = Fout
@@ -127,6 +129,7 @@ error.download_failed = Downloaden van {name} mislukt
 error.transfer_failed = Overdracht van {name} mislukt; overige bestanden genegeerd
 warning.select_upload = Selecteer een of meer bestanden om te uploaden
 warning.select_download = Selecteer een of meer bestanden om te downloaden
+warning.no_config_loaded = Er is geen configuratiebestand geladen. De instellingen zijn alleen op de huidige sessie toegepast. Gebruik Bestand > Opslaan om ze naar een configuratiebestand te schrijven.
 
 # --- Common buttons ----------------------------------------------------------
 button.apply = Toepassen

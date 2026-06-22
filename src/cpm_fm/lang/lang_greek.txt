@@ -76,6 +76,8 @@ status.saved_config = Αποθήκευση ρυθμίσεων στο {path}
 status.new_config_created = Δημιουργήθηκαν νέες ρυθμίσεις
 status.serial_settings_updated = Οι σειριακές ρυθμίσεις ενημερώθηκαν
 status.general_settings_updated = Οι γενικές ρυθμίσεις ενημερώθηκαν
+status.serial_settings_saved = Οι σειριακές ρυθμίσεις αποθηκεύτηκαν στο {path}
+status.general_settings_saved = Οι γενικές ρυθμίσεις αποθηκεύτηκαν στο {path}
 
 # --- Dialog titles -------------------------------------------------------------
 dialog.error.title = Σφάλμα
@@ -127,6 +129,7 @@ error.download_failed = Αποτυχία λήψης του {name}
 error.transfer_failed = Αποτυχία μεταφοράς του {name}; τα υπόλοιπα αρχεία αγνοούνται
 warning.select_upload = Παρακαλώ επιλέξτε ένα ή περισσότερα αρχεία για μεταφόρτωση
 warning.select_download = Παρακαλώ επιλέξτε ένα ή περισσότερα αρχεία για λήψη
+warning.no_config_loaded = Δεν έχει φορτωθεί αρχείο ρυθμίσεων. Οι ρυθμίσεις εφαρμόστηκαν μόνο στην τρέχουσα συνεδρία. Χρησιμοποιήστε Αρχείο > Αποθήκευση για να τις γράψετε σε αρχείο ρυθμίσεων.
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = Εφαρμογή

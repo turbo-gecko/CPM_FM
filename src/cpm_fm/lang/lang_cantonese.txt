@@ -76,6 +76,8 @@ status.saved_config = 設定已儲存到 {path}
 status.new_config_created = 新設定已創建
 status.serial_settings_updated = 串口設定已更新
 status.general_settings_updated = 一般設定已更新
+status.serial_settings_saved = 串口設定已儲存到 {path}
+status.general_settings_saved = 一般設定已儲存到 {path}
 
 # --- Dialog titles -------------------------------------------------------------
 dialog.error.title = 錯誤
@@ -127,6 +129,7 @@ error.download_failed = 下載 {name} 失敗
 error.transfer_failed = 傳輸 {name} 失敗；忽略其餘檔案
 warning.select_upload = 請選擇一個或多個要發送嘅檔案
 warning.select_download = 請選擇一個或多個要下載嘅檔案
+warning.no_config_loaded = 未載入設定檔。設定只套用喺目前嘅工作階段。請用「檔案 > 儲存」將佢哋寫入設定檔。
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = 應用
