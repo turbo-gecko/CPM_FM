@@ -22,6 +22,7 @@ menu.config.serial = Seriell
 menu.config.general = Allgemein
 menu.config.language = Sprache
 menu.help = Hilfe
+menu.help.manual = Handbuch
 menu.help.about = Über
 
 # --- Toolbar -------------------------------------------------------------------
@@ -221,6 +222,8 @@ error.retransfer_file_missing = Erneute Übertragung nicht möglich: Datei nicht
 # --- About dialog --------------------------------------------------------------
 about.title = Über
 about.version = Version {version}
+manual.title = Benutzerhandbuch
+manual.load_error = Das Benutzerhandbuch konnte nicht geladen werden von: {path}
 
 # --- File list filter / sort (Feature 3) --------------------------------------
 main.filter_placeholder = Dateien filtern…
@@ -243,3 +246,4 @@ dialog.backup_restore.restore_title = Wiederherstellung bestätigen
 dialog.backup_restore.backup = Beim Sichern werden ALLE Dateien im Host-Verzeichnis GELÖSCHT und durch alle Dateien des Remote-Laufwerks ersetzt. Dies kann nicht rückgängig gemacht werden. Fortfahren?
 dialog.backup_restore.restore = Beim Wiederherstellen werden ALLE Dateien auf dem Remote-Laufwerk GELÖSCHT und durch alle Dateien des Host-Verzeichnisses ersetzt. Dies kann nicht rückgängig gemacht werden. Fortfahren?
 button.continue = Fortfahren
+button.close = Schließen

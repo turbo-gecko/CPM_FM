@@ -27,6 +27,7 @@ menu.config.serial = Signal Flags
 menu.config.general = General Orders
 menu.config.language = Pirate Tongue
 menu.help = Scallywag's Guide
+menu.help.manual = The Logbook
 menu.help.about = The Legend
 
 # --- Toolbar -------------------------------------------------------------------
@@ -226,6 +227,8 @@ error.retransfer_file_missing = Cannae sail again: file be lost at sea: {path}
 # --- About dialog --------------------------------------------------------------
 about.title = The Legend
 about.version = Era {version}
+manual.title = The Ship's Logbook
+manual.load_error = Could nae haul in the logbook from: {path}
 
 # --- File list filter / sort (Feature 3) --------------------------------------
 main.filter_placeholder = Sift the booty…
@@ -248,3 +251,4 @@ dialog.backup_restore.restore_title = Confirm Haulin' Back
 dialog.backup_restore.backup = Stowin' booty will SEND ALL files in the host hold to Davy Jones an' replace 'em with every file from the remote hold. There be no turnin' back. Sail on?
 dialog.backup_restore.restore = Haulin' back will SEND ALL files on the remote hold to Davy Jones an' replace 'em with every file from the host hold. There be no turnin' back. Sail on?
 button.continue = Sail On
+button.close = Belay

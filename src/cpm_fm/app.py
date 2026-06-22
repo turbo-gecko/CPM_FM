@@ -41,6 +41,7 @@ from cpm_fm.gui.dialog_buttons import build_button_row
 from cpm_fm.gui.file_action_dialog import FileActionDialog
 from cpm_fm.gui.file_list_widget import FileListWidget
 from cpm_fm.gui.filename_validation_dialog import FilenameValidationDialog
+from cpm_fm.gui.manual_dialog import ManualDialog
 from cpm_fm.gui.terminal_window import TerminalWindow
 from cpm_fm.gui.theme import app_icon, apply_theme
 from cpm_fm.gui.transfer_dialog import TransferProgressDialog
@@ -393,9 +394,11 @@ class MainWindow(QMainWindow):
         self._add_menu_action(config_menu, "menu.config.general", self.menu_general_config)
         self._setup_language_menu(config_menu)
 
-        # UIR-004: Help menu with an About item (FR-022).
+        # UIR-004: Help menu with Manual (FR-023) and About (FR-022) items.
         help_menu = menubar.addMenu("")
         self._register_text(help_menu.setTitle, "menu.help")
+        self._add_menu_action(help_menu, "menu.help.manual", self.menu_manual)
+        help_menu.addSeparator()
         self._add_menu_action(help_menu, "menu.help.about", self.menu_about)
 
     def _add_menu_action(self, menu, key: str, handler) -> QAction:
@@ -2908,6 +2911,23 @@ class MainWindow(QMainWindow):
                 self.set_status(tr("status.general_settings_updated"))
 
         GeneralConfigDialog(self, self.settings, update_settings, self.window_state)
+
+    def menu_manual(self):
+        """Present the non-modal user-manual viewer (Help > Manual).
+
+        The window is reused across invocations: if it is already open it is
+        raised and activated rather than opening a second copy.
+
+        Satisfies: FR-023, UIR-091.
+        """
+        existing = getattr(self, "_manual_dialog", None)
+        if existing is not None and existing.isVisible():
+            existing.raise_()
+            existing.activateWindow()
+            return
+        dialog = ManualDialog(self)
+        self._manual_dialog = dialog
+        dialog.show()
 
     def menu_about(self):
         """

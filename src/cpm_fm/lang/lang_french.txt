@@ -22,6 +22,7 @@ menu.config.serial = Série
 menu.config.general = Général
 menu.config.language = Langue
 menu.help = Aide
+menu.help.manual = Manuel
 menu.help.about = À propos
 
 # --- Toolbar -------------------------------------------------------------------
@@ -221,6 +222,8 @@ error.retransfer_file_missing = Retransfert impossible : fichier introuvable : {
 # --- About dialog --------------------------------------------------------------
 about.title = À propos
 about.version = Version {version}
+manual.title = Manuel d'utilisation
+manual.load_error = Impossible de charger le manuel d'utilisation depuis : {path}
 
 # --- File list filter / sort (Feature 3) --------------------------------------
 main.filter_placeholder = Filtrer les fichiers…
@@ -243,3 +246,4 @@ dialog.backup_restore.restore_title = Confirmer la restauration
 dialog.backup_restore.backup = La sauvegarde SUPPRIMERA TOUS les fichiers du répertoire hôte et les remplacera par tous les fichiers du lecteur distant. Cette action est irréversible. Continuer ?
 dialog.backup_restore.restore = La restauration SUPPRIMERA TOUS les fichiers du lecteur distant et les remplacera par tous les fichiers du répertoire hôte. Cette action est irréversible. Continuer ?
 button.continue = Continuer
+button.close = Fermer

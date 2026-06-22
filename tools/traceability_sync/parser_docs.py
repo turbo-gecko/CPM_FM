@@ -1,7 +1,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import List, Dict, Optional
+
 from pydantic import BaseModel
 
 # Configure logging
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 _CELL_SPLIT = re.compile(r"(?<!\\)\|")
 
 
-def _split_row(line: str) -> List[str]:
+def _split_row(line: str) -> list[str]:
     """Split a table row into its cells (stripped), dropping the empty artefacts
     produced by the leading and trailing pipe but keeping interior cells
     positional (interior blanks are preserved, not discarded)."""
@@ -32,13 +32,14 @@ class RequirementRow(BaseModel):
     Attributes:
         requirement_id: The unique ID of the requirement (e.g., FR-001).
         description: The text description of the requirement.
-        implementation: The current implementation mapping (e.g., 'app.py:load_config' or 'Unmapped').
+        implementation: The current implementation mapping
+            (e.g., 'app.py:load_config' or 'Unmapped').
     """
     requirement_id: str
     description: str
     implementation: str
 
-def parse_requirements_md(file_path: str) -> List[RequirementRow]:
+def parse_requirements_md(file_path: str) -> list[RequirementRow]:
     """
     Parses a Markdown file containing requirements tables and extracts the 
     Requirement ID, Description, and Implementation.
@@ -49,7 +50,7 @@ def parse_requirements_md(file_path: str) -> List[RequirementRow]:
     Returns:
         A list of RequirementRow objects.
     """
-    requirements: List[RequirementRow] = []
+    requirements: list[RequirementRow] = []
     path = Path(file_path)
     
     if not path.exists():
@@ -57,7 +58,7 @@ def parse_requirements_md(file_path: str) -> List[RequirementRow]:
         return []
 
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             lines = f.readlines()
     except Exception as e:
         logger.error(f"Error reading {file_path}: {e}")
@@ -67,7 +68,8 @@ def parse_requirements_md(file_path: str) -> List[RequirementRow]:
     # We are looking for tables that have 'ID' and 'Source' or 'Implementation' columns.
     # Based on the provided docs/cpm_fm_requirements.md, the columns are:
     # | ID | Requirement | Priority | Verification | Source |
-    # Note: The "Source" column often contains implementation details like 'impl. app.py:load_config'.
+    # Note: The "Source" column often contains implementation details like
+    # 'impl. app.py:load_config'.
     
     in_table = False
     header_cols = []
@@ -167,7 +169,7 @@ def _merge_source(existing: str, new_impl: str) -> str:
     return f"{existing.rstrip().rstrip(';').rstrip()}; {new_impl}"
 
 
-def update_requirements_md(file_path: str, updates: Dict[str, str]):
+def update_requirements_md(file_path: str, updates: dict[str, str]):
     """
     Updates the implementation citation of a Markdown table without discarding
     the existing Source-column content.
@@ -183,11 +185,11 @@ def update_requirements_md(file_path: str, updates: Dict[str, str]):
         updates: Dictionary mapping Requirement ID to the new implementation string.
     """
     path = Path(file_path)
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         lines = f.readlines()
 
     applied = 0
-    new_lines: List[str] = []
+    new_lines: list[str] = []
     for line in lines:
         body = line.rstrip("\n")
         ending = line[len(body):]  # preserve the original line ending (or none)

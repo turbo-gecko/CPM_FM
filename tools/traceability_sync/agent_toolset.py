@@ -1,10 +1,9 @@
 import logging
 import re
-from typing import List, Dict, Tuple
-from pydantic import BaseModel
 
-from parser_code import scan_codebase, CodeElement
-from parser_docs import parse_requirements_md, RequirementRow, update_requirements_md
+from parser_code import CodeElement, scan_codebase
+from parser_docs import parse_requirements_md, update_requirements_md
+from pydantic import BaseModel
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -12,16 +11,17 @@ logger = logging.getLogger(__name__)
 
 class TraceabilityDiff(BaseModel):
     """
-    Represents the difference between code-discovered traceability and document-recorded traceability.
-    
+    Represents the difference between code-discovered traceability and
+    document-recorded traceability.
+
     Attributes:
         to_update: Requirements that have a new or updated implementation path.
         to_remove: Requirements that are no longer satisfied by any code element.
         new_discoveries: Requirements found in code but missing from the documents.
     """
-    to_update: Dict[str, str] = {}
-    to_remove: List[str] = []
-    new_discoveries: List[str] = []
+    to_update: dict[str, str] = {}
+    to_remove: list[str] = []
+    new_discoveries: list[str] = []
 
 class TraceabilityAgent:
     """
@@ -44,7 +44,7 @@ class TraceabilityAgent:
         # Create a mapping: ReqID -> [CodeElement, ...]. A single requirement is
         # frequently satisfied by more than one class/function, so we keep every
         # element rather than letting the last writer win.
-        code_mapping: Dict[str, List[CodeElement]] = {}
+        code_mapping: dict[str, list[CodeElement]] = {}
         for elem in discovered_elements:
             code_mapping.setdefault(elem.requirement_id, []).append(elem)
 
@@ -52,7 +52,9 @@ class TraceabilityAgent:
         doc_requirements = parse_requirements_md(self.requirements_file)
 
         # Create a mapping: ReqID -> implementation_string
-        doc_mapping: Dict[str, str] = {row.requirement_id: row.implementation for row in doc_requirements}
+        doc_mapping: dict[str, str] = {
+            row.requirement_id: row.implementation for row in doc_requirements
+        }
 
         logger.info("Step 3: Calculating the diff...")
         diff = TraceabilityDiff()
@@ -104,9 +106,9 @@ class TraceabilityAgent:
         return token in cls._normalize(doc_impl)
 
     @staticmethod
-    def _format_elements(elements: List[CodeElement]) -> str:
+    def _format_elements(elements: list[CodeElement]) -> str:
         """Render the satisfying elements as a doc-style citation list."""
-        seen: List[str] = []
+        seen: list[str] = []
         for e in elements:
             basename = e.module.replace("\\", "/").split("/")[-1]
             cite = f"`{basename}:{e.name}`"

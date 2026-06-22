@@ -22,6 +22,7 @@ menu.config.serial = 串口
 menu.config.general = 常规
 menu.config.language = 语言
 menu.help = 帮助
+menu.help.manual = 手册
 menu.help.about = 关于
 
 # --- Toolbar -------------------------------------------------------------------
@@ -221,6 +222,8 @@ error.retransfer_file_missing = 无法重新传输：找不到文件：{path}
 # --- About dialog --------------------------------------------------------------
 about.title = 关于
 about.version = 版本 {version}
+manual.title = 用户手册
+manual.load_error = 无法从以下位置加载用户手册：{path}
 
 # --- File list filter / sort (Feature 3) --------------------------------------
 main.filter_placeholder = 筛选文件…
@@ -243,3 +246,4 @@ dialog.backup_restore.restore_title = 确认还原
 dialog.backup_restore.backup = 备份将删除主机目录中的所有文件，并用远程驱动器中的所有文件替换它们。此操作无法撤消。是否继续？
 dialog.backup_restore.restore = 还原将删除远程驱动器上的所有文件，并用主机目录中的所有文件替换它们。此操作无法撤消。是否继续？
 button.continue = 继续
+button.close = 关闭
