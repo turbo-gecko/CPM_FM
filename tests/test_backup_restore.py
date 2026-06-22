@@ -91,6 +91,26 @@ def test_backup_order_refresh_confirm_wipe_transfer(qapp, monkeypatch, state, tm
         win.close()
 
 
+def test_backup_refreshes_host_pane_after_wipe(qapp, monkeypatch, state, tmp_path):
+    # The wiped (now-deleted) files must not linger in the Host pane while the
+    # backup downloads: the pane is refreshed after the wipe, before transfer.
+    win = MainWindow(state)
+    try:
+        _arm(win, monkeypatch, tmp_path)
+        order = []
+        monkeypatch.setattr(win, "_list_remote_file_names", lambda: ["A.TXT"])
+        monkeypatch.setattr(win, "_confirm_backup_restore", lambda op: True)
+        monkeypatch.setattr(win, "_wipe_host_dir", lambda names: order.append("wipe"))
+        monkeypatch.setattr(win, "refresh_host_files", lambda: order.append("refresh_host"))
+        monkeypatch.setattr(win, "_transfer_to_host_batch", lambda paths: order.append("transfer"))
+        win._backup_drive()
+        # An initial refresh happens before the confirm/wipe (FR-152); the key
+        # assertion is the second refresh between the wipe and the transfer.
+        assert order == ["refresh_host", "wipe", "refresh_host", "transfer"]
+    finally:
+        win.close()
+
+
 def test_backup_cancel_stops_before_wipe(qapp, monkeypatch, state, tmp_path):
     # FR-152: Cancel aborts before any deletion or transfer.
     win = MainWindow(state)
