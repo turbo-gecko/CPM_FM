@@ -56,11 +56,25 @@ class XModem:
         """Abort the transfer by sending the X-Modem CAN sequence (FR-120).
 
         Several CAN bytes are sent so the remote reliably recognises the abort.
+        The serial port is then flushed in BOTH directions so the cancellation
+        takes effect immediately: any partially-transmitted packet still queued
+        for transmit is discarded (otherwise it keeps draining to the remote
+        after the cancel), and any data the remote was still sending mid-abort
+        is dropped from the receive buffer. Without this, the transfer appears
+        to keep going until the buffers empty (FR-120).
 
         Satisfies: FR-120, NFR-003.
         """
         try:
+            # Discard the in-flight packet still queued for transmit so it does
+            # not keep draining to the remote after the cancel.
+            self.ser.reset_output_buffer()
+            # Tell the remote to abort, and block until the CAN bytes have
+            # actually gone out before dropping the line quiet.
             self._write(self.CAN * 3)
+            self.ser.flush()
+            # Drop anything the remote was still sending mid-abort.
+            self.ser.reset_input_buffer()
         except Exception:
             pass
 

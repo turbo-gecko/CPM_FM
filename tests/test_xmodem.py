@@ -26,6 +26,11 @@ class _FakeSerial:
     def __init__(self, to_read: bytes = b""):
         self._inbuf = bytearray(to_read)
         self.written = bytearray()
+        # FR-120: bookkeeping so tests can assert the cancel path flushes the
+        # port in both directions.
+        self.input_resets = 0
+        self.output_resets = 0
+        self.flushes = 0
 
     @property
     def in_waiting(self) -> int:
@@ -41,7 +46,13 @@ class _FakeSerial:
         return len(data)
 
     def reset_input_buffer(self) -> None:
-        pass
+        self.input_resets += 1
+
+    def reset_output_buffer(self) -> None:
+        self.output_resets += 1
+
+    def flush(self) -> None:
+        self.flushes += 1
 
 
 def test_send_file_reports_progress_per_packet(tmp_path):
@@ -146,6 +157,22 @@ def test_receive_file_cancel_aborts_and_sends_can(tmp_path):
     assert xm.receive_file(str(save)) is False
     assert CAN in fake.written
     assert not save.exists()
+
+
+def test_cancel_flushes_serial_in_both_directions(tmp_path):
+    # FR-120: aborting flushes the transmit and receive buffers so the in-flight
+    # packet stops draining to the remote and stale incoming bytes are dropped,
+    # rather than the transfer appearing to continue until the buffers empty.
+    path = tmp_path / "UP.TXT"
+    path.write_bytes(bytes(range(128)))
+    fake = _FakeSerial(b"C" + ACK * 4)
+    xm = XModem(fake, cancel_check=lambda: True)
+
+    assert xm.send_file(str(path)) is False
+    # Output buffer discarded, then CAN flushed out, then input buffer discarded.
+    assert fake.output_resets >= 1
+    assert fake.input_resets >= 1
+    assert fake.flushes >= 1
 
 
 # --------------------------------------------------------------------------- #
@@ -289,6 +316,12 @@ class _CrcReceiveSerial:
     def reset_input_buffer(self) -> None:
         pass
 
+    def reset_output_buffer(self) -> None:
+        pass
+
+    def flush(self) -> None:
+        pass
+
 
 def test_receive_file_falls_through_to_crc_mode(tmp_path):
     # NFR-003: when the sender ignores NAK (checksum) the receiver polls 'C' and
@@ -346,6 +379,12 @@ class _ChunkedSerial:
         return len(data)
 
     def reset_input_buffer(self) -> None:
+        pass
+
+    def reset_output_buffer(self) -> None:
+        pass
+
+    def flush(self) -> None:
         pass
 
 
@@ -443,6 +482,12 @@ class _SilentTailSerial:
         return len(data)
 
     def reset_input_buffer(self) -> None:
+        pass
+
+    def reset_output_buffer(self) -> None:
+        pass
+
+    def flush(self) -> None:
         pass
 
 
