@@ -27,9 +27,23 @@ class TraceabilityAgent:
     """
     The logic engine that synchronizes source code implementation with requirements documentation.
     """
-    def __init__(self, codebase_root: str, requirements_file: str):
+    def __init__(self, codebase_root: str, requirements_file):
+        """``requirements_file`` may be a single path or a list of paths. The
+        SRS and its architecture companion (`docs/cpm_fm_architecture.md`, which
+        holds the CR-/NFR- constraints) are separate files; both must be parsed
+        so that an architectural CR/NFR tag in code is not mis-reported as
+        "missing from requirements" — mirroring generate_views.py.
+        """
         self.codebase_root = codebase_root
-        self.requirements_file = requirements_file
+        if isinstance(requirements_file, (str, bytes)):
+            self.requirements_files = [requirements_file]
+        else:
+            self.requirements_files = list(requirements_file)
+        # First file is the default write target / log label for messages.
+        self.requirements_file = self.requirements_files[0]
+        # Populated during analysis: requirement ID -> the file that defines it,
+        # so write-backs land in the correct document.
+        self._id_to_file: dict[str, str] = {}
 
     def run_sync_analysis(self) -> TraceabilityDiff:
         """
@@ -49,12 +63,12 @@ class TraceabilityAgent:
             code_mapping.setdefault(elem.requirement_id, []).append(elem)
 
         logger.info("Step 2: Parsing requirements documentation...")
-        doc_requirements = parse_requirements_md(self.requirements_file)
-
-        # Create a mapping: ReqID -> implementation_string
-        doc_mapping: dict[str, str] = {
-            row.requirement_id: row.implementation for row in doc_requirements
-        }
+        doc_mapping: dict[str, str] = {}
+        self._id_to_file = {}
+        for req_file in self.requirements_files:
+            for row in parse_requirements_md(req_file):
+                doc_mapping[row.requirement_id] = row.implementation
+                self._id_to_file[row.requirement_id] = req_file
 
         logger.info("Step 3: Calculating the diff...")
         diff = TraceabilityDiff()
@@ -153,17 +167,24 @@ class TraceabilityAgent:
         Actually writes the changes back to the requirements.md file.
         """
         diff = self.run_sync_analysis()
-        if diff.to_update:
-            update_requirements_md(self.requirements_file, diff.to_update)
-            logger.info(f"Applied {len(diff.to_update)} updates to {self.requirements_file}")
-        else:
+        if not diff.to_update:
             logger.info("No updates to apply.")
+            return
+        # Route each update to the file that defines that requirement so a CR/NFR
+        # citation lands in the architecture doc, not the SRS.
+        by_file: dict[str, dict[str, str]] = {}
+        for req_id, new_impl in diff.to_update.items():
+            target = self._id_to_file.get(req_id, self.requirements_file)
+            by_file.setdefault(target, {})[req_id] = new_impl
+        for target, updates in by_file.items():
+            update_requirements_md(target, updates)
+            logger.info(f"Applied {len(updates)} updates to {target}")
 
 if __name__ == "__main__":
     # Example execution
     # Adjusted paths for the current project structure
     CODE_ROOT = "src"
-    REQ_FILE = "docs/cpm_fm_requirements.md"
-    
-    agent = TraceabilityAgent(CODE_ROOT, REQ_FILE)
+    REQ_FILES = ["docs/cpm_fm_requirements.md", "docs/cpm_fm_architecture.md"]
+
+    agent = TraceabilityAgent(CODE_ROOT, REQ_FILES)
     print(agent.generate_update_plan())

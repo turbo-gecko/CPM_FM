@@ -2332,7 +2332,7 @@ class MainWindow(QMainWindow):
         try:
             # Launch the CP/M sender (PCPUT) on the Terminal Port, then receive.
             # receive_file drives the handshake (polls with NAK first, then 'C'
-            # per NFR-003), so it tolerates PCPUT taking several seconds to arm.
+            # per NFR-003f), so it tolerates PCPUT taking several seconds to arm.
             self._issue_remote_cmd(
                 "recv_remote_cmd",
                 "PCPUT $1",
