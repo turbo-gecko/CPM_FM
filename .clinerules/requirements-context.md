@@ -1,6 +1,6 @@
 # Requirements context budget — READ BEFORE touching the spec
 
-The full specification `docs/cpm_fm_requirements.md` is ~40K tokens. **Do not
+The full specification `docs/cpm_fm_requirements.md` is ~37K tokens. **Do not
 read it whole.** Three slim, generated views in `docs/requirements_views/` exist
 so you can work without exhausting the context window. Use them by default.
 
@@ -23,8 +23,12 @@ so you can work without exhausting the context window. Use them by default.
 
 ## Rules
 
-- `docs/cpm_fm_requirements.md` is the single source of truth and the **only**
-  requirements file you edit by hand.
+- `docs/cpm_fm_requirements.md` is the single source of truth for requirements and the
+  only file you hand-edit to add or change a requirement.
+- The Issue Resolution Log and Change History are companion files
+  (`docs/requirements_issue_log.md`, `docs/requirements_change_history.md`) — historical and
+  append-only. Don't load them for implementation work; append to them only as part of the
+  requirement-change workflow (see `AGENTS.md`).
 - The files under `docs/requirements_views/` are **generated — never edit them.**
   After changing the spec or any code `Satisfies:` tag, regenerate with:
   `python tools/traceability_sync/generate_views.py`

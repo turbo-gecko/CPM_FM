@@ -4,9 +4,9 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.17 |
+| Version | 1.18 |
 | Status | Draft |
-| Date | 2026-06-19 |
+| Date | 2026-06-27 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.11.0) |
 
 ---
@@ -83,8 +83,10 @@ Launch under each of the two entry points as the case requires:
 
 ### 2.3 Test data
 
-- The example configs in `examples/` — `serial_settings.json` (flat shape) and `settings_a.json`
-  (nested shape) — for the config-format compatibility cases.
+- The example configs in `examples/` (e.g. `RC2014_Z_Pro.json`, flat shape) for the config cases. No
+  nested-shape example ships; for the nested-format compatibility case (MT-L02) derive one by hand by
+  wrapping the serial keys under a `serial` object (see `NFR-002`). The nested shape is also covered by
+  the automated suite (`tests/test_serial_manager.py`).
 - A small **host** file set in a scratch folder: at least one short text file, one binary file, one
   file whose name has no extension, and one file ≥ ~1 KB (to span multiple X-Modem blocks).
 - On the CP/M side, a drive (e.g. `A:`) holding a few files including one extensionless file and one
@@ -126,7 +128,7 @@ that need two physical ports are marked **[2-port]**; visual-only cases are mark
 
 ## 5. Serial connect / disconnect (real ports)
 
-Preconditions: a valid serial configuration is loaded (File > Load `examples/serial_settings.json`,
+Preconditions: a valid serial configuration is loaded (File > Load `examples/RC2014_Z_Pro.json`,
 then edit ports via Config > Serial to match your hardware), unless a case says otherwise.
 
 | ID | Req | Steps | Expected |
@@ -178,7 +180,7 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
 | MT-L01 | FR-010, IFR-004 | File > Load. | A file-select dialog defaulting to JSON appears. |
-| MT-L02 | FR-011, NFR-002 | Load `examples/serial_settings.json` (flat), then load `examples/settings_a.json` (nested). | Each load **fully replaces** the settings store; both shapes are accepted; serial settings normalise (Connect works with either). |
+| MT-L02 | FR-011, NFR-002 | Load `examples/RC2014_Z_Pro.json` (flat). Then hand-create a nested variant — wrap its serial keys in a `{"serial": {…}}` object, renaming `transport_port`→`transfer_port`, `data`→`data_bits`, `stopbits`→`stop_bits` — and load that. | Each load **fully replaces** the settings store; both shapes are accepted; serial settings normalise (Connect works with either). |
 | MT-L03 | FR-012 | Hand-edit a config to add an unknown key (e.g. `"foo": 123`), load it, then Save to a new file. | App accepts the file (no rejection); the unknown key survives verbatim in the saved output and does not change behaviour. |
 | MT-L04 | FR-017 | Update to populate the Remote list, then File > Load any config. | Remote Files list is **cleared** on load. |
 | MT-L05 | FR-013, FR-014 | File > Save to a new path; reopen the file in a text editor. | JSON file written with the **entire** settings store — all current serial + general settings (the full-store save, as opposed to the per-group dialog saves MT-L13/MT-L14). |
@@ -187,7 +189,7 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 | MT-L08 | FR-005, FR-003 | After MT-L07, delete or rename the remembered config file, relaunch. | App starts **unconfigured** (no crash) because the remembered file no longer parses/exists. |
 | MT-L09 | FR-018, FR-019 | Load a config (so a file is remembered), connect, Update, then File > **New**. | Current config is saved to the remembered file; ports closed (disconnect behaviour); Remote list cleared; settings replaced with defaults; remembered path forgotten; Host list refreshed to the default directory. |
 | MT-L10 | FR-018 | With **no** remembered file, File > New. | A Save dialog appears first; choosing a file then resets to defaults; **cancelling** the Save dialog cancels New entirely (config, ports, lists retained). |
-| MT-L11 | FR-125, UIR-005 | Launch unconfigured, then File > Load `examples/serial_settings.json`. | Before loading, the title bar reads **CP/M File Manager** alone; after loading it reads **CP/M File Manager — serial_settings** (file base name only — no path, no `.json`). |
+| MT-L11 | FR-125, UIR-005 | Launch unconfigured, then File > Load `examples/RC2014_Z_Pro.json`. | Before loading, the title bar reads **CP/M File Manager** alone; after loading it reads **CP/M File Manager — RC2014_Z_Pro** (file base name only — no path, no `.json`). |
 | MT-L12 | FR-125 | After MT-L11, File > **New**. | The title bar reverts to **CP/M File Manager** alone (the config name is dropped). |
 | MT-L13 | FR-020a | Load a config file. Open Config > **Serial**, change a serial value (e.g. Speed), and press **Save**. Reopen the loaded file in a text editor. | **No** Save dialog appears. The serial value is updated in the file; every general setting in the file (List Files, EOL, Host Directory, etc.) is **unchanged**. Status bar confirms the serial settings were saved. |
 | MT-L14 | FR-021a | Load a config file. Open Config > **General**, change a general value (e.g. EOL), and press **Save**. Reopen the loaded file in a text editor. | **No** Save dialog appears. The general value is updated in the file; every serial setting in the file (ports, speed, parity, etc.) is **unchanged**. Status bar confirms the general settings were saved. |
