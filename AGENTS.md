@@ -114,12 +114,16 @@ ISO/IEC/IEEE 29148 SRS with uniquely identified, traceable requirements (`FR-`/`
 **archived** for history but are **superseded** where they conflict (e.g. they call Copy to Remote/Host
 empty stubs, but the SRS and code implement working X-Modem transfers — see `FR-080`–`FR-085`,
 `CR-010`).
+The SRS's §10 **Issue Resolution Log** and §11 **Change History** live in companion files
+(`docs/requirements_issue_log.md`, `docs/requirements_change_history.md`) to keep the spec small; the
+SRS keeps a one-line stub pointing to each. Both are historical/append-only — you rarely need to read
+them, and they are excluded from the generated views.
 `Workflows/` holds repo-specific multi-agent workflow definitions (`requirements-check`,
 `code-requirements-align`, `defect-investigator`, `test-quality-checker`) for checking code and tests
 against the SRS.
 
 **Requirement views (`docs/requirements_views/`) — consult first to save context.** The full SRS is
-~40K tokens; you rarely need it whole. Two generated, read-only views (from
+~37K tokens; you rarely need it whole. Two generated, read-only views (from
 `tools/traceability_sync/generate_views.py`, derived from the SRS + code `Satisfies:` tags):
 - `requirements_index.md` — terse one-line-per-requirement summary (~13K tokens); use for **broad**
   understanding.
@@ -145,4 +149,8 @@ not stop short:
 6. **Update the manual test plan** (`docs/manual_test_plan.md`) and increment its test plan version.
 7. **Update the manual test scorecard** (`docs/manual_test_scorecard.md`) to match the test plan and
    increment its score version.
+7a. **Record the change** — bump `src/version.txt` and the SRS version field (DR-040/DR-041), and add a
+   row to **`docs/requirements_change_history.md`** (the §11 companion file — *not* the SRS itself).
+   When a requirements review resolves an ambiguity or gap, add the OI entry to
+   **`docs/requirements_issue_log.md`** (the §10 companion file).
 8. **Provide a summary** of the actions taken.
