@@ -6,6 +6,16 @@ description: Requirements checker that analyses, reviews and edits requirements 
 
 This skill provides expert analysis, review, and editing of requirements following the ISO/IEC/IEEE 29148 standard for systems and software engineering — life cycle processes — requirements engineering.
 
+## Document Structure (read this first)
+
+The requirements set is split across several files; know the layout before editing:
+- **`docs/cpm_fm_requirements.md`** — the SRS and the single source of truth for requirements. This is the **only** file you hand-edit to add or change a requirement. Its header carries the document Version field (DR-040/DR-041).
+- **`docs/requirements_change_history.md`** — the §11 Change History (companion file). Add a row here for every edit; do **not** put change history back in the SRS.
+- **`docs/requirements_issue_log.md`** — the §10 Issue Resolution Log (companion file). Record resolved ambiguities/conflicts/gaps here as OI entries.
+- **`docs/requirements_views/`** — generated, **read-only** views (`requirements_index.md` for a terse one-line-per-requirement summary; `code_to_requirements.md`/`.json` mapping source files to requirement IDs). Use them for quick lookup, but **never hand-edit them** — regenerate with `python tools/traceability_sync/generate_views.py` after any requirement-ID, Source-citation, or code `Satisfies:`-tag change.
+
+In the SRS, §10 and §11 are now one-line stub redirects pointing to the two companion files above.
+
 ## Core Principles
 
 The requirements expert follows ISO/IEC/IEEE 29148 principles:
@@ -119,8 +129,10 @@ When editing requirements:
 - Follow established requirement templates
 - Document all changes with rationale
 - Ensure changes don't introduce new issues
-- Always increment the document version number when making edits
-- Always add an entry to the Change History table summarising every requirement modified, added, or deleted, including the requirement IDs affected
+- Always increment the SRS document Version field (DR-040/DR-041) when making edits
+- Always add an entry to the **Change History companion file** (`docs/requirements_change_history.md`) — not the SRS itself — summarising every requirement modified, added, or deleted, including the requirement IDs affected
+- When a review resolves an ambiguity, conflict, or gap, record it as a new OI entry in the **Issue Resolution Log companion file** (`docs/requirements_issue_log.md`)
+- After editing requirement IDs, Source-column citations, or code `Satisfies:` tags, regenerate the read-only views by running `python tools/traceability_sync/generate_views.py` and commit `docs/requirements_views/` (never hand-edit the views)
 - After editing, review `AGENTS.md` and update any architecture, component, or behaviour descriptions that are no longer accurate given the changed requirements
 - After editing, review the test suite (`tests/`) and update or add tests so that every new or modified requirement has corresponding test coverage; if tests are added or changed, run the full test suite (`pytest`) and record any failures in a new plan file at `temp\fixes.md` listing the failing tests and the code changes needed to resolve them
 
@@ -135,7 +147,8 @@ When the user provides requirements for analysis:
 6. Provide comprehensive critique
 7. Suggest specific improvements
 8. Edit requirements if requested
-9. After editing, increment the document version number and add a Change History entry summarising all changes made (requirement IDs, nature of change)
+9. After editing, increment the SRS Version field and add an entry to the Change History companion file (`docs/requirements_change_history.md`); record any resolved ambiguity/conflict/gap as an OI entry in the Issue Resolution Log companion file (`docs/requirements_issue_log.md`)
+9a. After editing requirement IDs, Source citations, or code `Satisfies:` tags, regenerate the views (`python tools/traceability_sync/generate_views.py`) and commit `docs/requirements_views/`
 10. After editing, update `AGENTS.md` to reflect any changed architecture, component descriptions, or cross-cutting behaviours introduced or modified by the new/changed requirements
 11. After editing, update or add tests in `tests/` to cover every new or modified requirement; if any tests are added or changed, run `pytest` and — if there are failures — create `temp\fixes.md` as a plan listing each failing test, the root cause, and the code changes required to fix it
 
@@ -159,8 +172,9 @@ When the user provides requirements for analysis:
 - Change log with rationale
 - Updated metadata (IDs, priorities, etc.)
 - Traceability information
-- Incremented document version number
-- Change History table entry added to the document listing all affected requirement IDs and the nature of each change
+- Incremented SRS Version field
+- Change History entry added to `docs/requirements_change_history.md` (companion file) listing all affected requirement IDs and the nature of each change
+- Views regenerated (`docs/requirements_views/`) if any IDs, Source citations, or `Satisfies:` tags changed
 
 **AGENTS.md Update:**
 - Sections updated to reflect any new or changed architecture, components, or cross-cutting behaviours
@@ -180,5 +194,5 @@ When the user provides requirements for analysis:
 - Provide actionable, specific recommendations
 - Maintain professional, constructive tone
 - When editing, preserve stakeholder intent while improving quality
-- Never delete existing entries in the version history
+- Never delete existing entries in the Change History or Issue Resolution Log companion files
 - Steps 10 and 11 (AGENTS.md and test updates) are mandatory whenever requirements are edited — do not skip them even for minor or cosmetic changes
