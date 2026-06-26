@@ -72,13 +72,11 @@ Three layers, intentionally decoupled from the GUI so they are unit-testable wit
 
 - **Threading model:** Serial reads, and both transfer directions, run off the Qt GUI thread (daemon
   threads). Any UI update from those threads must be marshalled onto the GUI thread by **emitting a Qt
-  signal** — never touch a widget directly from a worker thread (NFR-004). `MainWindow` defines a
-  growing set of these (all auto-queued across threads): `status_changed`, `term_write`,
-  `remote_files_ready`, `error_raised`, `transfer_completed`, `batch_started`, `transfer_file_started`,
-  `transfer_progress`, `drive_not_found`, `view_file_ready`, `transfer_cancelled`, `conflict_detected`,
-  `invalid_name_detected`, `backup_restore_confirm`. Note that some of these (conflict, invalid-name,
-  backup/restore confirm) drive a **modal prompt on the GUI thread while the worker thread blocks**
-  awaiting the user's decision. Follow this signal pattern when adding background work, or Qt will
+  signal** — never touch a widget directly from a worker thread (NFR-004). `MainWindow` declares a set
+  of these signals (see the `Signal(...)` declarations at the top of the class). Most just push
+  status/progress to the UI; three — `conflict_detected`, `invalid_name_detected`,
+  `backup_restore_confirm` — drive a **modal prompt on the GUI thread while the worker thread blocks**
+  awaiting the user's decision. Follow this signal pattern for new background work, or Qt will
   crash/misbehave.
 - **Remote file listing is capture-based, not request/response:** `_capture_terminal_response`
   sets a `_capture_active` flag, sends the command, waits 1 s for output to begin accumulating in
@@ -86,10 +84,12 @@ Three layers, intentionally decoupled from the GUI so they are unit-testable wit
   has not grown within an idle window (max total wait 10 s). `_do_refresh_remote_logic` calls this
   for the `DIR` command and then parses the captured text.
 - **Two config JSON formats coexist** and both must keep working:
-  - *Flat* (what the dialogs read/write, see `examples/serial_settings.json`): `terminal_port`,
-    `transport_port`, `speed`, `data`, `parity`, `stopbits`, `flow`, `msec_char`, `msec_line`.
-  - *Nested* (`examples/settings_a.json`): `{"serial": {...}, "general": {...}}` with different key
-    names (`transfer_port`, `data_bits`, `stop_bits`, ...).
+  - *Flat* (what the dialogs read/write; every file in `examples/`, e.g. `RC2014_Z_Pro.json`):
+    `terminal_port`, `transport_port`, `speed`, `data`, `parity`, `stopbits`, `flow`, `msec_char`,
+    `msec_line`.
+  - *Nested* (legacy/alternative shape still accepted; no example currently shipped):
+    `{"serial": {...}, "general": {...}}` with variant key names (`transfer_port`, `data_bits`,
+    `stop_bits`, ...).
   `SerialManager.open_port` and `ConfigHandler.validate_serial_settings` defensively normalize both
   (unwrap a `serial` sub-dict, fall back across key-name variants). When touching settings handling,
   preserve compatibility with both shapes.
@@ -118,18 +118,15 @@ empty stubs, but the SRS and code implement working X-Modem transfers — see `F
 `code-requirements-align`, `defect-investigator`, `test-quality-checker`) for checking code and tests
 against the SRS.
 
-**Requirement views (`docs/requirements_views/`) — consult these first to save context.** The full SRS
-is ~40K tokens; for most work you do not need to load it whole. Two **generated, read-only** views
-(produced by `tools/traceability_sync/generate_views.py`) are derived from the SRS and the code's
-`Satisfies:` tags:
-- `requirements_index.md` — a terse, section-grouped, one-line-per-requirement summary (~13K tokens).
-  Load this for **broad** understanding of what the system requires.
-- `code_to_requirements.md` (+ `.json`) — maps each source file to the requirement IDs it implements.
-  Use this for **targeted** work: look up the file you are editing, then read just those IDs in the
-  index or the SRS instead of the whole document.
-The SRS (`docs/cpm_fm_requirements.md`) remains the single source of truth and the only file you edit
-by hand; the views are regenerated from it (workflow step 3a). **Never edit the views directly** — your
-changes will be overwritten on the next regeneration.
+**Requirement views (`docs/requirements_views/`) — consult first to save context.** The full SRS is
+~40K tokens; you rarely need it whole. Two generated, read-only views (from
+`tools/traceability_sync/generate_views.py`, derived from the SRS + code `Satisfies:` tags):
+- `requirements_index.md` — terse one-line-per-requirement summary (~13K tokens); use for **broad**
+  understanding.
+- `code_to_requirements.md` (+ `.json`) — source file → requirement IDs it implements; use for
+  **targeted** work (look up the file you're editing, read just those IDs).
+The SRS stays the single source of truth and the only requirements file edited by hand. **Never edit
+the views** — regenerate them (step 3a).
 
 ## Requirement-change workflow (MANDATORY)
 
@@ -141,9 +138,8 @@ not stop short:
 2. **Implement the changes.** In every new or changed function, update the docstring with a
    `Satisfies:` tag citing the relevant requirement ID(s).
 3. **Update the requirements** with the traceability mapping to the new and changed functions.
-3a. **Regenerate the requirement views** — run `python tools/traceability_sync/generate_views.py`
-   and commit the updated files under `docs/requirements_views/`. Never hand-edit those files;
-   they are generated from the SRS and the code `Satisfies:` tags (see below).
+3a. **Regenerate the views** — run `python tools/traceability_sync/generate_views.py` and commit
+   `docs/requirements_views/` (see "Requirement views" above; never hand-edit them).
 4. **Run the unit tests** (`pytest`).
 5. **Iterate steps 2–4** until all unit tests pass.
 6. **Update the manual test plan** (`docs/manual_test_plan.md`) and increment its test plan version.
