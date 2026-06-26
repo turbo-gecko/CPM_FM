@@ -4,7 +4,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.18 |
+| Version | 1.19 |
 | Status | Draft |
 | Date | 2026-06-27 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.11.0) |
@@ -20,7 +20,7 @@ must be verified by hand. The automated suite (`pytest`) already covers:
 - `SerialManager.open_port` flow-control / key-name mapping — `UIR-028`, `NFR-002`
   (`tests/test_serial_manager.py`).
 - The X-Modem progress hook, the checksum/CRC receive handshake, and cancel/abort (CAN) — `FR-105`,
-  `FR-120`, `NFR-003` (`tests/test_xmodem.py`), using an in-memory fake port.
+  `FR-120`, `NFR-003a`–`NFR-003o` (`tests/test_xmodem.py`), using an in-memory fake port.
 - Headless GUI logic under the `offscreen` Qt platform — transfer/batch orchestration, progress-dialog
   state, transfer cancellation wiring, dialog button layout, drive-change logic, list-clearing on
   load/disconnect, geometry/last-config persistence, File > New, the context-menu file actions, and
@@ -262,10 +262,10 @@ CP/M side. Use the multi-block (≥1 KB) file plus small files from §2.3.
 | MT-T07 | FR-108 | In a 3-file batch, arrange for the middle file to fail (e.g. abort it on the CP/M side / disconnect briefly). | Batch aborts (third file not attempted); error dialog names the failed file; because file 1 succeeded, the destination list refreshes once. |
 | MT-T08 | FR-109 | Run a multi-file batch and watch the Terminal Window between files. | Before each file **after the first**, the app waits for the CCP prompt to return plus the inter-file settle delay; the second/third launch commands are not truncated ("command not found"). |
 | MT-T09 | FR-086, UIR-058 | With Echo Transfer Data **OFF** (default), open the Terminal Window, then run a transfer. Then set Echo Transfer Data **ON** (Config > General) and run another transfer. | OFF: no `<HH>` tokens appear during the transfer (other terminal traffic is unaffected). ON: every byte sent/received on the Transport Port is echoed into the Receive area as `<HH>` hex tokens (uppercase two-digit). |
-| MT-T10 | NFR-003 | Transfer to/from a 1K-capable sender (e.g. PCPUT1K) and a checksum-only sender (PCPUT V1.0). | Receive polls **NAK first** (no stray `C`); 1K (STX) frames accepted from 1K senders; final packet padded with 0x1A. Content round-trips intact. |
+| MT-T10 | NFR-003c, NFR-003f, NFR-003h | Transfer to/from a 1K-capable sender (e.g. PCPUT1K) and a checksum-only sender (PCPUT V1.0). | Receive polls **NAK first** (no stray `C`); 1K (STX) frames accepted from 1K senders; final packet padded with 0x1A. Content round-trips intact. |
 | MT-T11 | NFR-001 | During a large transfer, move/resize the main window and hover the toolbar. | UI stays responsive (transfer runs off the GUI thread); progress keeps updating. |
 | MT-T12 | FR-119 | Right-click a single host file → **To Remote**; right-click a single remote file → **To Host**. | Each transfers just that one file exactly as the corresponding Copy button (progress dialog, refresh on success); with Transport disconnected, "Transport port not connected" and no transfer. |
-| MT-T13 | FR-120, NFR-003 | Start a transfer of the multi-block (≥1 KB) file (either direction); while the progress dialog shows blocks incrementing, press **Cancel**. (Open the Terminal Window first to watch the byte echo.) | The Cancel button disables and shows "Cancelling…"; the transfer aborts promptly; the CAN sequence is sent (visible as `<18>` tokens in the Terminal Window — MT-T09) and the CP/M program reports an abort; the progress dialog closes; the status bar shows a "Transfer cancelled" message; **no** error dialog appears. |
+| MT-T13 | FR-120, NFR-003m | Start a transfer of the multi-block (≥1 KB) file (either direction); while the progress dialog shows blocks incrementing, press **Cancel**. (Open the Terminal Window first to watch the byte echo.) | The Cancel button disables and shows "Cancelling…"; the transfer aborts promptly; the CAN sequence is sent (visible as `<18>` tokens in the Terminal Window — MT-T09) and the CP/M program reports an abort; the progress dialog closes; the status bar shows a "Transfer cancelled" message; **no** error dialog appears. |
 | MT-T14 | FR-120 | Multi-select three files; start the batch; press **Cancel** during the **second** file (so file 1 already completed). | Remaining files are skipped (third never launched); the dialog closes with a cancellation status; because file 1 completed, the destination list refreshes once; on a cancelled **Copy to Host**, no partially-received file is left in the host folder. |
 
 ---
@@ -465,7 +465,7 @@ or real cross-session persistence:
 - Lifecycle / persistence (real): `FR-004` (windows/dialogs), `FR-005`, `FR-006`, `FR-015`, `FR-016`.
 - Connect/disconnect (real ports & error paths): `FR-030`–`FR-040`, `FR-050`–`FR-058`.
 - Remote listing & drive selection (live capture/timing): `FR-074`–`FR-079`, `FR-100`–`FR-104`.
-- Transfers (live X-Modem, CP/M launch, timing, byte echo, live cancel): `FR-080`–`FR-089`, `FR-099`, `FR-105`–`FR-109`, `FR-119`, `FR-120`, `NFR-003` (interop + CAN abort).
+- Transfers (live X-Modem, CP/M launch, timing, byte echo, live cancel): `FR-080`–`FR-089`, `FR-099`, `FR-105`–`FR-109`, `FR-119`, `FR-120`, `NFR-003a`–`NFR-003o` (interop + CAN abort).
 - Terminal Window (interactive over a link): `FR-090`–`FR-098`, `UIR-060`–`UIR-067`.
 - File actions (real dialog/filesystem/viewer/remote cmd): `FR-112`, `FR-113`, `FR-114`–`FR-118`, `UIR-057`.
 - Interfaces (real): `IFR-001`–`IFR-004`.

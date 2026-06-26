@@ -30,86 +30,47 @@ Test / lint / type-check (CI runs all of these on Python 3.12, see `.github/work
 
 ## Architecture
 
+**Authoritative reference: [`docs/cpm_fm_architecture.md`](docs/cpm_fm_architecture.md)** — the
+Software Architecture Description. It holds the full layer/module breakdown, the cross-cutting
+behaviours, and the architectural constraints (the `CR-`/`NFR-` requirements). The summary below is
+just enough to orient; consult the architecture doc when you need detail.
+
 `src/`-layout package under `src/cpm_fm/`. `app.py:MainWindow` (a `QMainWindow` subclass) is the hub
-that owns all components and wires UI events to them. `main()` creates the `QApplication`, applies the
-theme, shows the window, and runs `app.exec()`; it is the entry point for both launchers.
+that owns all components and wires UI events to them; `app.py:main` creates the `QApplication`, applies
+the theme, shows the window, and runs `app.exec()` (entry point for both launchers). Three layers are
+intentionally decoupled from the GUI so they are unit-testable without a running Qt app — **CR-014
+forbids GUI-toolkit imports in `terminal/` and `utils/`**:
 
-Three layers, intentionally decoupled from the GUI so they are unit-testable without a running Qt app
-(CR-014 forbids GUI-toolkit imports in `terminal/` and `utils/`):
-- `terminal/serial_manager.py` — `SerialManager` owns two `pyserial` ports: a **terminal** port (for
-  CP/M commands) and a **transport** port (for X-Modem transfers). They may be the same physical port.
-  A background daemon thread (`_read_loop`) polls the terminal port and pushes received text to the
-  `on_data_received` callback.
-- `terminal/xmodem.py` — `XModem` is a hand-rolled X-Modem implementation (128-byte SOH-framed
-  packets, supporting both **checksum** and **CRC** modes selected by the receiver-driven handshake;
-  receive also accepts STX/1024-byte XMODEM-1K frames). `send_file`/`receive_file` are blocking and
-  run on worker threads.
-- `terminal/cpm_parser.py` — `CPMParser.parse_dir_output` is a pure static method that scrapes
-  filenames from CP/M 2.2 four-column `DIR` text output. This is the most-tested logic.
-- `utils/config_handler.py` — `ConfigHandler` loads/saves settings as JSON.
-- `utils/i18n.py` — process-wide internationalisation singleton: `tr(key, ...)` resolves a placeholder
-  key to text in the active language, `set_language` switches it. Strings live in `lang/lang_<language>.txt`
-  (`key = value`, UTF-8); `lang_english.txt` is the complete reference/fallback (FR-121, FR-124, DR-042/043).
-- `utils/file_filter.py` — pure wildcard/substring filtering and sorting used by both file panes.
-- `utils/transfer_history.py` — `TransferHistory`, a GUI-free, thread-safe JSON persistence layer
-  (default `~/.cpm_fm_history.json`) recording one entry per transfer *attempt* with retention pruning
-  (FR-140–FR-142, DR-045). Distinct from the raw serial `_rx_buffer`/`_tx_buffer` in `app.py`.
-- `gui/` — Qt-only widgets/dialogs:
-  - `theme.py` (`apply_theme`, the central `qt-material` setup).
-  - `terminal_window.py` (`TerminalWindow`, a non-modal `QMainWindow` serial console).
-  - `config_dialogs.py` (`ConfigDialog` base `QDialog` + `SerialConfigDialog`/`GeneralConfigDialog`,
-    which build `QFormLayout` forms from declarative field lists).
-  - `file_list_widget.py` — the per-pane file list widget (`FileListWidget(QListWidget)`) that adds
-    drag-and-drop source/target behaviour; filter/sort is handled in `app.py` + `utils/file_filter.py`.
-  - `transfer_dialog.py` — modal per-batch transfer-progress dialog with a Cancel button.
-  - `conflict_dialog.py` — destination-exists prompt (Overwrite/Skip/Cancel, apply-to-rest).
-  - `filename_validation_dialog.py` — CP/M 8.3 rename/skip/cancel prompt on upload.
-  - `transfer_history_dialog.py` — review/filter/export/clear/re-transfer from `TransferHistory`.
-  - `file_action_dialog.py`, `about_dialog.py`, `dialog_buttons.py` (shared button helpers),
-    `window_state.py` (`WindowState`: QSettings-backed window geometry + last-used config dir/file).
+- `terminal/` — `serial_manager.py` (`SerialManager`: two `pyserial` ports, terminal + transport, with
+  a daemon `_read_loop`), `xmodem.py` (`XModem`: hand-rolled X-Modem, blocking, on worker threads),
+  `cpm_parser.py` (`CPMParser.parse_dir_output`: pure `DIR`-output scraper, the most-tested logic).
+- `utils/` — `config_handler.py` (JSON settings load/save), `i18n.py` (the `tr(key)` translation
+  singleton; strings in `lang/lang_<language>.txt`, English the reference/fallback), `file_filter.py`
+  (pure filter/sort), `transfer_history.py` (`TransferHistory`: GUI-free JSON history store).
+- `gui/` — Qt-only widgets/dialogs: `theme.py`, `terminal_window.py`, `config_dialogs.py`,
+  `file_list_widget.py`, `transfer_dialog.py`, `conflict_dialog.py`, `filename_validation_dialog.py`,
+  `transfer_history_dialog.py`, `manual_dialog.py`, `file_action_dialog.py`, `about_dialog.py`,
+  `dialog_buttons.py`, `window_state.py`.
 
-### Key cross-cutting behaviors
-
-- **Threading model:** Serial reads, and both transfer directions, run off the Qt GUI thread (daemon
-  threads). Any UI update from those threads must be marshalled onto the GUI thread by **emitting a Qt
-  signal** — never touch a widget directly from a worker thread (NFR-004). `MainWindow` declares a set
-  of these signals (see the `Signal(...)` declarations at the top of the class). Most just push
-  status/progress to the UI; three — `conflict_detected`, `invalid_name_detected`,
-  `backup_restore_confirm` — drive a **modal prompt on the GUI thread while the worker thread blocks**
-  awaiting the user's decision. Follow this signal pattern for new background work, or Qt will
-  crash/misbehave.
-- **Remote file listing is capture-based, not request/response:** `_capture_terminal_response`
-  sets a `_capture_active` flag, sends the command, waits 1 s for output to begin accumulating in
-  `_remote_capture_buffer` via the read callback, then polls every 0.5 s and stops once the buffer
-  has not grown within an idle window (max total wait 10 s). `_do_refresh_remote_logic` calls this
-  for the `DIR` command and then parses the captured text.
-- **Two config JSON formats coexist** and both must keep working:
-  - *Flat* (what the dialogs read/write; every file in `examples/`, e.g. `RC2014_Z_Pro.json`):
-    `terminal_port`, `transport_port`, `speed`, `data`, `parity`, `stopbits`, `flow`, `msec_char`,
-    `msec_line`.
-  - *Nested* (legacy/alternative shape still accepted; no example currently shipped):
-    `{"serial": {...}, "general": {...}}` with variant key names (`transfer_port`, `data_bits`,
-    `stop_bits`, ...).
-  `SerialManager.open_port` and `ConfigHandler.validate_serial_settings` defensively normalize both
-  (unwrap a `serial` sub-dict, fall back across key-name variants). When touching settings handling,
-  preserve compatibility with both shapes.
-- The app **starts unconfigured** (`self.settings = {}`); settings come from File > Load or the
-  Config dialogs. `eol` setting maps `CR`/`LF`/`CRLF` to terminator chars in `app.py`.
-- **Three separate persistence stores, deliberately not merged:** the per-configuration serial/general
-  JSON (`ConfigHandler`), the QSettings-backed UI/session state (`WindowState` — window geometry,
-  last-used config dir/file), and the transfer-history JSON (`TransferHistory`). Keep them distinct.
-- **Whole-drive Backup/Restore** (`app.py:_backup_drive`/`_restore_drive`, FR-150–FR-154, UIR-086–088):
-  mirror every file between the remote drive and the host directory. Each refreshes the destination,
-  emits `backup_restore_confirm` for a modal "all destination files will be deleted" warning (Cancel is
-  the default), then wipes and re-copies via the normal batch transfer path.
-- **GUI strings are never hard-coded** — route every user-facing string through `i18n.tr(key)` and add
-  the key to **all** `lang/lang_*.txt` files (English is mandatory; missing keys fall back to English).
+**Most safety-critical rule — the threading model (NFR-001/NFR-004):** serial reads and both transfer
+directions run off the Qt GUI thread on daemon threads; any UI update from them must be marshalled onto
+the GUI thread by **emitting a Qt signal** (never touch a widget directly from a worker thread, or Qt
+will crash/misbehave). Three signals — `conflict_detected`, `invalid_name_detected`,
+`backup_restore_confirm` — drive a modal prompt on the GUI thread while the worker thread blocks. Other
+load-bearing details (capture-based remote listing, the two coexisting config JSON shapes, the three
+separate persistence stores, the unconfigured start, never hard-coding GUI strings) are documented in
+the architecture doc — read it before changing background work, settings handling, or persistence.
 
 ## Design docs and workflows
 
 `docs/cpm_fm_requirements.md` is the **authoritative requirements specification** going forward — an
 ISO/IEC/IEEE 29148 SRS with uniquely identified, traceable requirements (`FR-`/`UIR-`/`DR-`/`CR-`/
-`NFR-` etc.). Cite requirement IDs when referencing behavior. `docs/legacy/App_Requirements.md` and
+`NFR-` etc.). Cite requirement IDs when referencing behavior. Its companion
+`docs/cpm_fm_architecture.md` is the **authoritative architecture description**: it carries the
+architectural design constraints (CR-001–CR-009, CR-012–CR-014) and architectural NFRs (NFR-001,
+NFR-004, NFR-005), extracted from the SRS with IDs unchanged. Edit architectural `CR-`/`NFR-`
+requirements there; the remaining behavioural constraints (CR-010, CR-011, CR-015, NFR-002) and the
+X-Modem protocol requirements (NFR-003a–NFR-003o, SRS §8.1) stay in the SRS. `docs/legacy/App_Requirements.md` and
 `docs/legacy/App_Design.md` are the original source documents it was consolidated from; they are
 **archived** for history but are **superseded** where they conflict (e.g. they call Copy to Remote/Host
 empty stubs, but the SRS and code implement working X-Modem transfers — see `FR-080`–`FR-085`,
@@ -124,14 +85,17 @@ against the SRS, plus `context-budget-audit` (run occasionally to confirm docs/s
 for small-LLM context windows).
 
 **Requirement views (`docs/requirements_views/`) — consult first to save context.** The full SRS is
-~37K tokens; you rarely need it whole. Two generated, read-only views (from
-`tools/traceability_sync/generate_views.py`, derived from the SRS + code `Satisfies:` tags):
+large; you rarely need it whole. Two generated, read-only views (from
+`tools/traceability_sync/generate_views.py`, derived from the SRS **and** the architecture companion
+plus code `Satisfies:` tags — the index covers every `FR-`/`UIR-`/`DR-`/`CR-`/`NFR-` requirement from
+both files):
 - `requirements_index.md` — terse one-line-per-requirement summary (~13K tokens); use for **broad**
   understanding.
 - `code_to_requirements.md` (+ `.json`) — source file → requirement IDs it implements; use for
   **targeted** work (look up the file you're editing, read just those IDs).
-The SRS stays the single source of truth and the only requirements file edited by hand. **Never edit
-the views** — regenerate them (step 3a).
+The SRS (plus `docs/cpm_fm_architecture.md` for `CR-`/`NFR-` architecture) stays the single source of
+truth and the only requirements files edited by hand. **Never edit the views** — regenerate them
+(step 3a).
 
 ## Requirement-change workflow (MANDATORY)
 
@@ -139,7 +103,9 @@ Whenever you are asked to **add or change a requirement**, perform all of these 
 not stop short:
 
 1. **Update the requirements** in `docs/cpm_fm_requirements.md` (add/modify the `FR-`/`UIR-`/`DR-`/
-   `CR-`/`NFR-` entry).
+   `CR-`/`NFR-` entry). Architectural constraints — module structure/toolkit/layering (CR-001–009,
+   CR-012–014) and the concurrency/extensibility NFRs (NFR-001, NFR-004, NFR-005) — live in
+   `docs/cpm_fm_architecture.md` instead; edit them there.
 2. **Implement the changes.** In every new or changed function, update the docstring with a
    `Satisfies:` tag citing the relevant requirement ID(s).
 3. **Update the requirements** with the traceability mapping to the new and changed functions.

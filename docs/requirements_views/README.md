@@ -1,8 +1,10 @@
 # Requirements views (GENERATED — do not edit)
 
 These files are **derived views** of the canonical specification
-`docs/cpm_fm_requirements.md`, produced so that small / local LLMs (and humans)
-can work without loading the full ~40K-token SRS into context.
+`docs/cpm_fm_requirements.md` and its architecture companion
+`docs/cpm_fm_architecture.md` (which holds the `CR-`/`NFR-` architectural
+constraints), produced so that small / local LLMs (and humans) can work without
+loading the full SRS into context.
 
 | File | What it is | Use it for |
 |------|------------|------------|
@@ -12,9 +14,10 @@ can work without loading the full ~40K-token SRS into context.
 
 ## Do not edit these files
 
-They are regenerated from the SRS and the code's `Satisfies:` docstring tags.
-Any manual edit will be overwritten. The single source of truth is
-`docs/cpm_fm_requirements.md` (plus the `Satisfies:` tags in code).
+They are regenerated from the SRS, the architecture companion, and the code's
+`Satisfies:` docstring tags. Any manual edit will be overwritten. The single
+source of truth is `docs/cpm_fm_requirements.md` and `docs/cpm_fm_architecture.md`
+(plus the `Satisfies:` tags in code).
 
 ## Regenerating
 

@@ -63,12 +63,30 @@ class RequirementExtractor(ast.NodeVisitor):
             return []
 
         ids: list[tuple] = []
-        # Consider the text after the first "Satisfies:" up to the end of that
-        # line, so prose elsewhere in the docstring cannot leak IDs in.
-        match = re.search(r"Satisfies:\s*(.+)", docstring)
-        if not match:
+        # Consider the text after the first "Satisfies:" tag. The clause may wrap
+        # onto following lines, but ONLY lines consisting solely of requirement
+        # IDs and separators are treated as continuations — the first line that
+        # carries any prose ends the clause, so IDs mentioned elsewhere in the
+        # docstring cannot leak in. This lets a long list (e.g. the X-Modem
+        # NFR-003a..NFR-003o set) wrap without breaking parsing.
+        cont_re = re.compile(r"(?:[A-Z]+-\d+[a-z]?[\s,.;]*)+")
+        clause_parts: list[str] = []
+        collecting = False
+        for raw in docstring.splitlines():
+            line = raw.strip()
+            if not collecting:
+                m = re.match(r"Satisfies:\s*(.*)", line)
+                if m:
+                    clause_parts.append(m.group(1))
+                    collecting = True
+                continue
+            if line and cont_re.fullmatch(line):
+                clause_parts.append(line)
+            else:
+                break
+        if not clause_parts:
             return []
-        clause = match.group(1)
+        clause = " ".join(clause_parts)
 
         # First consume ranges ("FR-050-FR-058" / "FR-050-058"), expanding each,
         # then strip them out so the leftover single IDs aren't double-counted.
@@ -89,7 +107,10 @@ class RequirementExtractor(ast.NodeVisitor):
             return " "  # blank out so the trailing single-ID pass skips it
 
         leftover = range_re.sub(_expand, clause)
-        ids.extend((req_id, False) for req_id in re.findall(r"[A-Z]+-\d+", leftover))
+        # A trailing lowercase letter denotes a decomposed sub-requirement
+        # (e.g. NFR-003a..NFR-003o); capture it so sub-IDs are not collapsed to
+        # their bare numeric parent. Ranges (above) stay numeric.
+        ids.extend((req_id, False) for req_id in re.findall(r"[A-Z]+-\d+[a-z]?", leftover))
 
         # De-duplicate, preserving order. An explicit mention wins over a
         # range-derived one for the same ID (from_range=False is "stronger").

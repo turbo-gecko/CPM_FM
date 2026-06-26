@@ -18,11 +18,12 @@ guidance falling out of alignment.
 
 | Artifact | Budget (warn if exceeded) | Baseline |
 |----------|---------------------------|----------|
-| `docs/cpm_fm_requirements.md` (SRS) | ≤ 40K tokens / ≤ 800 lines | ~37K / 727 |
+| `docs/cpm_fm_requirements.md` (SRS) | ≤ 40K tokens / ≤ 800 lines | ~36K / 725 |
+| `docs/cpm_fm_architecture.md` (architecture companion) | ≤ 6K tokens / ≤ 250 lines | ~3.3K / 146 |
 | `docs/requirements_views/requirements_index.md` | ≤ 16K tokens | ~13K |
 | `docs/requirements_views/code_to_requirements.md` | ≤ 4K tokens | ~1K |
-| `AGENTS.md` | ≤ 3.5K tokens / ≤ 200 lines | ~2.8K / ~190 |
-| `.clinerules/requirements-context.md` | ≤ 1K tokens | ~0.5K |
+| `AGENTS.md` | ≤ 3.5K tokens / ≤ 200 lines | ~2.1K / ~123 |
+| `.clinerules/requirements-context.md` | ≤ 1K tokens | ~0.6K |
 | any single `src/**/*.py` | ≤ 500 lines | `app.py` is a known 3,041-line outlier (see deferred plan) |
 
 Token estimate used throughout: **bytes ÷ 4** (rough but consistent with how these budgets were set).
@@ -35,7 +36,7 @@ Token estimate used throughout: **bytes ÷ 4** (rough but consistent with how th
 
 ## Step 2: Measure document sizes against the budgets
 - For each artifact in the Budgets table, measure bytes and lines and compare. Example (cross-platform):
-  `python -c "import os; [print(f'{p}: {os.path.getsize(p)//4} tok, {sum(1 for _ in open(p,encoding=\"utf-8\"))} lines') for p in ['docs/cpm_fm_requirements.md','docs/requirements_views/requirements_index.md','docs/requirements_views/code_to_requirements.md','AGENTS.md','.clinerules/requirements-context.md']]"`
+  `python -c "import os; [print(f'{p}: {os.path.getsize(p)//4} tok, {sum(1 for _ in open(p,encoding=\"utf-8\"))} lines') for p in ['docs/cpm_fm_requirements.md','docs/cpm_fm_architecture.md','docs/requirements_views/requirements_index.md','docs/requirements_views/code_to_requirements.md','AGENTS.md','.clinerules/requirements-context.md']]"`
 - **WARN** for any artifact over budget. Compare against the baseline column: flag anything that has
   grown materially since, not just absolute breaches.
 - Remediation if the SRS is over budget: extract the next-heaviest back-matter to a companion file

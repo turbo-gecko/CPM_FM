@@ -10,7 +10,8 @@ class XModem:
     Implements the X-Modem protocol for file transfer.
     Supports both sending (Host -> Remote) and receiving (Remote -> Host).
 
-    Satisfies: FR-082, NFR-003.
+    Satisfies: FR-082, NFR-003a, NFR-003b, NFR-003c, NFR-003d, NFR-003e, NFR-003f,
+        NFR-003g, NFR-003h, NFR-003i, NFR-003j, NFR-003k, NFR-003l, NFR-003m, NFR-003n, NFR-003o.
     """
 
     SOH = b"\x01"  # Start of Header
@@ -18,8 +19,8 @@ class XModem:
     EOT = b"\x04"  # End of Transmission
     ACK = b"\x06"  # Acknowledge
     NAK = b"\x15"  # Negative Acknowledge
-    CAN = b"\x18"  # Cancel (X-Modem abort), see FR-120/NFR-003
-    PAD = 0x1A  # Final-packet padding byte (CP/M EOF / Ctrl-Z), see NFR-003
+    CAN = b"\x18"  # Cancel (X-Modem abort), see FR-120/NFR-003m
+    PAD = 0x1A  # Final-packet padding byte (CP/M EOF / Ctrl-Z), see NFR-003c
 
     def __init__(
         self,
@@ -72,7 +73,7 @@ class XModem:
         dialog stuck open with its Cancel button disabled and no close button,
         with no way to dismiss it (FR-120).
 
-        Satisfies: FR-120, NFR-003.
+        Satisfies: FR-120, NFR-003m, NFR-003n.
         """
         try:
             # Discard the in-flight packet still queued for transmit so it does
@@ -100,7 +101,7 @@ class XModem:
         Ports/stubs without an ``out_waiting`` attribute fall back to a single
         best-effort ``flush()``.
 
-        Satisfies: FR-120, NFR-003.
+        Satisfies: FR-120, NFR-003o.
         """
         if not hasattr(self.ser, "out_waiting"):
             try:
@@ -151,7 +152,7 @@ class XModem:
         after ``idle_timeout`` seconds elapse with no new byte (a genuine stall)
         or on cancellation (FR-120), returning whatever was gathered.
 
-        Satisfies: FR-082, FR-086, NFR-003.
+        Satisfies: FR-082, FR-086, NFR-003i.
         """
         buf = bytearray()
         last = time.time()
@@ -208,7 +209,7 @@ class XModem:
     def _calculate_checksum(self, data: bytes) -> int:
         """Standard X-Modem checksum (sum of bytes, modulo 256).
 
-        Satisfies: NFR-003.
+        Satisfies: NFR-003d.
         """
         return sum(data) & 0xFF
 
@@ -216,7 +217,7 @@ class XModem:
         """CRC-16/XMODEM (poly 0x1021, init 0x0000), used by CRC-mode senders
         such as PCGET/PCPUT. Transmitted big-endian as the 2-byte trailer.
 
-        Satisfies: NFR-003.
+        Satisfies: NFR-003e.
         """
         crc = 0
         for byte in data:
@@ -230,7 +231,7 @@ class XModem:
         """Build the packet trailer: 2-byte CRC-16 (CRC mode) or 1-byte
         checksum (checksum mode).
 
-        Satisfies: NFR-003.
+        Satisfies: NFR-003d, NFR-003e.
         """
         if crc_mode:
             crc = self._crc16(chunk)
@@ -240,7 +241,7 @@ class XModem:
     def _trailer_ok(self, payload: bytes, trailer: bytes, crc_mode: bool) -> bool:
         """Validate a received packet trailer against the payload.
 
-        Satisfies: NFR-003.
+        Satisfies: NFR-003d, NFR-003e, NFR-003l.
         """
         if crc_mode:
             return len(trailer) == 2 and ((trailer[0] << 8) | trailer[1]) == self._crc16(payload)
@@ -252,16 +253,16 @@ class XModem:
         X-Modem is receiver-driven: the sender waits for the receiver's start
         character before transmitting. That character also selects the mode —
         'C' (0x43) requests CRC, NAK (0x15) requests checksum — and we frame
-        the trailer to match (NFR-003). When ``use_1k`` is True the data field is
-        1024 bytes framed with STX (XMODEM-1K); otherwise it is 128 bytes framed
-        with SOH. The frame size is independent of the CRC/checksum mode.
+        the trailer to match (NFR-003d, NFR-003e). When ``use_1k`` is True the
+        data field is 1024 bytes framed with STX (XMODEM-1K); otherwise it is 128
+        bytes framed with SOH. The frame size is independent of the CRC/checksum mode.
 
-        Satisfies: FR-081, FR-082, FR-083, FR-086, FR-105, FR-120, NFR-003.
+        Satisfies: FR-081, FR-082, FR-083, FR-086, FR-105, FR-120, NFR-003a, NFR-003b, NFR-003c.
         """
         if not os.path.exists(filepath):
             return False
 
-        # XMODEM-1K (NFR-003): STX-framed 1024-byte data fields, else SOH/128.
+        # XMODEM-1K (NFR-003b): STX-framed 1024-byte data fields, else SOH/128.
         frame_size = 1024 if use_1k else 128
         start_byte = self.STX if use_1k else self.SOH
 
@@ -296,7 +297,7 @@ class XModem:
                 return False
 
             # Create packet: start_byte + Seq + ~Seq + Data + trailer.
-            # NFR-003: the final short chunk is padded to a full data field
+            # NFR-003c: the final short chunk is padded to a full data field
             # (128 or 1024 bytes) with the PAD byte before the trailer is
             # computed.
             chunk = data[offset : offset + frame_size]
@@ -349,7 +350,7 @@ class XModem:
         and do not understand the CRC start character 'C' — sending it makes
         them abort with "Unknown response from host" — so by default we poll
         with NAK (checksum) first and only fall back to 'C' (CRC) if the sender
-        does not answer NAK at all (NFR-003; "checksum mode, not CRC").
+        does not answer NAK at all (NFR-003f; "checksum mode, not CRC").
 
         XMODEM-1K, however, is a CRC protocol: a 1K-capable sender only switches
         to 1024-byte STX frames once the receiver requests CRC mode with 'C'. So
@@ -357,7 +358,8 @@ class XModem:
         is what coaxes the sender into 1K blocks. Either way SOH frames carry
         128 data bytes and STX frames carry 1024, so both sizes are accepted.
 
-        Satisfies: FR-081, FR-082, FR-083, FR-105, FR-120, NFR-003.
+        Satisfies: FR-081, FR-082, FR-083, FR-105, FR-120, NFR-003f, NFR-003g,
+            NFR-003h, NFR-003j, NFR-003k, NFR-003l.
         """
         received_data = bytearray()
         expected_packet = 1

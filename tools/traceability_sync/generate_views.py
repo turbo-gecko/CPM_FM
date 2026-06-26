@@ -48,6 +48,11 @@ from parser_docs import _split_row  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CODE_ROOT = REPO_ROOT / "src"
 REQ_FILE = REPO_ROOT / "docs" / "cpm_fm_requirements.md"
+ARCH_FILE = REPO_ROOT / "docs" / "cpm_fm_architecture.md"
+# Requirement rows live in the SRS plus its architecture companion (the CR-/NFR-
+# architectural constraints were extracted there). Both are parsed, in this
+# order, so the index and the defined-ID set cover every requirement.
+SPEC_FILES = [REQ_FILE, ARCH_FILE]
 OUT_DIR = REPO_ROOT / "docs" / "requirements_views"
 INDEX_MD = OUT_DIR / "requirements_index.md"
 CODE_MAP_MD = OUT_DIR / "code_to_requirements.md"
@@ -165,7 +170,8 @@ def build_index_md(sections: list) -> str:
         _GENERATED_BANNER,
         "",
         "Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the "
-        "canonical SRS).",
+        "canonical SRS) and its architecture companion "
+        "`docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).",
         "Each row gives a requirement ID, a ~15-word summary, and its code "
         "implementation.",
         "Read this for **broad understanding**; open the full SRS only when you "
@@ -247,7 +253,9 @@ def build_code_map_json(code_map: dict) -> str:
 # ---------------------------------------------------------------------------
 def generate() -> dict:
     """Build all view contents in memory. Returns ``{path: content}``."""
-    sections = parse_sections(REQ_FILE)
+    sections = []
+    for spec_file in SPEC_FILES:
+        sections.extend(parse_sections(spec_file))
     defined_ids = {row[0] for _, rows in sections for row in rows}
     code_map = build_code_map(CODE_ROOT, defined_ids)
     return {
@@ -266,9 +274,10 @@ def main(argv=None) -> int:
     )
     args = parser.parse_args(argv)
 
-    if not REQ_FILE.exists():
-        print(f"ERROR: requirements file not found: {REQ_FILE}", file=sys.stderr)
-        return 2
+    for spec_file in SPEC_FILES:
+        if not spec_file.exists():
+            print(f"ERROR: spec file not found: {spec_file}", file=sys.stderr)
+            return 2
 
     contents = generate()
 

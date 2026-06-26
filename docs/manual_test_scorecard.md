@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.17 |
-| Scorecard for plan version | 1.17 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.19 |
+| Scorecard for plan version | 1.19 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -158,10 +158,10 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-T07 | Batch abort on mid-file failure | FR-108 | | | |
 | MT-T08 | Inter-file wait; no truncated command | FR-109 | | | |
 | MT-T09 | Hex byte echo `<HH>` to Terminal Window; suppressed when Echo Transfer Data OFF | FR-086, UIR-058 | | | |
-| MT-T10 | NAK-first; 1K frames; 0x1A pad; integrity | NFR-003 | | | |
+| MT-T10 | NAK-first; 1K frames; 0x1A pad; integrity | NFR-003c, NFR-003f, NFR-003h | | | |
 | MT-T11 | UI responsive during large transfer | NFR-001 | | | |
 | MT-T12 | Context-menu To Remote / To Host | FR-119 | | | |
-| MT-T13 | Cancel single live transfer; CAN abort; no error | FR-120, NFR-003 | | | |
+| MT-T13 | Cancel single live transfer; CAN abort; no error | FR-120, NFR-003m | | | |
 | MT-T14 | Cancel mid-batch; skip rest; refresh; no partial file | FR-120 | | | |
 
 ### §11.1 Drag-and-drop file transfer
@@ -357,7 +357,7 @@ For transfer/timing/parser bugs, set Debug Logging ON — UIR-050 — and includ
 ```
 
 **Serial-line evidence** (if a bus analyser / `com0com` log / `socat -x` capture is available — bytes
-on the wire, baud, flow-control state). Optional but decisive for FR-076/087/089/109/NFR-003 issues:
+on the wire, baud, flow-control state). Optional but decisive for FR-076/087/089/109/NFR-003a–o issues:
 
 ```
 ```
