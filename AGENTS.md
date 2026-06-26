@@ -118,6 +118,19 @@ empty stubs, but the SRS and code implement working X-Modem transfers — see `F
 `code-requirements-align`, `defect-investigator`, `test-quality-checker`) for checking code and tests
 against the SRS.
 
+**Requirement views (`docs/requirements_views/`) — consult these first to save context.** The full SRS
+is ~40K tokens; for most work you do not need to load it whole. Two **generated, read-only** views
+(produced by `tools/traceability_sync/generate_views.py`) are derived from the SRS and the code's
+`Satisfies:` tags:
+- `requirements_index.md` — a terse, section-grouped, one-line-per-requirement summary (~13K tokens).
+  Load this for **broad** understanding of what the system requires.
+- `code_to_requirements.md` (+ `.json`) — maps each source file to the requirement IDs it implements.
+  Use this for **targeted** work: look up the file you are editing, then read just those IDs in the
+  index or the SRS instead of the whole document.
+The SRS (`docs/cpm_fm_requirements.md`) remains the single source of truth and the only file you edit
+by hand; the views are regenerated from it (workflow step 3a). **Never edit the views directly** — your
+changes will be overwritten on the next regeneration.
+
 ## Requirement-change workflow (MANDATORY)
 
 Whenever you are asked to **add or change a requirement**, perform all of these steps in order — do
@@ -128,6 +141,9 @@ not stop short:
 2. **Implement the changes.** In every new or changed function, update the docstring with a
    `Satisfies:` tag citing the relevant requirement ID(s).
 3. **Update the requirements** with the traceability mapping to the new and changed functions.
+3a. **Regenerate the requirement views** — run `python tools/traceability_sync/generate_views.py`
+   and commit the updated files under `docs/requirements_views/`. Never hand-edit those files;
+   they are generated from the SRS and the code `Satisfies:` tags (see below).
 4. **Run the unit tests** (`pytest`).
 5. **Iterate steps 2–4** until all unit tests pass.
 6. **Update the manual test plan** (`docs/manual_test_plan.md`) and increment its test plan version.
