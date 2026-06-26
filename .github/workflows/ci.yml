@@ -32,5 +32,10 @@ jobs:
           ruff check src tests
           ruff format --check src tests
 
+      - name: Check requirement views are in sync
+        # Fails if docs/requirements_views/ is stale vs the SRS or code Satisfies:
+        # tags. Fix locally with: python tools/traceability_sync/generate_views.py
+        run: python tools/traceability_sync/generate_views.py --check
+
       - name: Test
         run: pytest

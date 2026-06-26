@@ -12,7 +12,7 @@ license = { file = "LICENSE" }
 dependencies = ["pyserial>=3.5", "PySide6>=6.6", "qt-material>=2.14", "markdown>=3.5"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.5", "mypy>=1.10", "Pillow>=10"]
+dev = ["pytest>=8", "ruff>=0.5", "mypy>=1.10", "Pillow>=10", "pydantic>=2"]
 # Tooling for building standalone distribution packages (see build_dist.py and
 # the pyinstaller_*.spec files). Install with: pip install -e .[build]
 build = ["pyinstaller>=6.0"]
