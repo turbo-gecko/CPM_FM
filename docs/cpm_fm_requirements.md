@@ -1,3 +1,8 @@
+<!-- CONTEXT NOTE FOR LLMs: This file is ~40K tokens. Do NOT load it whole.
+     For broad understanding read docs/requirements_views/requirements_index.md;
+     for a specific file's requirements use docs/requirements_views/code_to_requirements.md.
+     Open this spec only for the exact wording of a specific requirement. -->
+
 # CP/M File Manager — Software Requirements Specification
 
 | Field | Value |
