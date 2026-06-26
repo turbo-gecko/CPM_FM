@@ -120,7 +120,8 @@ SRS keeps a one-line stub pointing to each. Both are historical/append-only — 
 them, and they are excluded from the generated views.
 `Workflows/` holds repo-specific multi-agent workflow definitions (`requirements-check`,
 `code-requirements-align`, `defect-investigator`, `test-quality-checker`) for checking code and tests
-against the SRS.
+against the SRS, plus `context-budget-audit` (run occasionally to confirm docs/source stay optimized
+for small-LLM context windows).
 
 **Requirement views (`docs/requirements_views/`) — consult first to save context.** The full SRS is
 ~37K tokens; you rarely need it whole. Two generated, read-only views (from
