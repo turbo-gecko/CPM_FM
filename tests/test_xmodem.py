@@ -7,6 +7,8 @@ byte counts, and the right ``total_bytes`` (file size on send, ``None`` on
 receive, since X-Modem carries no length).
 """
 
+import threading
+
 from cpm_fm.terminal.xmodem import XModem
 
 ACK = b"\x06"
@@ -23,7 +25,7 @@ class _FakeSerial:
     data is not discarded by ``receive_file``'s initial flush (in a real port
     the bytes would arrive from the remote after the flush)."""
 
-    def __init__(self, to_read: bytes = b""):
+    def __init__(self, to_read: bytes = b"", out_waiting: int = 0):
         self._inbuf = bytearray(to_read)
         self.written = bytearray()
         # FR-120: bookkeeping so tests can assert the cancel path flushes the
@@ -31,6 +33,15 @@ class _FakeSerial:
         self.input_resets = 0
         self.output_resets = 0
         self.flushes = 0
+        # FR-120: queued transmit bytes the bounded abort drain polls. A real
+        # port reports this via out_waiting; the fake holds it fixed so a test
+        # can model a line that never drains (flow-control stall) without the
+        # abort hanging.
+        self._out_waiting = out_waiting
+
+    @property
+    def out_waiting(self) -> int:
+        return self._out_waiting
 
     @property
     def in_waiting(self) -> int:
@@ -165,14 +176,38 @@ def test_cancel_flushes_serial_in_both_directions(tmp_path):
     # rather than the transfer appearing to continue until the buffers empty.
     path = tmp_path / "UP.TXT"
     path.write_bytes(bytes(range(128)))
-    fake = _FakeSerial(b"C" + ACK * 4)
+    fake = _FakeSerial(b"C" + ACK * 4)  # out_waiting 0 -> the drain returns at once
     xm = XModem(fake, cancel_check=lambda: True)
 
     assert xm.send_file(str(path)) is False
-    # Output buffer discarded, then CAN flushed out, then input buffer discarded.
+    # Output buffer discarded, then CAN sent and drained out, then input buffer
+    # discarded.
     assert fake.output_resets >= 1
     assert fake.input_resets >= 1
-    assert fake.flushes >= 1
+
+
+def test_abort_does_not_hang_when_tx_cannot_drain(tmp_path):
+    # FR-120 regression: when the line cannot drain after the abort (flow control
+    # de-asserted by the aborting remote, so out_waiting never reaches 0), the
+    # bounded transmit drain must still return promptly. An unbounded flush()
+    # busy-waiting on out_waiting would hang the transfer worker forever, leaving
+    # the progress dialog stuck open with no way to close it.
+    path = tmp_path / "UP.TXT"
+    path.write_bytes(bytes(range(128)))
+    fake = _FakeSerial(b"C" + ACK * 4, out_waiting=99)  # never drains
+    xm = XModem(fake, cancel_check=lambda: True)
+
+    done = []
+
+    def run():
+        done.append(xm.send_file(str(path)))
+
+    t = threading.Thread(target=run, daemon=True)
+    t.start()
+    t.join(timeout=5.0)  # generous vs the 1.0s drain bound
+    assert not t.is_alive(), "abort hung on a non-draining transmit buffer"
+    assert done == [False]
+    assert CAN in fake.written  # the remote was still told to abort
 
 
 # --------------------------------------------------------------------------- #

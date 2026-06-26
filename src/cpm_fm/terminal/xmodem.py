@@ -63,20 +63,59 @@ class XModem:
         is dropped from the receive buffer. Without this, the transfer appears
         to keep going until the buffers empty (FR-120).
 
+        The wait for the CAN bytes to leave the port is **bounded** (see
+        :meth:`_drain_tx`): a plain ``serial.Serial.flush()`` busy-waits on
+        ``out_waiting`` with no timeout, so if the line cannot drain — e.g.
+        hardware (RTS/CTS) or software (XON/XOFF) flow control stalls because
+        the aborting remote has stopped asserting CTS / sent XOFF — it would
+        block the transfer worker thread forever. That left the modal progress
+        dialog stuck open with its Cancel button disabled and no close button,
+        with no way to dismiss it (FR-120).
+
         Satisfies: FR-120, NFR-003.
         """
         try:
             # Discard the in-flight packet still queued for transmit so it does
             # not keep draining to the remote after the cancel.
             self.ser.reset_output_buffer()
-            # Tell the remote to abort, and block until the CAN bytes have
-            # actually gone out before dropping the line quiet.
+            # Tell the remote to abort, then wait (bounded) for the CAN bytes to
+            # go out before dropping the line quiet.
             self._write(self.CAN * 3)
-            self.ser.flush()
+            self._drain_tx(timeout=1.0)
             # Drop anything the remote was still sending mid-abort.
             self.ser.reset_input_buffer()
         except Exception:
             pass
+
+    def _drain_tx(self, timeout: float) -> None:
+        """Wait, bounded by ``timeout`` seconds, for the port's queued transmit
+        bytes (the CAN sequence) to leave before the abort returns (FR-120).
+
+        Unlike ``serial.Serial.flush()`` — which busy-waits on ``out_waiting``
+        with no bound — this gives up once the timeout elapses, so a stalled
+        line (flow control de-asserted by an aborting remote) can never hang the
+        transfer worker thread. Any CAN bytes still queued when the wait gives
+        up are transmitted by the OS in the background while the (shared
+        transport) port remains open, so the remote still receives the abort.
+        Ports/stubs without an ``out_waiting`` attribute fall back to a single
+        best-effort ``flush()``.
+
+        Satisfies: FR-120, NFR-003.
+        """
+        if not hasattr(self.ser, "out_waiting"):
+            try:
+                self.ser.flush()
+            except Exception:
+                pass
+            return
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            try:
+                if not self.ser.out_waiting:
+                    return
+            except Exception:
+                return
+            time.sleep(0.02)
 
     def _write(self, data: bytes) -> None:
         """

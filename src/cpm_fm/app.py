@@ -1495,9 +1495,9 @@ class MainWindow(QMainWindow):
         drive = self.drive_combo.currentText()[0]  # 'A'..'P'
         threading.Thread(target=self._do_change_drive_logic, args=(drive,), daemon=True).start()
 
-    def _capture_terminal_response(self, command: str) -> str:
+    def _capture_terminal_response(self, command: str, cancellable: bool = False) -> str:
         """
-        Satisfies: FR-075, FR-076, FR-101.
+        Satisfies: FR-075, FR-076, FR-101, FR-120, FR-145.
 
         Send `command` (with the configured EOL appended) on the Terminal Port
         and capture the echoed output into the capture buffer until it idles
@@ -1505,21 +1505,37 @@ class MainWindow(QMainWindow):
         FR-076: wait at least one second for output to start accumulating,
         then wait for the receive buffer to time out (no new data within the
         idle window) before processing, bounded by a safety maximum.
+
+        ``cancellable`` is set by transfer callers (the pre-upload remote
+        listing, FR-145) so a Cancel during this read wakes the worker promptly
+        instead of blocking for the whole idle/settle budget (FR-120); the
+        partial capture so far is returned. It is left False for the standalone
+        Remote-list refresh / drive-change reads, which are not part of a
+        transfer and must not observe a stale transfer-cancel flag.
         """
         self._remote_capture_buffer = ""
         self._capture_active = True
         eol_char = EOL_MAP.get(self.settings.get("eol", "CR"), "\r")
         self.handle_terminal_send(command + eol_char)
-        time.sleep(1.0)
+
+        def _settle(secs: float) -> bool:
+            # Returns True when the wait should stop early (cancellation).
+            if cancellable:
+                return self._cancellable_sleep(secs)
+            time.sleep(secs)
+            return False
+
         idle_window = 0.5
         max_wait = 10.0
-        waited = 1.0
-        while waited < max_wait:
-            prev_len = len(self._remote_capture_buffer)
-            time.sleep(idle_window)
-            waited += idle_window
-            if len(self._remote_capture_buffer) == prev_len:
-                break
+        if not _settle(1.0):
+            waited = 1.0
+            while waited < max_wait:
+                prev_len = len(self._remote_capture_buffer)
+                if _settle(idle_window):
+                    break
+                waited += idle_window
+                if len(self._remote_capture_buffer) == prev_len:
+                    break
         self._capture_active = False
         return self._remote_capture_buffer
 
@@ -1803,9 +1819,34 @@ class MainWindow(QMainWindow):
         except (TypeError, ValueError):
             return 2.0
 
+    def _cancellable_sleep(self, seconds: float) -> bool:
+        """Sleep up to ``seconds``, waking early if a transfer cancellation is
+        requested. Returns True if the wait ended because cancellation was
+        requested, False if the full interval elapsed.
+
+        The worker-thread launch/settle waits (FR-089/FR-109) and the remote
+        listing read (FR-145) are otherwise plain sleeps, so a Cancel pressed
+        during one of them would not be observed until the whole delay had
+        elapsed (up to ~10s). This sleeps in small steps, polling the
+        thread-safe cancel flag between them, so the cancel takes effect
+        promptly (FR-120). The interval is counted in steps rather than against
+        the wall clock so tests that neutralise ``time.sleep`` still run fast.
+        Runs on the transfer worker thread.
+
+        Satisfies: FR-120.
+        """
+        remaining = max(0.0, seconds)
+        step = 0.05
+        while remaining > 0:
+            if self._transfer_cancel.is_set():
+                return True
+            time.sleep(min(step, remaining))
+            remaining -= step
+        return self._transfer_cancel.is_set()
+
     def _wait_for_terminal_idle(self) -> None:
         """
-        Satisfies: FR-109.
+        Satisfies: FR-109, FR-120.
 
         Between files in a batch, wait for the previous CP/M transfer
         program to finish and the CCP command prompt to return before issuing
@@ -1817,18 +1858,22 @@ class MainWindow(QMainWindow):
         completion text to start, then wait for the receive buffer to stop
         growing, bounded by a safety maximum, then a final settle. Runs on the
         transfer worker thread; it only reads the plain `_rx_buffer` string.
+        Each wait is cancellable so a Cancel between files is observed promptly
+        rather than after the full settle (FR-120).
         """
         idle_window = 0.5
         max_wait = 8.0
-        time.sleep(1.0)
+        if self._cancellable_sleep(1.0):
+            return
         waited = 1.0
         while waited < max_wait:
             prev_len = len(self._rx_buffer)
-            time.sleep(idle_window)
+            if self._cancellable_sleep(idle_window):
+                return
             waited += idle_window
             if len(self._rx_buffer) == prev_len:
                 break
-        time.sleep(self._interfile_delay())
+        self._cancellable_sleep(self._interfile_delay())
 
     def _debug_enabled(self) -> bool:
         """
@@ -1987,7 +2032,9 @@ class MainWindow(QMainWindow):
         """
         try:
             cmd = self.settings.get("list_files_cmd", "DIR")
-            text = self._capture_terminal_response(cmd)
+            # FR-120: cancellable so a Cancel during the pre-upload listing wakes
+            # the upload worker promptly; the batch loop then aborts at its top.
+            text = self._capture_terminal_response(cmd, cancellable=True)
             files_dict = CPMParser.parse_dir_output(text)
         except Exception as e:  # pragma: no cover - defensive
             self._debug(f"[conflict] remote refresh failed: {e!r}")
@@ -2140,7 +2187,9 @@ class MainWindow(QMainWindow):
                 "send_remote_cmd", "PCGET $1", remote_name, cmd_key_1k="send_remote_cmd_1k"
             )
             self._debug(f"[copy-to-remote] launched PCGET; waiting {delay}s before handshake")
-            time.sleep(delay)
+            # FR-120: wake early on cancel; send_file then aborts in its
+            # handshake, sending CAN so the launched PCGET aborts too.
+            self._cancellable_sleep(delay)
             self._debug("[copy-to-remote] starting X-Modem send")
             xm = XModem(
                 ser,
@@ -2291,7 +2340,9 @@ class MainWindow(QMainWindow):
                 cmd_key_1k="recv_remote_cmd_1k",
             )
             self._debug(f"[copy-to-host] launched PCPUT; waiting {delay}s before handshake")
-            time.sleep(delay)
+            # FR-120: wake early on cancel; receive_file then aborts in its
+            # handshake, sending CAN so the launched PCPUT aborts too.
+            self._cancellable_sleep(delay)
             self._debug("[copy-to-host] starting X-Modem receive")
             xm = XModem(
                 ser,

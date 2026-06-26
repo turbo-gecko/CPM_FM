@@ -107,7 +107,7 @@ def test_fresh_remote_names_uppercases_and_emits(qapp, monkeypatch, state):
     # displayed Remote Files list via remote_files_ready.
     win = MainWindow(state)
     try:
-        monkeypatch.setattr(win, "_capture_terminal_response", lambda cmd: "DIR-OUTPUT")
+        monkeypatch.setattr(win, "_capture_terminal_response", lambda cmd, cancellable=False: "DIR-OUTPUT")
         monkeypatch.setattr(
             "cpm_fm.app.CPMParser.parse_dir_output", lambda text: {"foo.txt": None, "BAR.COM": None}
         )
@@ -123,7 +123,7 @@ def test_fresh_remote_names_empty_on_capture_failure(qapp, monkeypatch, state):
     # FR-145: if the refresh cannot be parsed, no names => no conflicts detected.
     win = MainWindow(state)
     try:
-        monkeypatch.setattr(win, "_capture_terminal_response", lambda cmd: "")
+        monkeypatch.setattr(win, "_capture_terminal_response", lambda cmd, cancellable=False: "")
         monkeypatch.setattr("cpm_fm.app.CPMParser.parse_dir_output", lambda text: {})
         assert win._fresh_remote_names() == set()
     finally:
