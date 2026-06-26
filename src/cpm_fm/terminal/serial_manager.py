@@ -53,7 +53,7 @@ class SerialManager:
             # Determine which port name to use
             port_name = s.get("terminal_port" if port_type == "terminal" else "transport_port")
             if not port_name:
-                # Try alternative key name from settings_a.json
+                # Try alternative key name from the nested settings shape
                 port_name = s.get("transfer_port" if port_type == "transport" else "terminal_port")
 
             # Per-port read timeout (UIR-032/UIR-033). Stored in milliseconds in

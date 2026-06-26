@@ -119,7 +119,7 @@ def test_numeric_fields_are_coerced_to_int(capture):
 
 
 def test_nested_key_names_are_honoured(capture):
-    """NFR-002: the nested settings_a.json shape uses transfer_port/data_bits/
+    """NFR-002: the nested settings shape uses transfer_port/data_bits/
     stop_bits, which must be read when the flat keys are absent."""
     mgr = SerialManager()
     settings = {

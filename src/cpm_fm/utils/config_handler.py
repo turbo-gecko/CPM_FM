@@ -54,7 +54,8 @@ DEFAULT_SETTINGS: dict[str, Any] = {
 class ConfigHandler:
     """
     Handles loading and saving of configuration files for the CP/M File Manager.
-    Supports both the simple serial_settings.json and the structured settings_a.json formats.
+    Supports both the flat (dialog-written) and the nested (`{"serial": ..., "general": ...}`)
+    settings formats.
 
     Satisfies: IFR-004.
     """
