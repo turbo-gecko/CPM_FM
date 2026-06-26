@@ -392,7 +392,7 @@ def test_change_drive_success_refreshes_remote_list(qapp, monkeypatch, state):
     win = MainWindow(state)
     try:
         win.serial_mgr.terminal_connected = True
-        monkeypatch.setattr(win, "_capture_terminal_response", lambda cmd: "B:\nB>\n")
+        monkeypatch.setattr(win, "_capture_terminal_response", lambda cmd, cancellable=False: "B:\nB>\n")
         calls = []
         monkeypatch.setattr(win, "_do_refresh_remote_logic", lambda: calls.append("refresh"))
         win._do_change_drive_logic("B")
@@ -407,7 +407,7 @@ def test_change_drive_not_found_clears_list_and_warns(qapp, monkeypatch, state):
     try:
         win.remote_list.addItem("STALE.TXT")
         win.serial_mgr.terminal_connected = True
-        monkeypatch.setattr(win, "_capture_terminal_response", lambda cmd: "\nnot ready\n")
+        monkeypatch.setattr(win, "_capture_terminal_response", lambda cmd, cancellable=False: "\nnot ready\n")
         warned = []
         monkeypatch.setattr("cpm_fm.app.QMessageBox.warning", lambda *a, **k: warned.append(a[1:]))
         win._do_change_drive_logic("B")
@@ -1272,7 +1272,9 @@ def test_do_remote_file_cmd_refreshes_remote_list(qapp, monkeypatch, state):
     win = MainWindow(state)
     try:
         captured = []
-        monkeypatch.setattr(win, "_capture_terminal_response", lambda c: captured.append(c) or "")
+        monkeypatch.setattr(
+            win, "_capture_terminal_response", lambda c, cancellable=False: captured.append(c) or ""
+        )
         refreshed = []
         monkeypatch.setattr(win, "_do_refresh_remote_logic", lambda: refreshed.append(1))
         win._do_remote_file_cmd("ERA F.TXT")
@@ -1411,6 +1413,60 @@ def test_request_transfer_cancel_sets_flag(qapp, state):
         assert not win._transfer_cancel.is_set()
         win._request_transfer_cancel()
         assert win._transfer_cancel.is_set()
+    finally:
+        win.close()
+
+
+def test_cancellable_sleep_returns_immediately_when_cancelled(qapp, state):
+    # FR-120: a worker-thread settle/launch wait wakes at once when a cancel is
+    # already pending, rather than blocking for the whole interval. A long
+    # interval with real (un-neutralised) time.sleep would hang the test if the
+    # cancel were not honoured, so this also pins the early-return.
+    win = MainWindow(state)
+    try:
+        win._transfer_cancel.set()
+        assert win._cancellable_sleep(30.0) is True
+    finally:
+        win.close()
+
+
+def test_cancellable_sleep_completes_when_not_cancelled(qapp, monkeypatch, state):
+    # FR-120: with no cancel pending the wait runs its full (step-counted)
+    # interval and reports not-cancelled. time.sleep is neutralised so the step
+    # loop completes instantly.
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr("cpm_fm.app.time.sleep", lambda *a, **k: None)
+        assert win._cancellable_sleep(2.0) is False
+    finally:
+        win.close()
+
+
+def test_wait_for_terminal_idle_returns_early_on_cancel(qapp, state):
+    # FR-120: the between-files settle (FR-109) wakes promptly on cancel. A real
+    # time.sleep is left in place so the test would hang on the first 1.0s wait
+    # if the cancel were ignored.
+    win = MainWindow(state)
+    try:
+        win._transfer_cancel.set()
+        win._wait_for_terminal_idle()  # must return without blocking
+    finally:
+        win.close()
+
+
+def test_capture_terminal_response_cancellable_bails_early(qapp, monkeypatch, state):
+    # FR-120/FR-145: the pre-upload remote listing returns promptly on cancel
+    # (with whatever partial output arrived) instead of sleeping the full idle
+    # budget. Real time.sleep is kept so an unhonoured cancel would hang here.
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(win, "handle_terminal_send", lambda *a, **k: None)
+        win._transfer_cancel.set()
+        assert win._capture_terminal_response("DIR", cancellable=True) == ""
+        # The non-cancellable form must NOT consult the (possibly stale) flag;
+        # neutralise time.sleep so it still completes instantly here.
+        monkeypatch.setattr("cpm_fm.app.time.sleep", lambda *a, **k: None)
+        assert win._capture_terminal_response("DIR") == ""
     finally:
         win.close()
 

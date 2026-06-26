@@ -235,7 +235,9 @@ def test_wipe_remote_drive_issues_delete_per_file(qapp, monkeypatch, state, tmp_
     try:
         _arm(win, monkeypatch, tmp_path)
         cmds = []
-        monkeypatch.setattr(win, "_capture_terminal_response", lambda cmd: cmds.append(cmd) or "")
+        monkeypatch.setattr(
+            win, "_capture_terminal_response", lambda cmd, cancellable=False: cmds.append(cmd) or ""
+        )
         win._wipe_remote_drive(["A.TXT", "B.COM"])
         assert cmds == ["ERA A.TXT", "ERA B.COM"]
     finally:
