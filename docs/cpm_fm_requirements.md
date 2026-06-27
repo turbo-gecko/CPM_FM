@@ -11,7 +11,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 2.14.0 |
+| Version | 2.14.1 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
@@ -795,6 +795,8 @@ future refactor in the Issue Resolution Log (OI-27).
 | NFR-003m | On a cancellation request (FR-120) the implementation shall abort the transfer by transmitting the CAN (0x18) byte sequence on the Transport Port, by which the remote program also aborts. *(v1.9.)* | Mandatory | T | FR-120; impl. `xmodem.py:_abort`, `send_file`, `receive_file`; tests `test_xmodem.py` (cancel aborts and sends CAN) |
 | NFR-003n | On abort the implementation shall flush the Transport Port in **both** directions — discarding any partially-transmitted packet still queued for transmit and any data the remote was still sending — in the order: transmit-buffer discard, then CAN sent and given a bounded wait to drain, then receive-buffer discard, so the CAN itself is not discarded and the abort takes effect immediately rather than appearing to continue until the buffers empty. *(v2.13.1.)* | Mandatory | T | impl. `xmodem.py:_abort`; tests `test_xmodem.py` (cancel flushes serial in both directions) |
 | NFR-003o | The wait for the CAN bytes to drain shall be time-bounded rather than an unbounded `flush()` (`serial.Serial.flush()` busy-waits on `out_waiting` with no timeout), so that a flow-control stall — e.g. hardware (RTS/CTS) or software (XON/XOFF) flow control held off because the aborting remote has stopped asserting CTS or sent XOFF — cannot block the abort, and therefore the transfer worker thread, indefinitely; any CAN bytes still queued when the bound elapses are transmitted by the OS in the background while the port remains open. *(v2.13.2.)* | Mandatory | T | impl. `xmodem.py:_drain_tx`, `_abort`; tests `test_xmodem.py` (does not hang when TX cannot drain) |
+| NFR-003p | When a transmitted packet is NAK'd or goes unanswered, the sender shall retransmit the same packet (its sequence number unchanged) for up to a bounded number of attempts (10); if the packet is still not acknowledged after the final attempt, the sender shall abort the transfer and return failure rather than retransmitting indefinitely. *(v2.14.1.)* | Mandatory | T | impl. `xmodem.py:send_file`; tests `test_xmodem.py` (aborts after NAK exhaustion) |
+| NFR-003q | When the sender transmits EOT before any data packet, the receiver shall accept it as a valid, empty transfer — ACKing the EOT and writing a zero-length file — rather than treating the absent data as an error. *(v2.14.1.)* | Mandatory | T | impl. `xmodem.py:receive_file`; tests `test_xmodem.py` (empty transfer writes empty file) |
 
 ---
 
@@ -811,7 +813,7 @@ future refactor in the Issue Resolution Log (OI-27).
 | App_Requirements §Host Files / Change Directory / Refresh | FR-060 – FR-063 |
 | App_Requirements §General Configuration Dialog | UIR-040 – UIR-053 |
 | App_Requirements / App_Design §Populating remote file list | FR-070 – FR-079 |
-| App_Requirements / App_Design §File Transfers | FR-080 – FR-086, FR-082→NFR-003a–NFR-003o, FR-086 impl. |
+| App_Requirements / App_Design §File Transfers | FR-080 – FR-086, FR-082→NFR-003a–NFR-003q, FR-086 impl. |
 | App_Design §Receiving / Sending data | FR-090 – FR-098 |
 | App_Requirements §Main Program GUI (Terminal/Disconnect buttons) | UIR-016, FR-097 |
 | App_Requirements §Serial Configuration Dialog | UIR-020 – UIR-033, IFR-002, IFR-003 |
@@ -820,7 +822,7 @@ future refactor in the Issue Resolution Log (OI-27).
 | v1.3 UI migration (PySide6 + Material) | UIR-070 – UIR-074, CR-012 – CR-014, NFR-004; revises STR-002, UIR-013, NFR-001 |
 | App_Design §DIR parsing algorithm | DR-001 – DR-032 |
 | App_Design §Project Structure / Class Files / Code Quality | CR-001 – CR-009 |
-| Deferred / as-built constraints (impl. survey) | CR-010, CR-011, NFR-001, NFR-002, NFR-003a – NFR-003o |
+| Deferred / as-built constraints (impl. survey) | CR-010, CR-011, NFR-001, NFR-002, NFR-003a – NFR-003q |
 | App_Design §Program state | FR-001 – FR-003 |
 | v1.8 file context-menu actions | FR-110 – FR-119, UIR-018, UIR-019, UIR-054 – UIR-057 |
 | v1.8.2 common dialog conventions | UIR-075 |

@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_394 requirements across 54 sections._
+_396 requirements across 54 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -634,6 +634,8 @@ _394 requirements across 54 sections._
 | NFR-003m | On a cancellation request (FR-120) the implementation shall abort the transfer by transmitting the CAN… | xmodem.py:_abort, send_file, receive_file; tests test_xmodem.py (cancel aborts and sends CAN) |
 | NFR-003n | On abort the implementation shall flush the Transport Port in **both** directions — discarding any… | xmodem.py:_abort; tests test_xmodem.py (cancel flushes serial in both directions) |
 | NFR-003o | The wait for the CAN bytes to drain shall be time-bounded rather than an unbounded… | xmodem.py:_drain_tx, _abort; tests test_xmodem.py (does not hang when TX cannot drain) |
+| NFR-003p | When a transmitted packet is NAK'd or goes unanswered, the sender shall retransmit the same… | xmodem.py:send_file; tests test_xmodem.py (aborts after NAK exhaustion) |
+| NFR-003q | When the sender transmits EOT before any data packet, the receiver shall accept it as… | xmodem.py:receive_file; tests test_xmodem.py (empty transfer writes empty file) |
 
 ## A4. Project structure and module organisation
 

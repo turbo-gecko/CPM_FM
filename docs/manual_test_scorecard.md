@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.19 |
-| Scorecard for plan version | 1.19 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.20 |
+| Scorecard for plan version | 1.20 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -357,7 +357,7 @@ For transfer/timing/parser bugs, set Debug Logging ON — UIR-050 — and includ
 ```
 
 **Serial-line evidence** (if a bus analyser / `com0com` log / `socat -x` capture is available — bytes
-on the wire, baud, flow-control state). Optional but decisive for FR-076/087/089/109/NFR-003a–o issues:
+on the wire, baud, flow-control state). Optional but decisive for FR-076/087/089/109/NFR-003a–q issues:
 
 ```
 ```

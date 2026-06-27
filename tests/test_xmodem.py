@@ -294,7 +294,8 @@ def test_send_file_returns_false_when_no_start_char(tmp_path, monkeypatch):
 
 
 def test_send_file_aborts_after_nak_exhaustion(tmp_path):
-    # NFR-003: a packet that is NAK'd on all 10 retransmit attempts gives up and
+    """Verifies: NFR-003p."""
+    # NFR-003p: a packet that is NAK'd on all 10 retransmit attempts gives up and
     # returns False rather than looping forever.
     path = tmp_path / "UP.TXT"
     path.write_bytes(bytes(range(128)))
@@ -586,7 +587,8 @@ def test_receive_file_resyncs_after_stray_bytes_between_packets(tmp_path):
 
 
 def test_receive_file_empty_transfer_writes_empty_file(tmp_path):
-    # NFR-003: an immediate EOT (no data packets) is a valid, empty transfer.
+    """Verifies: NFR-003q."""
+    # NFR-003q: an immediate EOT (no data packets) is a valid, empty transfer.
     save = tmp_path / "EMPTY.TXT"
     fake = _FakeSerial(EOT)
     assert XModem(fake).receive_file(str(save)) is True
