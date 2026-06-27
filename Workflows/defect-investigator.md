@@ -139,6 +139,12 @@ The code is `src/`-layout under `src/cpm_fm/`.
   edit the spec in this workflow — note it and route the change through the
   `requirements-check` workflow. For a broader traceability audit (orphan code,
   unimplemented requirements), hand off to `code-requirements-align`.
+- **If the fix changed user-visible behaviour**, update the end-user manual
+  (`src/cpm_fm/docs/cpm_fm_manual.md`) — the affected section(s), Table of
+  Contents, and Reference: Default Settings table — and bump its
+  `**Version X.Y.Z**` line to match `src/version.txt`. (This is the user manual,
+  distinct from `docs/manual_test_plan.md`.) A fix with no user-visible effect
+  needs no manual edit — say so rather than skip the check silently.
 
 ## Notes
 - Test-first is the point: the failing test in Steps 3–4 proves the defect before

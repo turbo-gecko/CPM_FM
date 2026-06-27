@@ -126,8 +126,15 @@ not stop short:
 6. **Update the manual test plan** (`docs/manual_test_plan.md`) and increment its test plan version.
 7. **Update the manual test scorecard** (`docs/manual_test_scorecard.md`) to match the test plan and
    increment its score version.
-7a. **Record the change** — bump `src/version.txt` and the SRS version field (DR-040/DR-041), and add a
-   row to **`docs/requirements_change_history.md`** (the §11 companion file — *not* the SRS itself).
-   When a requirements review resolves an ambiguity or gap, add the OI entry to
-   **`docs/requirements_issue_log.md`** (the §10 companion file).
+7a. **Record the change** — bump `src/version.txt`, the SRS version field (DR-040/DR-041), and the
+   `**Version X.Y.Z**` line at the top of the user manual (`src/cpm_fm/docs/cpm_fm_manual.md`) so all
+   three stay locked together, and add a row to **`docs/requirements_change_history.md`** (the §11
+   companion file — *not* the SRS itself). When a requirements review resolves an ambiguity or gap, add
+   the OI entry to **`docs/requirements_issue_log.md`** (the §10 companion file).
+7b. **Update the user manual** (`src/cpm_fm/docs/cpm_fm_manual.md`) **when the change alters
+   user-visible behaviour** — revise the affected section(s), the Table of Contents, and the
+   **Reference: Default Settings** table so the manual matches the new behaviour (this is the end-user
+   manual, distinct from the `docs/manual_test_plan.md` updated in step 6). If the change is
+   architecture-only (a `CR-`/`NFR-` constraint with no user-visible effect), state explicitly in the
+   step-8 summary that no manual content change was needed — never skip the step silently.
 8. **Provide a summary** of the actions taken.

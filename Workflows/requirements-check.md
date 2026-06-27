@@ -135,6 +135,7 @@ When editing requirements:
 - When a review resolves an ambiguity, conflict, or gap, record it as a new OI entry in the **Issue Resolution Log companion file** (`docs/requirements_issue_log.md`)
 - After editing requirement IDs, Source-column citations, or code `Satisfies:` tags, regenerate the read-only views by running `python tools/traceability_sync/generate_views.py` and commit `docs/requirements_views/` (never hand-edit the views)
 - After editing, review `AGENTS.md` and update any architecture, component, or behaviour descriptions that are no longer accurate given the changed requirements
+- When the change alters user-visible behaviour, update the **end-user manual** (`src/cpm_fm/docs/cpm_fm_manual.md`) — the affected section(s), the Table of Contents, and the **Reference: Default Settings** table — and bump its `**Version X.Y.Z**` line to match `src/version.txt`. This is the user manual, distinct from `docs/manual_test_plan.md`. For architecture-only changes with no user-visible effect, state that no manual change was needed rather than skipping the step silently
 - After editing, review the test suite (`tests/`) and update or add tests so that every new or modified requirement has corresponding test coverage; tag each test function's docstring with a `Verifies:` line citing the requirement ID(s) it exercises (the test-suite counterpart of code `Satisfies:` tags) so the `requirements_to_tests` view picks it up. If tests are added or changed, run the full test suite (`pytest`), check `python tools/traceability_sync/agent_toolset.py --coverage` for untested requirements and stale tags, and record any failures in a new plan file at `temp\fixes.md` listing the failing tests and the code changes needed to resolve them
 
 ## Usage
@@ -151,6 +152,7 @@ When the user provides requirements for analysis:
 9. After editing, increment the SRS Version field and add an entry to the Change History companion file (`docs/requirements_change_history.md`); record any resolved ambiguity/conflict/gap as an OI entry in the Issue Resolution Log companion file (`docs/requirements_issue_log.md`)
 9a. After editing requirement IDs, Source citations, or code `Satisfies:` tags, regenerate the views (`python tools/traceability_sync/generate_views.py`) and commit `docs/requirements_views/`
 10. After editing, update `AGENTS.md` to reflect any changed architecture, component descriptions, or cross-cutting behaviours introduced or modified by the new/changed requirements
+10a. When the change alters user-visible behaviour, update the end-user manual (`src/cpm_fm/docs/cpm_fm_manual.md`) — affected section(s), Table of Contents, and Reference: Default Settings table — and bump its version line to match `src/version.txt`; for architecture-only changes, state that no manual change was needed
 11. After editing, update or add tests in `tests/` to cover every new or modified requirement, tagging each test function's docstring with a `Verifies:` line for the requirement ID(s) it exercises; if any tests are added or changed, run `pytest`, check `agent_toolset.py --coverage` for untested requirements/stale tags, and — if there are failures — create `temp\fixes.md` as a plan listing each failing test, the root cause, and the code changes required to fix it
 
 ## Output Format
@@ -181,6 +183,10 @@ When the user provides requirements for analysis:
 - Sections updated to reflect any new or changed architecture, components, or cross-cutting behaviours
 - No update needed if the requirement change has no impact on the architecture description
 
+**User Manual Update:**
+- Sections/ToC/Reference: Default Settings table of `src/cpm_fm/docs/cpm_fm_manual.md` updated to match any new or changed user-visible behaviour, with its version line bumped to match `src/version.txt`
+- Explicitly note "no manual change needed" for architecture-only changes (no user-visible effect)
+
 **Test Update:**
 - New or modified test cases listed, with the requirement ID each covers
 - `pytest` run result (pass count, failure count)
@@ -196,4 +202,4 @@ When the user provides requirements for analysis:
 - Maintain professional, constructive tone
 - When editing, preserve stakeholder intent while improving quality
 - Never delete existing entries in the Change History or Issue Resolution Log companion files
-- Steps 10 and 11 (AGENTS.md and test updates) are mandatory whenever requirements are edited — do not skip them even for minor or cosmetic changes
+- Steps 10, 10a, and 11 (AGENTS.md, user manual, and test updates) are mandatory whenever requirements are edited — do not skip them even for minor or cosmetic changes (for step 10a, "no manual change needed" is an acceptable outcome for architecture-only edits, but the decision must be stated, not skipped silently)
