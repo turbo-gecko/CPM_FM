@@ -68,8 +68,16 @@ Judge every existing and proposed test against these rules:
 ## Step 1: Scope the Audit
 
 - Confirm the target with the user: the whole suite, a specific test module, or
-  the tests covering a specific source module/feature. Default to the whole suite
-  (`tests/`) if unspecified.
+  the tests covering a specific source module/feature. Default to the whole **unit**
+  suite (`tests/`) if unspecified.
+- The **integration (HIL) suite** (`integration/`) is a *separate tier* — it drives
+  the real app against a real CP/M machine over serial and is bench-only (not run
+  by CI or the default `pytest`). It is **out of scope by default**: do not run it
+  as part of a baseline (it needs hardware and minutes per case) and do not grade
+  its end-to-end cases by the unit-test "Just One Thing" rule — a HIL case
+  legitimately drives a whole flow. Audit it only when the user explicitly asks,
+  and then judge it on HIL terms (deterministic waits, MT-ID/requirement tagging,
+  scratch-drive safety, real round-trip integrity), not unit-test isolation.
 - Identify the source modules in scope and their corresponding test files. In
   this repo the most safety-critical pure logic is `terminal/cpm_parser.py`,
   `terminal/xmodem.py`, and `utils/config_handler.py`; the GUI/serial layers are

@@ -23,10 +23,19 @@ Run:
   printed to stdout, not surfaced in the UI)
 
 Test / lint / type-check (CI runs all of these on Python 3.12, see `.github/workflows/ci.yml`):
-- `pytest` — full suite (`-q` is set in `pyproject.toml`)
+- `pytest` — full unit suite (`-q` is set in `pyproject.toml`; `testpaths = ["tests"]`, so it never
+  descends into `integration/`)
 - `pytest tests/test_cpm_parser.py::test_parse_dir_output_extracts_filenames` — single test
 - `ruff check src tests` and `ruff format --check src tests` (CI uses `--check`; drop it to apply)
 - `mypy src`
+
+Integration (hardware-in-the-loop) suite — **separate, bench-only, not run by CI or the default
+`pytest`** because it drives the real app against a real CP/M machine over serial:
+- `pytest integration/` — the HIL suite (its own `integration/pytest.ini`); `--target`/`--all-targets`
+  select the rig, `--run-destructive` enables the backup/restore (whole-drive-wipe) cases
+- `python integration/run.py` — interactive target picker
+- See `integration/README.md` for wiring, target setup (`hil_config.json`), and the manual-vs-automated
+  split. It is additive test infrastructure and does not itself define requirements.
 
 ## Architecture
 
@@ -121,6 +130,19 @@ not stop short:
    `Satisfies:`). Then **run the unit tests** (`pytest`). Check coverage with
    `python tools/traceability_sync/agent_toolset.py --coverage` — it lists requirements with no
    verifying test and any stale `Verifies:` tags.
+4a. **Update the integration (HIL) test suite** (`integration/`) when the change touches behaviour it
+   exercises — the X-Modem protocol round-trips, the GUI-over-real-serial flows (connect/disconnect,
+   listing, drive change, conflict, filename validation, drag-and-drop, transfer history, terminal
+   window, remote context-menu actions, backup/restore), or the widget-tree look-and-feel assertions.
+   Add or adjust the relevant `integration/test_*.py` case(s), keep each test's
+   `@pytest.mark.mt("MT-..", "FR-..")` MT-ID/requirement tags accurate, and update
+   `integration/README.md` if the manual-vs-automated split changes. The HIL suite needs a real CP/M
+   peer, so it is **not** part of the default `pytest` run or CI — verify it with a bench run
+   (`pytest integration/`, plus `--run-destructive` for the backup/restore cases) when hardware is
+   available, and record the outcome. If hardware is not at hand, state in the step-8 summary that the
+   integration update is written but its bench run is pending. If the change touches no HIL-covered
+   behaviour (e.g. a pure architecture `CR-`/`NFR-` constraint with no protocol/GUI effect), state
+   explicitly that no integration-suite change was needed — never skip the step silently.
 5. **Iterate steps 2–4** until all unit tests pass and the trace is clean (no stale tags;
    `generate_views.py --check` green).
 6. **Update the manual test plan** (`docs/manual_test_plan.md`) and increment its test plan version.

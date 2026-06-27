@@ -130,6 +130,15 @@ Using `requirements_to_tests.md` and the `--coverage` output from Step 2:
   - a **stale `Verifies:` tag** citing an ID no spec defines (fix the tag or the
     spec);
   - a requirement whose test exists but is too weak to catch a realistic fault.
+- A requirement may also be covered by the **integration (HIL) suite**
+  (`integration/test_*.py`, tagged `@pytest.mark.mt("MT-..", "FR-..")`) rather than
+  (or in addition to) a unit test — the protocol round-trips, GUI-over-real-serial
+  flows, and widget-tree assertions live there. When judging a coverage gap,
+  account for this third tier as well as `tests/` and `docs/manual_test_plan.md`:
+  a requirement exercised by an `integration/` case tagged with its ID is
+  covered-by-HIL, not an untested defect. The HIL suite is bench-only (a real CP/M
+  peer; not in CI or the default `pytest`), so its coverage is established by
+  reading the `mt`/`Verifies:` tags, not by the `--coverage` tool.
 - This workflow checks *coverage/traceability* of tests to requirements. For a
   deep, adversarial audit of test *quality* (weak assertions, missing boundaries),
   defer to the `test-quality-checker` workflow; for chasing a real code fault a
@@ -186,6 +195,13 @@ For the findings the user confirms are in scope, produce a concrete, ordered pla
   the end-user manual (`src/cpm_fm/docs/cpm_fm_manual.md`) — affected section(s),
   Table of Contents, and Reference: Default Settings table — and bump its version
   line to match `src/version.txt` (distinct from `docs/manual_test_plan.md`).
+- For any plan item that changes behaviour the integration (HIL) suite exercises
+  (protocol round-trips, GUI-over-real-serial flows, widget-tree look-and-feel),
+  include a step to update the relevant `integration/test_*.py` case(s) with
+  accurate `@pytest.mark.mt(...)` tags and to verify them with a bench run
+  (`pytest integration/`, plus `--run-destructive` for backup/restore) when
+  hardware is available — or to record that the bench run is pending. State when
+  no integration change is needed rather than omitting it.
 - Route any *spec* edit (new/changed requirement, resolved ambiguity) through the
   `requirements-check` workflow, not this one.
 - Sequence by dependency and risk; call out items blocked pending Step 7

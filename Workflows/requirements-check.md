@@ -137,6 +137,7 @@ When editing requirements:
 - After editing, review `AGENTS.md` and update any architecture, component, or behaviour descriptions that are no longer accurate given the changed requirements
 - When the change alters user-visible behaviour, update the **end-user manual** (`src/cpm_fm/docs/cpm_fm_manual.md`) — the affected section(s), the Table of Contents, and the **Reference: Default Settings** table — and bump its `**Version X.Y.Z**` line to match `src/version.txt`. This is the user manual, distinct from `docs/manual_test_plan.md`. For architecture-only changes with no user-visible effect, state that no manual change was needed rather than skipping the step silently
 - After editing, review the test suite (`tests/`) and update or add tests so that every new or modified requirement has corresponding test coverage; tag each test function's docstring with a `Verifies:` line citing the requirement ID(s) it exercises (the test-suite counterpart of code `Satisfies:` tags) so the `requirements_to_tests` view picks it up. If tests are added or changed, run the full test suite (`pytest`), check `python tools/traceability_sync/agent_toolset.py --coverage` for untested requirements and stale tags, and record any failures in a new plan file at `temp\fixes.md` listing the failing tests and the code changes needed to resolve them
+- After editing, also review the **integration (HIL) test suite** (`integration/`) and update or add the relevant `integration/test_*.py` case(s) when the requirement change affects HIL-covered behaviour (X-Modem protocol round-trips, the GUI-over-real-serial flows, or the widget-tree look-and-feel), keeping each test's `@pytest.mark.mt("MT-..", "FR-..")` MT-ID/requirement tags accurate. The HIL suite is bench-only (a real CP/M peer) and is not run by CI or the default `pytest`; verify it with `pytest integration/` (plus `--run-destructive` for backup/restore) when hardware is available, otherwise note that the bench run is pending. If the change touches no HIL-covered behaviour, state that no integration change was needed — do not skip the step silently
 
 ## Usage
 
@@ -154,6 +155,7 @@ When the user provides requirements for analysis:
 10. After editing, update `AGENTS.md` to reflect any changed architecture, component descriptions, or cross-cutting behaviours introduced or modified by the new/changed requirements
 10a. When the change alters user-visible behaviour, update the end-user manual (`src/cpm_fm/docs/cpm_fm_manual.md`) — affected section(s), Table of Contents, and Reference: Default Settings table — and bump its version line to match `src/version.txt`; for architecture-only changes, state that no manual change was needed
 11. After editing, update or add tests in `tests/` to cover every new or modified requirement, tagging each test function's docstring with a `Verifies:` line for the requirement ID(s) it exercises; if any tests are added or changed, run `pytest`, check `agent_toolset.py --coverage` for untested requirements/stale tags, and — if there are failures — create `temp\fixes.md` as a plan listing each failing test, the root cause, and the code changes required to fix it
+11a. After editing, update the **integration (HIL) suite** (`integration/`) for any HIL-covered behaviour the change affects (protocol round-trips, GUI-over-real-serial flows, widget-tree look-and-feel), keeping the `@pytest.mark.mt(...)` MT-ID/requirement tags accurate. The suite is bench-only (real CP/M peer, not in CI/default `pytest`): verify with `pytest integration/` (plus `--run-destructive` for backup/restore) when hardware is available, else note the bench run is pending. State "no integration change needed" when the change touches no HIL-covered behaviour — do not skip silently
 
 ## Output Format
 
@@ -191,6 +193,7 @@ When the user provides requirements for analysis:
 - New or modified test cases listed, with the requirement ID each covers
 - `pytest` run result (pass count, failure count)
 - If failures exist: `temp\fixes.md` created as a plan with one entry per failing test — failing test name, root cause, and the code change needed to fix it
+- Integration (HIL) suite: the `integration/test_*.py` case(s) added/changed (with MT-ID/requirement tags), and the `pytest integration/` bench-run result — or an explicit "no integration change needed" / "bench run pending hardware" note
 
 ## Notes
 
