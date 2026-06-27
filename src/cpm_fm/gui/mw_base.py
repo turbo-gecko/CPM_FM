@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 if TYPE_CHECKING:
     import threading
 
+    from PySide6.QtWidgets import QComboBox, QLineEdit, QToolButton
+
+    from cpm_fm.gui.file_list_widget import FileListWidget
+    from cpm_fm.gui.window_state import WindowState
     from cpm_fm.terminal.serial_manager import SerialManager
 
 
@@ -26,6 +30,7 @@ class MainWindowMixinBase:
         # --- shared instance state (created in MainWindow.__init__) ---
         settings: dict
         serial_mgr: SerialManager
+        window_state: WindowState
         _rx_buffer: str
         _transfer_cancel: threading.Event
         _conflict_policy: str | None
@@ -33,6 +38,19 @@ class MainWindowMixinBase:
         _conflict_result: tuple[str, bool]
         _invalid_name_answered: threading.Event
         _invalid_name_result: tuple[str, str]
+
+        # --- file-pane widgets and their canonical (unfiltered) name lists ---
+        host_list: FileListWidget
+        remote_list: FileListWidget
+        _host_files: list[str]
+        _remote_files: list[str]
+        host_filter: QLineEdit
+        remote_filter: QLineEdit
+        host_sort_combo: QComboBox
+        remote_sort_combo: QComboBox
+        host_sort_dir_btn: QToolButton
+        remote_sort_dir_btn: QToolButton
+        _restoring_filter_sort: bool
 
         # --- cross-thread GUI-marshalling signals (NFR-004) ---
         # Typed ``Any``: a PySide ``Signal`` is a descriptor whose bound
@@ -50,6 +68,7 @@ class MainWindowMixinBase:
 
         # --- methods that remain on MainWindow / non-transfer sections ---
         def set_status(self, text: str) -> None: ...
+        def _register_text(self, setter: Callable[[str], None], key: str) -> None: ...
         def handle_terminal_send(self, text, append_eol: bool = True) -> None: ...
         def _capture_terminal_response(self, command: str, cancellable: bool = False) -> str: ...
         def _confirm_dialog(

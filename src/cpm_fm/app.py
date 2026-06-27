@@ -5,13 +5,12 @@ import os
 import shlex
 import subprocess
 import sys
-import tempfile
 import threading
 import time
 from typing import Callable, cast
 
 import serial.tools.list_ports
-from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QActionGroup, QFontMetrics
 from PySide6.QtWidgets import (
     QApplication,
@@ -21,15 +20,12 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QMainWindow,
-    QMenu,
     QMessageBox,
     QPushButton,
     QSplitter,
     QStyle,
     QToolBar,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -38,9 +34,10 @@ from cpm_fm.gui.about_dialog import AboutDialog
 from cpm_fm.gui.config_dialogs import GeneralConfigDialog, SerialConfigDialog
 from cpm_fm.gui.conflict_dialog import CANCEL
 from cpm_fm.gui.dialog_buttons import build_button_row
-from cpm_fm.gui.file_action_dialog import FileActionDialog
 from cpm_fm.gui.file_list_widget import FileListWidget
 from cpm_fm.gui.manual_dialog import ManualDialog
+from cpm_fm.gui.mw_context_menu import _ContextMenuMixin
+from cpm_fm.gui.mw_file_panes import _FilePanesMixin
 from cpm_fm.gui.mw_transfer_batches import _TransferBatchesMixin
 from cpm_fm.gui.mw_transfer_guards import _TransferGuardsMixin
 from cpm_fm.gui.mw_transfers import _TransfersMixin
@@ -52,7 +49,6 @@ from cpm_fm.gui.window_state import APP, ORG, WindowState
 from cpm_fm.terminal.cpm_parser import CPMParser
 from cpm_fm.terminal.serial_manager import SerialManager
 from cpm_fm.utils.config_handler import DEFAULT_SETTINGS, ConfigHandler
-from cpm_fm.utils.file_filter import SORT_EXTENSION, SORT_NAME, filter_and_sort
 from cpm_fm.utils.i18n import (
     available_languages,
     current_language,
@@ -100,6 +96,8 @@ def build_viewer_args(template: str, path: str) -> list[str]:
 
 class MainWindow(
     QMainWindow,
+    _FilePanesMixin,
+    _ContextMenuMixin,
     _TransfersMixin,
     _TransferBatchesMixin,
     _TransferGuardsMixin,
@@ -593,174 +591,6 @@ class MainWindow(
         layout.addWidget(splitter)
         self.setCentralWidget(container)
 
-    # ------------------------------------------------- file-list filter / sort
-
-    def _build_filter_sort_row(self, pane: str):
-        """Build the filter field and sort controls for one file pane.
-
-        Returns ``(layout, filter_edit, sort_combo, dir_btn)``. ``pane`` is
-        "host" or "remote" and selects which view-apply slot the controls drive.
-        The filter field carries a built-in clear (X) button (FR-135) and its
-        input is debounced ~150 ms so a render is not run on every keystroke
-        (FR-131). The sort drop-down offers Name/Extension (FR-132, userData =
-        the SORT_* key) and the checkable direction button toggles
-        ascending/descending.
-
-        Satisfies: FR-130, FR-132, FR-135, UIR-079, UIR-080.
-        """
-        row = QHBoxLayout()
-
-        filter_edit = QLineEdit()
-        filter_edit.setClearButtonEnabled(True)  # FR-135: clear (X) button.
-        self._register_text(filter_edit.setPlaceholderText, "main.filter_placeholder")
-        self._register_text(filter_edit.setToolTip, "main.filter_tooltip")
-        row.addWidget(filter_edit, 1)
-
-        sort_combo = QComboBox()
-        sort_combo.addItem(tr("main.sort.name"), SORT_NAME)
-        sort_combo.addItem(tr("main.sort.extension"), SORT_EXTENSION)
-        self._register_text(sort_combo.setToolTip, "main.sort_by_tooltip")
-        row.addWidget(sort_combo)
-
-        dir_btn = QToolButton()
-        dir_btn.setCheckable(True)
-        dir_btn.setText("↑")  # ascending; flipped to ↓ when checked.
-        self._register_text(dir_btn.setToolTip, "main.sort_direction_tooltip")
-        row.addWidget(dir_btn)
-
-        apply_fn = self._apply_host_view if pane == "host" else self._apply_remote_view
-
-        # FR-131: debounce filter typing so the list re-renders ~150 ms after the
-        # user pauses, not on every character.
-        timer = QTimer(self)
-        timer.setSingleShot(True)
-        timer.setInterval(150)
-        timer.timeout.connect(apply_fn)
-        filter_edit.textChanged.connect(lambda _text, tm=timer: tm.start())
-        # FR-132: a sort change re-renders immediately (no debounce needed).
-        sort_combo.currentIndexChanged.connect(apply_fn)
-        dir_btn.toggled.connect(lambda checked, b=dir_btn: self._update_sort_arrow(b, checked))
-        dir_btn.toggled.connect(apply_fn)
-
-        return row, filter_edit, sort_combo, dir_btn
-
-    @staticmethod
-    def _update_sort_arrow(button, checked: bool) -> None:
-        """Show ``↓`` for descending, ``↑`` for ascending (UIR-080).
-
-        The arrow glyph is a directional indicator, not translatable prose, so
-        it is set directly (CR-015).
-
-        Satisfies: UIR-080.
-        """
-        button.setText("↓" if checked else "↑")
-
-    def _render_file_list(self, list_widget, names, filter_edit, sort_combo, dir_btn) -> None:
-        """Filter+sort ``names`` per the pane's controls and show them.
-
-        Applies the shared filter_and_sort logic (FR-133) and flags an active
-        (non-empty) filter with a coloured border on the field (UIR-079).
-
-        Satisfies: FR-130, FR-131, FR-132, FR-133, UIR-079.
-        """
-        pattern = filter_edit.text()
-        key = sort_combo.currentData() or SORT_NAME
-        descending = dir_btn.isChecked()
-        visible = filter_and_sort(names, pattern, key=key, descending=descending)
-        list_widget.clear()
-        list_widget.addItems(visible)
-        # UIR-079: a coloured border marks an active filter so it is obvious why
-        # files may be hidden.
-        active = bool(pattern.strip())
-        filter_edit.setStyleSheet("QLineEdit { border: 1px solid #4caf50; }" if active else "")
-
-    def _apply_host_view(self) -> None:
-        """Re-render the Host list from the current filter/sort controls (FR-133).
-
-        Satisfies: FR-133, FR-134.
-        """
-        self._render_file_list(
-            self.host_list,
-            self._host_files,
-            self.host_filter,
-            self.host_sort_combo,
-            self.host_sort_dir_btn,
-        )
-        self._persist_filter_sort()
-
-    def _apply_remote_view(self) -> None:
-        """Re-render the Remote list from the current filter/sort controls (FR-133).
-
-        Satisfies: FR-133, FR-134.
-        """
-        self._render_file_list(
-            self.remote_list,
-            self._remote_files,
-            self.remote_filter,
-            self.remote_sort_combo,
-            self.remote_sort_dir_btn,
-        )
-        self._persist_filter_sort()
-
-    def _clear_remote_files(self) -> None:
-        """Empty both the canonical Remote file list and the visible widget.
-
-        Used wherever a stale remote listing must be discarded (load, disconnect,
-        drive-not-found, terminal closed, File > New) so the filter/sort source
-        does not retain entries that are no longer valid.
-
-        Satisfies: FR-017, FR-058, FR-074, FR-103, FR-104.
-        """
-        self._remote_files = []
-        self.remote_list.clear()
-
-    def _persist_filter_sort(self) -> None:
-        """Persist both panes' filter text and sort settings (FR-134).
-
-        A no-op while restoring (so the restore does not overwrite itself).
-
-        Satisfies: FR-134.
-        """
-        if self._restoring_filter_sort:
-            return
-        ws = self.window_state
-        ws.set_filter_text("host", self.host_filter.text())
-        ws.set_sort_key("host", self.host_sort_combo.currentData() or SORT_NAME)
-        ws.set_sort_descending("host", self.host_sort_dir_btn.isChecked())
-        ws.set_filter_text("remote", self.remote_filter.text())
-        ws.set_sort_key("remote", self.remote_sort_combo.currentData() or SORT_NAME)
-        ws.set_sort_descending("remote", self.remote_sort_dir_btn.isChecked())
-
-    def _restore_filter_sort(self) -> None:
-        """Load each pane's saved filter text and sort settings into its controls.
-
-        Signals are blocked during the restore so it does not trigger a premature
-        render or a self-overwriting persist; the first real render happens when
-        the lists are next populated.
-
-        Satisfies: FR-134.
-        """
-        self._restoring_filter_sort = True
-        try:
-            ws = self.window_state
-            panes = (
-                ("host", self.host_filter, self.host_sort_combo, self.host_sort_dir_btn),
-                ("remote", self.remote_filter, self.remote_sort_combo, self.remote_sort_dir_btn),
-            )
-            for pane, edit, combo, btn in panes:
-                for widget in (edit, combo, btn):
-                    widget.blockSignals(True)
-                edit.setText(ws.filter_text(pane))
-                idx = combo.findData(ws.sort_key(pane))
-                combo.setCurrentIndex(idx if idx >= 0 else 0)
-                descending = ws.sort_descending(pane)
-                btn.setChecked(descending)
-                self._update_sort_arrow(btn, descending)
-                for widget in (edit, combo, btn):
-                    widget.blockSignals(False)
-        finally:
-            self._restoring_filter_sort = False
-
     def setup_status_bar(self):
         """
         Satisfies: UIR-010, UIR-074.
@@ -933,150 +763,7 @@ class MainWindow(
             elif direction == "remote":
                 self.refresh_remote_files()
 
-    # ------------------------------------------------------------- host files
-
-    def refresh_host_files(self):
-        """
-        Satisfies: FR-060, FR-126, FR-133.
-        """
-        # FR-126: the host directory may have changed; reflect it in the group
-        # title. This is the single point through which every host-directory
-        # change passes.
-        self._update_host_group_title()
-        try:
-            files = [
-                f
-                for f in os.listdir(self.host_dir)
-                if os.path.isfile(os.path.join(self.host_dir, f))
-            ]
-        except Exception as e:
-            self._host_files = []
-            self.host_list.clear()
-            self.set_status(tr("status.error_reading_host", error=e))
-            return
-        # FR-133: keep the canonical list and render it through the active
-        # filter/sort controls.
-        self._host_files = files
-        self._apply_host_view()
-
-    def change_host_dir(self):
-        """
-        Satisfies: FR-062.
-        """
-        path = QFileDialog.getExistingDirectory(
-            self, tr("dialog.change_directory.title"), self.host_dir
-        )
-        if path:
-            self.host_dir = path
-            self.refresh_host_files()
-
-    # ------------------------------------------------ file context-menu actions
-
-    def _context_menu_targets(self, list_widget, pos):
-        """
-        Resolve the file under the cursor and the set of files an action applies
-        to for a right-click context menu (FR-110, FR-111).
-
-        Returns ``(name, names)`` where ``name`` is the single file under the
-        cursor (the target of the single-file actions) and ``names`` is the list
-        of files Delete applies to: the current selection when the clicked file
-        is part of it, otherwise just the clicked file. Returns ``(None, [])``
-        when the click was not over an item.
-
-        Satisfies: FR-110, FR-111.
-        """
-        item = list_widget.itemAt(pos)
-        if item is None:
-            return None, []
-        name = item.text()
-        names = self._selected_filenames(list_widget)
-        if name not in names:
-            names = [name]
-        return name, names
-
-    def _host_context_menu(self, pos):
-        """
-        Satisfies: FR-110, FR-119, UIR-018.
-
-        Right-click menu for the Host Files list: To Remote, View/Edit, Rename,
-        Delete. To Remote and Delete act on every selected file; View/Edit and
-        Rename act on the file under the cursor and are disabled when more than
-        one file is selected.
-        """
-        name, names = self._context_menu_targets(self.host_list, pos)
-        if name is None:
-            return
-        single = len(names) == 1
-        menu = QMenu(self)
-        menu.addAction(tr("ctxmenu.to_remote"), lambda names=names: self._host_to_remote(names))
-        menu.addSeparator()
-        menu.addAction(tr("ctxmenu.view_edit"), lambda: self._host_view(name)).setEnabled(single)
-        menu.addAction(tr("ctxmenu.rename"), lambda: self._host_rename(name)).setEnabled(single)
-        menu.addAction(tr("ctxmenu.delete"), lambda names=names: self._host_delete(names))
-        menu.exec(self.host_list.mapToGlobal(pos))
-
-    def _remote_context_menu(self, pos):
-        """
-        Satisfies: FR-111, FR-119, UIR-019.
-
-        Right-click menu for the Remote Files list: To Host, View, Rename,
-        Delete. To Host and Delete act on every selected file; View and Rename
-        act on the file under the cursor and are disabled when more than one
-        file is selected.
-        """
-        name, names = self._context_menu_targets(self.remote_list, pos)
-        if name is None:
-            return
-        single = len(names) == 1
-        menu = QMenu(self)
-        menu.addAction(tr("ctxmenu.to_host"), lambda names=names: self._remote_to_host(names))
-        menu.addSeparator()
-        menu.addAction(tr("ctxmenu.view"), lambda: self._remote_view(name)).setEnabled(single)
-        menu.addAction(tr("ctxmenu.rename"), lambda: self._remote_rename(name)).setEnabled(single)
-        menu.addAction(tr("ctxmenu.delete"), lambda names=names: self._remote_delete(names))
-        menu.exec(self.remote_list.mapToGlobal(pos))
-
-    def _host_to_remote(self, names):
-        """
-        Satisfies: FR-119, FR-080, FR-106, FR-107, CR-010.
-
-        Copy every selected host file to the remote, reusing the Copy to Remote
-        batch transfer (FR-099/FR-105, sequential per FR-106/FR-107). Accepts a
-        single filename or a list of filenames.
-        """
-        names = [names] if isinstance(names, str) else list(names)
-        if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
-            QMessageBox.critical(
-                self, tr("dialog.error.title"), tr("error.transport_not_connected")
-            )
-            return
-        if not names:
-            return
-        filepaths = [os.path.join(self.host_dir, name) for name in names]
-        threading.Thread(
-            target=self._transfer_to_remote_batch, args=(filepaths,), daemon=True
-        ).start()
-
-    def _remote_to_host(self, names):
-        """
-        Satisfies: FR-119, FR-080, FR-106, FR-107, CR-010.
-
-        Copy every selected remote file to the host, reusing the Copy to Host
-        batch transfer (FR-099/FR-105, sequential per FR-106/FR-107). Accepts a
-        single filename or a list of filenames.
-        """
-        names = [names] if isinstance(names, str) else list(names)
-        if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
-            QMessageBox.critical(
-                self, tr("dialog.error.title"), tr("error.transport_not_connected")
-            )
-            return
-        if not names:
-            return
-        save_paths = [os.path.join(self.host_dir, name) for name in names]
-        threading.Thread(
-            target=self._transfer_to_host_batch, args=(save_paths,), daemon=True
-        ).start()
+    # -------------------------------------------------------------- viewer
 
     def _open_in_viewer(self, path):
         """
@@ -1111,208 +798,6 @@ class MainWindow(
             subprocess.Popen(["open", path])
         else:
             subprocess.Popen(["xdg-open", path])
-
-    def _host_view(self, name):
-        """
-        Satisfies: FR-110, FR-112.
-        """
-        self._open_in_viewer(os.path.join(self.host_dir, name))
-
-    def _host_rename(self, name):
-        """
-        Satisfies: FR-110, FR-114, FR-116, FR-118.
-        """
-        dlg = FileActionDialog(self, tr("dialog.rename_file.title"), name, editable=True)
-        if dlg.exec() != QDialog.DialogCode.Accepted:
-            return
-        new_name = dlg.value().strip()
-        if not new_name or new_name == name:
-            return
-        try:
-            os.rename(os.path.join(self.host_dir, name), os.path.join(self.host_dir, new_name))
-        except OSError as e:
-            QMessageBox.critical(self, tr("dialog.error.title"), tr("error.rename_failed", error=e))
-            return
-        self.refresh_host_files()
-
-    def _host_delete(self, names):
-        """
-        Delete every selected host file (FR-110), confirming all of them in one
-        modal dialog (FR-115) and refreshing the Host Files list afterwards.
-        Files that delete successfully stay deleted even if a later file fails;
-        any failures are reported together (FR-116).
-
-        Accepts either a single filename or a list of filenames.
-
-        Satisfies: FR-110, FR-115, FR-116, FR-118.
-        """
-        names = [names] if isinstance(names, str) else list(names)
-        if not names:
-            return
-        single = len(names) == 1
-        prompt = (
-            tr("dialog.delete_file.prompt")
-            if single
-            else tr("dialog.delete_file.prompt_multi", count=len(names))
-        )
-        dlg = FileActionDialog(
-            self,
-            tr("dialog.delete_file.title"),
-            names[0],
-            editable=False,
-            prompt=prompt,
-            filenames=names,
-        )
-        if dlg.exec() != QDialog.DialogCode.Accepted:
-            return
-        errors = []
-        for name in names:
-            try:
-                os.remove(os.path.join(self.host_dir, name))
-            except OSError as e:
-                errors.append(str(e))
-        self.refresh_host_files()
-        if errors:
-            QMessageBox.critical(
-                self, tr("dialog.error.title"), tr("error.delete_failed", error="\n".join(errors))
-            )
-
-    def _remote_view(self, name):
-        """
-        Satisfies: FR-111, FR-113.
-
-        Download the remote file to a temporary folder over X-Modem, then open
-        it in the viewer (FR-112). Permitted only when both status flags are
-        connected (FR-080/CR-010). Runs the download on a worker thread.
-        """
-        if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
-            QMessageBox.critical(
-                self, tr("dialog.error.title"), tr("error.transport_not_connected")
-            )
-            return
-        threading.Thread(target=self._download_and_view, args=(name,), daemon=True).start()
-
-    def _download_and_view(self, name):
-        """
-        Satisfies: FR-113.
-
-        Worker thread: receive ``name`` into a temp folder via the Copy to Host
-        transfer process, then request the viewer on the GUI thread via the
-        view_file_ready signal (NFR-004). The progress dialog (FR-105) is driven
-        by the same batch signals as a normal transfer.
-        """
-        save_path = os.path.join(tempfile.mkdtemp(prefix="cpm_fm_"), name)
-        self._transfer_cancel.clear()  # FR-120: start un-cancelled.
-        self.batch_started.emit("host", 1)
-        self.set_status(tr("status.downloading_for_viewing", name=name))
-        self.transfer_file_started.emit(name, 0, 1)
-        try:
-            ok = self._recv_one_to_host(save_path)
-        except Exception as e:
-            self._debug(f"[remote-view] EXCEPTION: {e!r}")
-            self.error_raised.emit(tr("dialog.error.title"), str(e))
-            return
-        if not ok:
-            # FR-120: a cancelled download just closes the dialog (no viewer).
-            if self._transfer_cancel.is_set():
-                self._finish_cancelled_batch("host", 0)
-                return
-            self.error_raised.emit(
-                tr("dialog.xmodem_error.title"), tr("error.download_failed", name=name)
-            )
-            return
-        self.view_file_ready.emit(save_path)
-
-    def _on_view_file_ready(self, path):
-        """
-        Satisfies: FR-112, FR-113.
-
-        Runs on the GUI thread (queued from the remote-view worker). Close the
-        progress dialog and open the downloaded file in the viewer.
-        """
-        self._close_transfer_dialog()
-        self.set_status(tr("status.opening_viewer"))
-        self._open_in_viewer(path)
-
-    def _remote_rename(self, name):
-        """
-        Satisfies: FR-111, FR-114, FR-117, FR-118.
-        """
-        if not self.serial_mgr.terminal_connected:
-            self.set_status(tr("status.terminal_not_open_rename"))
-            return
-        dlg = FileActionDialog(self, tr("dialog.rename_remote.title"), name, editable=True)
-        if dlg.exec() != QDialog.DialogCode.Accepted:
-            return
-        new_name = dlg.value().strip()
-        if not new_name or new_name == name:
-            return
-        template = self.settings.get("rename_remote_cmd", "REN $2=$1")
-        if not template:
-            return
-        cmd = template.replace("$2", new_name).replace("$1", name)
-        threading.Thread(target=self._do_remote_file_cmd, args=(cmd,), daemon=True).start()
-
-    def _remote_delete(self, names):
-        """
-        Delete every selected remote file (FR-111) by sending the configured
-        delete command once per file on the Terminal Port, confirming all of
-        them in one modal dialog (FR-115). Accepts a single filename or a list.
-
-        Satisfies: FR-111, FR-115, FR-117, FR-118.
-        """
-        names = [names] if isinstance(names, str) else list(names)
-        if not self.serial_mgr.terminal_connected:
-            self.set_status(tr("status.terminal_not_open_delete"))
-            return
-        if not names:
-            return
-        single = len(names) == 1
-        prompt = (
-            tr("dialog.delete_remote.prompt")
-            if single
-            else tr("dialog.delete_remote.prompt_multi", count=len(names))
-        )
-        dlg = FileActionDialog(
-            self,
-            tr("dialog.delete_remote.title"),
-            names[0],
-            editable=False,
-            prompt=prompt,
-            filenames=names,
-        )
-        if dlg.exec() != QDialog.DialogCode.Accepted:
-            return
-        template = self.settings.get("delete_remote_cmd", "ERA $1")
-        if not template:
-            return
-        cmds = [template.replace("$1", name) for name in names]
-        threading.Thread(target=self._do_remote_file_cmds, args=(cmds,), daemon=True).start()
-
-    def _do_remote_file_cmd(self, cmd):
-        """
-        Satisfies: FR-117, FR-118.
-
-        Worker thread: send a single remote file-management command (Rename).
-        Delegates to _do_remote_file_cmds, which sends the command, waits for the
-        output to go idle, and refreshes the Remote Files list.
-        """
-        self._do_remote_file_cmds([cmd])
-
-    def _do_remote_file_cmds(self, cmds):
-        """
-        Satisfies: FR-117, FR-118.
-
-        Worker thread: send one or more remote file-management commands on the
-        Terminal Port in order, waiting for each command's output to go idle
-        (reusing the capture mechanism), then refresh the Remote Files list once
-        (FR-074-FR-079). _do_refresh_remote_logic marshals its UI update via the
-        remote_files_ready signal (NFR-004).
-        """
-        for cmd in cmds:
-            self.set_status(tr("status.executing", cmd=cmd))
-            self._capture_terminal_response(cmd)
-        self._do_refresh_remote_logic()
 
     # -------------------------------------------------------------- terminal
 

@@ -1115,7 +1115,7 @@ def test_host_rename_renames_file(qapp, monkeypatch, state, tmp_path):
     try:
         win.host_dir = str(tmp_path)
         (tmp_path / "OLD.TXT").write_text("x")
-        monkeypatch.setattr("cpm_fm.app.FileActionDialog", _fake_action_dialog("NEW.TXT"))
+        monkeypatch.setattr("cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("NEW.TXT"))
         refreshed = []
         monkeypatch.setattr(win, "refresh_host_files", lambda: refreshed.append(1))
         win._host_rename("OLD.TXT")
@@ -1133,7 +1133,7 @@ def test_host_rename_cancelled_makes_no_change(qapp, monkeypatch, state, tmp_pat
         win.host_dir = str(tmp_path)
         (tmp_path / "OLD.TXT").write_text("x")
         monkeypatch.setattr(
-            "cpm_fm.app.FileActionDialog", _fake_action_dialog("NEW.TXT", accepted=False)
+            "cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("NEW.TXT", accepted=False)
         )
         win._host_rename("OLD.TXT")
         assert (tmp_path / "OLD.TXT").exists()
@@ -1148,7 +1148,7 @@ def test_host_delete_removes_file(qapp, monkeypatch, state, tmp_path):
     try:
         win.host_dir = str(tmp_path)
         (tmp_path / "F.TXT").write_text("x")
-        monkeypatch.setattr("cpm_fm.app.FileActionDialog", _fake_action_dialog("F.TXT"))
+        monkeypatch.setattr("cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("F.TXT"))
         refreshed = []
         monkeypatch.setattr(win, "refresh_host_files", lambda: refreshed.append(1))
         win._host_delete("F.TXT")
@@ -1164,7 +1164,7 @@ def test_remote_rename_sends_command(qapp, monkeypatch, state):
     try:
         win.serial_mgr.terminal_connected = True
         win.settings = {"rename_remote_cmd": "REN $2=$1"}
-        monkeypatch.setattr("cpm_fm.app.FileActionDialog", _fake_action_dialog("NEW.TXT"))
+        monkeypatch.setattr("cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("NEW.TXT"))
         _RecordingThread.instances = []
         monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
         win._remote_rename("OLD.TXT")
@@ -1179,7 +1179,7 @@ def test_remote_delete_sends_command(qapp, monkeypatch, state):
     try:
         win.serial_mgr.terminal_connected = True
         win.settings = {"delete_remote_cmd": "ERA $1"}
-        monkeypatch.setattr("cpm_fm.app.FileActionDialog", _fake_action_dialog("F.TXT"))
+        monkeypatch.setattr("cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("F.TXT"))
         _RecordingThread.instances = []
         monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
         win._remote_delete("F.TXT")
@@ -1195,7 +1195,7 @@ def test_host_delete_removes_all_selected_files(qapp, monkeypatch, state, tmp_pa
         win.host_dir = str(tmp_path)
         for fn in ("A.TXT", "B.TXT", "C.TXT"):
             (tmp_path / fn).write_text("x")
-        monkeypatch.setattr("cpm_fm.app.FileActionDialog", _fake_action_dialog("A.TXT"))
+        monkeypatch.setattr("cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("A.TXT"))
         monkeypatch.setattr(win, "refresh_host_files", lambda: None)
         win._host_delete(["A.TXT", "B.TXT", "C.TXT"])
         assert not (tmp_path / "A.TXT").exists()
@@ -1211,7 +1211,7 @@ def test_remote_delete_sends_command_per_selected_file(qapp, monkeypatch, state)
     try:
         win.serial_mgr.terminal_connected = True
         win.settings = {"delete_remote_cmd": "ERA $1"}
-        monkeypatch.setattr("cpm_fm.app.FileActionDialog", _fake_action_dialog("A.TXT"))
+        monkeypatch.setattr("cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("A.TXT"))
         _RecordingThread.instances = []
         monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
         win._remote_delete(["A.TXT", "B.TXT"])
