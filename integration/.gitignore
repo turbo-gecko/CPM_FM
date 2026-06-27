@@ -1,0 +1,10 @@
+# Real bench configuration — never committed (paths/ports/drives are local).
+hil_config.json
+
+# Per-run artifact folders are gitignored; the run history index is committed.
+results/*
+!results/runs_ledger.json
+
+# Local pytest noise
+.pytest_cache/
+__pycache__/
