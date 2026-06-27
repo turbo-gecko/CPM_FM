@@ -24,5 +24,6 @@
     "viewer_cmd": "notepad $1",
     "rename_remote_cmd": "REN $2=$1",
     "delete_remote_cmd": "ERA $1",
-    "host_directory": "D:\\Tools"
+    "host_directory": "D:\\Tools",
+    "boot_sequence": "SENDRAW 20 20\nSEND xy\nWAIT 2"
 }
