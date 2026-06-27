@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.20 |
+| Version | 1.21 |
 | Status | Draft |
 | Date | 2026-06-27 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.14.1) |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.15.0) |
 
 ---
 
@@ -139,6 +139,12 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 | MT-C04 [2-port] | FR-039 | Configure a valid Terminal Port but a bad/busy **Transport** Port; press **Connect**. | An error dialog containing "Transport port is unable to be opened" appears. |
 | MT-C05 | FR-037 | Configure the **same** physical port as both Terminal and Transport; press **Connect**. | Terminal opens; Transport flag/indicator also becomes *connected* without a second open. (Regression: no `NoneType … in_waiting` crash on a later Copy.) |
 | MT-C06 | FR-035, FR-097 | After connecting, confirm the Terminal Window did **not** auto-open. | Connect does not open the Terminal Window; it opens only via the Terminal button. |
+| MT-C11 | FR-041, FR-042 | With a real CP/M system at its CCP prompt on the configured port(s), press **Connect**. | After both ports open, the app sends an EOL and the remote returns a drive prompt; the status bar briefly shows "Checking remote file system"; the drive drop-down updates to the remote's current drive and the Remote Files list populates automatically. |
+| MT-C12 | FR-041, FR-043, FR-044, FR-045, UIR-092 | Press **Connect** with the remote unreachable (cable unplugged at the CP/M end, or the remote not at the CCP prompt) so no drive prompt returns. | After two EOL attempts a **modal** dialog states the remote computer's file system cannot be accessed, presenting exactly three buttons in left-to-right order **Abort, Continue, Terminal**. |
+| MT-C12a | FR-045 | In the MT-C12 dialog, press **Abort**. | The comm port(s) are closed (Disconnect behaviour) and the Remote Files list is cleared. |
+| MT-C12b | FR-045 | Re-trigger MT-C12, press **Continue**. | The dialog closes; the port(s) remain open; the Remote Files list stays empty; no other action taken. |
+| MT-C12c | FR-045, FR-097 | Re-trigger MT-C12, press **Terminal**. | The Terminal Window opens for debugging; the port(s) remain open. |
+| MT-C13 | DR-033, FR-042 | On a ZCPR/NZCOM-style system whose prompt embeds the user area (e.g. `A0>` or `4A>`), press **Connect**. | The probe recognises the ZCPR prompt; the drive drop-down and Remote Files list update as in MT-C11 — the "file system unavailable" dialog (MT-C12) does **not** appear. |
 | MT-C07 | FR-050, FR-052, FR-053 | While connected (shared or single port), press **Disconnect**. | Terminal Port closes; status bar shows "Terminal port closed"; Terminal indicator → *not-connected*. |
 | MT-C08 [2-port] | FR-055, FR-057 | While connected on two ports, press **Disconnect**. | Both ports close; Transport flag/indicator → *not-connected*. |
 | MT-C09 | FR-058 | Connect, Update to populate the Remote list, then Disconnect (clean close). | Remote Files list is **cleared** after the successful disconnect. |

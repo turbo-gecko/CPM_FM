@@ -66,6 +66,21 @@ def test_tr_substitutes_named_placeholders():
     assert i18n.tr("transfer.count", blocks=2, bytes_done=256) == "Blocks: 2    Bytes: 256"
 
 
+def test_remote_unavailable_keys_resolve():
+    """Verifies: FR-044, UIR-092."""
+    # FR-044/UIR-092: the post-connect "remote filesystem unavailable" dialog
+    # strings and its three button labels are externalised and resolve in English.
+    assert i18n.tr("dialog.remote_unavailable.title") == "Remote File System Unavailable"
+    assert (
+        i18n.tr("dialog.remote_unavailable.body")
+        == "Cannot access the remote computer's file system."
+    )
+    assert i18n.tr("button.abort") == "Abort"
+    assert i18n.tr("button.continue") == "Continue"
+    assert i18n.tr("button.terminal") == "Terminal"
+    assert i18n.tr("status.checking_remote_fs") == "Checking remote file system"
+
+
 def test_tr_unknown_key_falls_back_to_key():
     """Verifies: FR-124, DR-043."""
     # FR-124/DR-043: a key absent from every language falls back to the key itself.

@@ -1,3 +1,12 @@
+import re
+
+# A CP/M / ZCPR drive prompt at the start of a (stripped) line: an optional
+# user-area number (ZCPR-style), the drive letter, an optional user-area number,
+# then '>' (e.g. "A>", "A0>", "4A>"). Path-style prompts containing ':'
+# (e.g. "A0:BASE>") are intentionally not matched (DR-033).
+_DRIVE_PROMPT_RE = re.compile(r"^\d*([A-Za-z])\d*>")
+
+
 # CP/M 2.2 file names are upper-case 8.3 names drawn from a restricted
 # character set. These characters are reserved by CP/M as command-line / FCB
 # delimiters and wildcards and may not appear in a file name (FR-148, DR-046).
@@ -165,16 +174,44 @@ class CPMParser:
         appears on any non-blank line of ``text`` (DR-033).
 
         After a drive-change command (``<letter>:``) CP/M responds with a new
-        drive prompt — the drive letter followed by ``>``. Blank lines returned
-        by the terminal are ignored. Matching is case-insensitive.
+        drive prompt — the drive letter followed by ``>``. ZCPR-family CCPs
+        embed the user-area number in the prompt, so the letter may be preceded
+        and/or followed by decimal digits (e.g. ``A0>``, ``4A>``); all such
+        forms are accepted. Blank lines are ignored and matching is
+        case-insensitive. Path-style prompts containing ``:`` are not matched.
 
         Satisfies: DR-033, FR-101, FR-102.
         """
-        target = f"{drive.upper()}>"
+        target = drive.upper()
         for line in text.splitlines():
             line = line.strip()
             if not line:
                 continue
-            if line.upper().startswith(target):
+            match = _DRIVE_PROMPT_RE.match(line)
+            if match and match.group(1).upper() == target:
                 return True
         return False
+
+    @staticmethod
+    def drive_prompt_letter(text: str) -> str | None:
+        """Return the drive letter of the first CP/M drive prompt in ``text``.
+
+        Applies the same matching rule as :meth:`has_drive_prompt` (DR-033) but
+        without a target drive letter: it scans the non-blank lines in order and
+        returns the upper-cased drive letter (``A``-``P``) of the first drive
+        prompt found, or ``None`` when none is present. Used by the post-connect
+        probe (FR-041/FR-042) to discover which drive the remote is on without
+        knowing it in advance.
+
+        Satisfies: DR-033a, FR-041, FR-042.
+        """
+        for line in text.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            match = _DRIVE_PROMPT_RE.match(line)
+            if match:
+                letter = match.group(1).upper()
+                if "A" <= letter <= "P":
+                    return letter
+        return None

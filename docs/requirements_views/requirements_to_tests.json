@@ -47,9 +47,19 @@
       "tests/test_cpm_parser.py:test_parse_dir_output_single_extensionless_file"
     ],
     "DR-033": [
+      "tests/test_cpm_parser.py:test_has_drive_prompt_accepts_zcpr_user_area",
       "tests/test_cpm_parser.py:test_has_drive_prompt_detects_prompt",
+      "tests/test_cpm_parser.py:test_has_drive_prompt_ignores_path_style_prompt",
       "tests/test_cpm_parser.py:test_has_drive_prompt_matches_lowercase_request",
-      "tests/test_cpm_parser.py:test_has_drive_prompt_matches_lowercase_response"
+      "tests/test_cpm_parser.py:test_has_drive_prompt_matches_lowercase_response",
+      "tests/test_cpm_parser.py:test_has_drive_prompt_zcpr_matches_requested_drive_only"
+    ],
+    "DR-033a": [
+      "tests/test_cpm_parser.py:test_drive_prompt_letter_extracts_plain_prompt",
+      "tests/test_cpm_parser.py:test_drive_prompt_letter_extracts_zcpr_prompt",
+      "tests/test_cpm_parser.py:test_drive_prompt_letter_none_when_absent",
+      "tests/test_cpm_parser.py:test_drive_prompt_letter_returns_first_prompt",
+      "tests/test_cpm_parser.py:test_drive_prompt_letter_upper_cases_result"
     ],
     "DR-040": [
       "tests/test_version.py:test_get_version_is_semantic_version_string",
@@ -146,6 +156,30 @@
     "FR-037": [
       "tests/test_gui_smoke.py:test_connect_shared_port_assigns_transport_port",
       "tests/test_serial_manager.py:test_read_loop_suspends_dispatch_while_paused"
+    ],
+    "FR-041": [
+      "tests/test_gui_smoke.py:test_connect_probes_when_both_ports_connected"
+    ],
+    "FR-042": [
+      "tests/test_cpm_parser.py:test_drive_prompt_letter_extracts_plain_prompt",
+      "tests/test_gui_smoke.py:test_connect_probe_ok_sets_drive_and_refreshes"
+    ],
+    "FR-043": [
+      "tests/test_cpm_parser.py:test_drive_prompt_letter_none_when_absent",
+      "tests/test_gui_smoke.py:test_connect_probe_retries_then_succeeds"
+    ],
+    "FR-044": [
+      "tests/test_gui_smoke.py:test_connect_probe_failure_abort_disconnects",
+      "tests/test_i18n.py:test_remote_unavailable_keys_resolve"
+    ],
+    "FR-045": [
+      "tests/test_gui_smoke.py:test_connect_probe_failure_abort_disconnects",
+      "tests/test_gui_smoke.py:test_connect_probe_failure_continue_no_action",
+      "tests/test_gui_smoke.py:test_connect_probe_failure_terminal_opens_terminal"
+    ],
+    "FR-046": [
+      "tests/test_gui_smoke.py:test_connect_probes_when_both_ports_connected",
+      "tests/test_gui_smoke.py:test_connect_skips_probe_when_transport_unavailable"
     ],
     "FR-050": [
       "tests/test_gui_smoke.py:test_disconnect_attempts_close_when_flags_false",
@@ -675,6 +709,9 @@
     "UIR-091": [
       "tests/test_gui_smoke.py:test_manual_dialog_contents",
       "tests/test_gui_smoke.py:test_render_manual_html_anchors_match_toc_links"
+    ],
+    "UIR-092": [
+      "tests/test_i18n.py:test_remote_unavailable_keys_resolve"
     ]
   },
   "untested": [

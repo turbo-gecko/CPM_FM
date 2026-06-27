@@ -11,7 +11,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 2.14.1 |
+| Version | 2.15.0 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
@@ -149,6 +149,12 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | FR-038 | On connect, if the Transport Port is different from the Terminal Port and is not currently open, the application shall attempt to open the Transport Port. | Mandatory | T | App_Design §Connecting; impl. `mw_remote.py:do_connect`, `serial_manager.py:open_port` |
 | FR-039 | If the Transport Port cannot be opened, the application shall display an error dialog containing the text "Transport port is unable to be opened". | Mandatory | T | App_Design §Connecting; impl. `mw_remote.py:do_connect` |
 | FR-040 | If the Transport Port is successfully opened, the application shall set the Transport status flag to connected. | Mandatory | T | App_Design §Connecting; impl. `mw_remote.py:do_connect`, `serial_manager.py:open_port` |
+| FR-041 | After the Connect workflow has set both the Terminal status flag (FR-032) and the Transport status flag (FR-037/FR-040) to connected, the application shall probe whether the remote file system is reachable by sending the configured EOL character(s) on the Terminal Port with no preceding command and capturing the response using the FR-076 wait mechanism, expecting a CP/M drive prompt (DR-033) to appear. The probe and its retry (FR-043) run on a worker thread, with all UI updates marshalled back via Qt signals (NFR-004). While the probe is running the status bar shall display "Checking remote file system". *(v2.15.)* | Mandatory | T | impl. `mw_remote.py:do_connect`, `mw_remote.py:_do_connect_probe_logic`, `mw_remote.py:_capture_terminal_response`, `cpm_parser.py:drive_prompt_letter` |
+| FR-042 | If a drive prompt is detected, the application shall set the remote drive-selection drop-down (UIR-017) to the returned drive letter (DR-033a) and populate the Remote Files list for that drive following the "Populating remote file list" process (FR-074–FR-079), then continue normally. | Mandatory | T | impl. `mw_remote.py:_on_connect_probe_ok`, `mw_remote.py:refresh_remote_files`, `connect_probe_ok` signal |
+| FR-043 | If no drive prompt is detected, the application shall send the configured EOL character(s) on the Terminal Port once more and re-capture the response (exactly one retry). | Mandatory | T | impl. `mw_remote.py:_do_connect_probe_logic` |
+| FR-044 | If no drive prompt is detected after the retry (FR-043), the application shall inform the user that it cannot access the remote computer's file system by presenting the modal Remote Filesystem Unavailable dialog (UIR-092). | Mandatory | T | impl. `mw_remote.py:_do_connect_probe_logic`, `mw_remote.py:_on_connect_probe_failed`, `connect_probe_failed` signal, `gui/remote_unavailable_dialog.py:RemoteUnavailableDialog` |
+| FR-045 | The Remote Filesystem Unavailable dialog (UIR-092) shall offer three actions and the application shall act on the chosen one: **Abort** shall abort the connection and close the comm port(s) following the Disconnect close behaviour (FR-050–FR-057) and clear the Remote Files list; **Continue** shall take no action, leaving the port(s) open and the Remote Files list empty; **Terminal** shall open the Terminal Window (FR-097) for debugging, leaving the port(s) open. | Mandatory | T | impl. `mw_remote.py:_on_connect_probe_failed`, `mw_remote.py:do_disconnect`, `mw_remote.py:show_terminal` |
+| FR-046 | The remote-file-system probe (FR-041–FR-045) shall be performed only when both the Terminal and Transport status flags are connected; if the Transport Port failed to open (FR-039), no probe shall be performed. | Mandatory | T | impl. `mw_remote.py:do_connect` |
 
 ### 3.6 Disconnecting from the remote system
 
@@ -627,6 +633,7 @@ operation shows the standard progress dialog and can be cancelled.)*
 | UIR-091b | Headings shall carry GitHub-style anchors so the manual's table-of-contents links navigate within the document; external `http(s)` links shall open in the host's default browser. | Mandatory | T | — |
 | UIR-091c | The window shall provide a single **Close** button (centred per UIR-075) that dismisses it. | Mandatory | T | — |
 | UIR-091d | If the manual file cannot be read, the window shall display an explanatory message rather than failing to open. | Mandatory | T | — |
+| UIR-092 | The Remote Filesystem Unavailable dialog (FR-044) shall be a modal dialog whose body informs the user that the remote computer's file system cannot be accessed. It shall present exactly three buttons in a single row in the fixed left-to-right order **Abort**, **Continue**, **Terminal** (this fixed three-button order overrides the two-button arrangement of UIR-075, which does not define a three-button layout). Each button triggers the corresponding action in FR-045. *(v2.15.)* | Mandatory | T | impl. `gui/remote_unavailable_dialog.py:RemoteUnavailableDialog`; `lang/*.txt` (`dialog.remote_unavailable.title`, `dialog.remote_unavailable.body`, `button.abort`, `button.continue`, `button.terminal`); FR-044, FR-045 |
 
 ---
 
@@ -644,10 +651,11 @@ operation shows the standard progress dialog and can be cancelled.)*
 ## 6. Data Requirements — CP/M 4-Column DIR Parsing Algorithm
 
 The following requirements define the algorithm for extracting remote file names from standard CP/M
-2.2 four-column `DIR` output. All testable requirements in §6.1–§6.3 (DR-001–DR-026 and DR-033) are
-verified by the unit tests in `tests/test_cpm_parser.py`, which cover line filtering, the standard
-drive-prefix and vertical-bar formats, single-file and extensionless entries, multi-token base join,
-whitespace/CRLF robustness, de-duplication, empty/edge inputs, and drive-prompt detection.
+2.2 four-column `DIR` output. All testable requirements in §6.1–§6.3 (DR-001–DR-026, DR-033 and
+DR-033a) are verified by the unit tests in `tests/test_cpm_parser.py`, which cover line filtering, the
+standard drive-prefix and vertical-bar formats, single-file and extensionless entries, multi-token base
+join, whitespace/CRLF robustness, de-duplication, empty/edge inputs, and drive-prompt detection
+(including ZCPR-style user-area prefixes) and drive-letter extraction.
 
 ### 6.1 Line filtering
 
@@ -682,7 +690,8 @@ whitespace/CRLF robustness, de-duplication, empty/edge inputs, and drive-prompt 
 | DR-024 | The parser shall not raise exceptions for invalid or unexpected input. | Mandatory | T | App_Design §Handle edge cases; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
 | DR-025 | The parser shall return an empty dictionary if no valid file entries are found. | Mandatory | T | App_Design §Handle edge cases; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
 | DR-026 | The parser shall tolerate irregular spacing, extra colons within filenames, and mixed line endings (`\n`, `\r\n`). | Mandatory | T | App_Design §Input robustness; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
-| DR-033 | The drive-prompt detection routine shall report a drive prompt for drive `X` as present when any non-blank line of the captured terminal text, after stripping surrounding whitespace and comparing case-insensitively, starts with `X>`. Blank lines shall be ignored. | Mandatory | T | impl. `cpm_parser.py:has_drive_prompt`; FR-101, FR-102; tests `test_cpm_parser.py` |
+| DR-033 | The drive-prompt detection routine shall report a drive prompt for drive `X` as present when any non-blank line of the captured terminal text, after stripping surrounding whitespace and comparing case-insensitively, matches a CP/M drive prompt for drive `X`: an optional run of decimal digits (a ZCPR-style user-area number), the drive letter `X`, an optional run of decimal digits, then a closing `>` (e.g. `X>`, `X0>`, `4X>`). Blank lines shall be ignored. Path-style prompts that contain a `:` (e.g. `A0:BASE>`) are out of scope. *(v2.15: generalised from a bare `X>` prefix to also accept ZCPR-style user-area digits — see the Issue Resolution Log, OI-30.)* | Mandatory | T | impl. `cpm_parser.py:has_drive_prompt`; FR-101, FR-102; tests `test_cpm_parser.py` |
+| DR-033a | The application shall provide a drive-prompt letter-extraction routine that, applying the same matching rule as DR-033 but without a target drive letter, returns the drive letter (`A`–`P`, upper-cased) of the first CP/M drive prompt appearing on a non-blank line of the captured terminal text, or no value when none is present. It is used by the post-connect probe (FR-041/FR-042) to discover the remote's current drive. *(v2.15.)* | Mandatory | T | impl. `cpm_parser.py:drive_prompt_letter`; FR-041, FR-042; tests `test_cpm_parser.py` |
 
 ### 6.4 Parser constraints
 

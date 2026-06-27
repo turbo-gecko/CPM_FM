@@ -436,6 +436,176 @@ def test_change_drive_not_found_clears_list_and_warns(qapp, monkeypatch, state):
         win.close()
 
 
+def test_connect_probes_when_both_ports_connected(qapp, monkeypatch, state):
+    """Verifies: FR-041, FR-046."""
+    # FR-041/FR-046: when Connect leaves both ports connected, a probe worker is
+    # started. Same physical port, so opening the terminal also connects transport.
+    win = MainWindow(state)
+    try:
+        win.settings["terminal_port"] = "COM1"
+        win.settings["transport_port"] = "COM1"
+
+        def fake_open(kind, settings):
+            win.serial_mgr.terminal_connected = True
+            return True
+
+        monkeypatch.setattr(win.serial_mgr, "open_port", fake_open)
+        targets = []
+
+        class _RecordingThread:
+            def __init__(self, *a, target=None, args=(), **k):
+                targets.append(target)
+
+            def start(self):
+                pass
+
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win.do_connect()
+        assert win._do_connect_probe_logic in targets
+    finally:
+        win.close()
+
+
+def test_connect_skips_probe_when_transport_unavailable(qapp, monkeypatch, state):
+    """Verifies: FR-046."""
+    # FR-046: if the (separate) Transport Port fails to open, no probe runs.
+    win = MainWindow(state)
+    try:
+        win.settings["terminal_port"] = "COM1"
+        win.settings["transport_port"] = "COM2"
+
+        def fake_open(kind, settings):
+            if kind == "terminal":
+                win.serial_mgr.terminal_connected = True
+                return True
+            return False  # transport fails to open
+
+        monkeypatch.setattr(win.serial_mgr, "open_port", fake_open)
+        monkeypatch.setattr("cpm_fm.gui.mw_remote.QMessageBox.critical", lambda *a, **k: None)
+        targets = []
+
+        class _RecordingThread:
+            def __init__(self, *a, target=None, args=(), **k):
+                targets.append(target)
+
+            def start(self):
+                pass
+
+        monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
+        win.do_connect()
+        assert win._do_connect_probe_logic not in targets
+    finally:
+        win.close()
+
+
+def test_connect_probe_ok_sets_drive_and_refreshes(qapp, monkeypatch, state):
+    """Verifies: FR-042."""
+    # FR-042: a returned drive prompt sets the drop-down to that drive and
+    # populates the Remote Files list (here the refresh is stubbed/recorded).
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(
+            win, "_capture_terminal_response", lambda cmd, cancellable=False: "C>\n"
+        )
+        refreshed = []
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: refreshed.append(True))
+        win._do_connect_probe_logic()
+        qapp.processEvents()  # deliver the queued connect_probe_ok signal
+        assert win.drive_combo.currentText() == "C:"
+        assert refreshed == [True]
+    finally:
+        win.close()
+
+
+def test_connect_probe_retries_then_succeeds(qapp, monkeypatch, state):
+    """Verifies: FR-043."""
+    # FR-043: no prompt on the first EOL -> send EOL again; the second response
+    # carries the prompt, so the probe still succeeds (two capture calls).
+    win = MainWindow(state)
+    try:
+        responses = iter(["not ready\n", "A>\n"])
+        calls = []
+
+        def fake_capture(cmd, cancellable=False):
+            calls.append(cmd)
+            return next(responses)
+
+        monkeypatch.setattr(win, "_capture_terminal_response", fake_capture)
+        refreshed = []
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: refreshed.append(True))
+        win._do_connect_probe_logic()
+        qapp.processEvents()
+        assert len(calls) == 2
+        assert win.drive_combo.currentText() == "A:"
+        assert refreshed == [True]
+    finally:
+        win.close()
+
+
+def test_connect_probe_failure_abort_disconnects(qapp, monkeypatch, state):
+    """Verifies: FR-044, FR-045."""
+    # FR-044/FR-045: no prompt after the retry -> show the dialog; choosing Abort
+    # closes the port(s) via the Disconnect behaviour.
+    from cpm_fm.gui.remote_unavailable_dialog import RemoteUnavailableDialog
+
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(
+            RemoteUnavailableDialog,
+            "exec",
+            lambda self: setattr(self, "choice", RemoteUnavailableDialog.ABORT),
+        )
+        actions = []
+        monkeypatch.setattr(win, "do_disconnect", lambda: actions.append("disconnect"))
+        monkeypatch.setattr(win, "show_terminal", lambda: actions.append("terminal"))
+        win._on_connect_probe_failed()
+        assert actions == ["disconnect"]
+    finally:
+        win.close()
+
+
+def test_connect_probe_failure_terminal_opens_terminal(qapp, monkeypatch, state):
+    """Verifies: FR-045."""
+    # FR-045: choosing Terminal opens the Terminal Window and leaves ports open.
+    from cpm_fm.gui.remote_unavailable_dialog import RemoteUnavailableDialog
+
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(
+            RemoteUnavailableDialog,
+            "exec",
+            lambda self: setattr(self, "choice", RemoteUnavailableDialog.TERMINAL),
+        )
+        actions = []
+        monkeypatch.setattr(win, "do_disconnect", lambda: actions.append("disconnect"))
+        monkeypatch.setattr(win, "show_terminal", lambda: actions.append("terminal"))
+        win._on_connect_probe_failed()
+        assert actions == ["terminal"]
+    finally:
+        win.close()
+
+
+def test_connect_probe_failure_continue_no_action(qapp, monkeypatch, state):
+    """Verifies: FR-045."""
+    # FR-045: choosing Continue takes no action — ports stay open, no terminal.
+    from cpm_fm.gui.remote_unavailable_dialog import RemoteUnavailableDialog
+
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(
+            RemoteUnavailableDialog,
+            "exec",
+            lambda self: setattr(self, "choice", RemoteUnavailableDialog.CONTINUE),
+        )
+        actions = []
+        monkeypatch.setattr(win, "do_disconnect", lambda: actions.append("disconnect"))
+        monkeypatch.setattr(win, "show_terminal", lambda: actions.append("terminal"))
+        win._on_connect_probe_failed()
+        assert actions == []
+    finally:
+        win.close()
+
+
 def test_change_drive_requires_open_terminal(qapp, monkeypatch, state):
     """Verifies: FR-104."""
     # FR-104: selecting a drive with the Terminal Port closed clears the list,

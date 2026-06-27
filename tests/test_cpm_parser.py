@@ -120,6 +120,61 @@ def test_has_drive_prompt_rejects_different_drive():
     assert CPMParser.has_drive_prompt("A>", "B") is False
 
 
+def test_has_drive_prompt_accepts_zcpr_user_area():
+    """Verifies: DR-033."""
+    # DR-033: ZCPR-family CCPs embed the user area in the prompt, so the drive
+    # letter may be preceded and/or followed by digits (e.g. "A0>", "4A>").
+    assert CPMParser.has_drive_prompt("A0>", "A") is True
+    assert CPMParser.has_drive_prompt("4A>", "A") is True
+    assert CPMParser.has_drive_prompt("B12>", "B") is True
+    assert CPMParser.has_drive_prompt("4a>", "A") is True  # case-insensitive
+
+
+def test_has_drive_prompt_zcpr_matches_requested_drive_only():
+    """Verifies: DR-033."""
+    # DR-033: the embedded digits are the user area, not the drive — a ZCPR
+    # prompt for drive A must not satisfy a request for drive B.
+    assert CPMParser.has_drive_prompt("4A>", "B") is False
+
+
+def test_has_drive_prompt_ignores_path_style_prompt():
+    """Verifies: DR-033."""
+    # DR-033: path-style prompts containing ':' (e.g. "A0:BASE>") are out of scope.
+    assert CPMParser.has_drive_prompt("A0:BASE>", "A") is False
+
+
+def test_drive_prompt_letter_extracts_plain_prompt():
+    """Verifies: DR-033a, FR-042."""
+    # DR-033a/FR-042: the probe discovers the remote's drive from the prompt.
+    assert CPMParser.drive_prompt_letter("A>") == "A"
+
+
+def test_drive_prompt_letter_extracts_zcpr_prompt():
+    """Verifies: DR-033a."""
+    # DR-033a: ZCPR user-area digits are stripped, leaving the drive letter.
+    assert CPMParser.drive_prompt_letter("B0>") == "B"
+    assert CPMParser.drive_prompt_letter("4C>") == "C"
+
+
+def test_drive_prompt_letter_upper_cases_result():
+    """Verifies: DR-033a."""
+    # DR-033a: the returned letter is upper-cased regardless of prompt case.
+    assert CPMParser.drive_prompt_letter("d>") == "D"
+
+
+def test_drive_prompt_letter_returns_first_prompt():
+    """Verifies: DR-033a."""
+    # DR-033a: the FIRST drive prompt on a non-blank line wins.
+    assert CPMParser.drive_prompt_letter("\n\nB:\nB: FOO BAR\nB>\nA>\n") == "B"
+
+
+def test_drive_prompt_letter_none_when_absent():
+    """Verifies: DR-033a, FR-043."""
+    # DR-033a/FR-043: no prompt -> None (which triggers the probe retry/failure).
+    assert CPMParser.drive_prompt_letter("\n  \nNot ready\n") is None
+    assert CPMParser.drive_prompt_letter("A0:BASE>") is None
+
+
 # --------------------------------------------------------------------------- #
 # parse_dir_output boundary / edge cases (DR-001-DR-032).
 # --------------------------------------------------------------------------- #

@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_156/396 requirements have a verifying test; 240 untested; 0 stale tag(s)._
+_164/404 requirements have a verifying test; 240 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -24,7 +24,8 @@ _156/396 requirements have a verifying test; 240 untested; 0 stale tag(s)._
 | DR-015 | `tests/test_cpm_parser.py:test_parse_dir_output_bar_format_skips_dot_only_entry`, `tests/test_cpm_parser.py:test_parse_dir_output_vertical_bar_extensionless`, `tests/test_cpm_parser.py:test_parse_dir_output_vertical_bar_format` |
 | DR-021 | `tests/test_cpm_parser.py:test_parse_dir_output_includes_extensionless_files` |
 | DR-023 | `tests/test_cpm_parser.py:test_parse_dir_output_includes_extensionless_files`, `tests/test_cpm_parser.py:test_parse_dir_output_single_extensionless_file` |
-| DR-033 | `tests/test_cpm_parser.py:test_has_drive_prompt_detects_prompt`, `tests/test_cpm_parser.py:test_has_drive_prompt_matches_lowercase_request`, `tests/test_cpm_parser.py:test_has_drive_prompt_matches_lowercase_response` |
+| DR-033 | `tests/test_cpm_parser.py:test_has_drive_prompt_accepts_zcpr_user_area`, `tests/test_cpm_parser.py:test_has_drive_prompt_detects_prompt`, `tests/test_cpm_parser.py:test_has_drive_prompt_ignores_path_style_prompt`, `tests/test_cpm_parser.py:test_has_drive_prompt_matches_lowercase_request`, `tests/test_cpm_parser.py:test_has_drive_prompt_matches_lowercase_response`, `tests/test_cpm_parser.py:test_has_drive_prompt_zcpr_matches_requested_drive_only` |
+| DR-033a | `tests/test_cpm_parser.py:test_drive_prompt_letter_extracts_plain_prompt`, `tests/test_cpm_parser.py:test_drive_prompt_letter_extracts_zcpr_prompt`, `tests/test_cpm_parser.py:test_drive_prompt_letter_none_when_absent`, `tests/test_cpm_parser.py:test_drive_prompt_letter_returns_first_prompt`, `tests/test_cpm_parser.py:test_drive_prompt_letter_upper_cases_result` |
 | DR-040 | `tests/test_version.py:test_get_version_is_semantic_version_string`, `tests/test_version.py:test_get_version_reads_version_file`, `tests/test_version.py:test_version_file_exists_in_src` |
 | DR-041 | `tests/test_version.py:test_get_version_falls_back_when_file_missing`, `tests/test_version.py:test_package_version_matches_file` |
 | DR-042 | `tests/test_i18n.py:test_parser_ignores_comments_and_blank_lines`, `tests/test_i18n.py:test_parser_missing_file_returns_empty`, `tests/test_i18n.py:test_parser_splits_on_first_equals`, `tests/test_i18n.py:test_tr_substitutes_named_placeholders` |
@@ -48,6 +49,12 @@ _156/396 requirements have a verifying test; 240 untested; 0 stale tag(s)._
 | FR-030 | `tests/test_serial_manager.py:test_numeric_defaults_applied_when_absent`, `tests/test_serial_manager.py:test_numeric_fields_are_coerced_to_int`, `tests/test_serial_manager.py:test_open_port_returns_false_on_serial_error`, `tests/test_serial_manager.py:test_parity_maps_to_pyserial_constant` |
 | FR-036 | `tests/test_serial_manager.py:test_read_loop_dispatches_decoded_data` |
 | FR-037 | `tests/test_gui_smoke.py:test_connect_shared_port_assigns_transport_port`, `tests/test_serial_manager.py:test_read_loop_suspends_dispatch_while_paused` |
+| FR-041 | `tests/test_gui_smoke.py:test_connect_probes_when_both_ports_connected` |
+| FR-042 | `tests/test_cpm_parser.py:test_drive_prompt_letter_extracts_plain_prompt`, `tests/test_gui_smoke.py:test_connect_probe_ok_sets_drive_and_refreshes` |
+| FR-043 | `tests/test_cpm_parser.py:test_drive_prompt_letter_none_when_absent`, `tests/test_gui_smoke.py:test_connect_probe_retries_then_succeeds` |
+| FR-044 | `tests/test_gui_smoke.py:test_connect_probe_failure_abort_disconnects`, `tests/test_i18n.py:test_remote_unavailable_keys_resolve` |
+| FR-045 | `tests/test_gui_smoke.py:test_connect_probe_failure_abort_disconnects`, `tests/test_gui_smoke.py:test_connect_probe_failure_continue_no_action`, `tests/test_gui_smoke.py:test_connect_probe_failure_terminal_opens_terminal` |
+| FR-046 | `tests/test_gui_smoke.py:test_connect_probes_when_both_ports_connected`, `tests/test_gui_smoke.py:test_connect_skips_probe_when_transport_unavailable` |
 | FR-050 | `tests/test_gui_smoke.py:test_disconnect_attempts_close_when_flags_false`, `tests/test_serial_manager.py:test_close_terminal_port_closes_and_clears_flag` |
 | FR-051 | `tests/test_gui_smoke.py:test_disconnect_keeps_remote_list_when_close_fails` |
 | FR-052 | `tests/test_serial_manager.py:test_close_terminal_port_closes_and_clears_flag`, `tests/test_serial_manager.py:test_close_terminal_port_returns_false_on_error` |
@@ -168,6 +175,7 @@ _156/396 requirements have a verifying test; 240 untested; 0 stale tag(s)._
 | UIR-089 | `tests/test_config_handler.py:test_default_settings_include_xmodem_1k_keys`, `tests/test_gui_smoke.py:test_general_config_remote_group_first`, `tests/test_gui_smoke.py:test_general_config_xmodem_1k_checkbox_round_trips`, `tests/test_gui_smoke.py:test_issue_remote_cmd_uses_1k_command_when_enabled`, `tests/test_xmodem.py:test_receive_file_1k_polls_crc_first`, `tests/test_xmodem.py:test_send_file_1k_uses_stx_1024_byte_frames` |
 | UIR-090 | `tests/test_config_handler.py:test_default_settings_include_xmodem_1k_keys`, `tests/test_gui_smoke.py:test_general_config_remote_group_first`, `tests/test_gui_smoke.py:test_general_config_xmodem_1k_checkbox_round_trips`, `tests/test_gui_smoke.py:test_issue_remote_cmd_uses_1k_command_when_enabled` |
 | UIR-091 | `tests/test_gui_smoke.py:test_manual_dialog_contents`, `tests/test_gui_smoke.py:test_render_manual_html_anchors_match_toc_links` |
+| UIR-092 | `tests/test_i18n.py:test_remote_unavailable_keys_resolve` |
 
 ## Untested requirements
 

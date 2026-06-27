@@ -6,6 +6,7 @@ import time
 from PySide6.QtWidgets import QMessageBox
 
 from cpm_fm.gui.mw_base import MainWindowMixinBase
+from cpm_fm.gui.remote_unavailable_dialog import RemoteUnavailableDialog
 from cpm_fm.gui.terminal_window import TerminalWindow
 from cpm_fm.terminal.cpm_parser import CPMParser
 from cpm_fm.utils.i18n import tr
@@ -105,7 +106,8 @@ class _RemoteMixin(MainWindowMixinBase):
 
     def do_connect(self):
         """
-        Satisfies: FR-030, FR-031, FR-032, FR-034, FR-037, FR-038, FR-039, FR-040.
+        Satisfies: FR-030, FR-031, FR-032, FR-034, FR-037, FR-038, FR-039,
+        FR-040, FR-041, FR-046.
         """
         if self.serial_mgr.open_port("terminal", self.settings):
             self.set_status(tr("status.terminal_port_open"))
@@ -125,6 +127,67 @@ class _RemoteMixin(MainWindowMixinBase):
         else:
             QMessageBox.critical(self, tr("dialog.error.title"), tr("error.terminal_unable_open"))
         self._update_indicators()
+
+        # FR-041/FR-046: only once BOTH ports are confirmed open, probe whether
+        # the remote file system is reachable. The probe sends an EOL and waits
+        # for a drive prompt, so it runs on a worker thread (NFR-004) and reports
+        # back via the connect_probe_ok / connect_probe_failed signals.
+        if self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected:
+            self.set_status(tr("status.checking_remote_fs"))
+            threading.Thread(target=self._do_connect_probe_logic, daemon=True).start()
+
+    def _do_connect_probe_logic(self):
+        """
+        Satisfies: FR-041, FR-043, FR-044, FR-046.
+
+        Runs on a worker thread. Send a bare EOL and look for any CP/M drive
+        prompt; if none is seen, send one more EOL and look again (FR-043, a
+        single retry). On success emit connect_probe_ok with the detected drive
+        letter (FR-042); otherwise emit connect_probe_failed (FR-044). The UI
+        updates run on the GUI thread via those signals (NFR-004).
+        """
+        text = self._capture_terminal_response("")
+        letter = CPMParser.drive_prompt_letter(text)
+        if letter is None:
+            text = self._capture_terminal_response("")
+            letter = CPMParser.drive_prompt_letter(text)
+        if letter is not None:
+            self.connect_probe_ok.emit(letter)
+        else:
+            self.connect_probe_failed.emit()
+
+    def _on_connect_probe_ok(self, drive):
+        """
+        Satisfies: FR-042.
+
+        Runs on the GUI thread (queued from the probe worker). Point the drive
+        drop-down at the detected drive and populate the Remote Files list as
+        the Update button would (FR-073). Setting the combo index
+        programmatically does not fire its ``activated`` signal, so this does
+        not trigger a second drive-change.
+        """
+        index = ord(drive) - ord("A")
+        if 0 <= index < self.drive_combo.count():
+            self.drive_combo.setCurrentIndex(index)
+        self.refresh_remote_files()
+
+    def _on_connect_probe_failed(self):
+        """
+        Satisfies: FR-044, FR-045.
+
+        Runs on the GUI thread (queued from the probe worker). Inform the user
+        the remote file system is unreachable (UIR-092) and act on their choice:
+        Abort closes the port(s) following the Disconnect behaviour
+        (FR-050-FR-057) and clears the list; Continue leaves everything open;
+        Terminal opens the Terminal Window (FR-097). Both Continue and Terminal
+        leave the ports open.
+        """
+        dialog = RemoteUnavailableDialog(self)
+        dialog.exec()
+        if dialog.choice == RemoteUnavailableDialog.ABORT:
+            self.do_disconnect()
+        elif dialog.choice == RemoteUnavailableDialog.TERMINAL:
+            self.show_terminal()
 
     def do_disconnect(self):
         """
