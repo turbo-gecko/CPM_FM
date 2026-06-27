@@ -109,7 +109,7 @@ def test_fresh_remote_names_uppercases_and_emits(qapp, monkeypatch, state):
     try:
         monkeypatch.setattr(win, "_capture_terminal_response", lambda cmd, cancellable=False: "DIR-OUTPUT")
         monkeypatch.setattr(
-            "cpm_fm.app.CPMParser.parse_dir_output", lambda text: {"foo.txt": None, "BAR.COM": None}
+            "cpm_fm.gui.mw_transfer_guards.CPMParser.parse_dir_output", lambda text: {"foo.txt": None, "BAR.COM": None}
         )
         names = win._fresh_remote_names()
         assert names == {"FOO.TXT", "BAR.COM"}
@@ -124,7 +124,7 @@ def test_fresh_remote_names_empty_on_capture_failure(qapp, monkeypatch, state):
     win = MainWindow(state)
     try:
         monkeypatch.setattr(win, "_capture_terminal_response", lambda cmd, cancellable=False: "")
-        monkeypatch.setattr("cpm_fm.app.CPMParser.parse_dir_output", lambda text: {})
+        monkeypatch.setattr("cpm_fm.gui.mw_transfer_guards.CPMParser.parse_dir_output", lambda text: {})
         assert win._fresh_remote_names() == set()
     finally:
         win.close()
