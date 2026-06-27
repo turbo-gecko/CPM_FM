@@ -11,7 +11,8 @@ class XModem:
     Supports both sending (Host -> Remote) and receiving (Remote -> Host).
 
     Satisfies: FR-082, NFR-003a, NFR-003b, NFR-003c, NFR-003d, NFR-003e, NFR-003f,
-        NFR-003g, NFR-003h, NFR-003i, NFR-003j, NFR-003k, NFR-003l, NFR-003m, NFR-003n, NFR-003o.
+        NFR-003g, NFR-003h, NFR-003i, NFR-003j, NFR-003k, NFR-003l, NFR-003m, NFR-003n,
+        NFR-003o, NFR-003p, NFR-003q.
     """
 
     SOH = b"\x01"  # Start of Header
@@ -257,7 +258,8 @@ class XModem:
         data field is 1024 bytes framed with STX (XMODEM-1K); otherwise it is 128
         bytes framed with SOH. The frame size is independent of the CRC/checksum mode.
 
-        Satisfies: FR-081, FR-082, FR-083, FR-086, FR-105, FR-120, NFR-003a, NFR-003b, NFR-003c.
+        Satisfies: FR-081, FR-082, FR-083, FR-086, FR-105, FR-120, NFR-003a, NFR-003b,
+            NFR-003c, NFR-003p.
         """
         if not os.path.exists(filepath):
             return False
@@ -359,7 +361,7 @@ class XModem:
         128 data bytes and STX frames carry 1024, so both sizes are accepted.
 
         Satisfies: FR-081, FR-082, FR-083, FR-105, FR-120, NFR-003f, NFR-003g,
-            NFR-003h, NFR-003j, NFR-003k, NFR-003l.
+            NFR-003h, NFR-003j, NFR-003k, NFR-003l, NFR-003q.
         """
         received_data = bytearray()
         expected_packet = 1

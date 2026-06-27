@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.19 |
+| Version | 1.20 |
 | Status | Draft |
 | Date | 2026-06-27 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.11.0) |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.14.1) |
 
 ---
 
@@ -20,7 +20,7 @@ must be verified by hand. The automated suite (`pytest`) already covers:
 - `SerialManager.open_port` flow-control / key-name mapping — `UIR-028`, `NFR-002`
   (`tests/test_serial_manager.py`).
 - The X-Modem progress hook, the checksum/CRC receive handshake, and cancel/abort (CAN) — `FR-105`,
-  `FR-120`, `NFR-003a`–`NFR-003o` (`tests/test_xmodem.py`), using an in-memory fake port.
+  `FR-120`, `NFR-003a`–`NFR-003q` (`tests/test_xmodem.py`), using an in-memory fake port.
 - Headless GUI logic under the `offscreen` Qt platform — transfer/batch orchestration, progress-dialog
   state, transfer cancellation wiring, dialog button layout, drive-change logic, list-clearing on
   load/disconnect, geometry/last-config persistence, File > New, the context-menu file actions, and
@@ -465,7 +465,7 @@ or real cross-session persistence:
 - Lifecycle / persistence (real): `FR-004` (windows/dialogs), `FR-005`, `FR-006`, `FR-015`, `FR-016`.
 - Connect/disconnect (real ports & error paths): `FR-030`–`FR-040`, `FR-050`–`FR-058`.
 - Remote listing & drive selection (live capture/timing): `FR-074`–`FR-079`, `FR-100`–`FR-104`.
-- Transfers (live X-Modem, CP/M launch, timing, byte echo, live cancel): `FR-080`–`FR-089`, `FR-099`, `FR-105`–`FR-109`, `FR-119`, `FR-120`, `NFR-003a`–`NFR-003o` (interop + CAN abort).
+- Transfers (live X-Modem, CP/M launch, timing, byte echo, live cancel): `FR-080`–`FR-089`, `FR-099`, `FR-105`–`FR-109`, `FR-119`, `FR-120`, `NFR-003a`–`NFR-003q` (interop + CAN abort).
 - Terminal Window (interactive over a link): `FR-090`–`FR-098`, `UIR-060`–`UIR-067`.
 - File actions (real dialog/filesystem/viewer/remote cmd): `FR-112`, `FR-113`, `FR-114`–`FR-118`, `UIR-057`.
 - Interfaces (real): `IFR-001`–`IFR-004`.

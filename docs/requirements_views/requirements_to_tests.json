@@ -554,6 +554,12 @@
     "NFR-003o": [
       "tests/test_xmodem.py:test_abort_does_not_hang_when_tx_cannot_drain"
     ],
+    "NFR-003p": [
+      "tests/test_xmodem.py:test_send_file_aborts_after_nak_exhaustion"
+    ],
+    "NFR-003q": [
+      "tests/test_xmodem.py:test_receive_file_empty_transfer_writes_empty_file"
+    ],
     "NFR-005": [
       "tests/test_i18n.py:test_available_languages_discovers_shipped_files"
     ],
