@@ -40,7 +40,7 @@ class ConfigDialog(QDialog):
     and stored keys are technical/semantic and are not translated (CR-015) —
     only the row label and group title are.
 
-    Satisfies: UIR-021, UIR-041, FR-121.
+    Satisfies: UIR-021, UIR-041, FR-121, CR-015.
     """
 
     def __init__(

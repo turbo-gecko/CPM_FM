@@ -25,78 +25,78 @@ _394 requirements across 54 sections._
 | FR-002 | The application shall maintain a Transport status flag indicating whether the Transport Port is open… | serial_manager.py:__init__ |
 | FR-003 | The application shall start in an unconfigured state, with serial and general settings populated only… | app.py:__init__ |
 | FR-004 | On exit, the application shall persist the size and position (geometry) of each of its… | app.py:__init__, app.py:closeEvent, config_dialogs.py:__init__, config_dialogs.py:done, window_state.py:WindowState, window_state.py:__init__, window_state.py:save_geometry, window_state.py:restore_geometry |
-| FR-005 | The application shall remember the filesystem path of the most recently loaded (FR-010) or saved… | app.py:load_config, menu_save |
-| FR-006 | The application shall remember the folder of the most recently loaded (FR-010) or saved (FR-013)… | app.py:menu_load, app.py:menu_save, window_state.py:last_config_dir |
+| FR-005 | The application shall remember the filesystem path of the most recently loaded (FR-010) or saved… | mw_config.py:load_config, mw_config.py:menu_save |
+| FR-006 | The application shall remember the folder of the most recently loaded (FR-010) or saved (FR-013)… | mw_config.py:menu_load, mw_config.py:menu_save, window_state.py:last_config_dir |
 
 ## 3.2 File menu
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-010 | The File > Load menu item shall present a file-select dialog defaulting to the JSON… | app.py:menu_load |
-| FR-011 | On loading a configuration file, the application shall replace its entire internal settings store with… | app.py:load_config, config_handler.py:load_json; tests test_config_handler.py |
-| FR-012 | Settings keys present in a loaded file that are not consumed by the application shall… | app.py:load_config, config_handler.py:load_json; tests test_config_handler.py |
-| FR-013 | The File > Save menu item shall present a file-select dialog defaulting to the JSON… | app.py:menu_save |
-| FR-014 | On saving, the application shall write the **entire** internal settings store — both serial configuration… | app.py:menu_save, config_handler.py:save_json; tests test_config_handler.py, test_gui_smoke.py |
+| FR-010 | The File > Load menu item shall present a file-select dialog defaulting to the JSON… | mw_config.py:menu_load |
+| FR-011 | On loading a configuration file, the application shall replace its entire internal settings store with… | mw_config.py:load_config, config_handler.py:load_json; tests test_config_handler.py |
+| FR-012 | Settings keys present in a loaded file that are not consumed by the application shall… | mw_config.py:load_config, config_handler.py:load_json; tests test_config_handler.py |
+| FR-013 | The File > Save menu item shall present a file-select dialog defaulting to the JSON… | mw_config.py:menu_save |
+| FR-014 | On saving, the application shall write the **entire** internal settings store — both serial configuration… | mw_config.py:menu_save, config_handler.py:save_json; tests test_config_handler.py, test_gui_smoke.py |
 | FR-015 | The File > Exit menu item shall close any open COM ports | app.py:closeEvent, serial_manager.py:close_ports |
 | FR-016 | The File > Exit menu item shall close all open dialogs and windows | app.py:closeEvent |
-| FR-017 | On loading a configuration file, the application shall clear the Remote Files list… | app.py:load_config |
-| FR-018 | The File > New menu item (presented at the top of the File menu) shall… | app.py:menu_new, app.py:_save_to_path |
-| FR-019 | After the current configuration has been successfully saved (FR-018), the File > New menu item… | app.py:menu_new, config_handler.py:DEFAULT_SETTINGS |
+| FR-017 | On loading a configuration file, the application shall clear the Remote Files list… | mw_config.py:load_config |
+| FR-018 | The File > New menu item (presented at the top of the File menu) shall… | mw_config.py:menu_new, mw_config.py:_save_to_path |
+| FR-019 | After the current configuration has been successfully saved (FR-018), the File > New menu item… | mw_config.py:menu_new, config_handler.py:DEFAULT_SETTINGS |
 
 ## 3.3 Config menu
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-020 | When the Config > Serial menu option is selected, the application shall present the Serial… | app.py:menu_serial_config, config_dialogs.py:save |
-| FR-020a | When the Serial Configuration Dialog's Save button is pressed, the application shall update the running… | app.py:menu_serial_config, app.py:_save_subset_to_active_config, config_dialogs.py:save; tests test_gui_smoke.py |
-| FR-021 | When the Config > General menu option is selected, the application shall present the General… | app.py:menu_general_config, config_dialogs.py:save |
-| FR-021a | When the General Configuration Dialog's Save button is pressed, the application shall update the running… | app.py:menu_general_config, app.py:_save_subset_to_active_config, config_dialogs.py:save; tests test_gui_smoke.py |
+| FR-020 | When the Config > Serial menu option is selected, the application shall present the Serial… | mw_config.py:menu_serial_config, config_dialogs.py:save |
+| FR-020a | When the Serial Configuration Dialog's Save button is pressed, the application shall update the running… | mw_config.py:menu_serial_config, mw_config.py:_save_subset_to_active_config, config_dialogs.py:save; tests test_gui_smoke.py |
+| FR-021 | When the Config > General menu option is selected, the application shall present the General… | mw_config.py:menu_general_config, config_dialogs.py:save |
+| FR-021a | When the General Configuration Dialog's Save button is pressed, the application shall update the running… | mw_config.py:menu_general_config, mw_config.py:_save_subset_to_active_config, config_dialogs.py:save; tests test_gui_smoke.py |
 
 ## 3.4 Help menu
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-022 | When the Help > About menu item is selected, the application shall present the modal… | app.py:menu_about, gui/about_dialog.py:AboutDialog |
-| FR-023 | When the Help > Manual menu item is selected, the application shall present the user… | app.py:menu_manual, gui/manual_dialog.py:ManualDialog |
+| FR-022 | When the Help > About menu item is selected, the application shall present the modal… | mw_config.py:menu_about, gui/about_dialog.py:AboutDialog |
+| FR-023 | When the Help > Manual menu item is selected, the application shall present the user… | mw_config.py:menu_manual, gui/manual_dialog.py:ManualDialog |
 
 ## 3.5 Connecting to the remote system
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-030 | When the Connect button is pressed, the application shall open the Terminal Port serial port… | app.py:do_connect, serial_manager.py:open_port; tests test_serial_manager.py (parity map, numeric coercion, nested-key fallbacks, open-failure) |
-| FR-031 | If the Terminal Port cannot be opened, the application shall display an error dialog containing… | app.py:do_connect |
-| FR-032 | If the Terminal Port is successfully opened, the application shall set the Terminal status flag… | app.py:do_connect, serial_manager.py:open_port |
+| FR-030 | When the Connect button is pressed, the application shall open the Terminal Port serial port… | mw_remote.py:do_connect, serial_manager.py:open_port; tests test_serial_manager.py (parity map, numeric coercion, nested-key fallbacks, open-failure) |
+| FR-031 | If the Terminal Port cannot be opened, the application shall display an error dialog containing… | mw_remote.py:do_connect |
+| FR-032 | If the Terminal Port is successfully opened, the application shall set the Terminal status flag… | mw_remote.py:do_connect, serial_manager.py:open_port |
 | FR-033 | If the Terminal Port cannot be opened, the application shall set the Terminal status flag… | — |
-| FR-034 | When the Terminal Port is opened, the application shall display the text "Terminal port open"… | app.py:do_connect |
+| FR-034 | When the Terminal Port is opened, the application shall display the text "Terminal port open"… | mw_remote.py:do_connect |
 | FR-035 | *Removed in v1.2.* (Was… | — |
 | FR-036 | The application shall display data received from the Terminal Port in the receive text area… | serial_manager.py:_read_loop; tests test_serial_manager.py |
-| FR-037 | On connect, if the Transport Port is the same as the Terminal Port, the application… | app.py:do_connect |
-| FR-038 | On connect, if the Transport Port is different from the Terminal Port and is not… | app.py:do_connect, serial_manager.py:open_port |
-| FR-039 | If the Transport Port cannot be opened, the application shall display an error dialog containing… | app.py:do_connect |
-| FR-040 | If the Transport Port is successfully opened, the application shall set the Transport status flag… | app.py:do_connect, serial_manager.py:open_port |
+| FR-037 | On connect, if the Transport Port is the same as the Terminal Port, the application… | mw_remote.py:do_connect |
+| FR-038 | On connect, if the Transport Port is different from the Terminal Port and is not… | mw_remote.py:do_connect, serial_manager.py:open_port |
+| FR-039 | If the Transport Port cannot be opened, the application shall display an error dialog containing… | mw_remote.py:do_connect |
+| FR-040 | If the Transport Port is successfully opened, the application shall set the Transport status flag… | mw_remote.py:do_connect, serial_manager.py:open_port |
 
 ## 3.6 Disconnecting from the remote system
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-050 | When the Disconnect button is pressed, the application shall attempt to close the Terminal Port… | app.py:do_disconnect, serial_manager.py:close_terminal_port; tests test_serial_manager.py, test_gui_smoke.py |
-| FR-051 | If the Terminal Port cannot be closed, the application shall display an error dialog containing… | app.py:do_disconnect |
-| FR-052 | When the Terminal Port is closed, the application shall set the Terminal status flag to… | app.py:do_disconnect, serial_manager.py:close_terminal_port; tests test_serial_manager.py |
-| FR-053 | When the Terminal Port is closed, the application shall display the text "Terminal port closed"… | app.py:do_disconnect |
-| FR-054 | On disconnect, if the Transport Port is the same as the Terminal Port, the application… | app.py:do_disconnect |
-| FR-055 | On disconnect, if the Transport Port is different from the Terminal Port, the application shall… | app.py:do_disconnect, serial_manager.py:close_transport_port; tests test_serial_manager.py |
-| FR-056 | If the Transport Port cannot be closed, the application shall display an error dialog containing… | app.py:do_disconnect |
-| FR-057 | If the Transport Port is successfully closed, the application shall set the Transport status flag… | app.py:do_disconnect, serial_manager.py:close_transport_port; tests test_serial_manager.py |
-| FR-058 | On disconnect, once the Terminal Port has been successfully closed, the application shall clear the… | app.py:do_disconnect |
+| FR-050 | When the Disconnect button is pressed, the application shall attempt to close the Terminal Port… | mw_remote.py:do_disconnect, serial_manager.py:close_terminal_port; tests test_serial_manager.py, test_gui_smoke.py |
+| FR-051 | If the Terminal Port cannot be closed, the application shall display an error dialog containing… | mw_remote.py:do_disconnect |
+| FR-052 | When the Terminal Port is closed, the application shall set the Terminal status flag to… | mw_remote.py:do_disconnect, serial_manager.py:close_terminal_port; tests test_serial_manager.py |
+| FR-053 | When the Terminal Port is closed, the application shall display the text "Terminal port closed"… | mw_remote.py:do_disconnect |
+| FR-054 | On disconnect, if the Transport Port is the same as the Terminal Port, the application… | mw_remote.py:do_disconnect |
+| FR-055 | On disconnect, if the Transport Port is different from the Terminal Port, the application shall… | mw_remote.py:do_disconnect, serial_manager.py:close_transport_port; tests test_serial_manager.py |
+| FR-056 | If the Transport Port cannot be closed, the application shall display an error dialog containing… | mw_remote.py:do_disconnect |
+| FR-057 | If the Transport Port is successfully closed, the application shall set the Transport status flag… | mw_remote.py:do_disconnect, serial_manager.py:close_transport_port; tests test_serial_manager.py |
+| FR-058 | On disconnect, once the Terminal Port has been successfully closed, the application shall clear the… | mw_remote.py:do_disconnect |
 
 ## 3.7 Host file management
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-060 | On startup, the application shall populate the Host Files list with the files in the… | app.py:refresh_host_files, app.py:load_config |
+| FR-060 | On startup, the application shall populate the Host Files list with the files in the… | mw_file_panes.py:refresh_host_files, mw_config.py:load_config |
 | FR-061 | The Change Directory button shall be enabled at startup | — |
-| FR-062 | When the Change Directory button is pressed, the application shall present a folder-select dialog for… | app.py:change_host_dir |
-| FR-063 | When the Host Files group's "Update" button (beside the "Change Directory" button — UIR-011) is… | app.py:refresh_host_files, setup_layout |
+| FR-062 | When the Change Directory button is pressed, the application shall present a folder-select dialog for… | mw_file_panes.py:change_host_dir |
+| FR-063 | When the Host Files group's "Update" button (beside the "Change Directory" button — UIR-011) is… | mw_file_panes.py:refresh_host_files, setup_layout |
 
 ## 3.8 Remote file listing
 
@@ -105,92 +105,92 @@ _394 requirements across 54 sections._
 | FR-070 | The Remote Files list shall be empty (unpopulated) at startup | — |
 | FR-071 | The Update button shall be enabled at startup | — |
 | FR-072 | The Update button (Host Files group — UIR-011) shall be enabled at startup | — |
-| FR-073 | When the Update button (in the Remote Files group) is pressed, the application shall switch… | app.py:refresh_remote_files, _do_change_drive_logic |
-| FR-074 | If the Terminal Port is not open when populating the remote file list, the application… | app.py:refresh_remote_files |
-| FR-075 | If the Terminal status flag is true, the application shall send the configured List Files… | app.py:_capture_terminal_response |
-| FR-076 | After sending the List Files command, the application shall wait at least one second for… | app.py:_capture_terminal_response |
-| FR-077 | The application shall process the captured remote output into a dictionary of filenames using the… | app.py:_do_refresh_remote_logic, cpm_parser.py:parse_dir_output; tests test_cpm_parser.py |
-| FR-078 | The application shall populate the Remote Files list with the entries produced by the parsing… | app.py:_update_remote_list_ui, _apply_remote_view |
-| FR-079 | On successful population of the remote file list, the application shall update the status bar… | app.py:_do_refresh_remote_logic, app.py:_update_remote_list_ui |
+| FR-073 | When the Update button (in the Remote Files group) is pressed, the application shall switch… | mw_remote.py:refresh_remote_files, mw_remote.py:_do_change_drive_logic |
+| FR-074 | If the Terminal Port is not open when populating the remote file list, the application… | mw_remote.py:refresh_remote_files |
+| FR-075 | If the Terminal status flag is true, the application shall send the configured List Files… | mw_remote.py:_capture_terminal_response |
+| FR-076 | After sending the List Files command, the application shall wait at least one second for… | mw_remote.py:_capture_terminal_response |
+| FR-077 | The application shall process the captured remote output into a dictionary of filenames using the… | mw_remote.py:_do_refresh_remote_logic, cpm_parser.py:parse_dir_output; tests test_cpm_parser.py |
+| FR-078 | The application shall populate the Remote Files list with the entries produced by the parsing… | mw_remote.py:_update_remote_list_ui, mw_file_panes.py:_apply_remote_view |
+| FR-079 | On successful population of the remote file list, the application shall update the status bar… | mw_remote.py:_do_refresh_remote_logic, mw_remote.py:_update_remote_list_ui |
 
 ## 3.8.1 Remote drive selection
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-100 | When a drive letter is selected from the drive-selection drop-down (UIR-017), the application shall send… | app.py:change_drive, _do_change_drive_logic, _capture_terminal_response |
-| FR-101 | After sending the drive-change command, the application shall capture the Terminal Port response using the… | app.py:_capture_terminal_response; cpm_parser.py:has_drive_prompt; tests test_cpm_parser.py |
-| FR-102 | If a drive prompt of the form <letter>> (the selected drive letter followed by >)… | app.py:_do_change_drive_logic, _do_refresh_remote_logic |
-| FR-103 | If the <letter>> drive prompt does not appear in the captured response, the application shall… | app.py:_do_change_drive_logic, _on_drive_not_found, drive_not_found signal |
-| FR-104 | If the Terminal Port is not open when a drive is selected, the application shall… | app.py:change_drive |
+| FR-100 | When a drive letter is selected from the drive-selection drop-down (UIR-017), the application shall send… | mw_remote.py:change_drive, mw_remote.py:_do_change_drive_logic, mw_remote.py:_capture_terminal_response |
+| FR-101 | After sending the drive-change command, the application shall capture the Terminal Port response using the… | mw_remote.py:_capture_terminal_response; cpm_parser.py:has_drive_prompt; tests test_cpm_parser.py |
+| FR-102 | If a drive prompt of the form <letter>> (the selected drive letter followed by >)… | mw_remote.py:_do_change_drive_logic, mw_remote.py:_do_refresh_remote_logic |
+| FR-103 | If the <letter>> drive prompt does not appear in the captured response, the application shall… | mw_remote.py:_do_change_drive_logic, mw_remote.py:_on_drive_not_found, drive_not_found signal |
+| FR-104 | If the Terminal Port is not open when a drive is selected, the application shall… | mw_remote.py:change_drive |
 
 ## 3.9 File transfers
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-080 | A file transfer shall be permitted only when both the Terminal status flag and the… | app.py:do_copy_to_remote, app.py:do_copy_to_host |
-| FR-081 | The application shall support file transfers in both directions… | app.py:_send_one_to_remote, app.py:_recv_one_to_host, xmodem.py:send_file, xmodem.py:receive_file; tests test_xmodem.py |
-| FR-082 | The application shall use the X-Modem protocol for all file transfers | app.py:_send_one_to_remote, app.py:_recv_one_to_host, xmodem.py:XModem, xmodem.py:send_file, xmodem.py:receive_file; tests test_xmodem.py |
-| FR-083 | The application shall use the Transport (Transfer) Port for all file transfers | app.py:_send_one_to_remote, app.py:_recv_one_to_host, xmodem.py:send_file, xmodem.py:receive_file; tests test_xmodem.py |
-| FR-084 | The Copy to Remote button shall be enabled at startup | app.py:do_copy_to_remote |
-| FR-085 | The Copy to Host button shall be enabled at startup | app.py:do_copy_to_host |
-| FR-086 | During an X-Modem file transfer (either direction), the application shall echo every byte sent to… | app.py:_on_transfer_bytes, _echo_transfer_enabled; xmodem.py monitor hook; UIR-058 |
-| FR-087 | Before starting the X-Modem transfer, the application shall launch the CP/M side of the transfer… | app.py:_issue_remote_cmd, _transfer_to_remote, _transfer_to_host; UIR-045/UIR-046 |
-| FR-088 | The application shall emit verbose transfer debug output (per-byte X-Modem trace and transfer flow messages)… | app.py:_debug, _debug_enabled, _on_transfer_bytes; UIR-050 |
-| FR-089 | After launching the CP/M side of a transfer (FR-087), the application shall wait xfer_launch_delay seconds… | app.py:_launch_delay; UIR-049 |
+| FR-080 | A file transfer shall be permitted only when both the Terminal status flag and the… | mw_transfer_batches.py:do_copy_to_remote, mw_transfer_batches.py:do_copy_to_host |
+| FR-081 | The application shall support file transfers in both directions… | mw_transfer_batches.py:_send_one_to_remote, mw_transfer_batches.py:_recv_one_to_host, xmodem.py:send_file, xmodem.py:receive_file; tests test_xmodem.py |
+| FR-082 | The application shall use the X-Modem protocol for all file transfers | mw_transfer_batches.py:_send_one_to_remote, mw_transfer_batches.py:_recv_one_to_host, xmodem.py:XModem, xmodem.py:send_file, xmodem.py:receive_file; tests test_xmodem.py |
+| FR-083 | The application shall use the Transport (Transfer) Port for all file transfers | mw_transfer_batches.py:_send_one_to_remote, mw_transfer_batches.py:_recv_one_to_host, xmodem.py:send_file, xmodem.py:receive_file; tests test_xmodem.py |
+| FR-084 | The Copy to Remote button shall be enabled at startup | mw_transfer_batches.py:do_copy_to_remote |
+| FR-085 | The Copy to Host button shall be enabled at startup | mw_transfer_batches.py:do_copy_to_host |
+| FR-086 | During an X-Modem file transfer (either direction), the application shall echo every byte sent to… | mw_transfers.py:_on_transfer_bytes, mw_transfers.py:_echo_transfer_enabled; xmodem.py monitor hook; UIR-058 |
+| FR-087 | Before starting the X-Modem transfer, the application shall launch the CP/M side of the transfer… | mw_transfers.py:_issue_remote_cmd, _transfer_to_remote, _transfer_to_host; UIR-045/UIR-046 |
+| FR-088 | The application shall emit verbose transfer debug output (per-byte X-Modem trace and transfer flow messages)… | mw_transfers.py:_debug, mw_transfers.py:_debug_enabled, mw_transfers.py:_on_transfer_bytes; UIR-050 |
+| FR-089 | After launching the CP/M side of a transfer (FR-087), the application shall wait xfer_launch_delay seconds… | mw_transfers.py:_launch_delay; UIR-049 |
 | FR-099 | On a **successful** file transfer the application shall automatically refresh the destination file list so… | app.py:_on_transfer_completed, transfer_completed signal, _transfer_to_remote, _transfer_to_host |
 | FR-099a | After a successful Copy to Host the application shall refresh the Host Files list (per… | — |
 | FR-099b | A failed transfer shall not trigger a refresh | — |
-| FR-105 | While an X-Modem file transfer is in progress, the application shall display a modal progress… | xmodem.py progress hook; gui/transfer_dialog.py; app.py:_on_batch_started, _on_transfer_file_started, _on_transfer_progress, _close_transfer_dialog, _on_transfer_progress_cb, batch_started/transfer_file_started/transfer_progress signals |
+| FR-105 | While an X-Modem file transfer is in progress, the application shall display a modal progress… | xmodem.py progress hook; gui/transfer_dialog.py; app.py:_on_batch_started, _on_transfer_file_started, _on_transfer_progress, _close_transfer_dialog, mw_transfers.py:_on_transfer_progress_cb, batch_started/transfer_file_started/transfer_progress signals |
 | FR-105a | While an X-Modem file transfer (either direction) is in progress, the application shall display a… | — |
 | FR-105b | The blocks/bytes count shall be updated after each block is transferred (each acknowledged 128-byte packet… | — |
 | FR-105c | When a batch of multiple files is transferred (FR-106), a single dialog shall serve the… | — |
 | FR-105d | The application shall close the dialog automatically when the transfer completes, on both success and… | — |
 | FR-105e | Progress updates originate on the transfer worker thread and shall be delivered to the GUI… | — |
-| FR-106 | The Copy to Remote and Copy to Host actions shall transfer **all** files currently selected… | app.py:do_copy_to_remote, do_copy_to_host, _selected_filenames |
-| FR-107 | When more than one file is selected, the files shall be transferred **sequentially** over the… | app.py:_transfer_to_remote_batch, _transfer_to_host_batch, _selected_filenames |
-| FR-108 | If any file in a multi-file batch fails to transfer, the application shall abort the… | app.py:_transfer_to_remote_batch, _transfer_to_host_batch |
+| FR-106 | The Copy to Remote and Copy to Host actions shall transfer **all** files currently selected… | mw_transfer_batches.py:do_copy_to_remote, mw_transfer_batches.py:do_copy_to_host, mw_transfers.py:_selected_filenames |
+| FR-107 | When more than one file is selected, the files shall be transferred **sequentially** over the… | mw_transfer_batches.py:_transfer_to_remote_batch, mw_transfer_batches.py:_transfer_to_host_batch, mw_transfers.py:_selected_filenames |
+| FR-108 | If any file in a multi-file batch fails to transfer, the application shall abort the… | mw_transfer_batches.py:_transfer_to_remote_batch, mw_transfer_batches.py:_transfer_to_host_batch |
 | FR-108a | On any file's failure the application shall abort the batch — it shall not attempt… | — |
 | FR-108b | If at least one file in the batch transferred successfully before the failure, the destination… | — |
-| FR-109 | In a multi-file batch, before issuing the FR-087 launch command for each file **after the… | app.py:_wait_for_terminal_idle, _interfile_delay, _transfer_to_remote_batch, _transfer_to_host_batch |
+| FR-109 | In a multi-file batch, before issuing the FR-087 launch command for each file **after the… | mw_transfers.py:_wait_for_terminal_idle, mw_transfers.py:_interfile_delay, mw_transfer_batches.py:_transfer_to_remote_batch, mw_transfer_batches.py:_transfer_to_host_batch |
 
 ## 3.10 Terminal window — receive and transmit
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-090 | All data received from the Terminal Port shall be accumulated in a receive data buffer… | app.py:handle_terminal_recv, _rx_buffer |
-| FR-091 | All data received from the Terminal Port shall be displayed in the receive text area… | app.py:_on_term_write, app.py:handle_terminal_recv, terminal_window.py:write_text, serial_manager.py:_read_loop; tests test_serial_manager.py |
-| FR-092 | All data transmitted to the Terminal Port (including the appended EOL, FR-094) shall be accumulated… | app.py:handle_terminal_send, _tx_buffer |
-| FR-093 | When the Local Echo checkbox is enabled, transmitted data shall be copied to the receive… | app.py:_on_term_write, app.py:_set_local_echo, app.py:handle_terminal_send |
-| FR-094 | Transmitted data shall have the configured EOL character(s) appended before being sent, except when the… | app.py:handle_terminal_send, terminal_window.py:send_text |
-| FR-095 | When the Clear button in the Terminal Window is pressed, the receive text area shall… | terminal_window.py:clear_text, app.py:clear_terminal_buffers |
+| FR-090 | All data received from the Terminal Port shall be accumulated in a receive data buffer… | mw_remote.py:handle_terminal_recv, _rx_buffer |
+| FR-091 | All data received from the Terminal Port shall be displayed in the receive text area… | app.py:_on_term_write, mw_remote.py:handle_terminal_recv, terminal_window.py:write_text, serial_manager.py:_read_loop; tests test_serial_manager.py |
+| FR-092 | All data transmitted to the Terminal Port (including the appended EOL, FR-094) shall be accumulated… | mw_remote.py:handle_terminal_send, _tx_buffer |
+| FR-093 | When the Local Echo checkbox is enabled, transmitted data shall be copied to the receive… | app.py:_on_term_write, mw_remote.py:_set_local_echo, mw_remote.py:handle_terminal_send |
+| FR-094 | Transmitted data shall have the configured EOL character(s) appended before being sent, except when the… | mw_remote.py:handle_terminal_send, terminal_window.py:send_text |
+| FR-095 | When the Clear button in the Terminal Window is pressed, the receive text area shall… | terminal_window.py:clear_text, mw_remote.py:clear_terminal_buffers |
 | FR-096 | When the Send button in the Terminal Window is pressed, the contents of the transmit… | terminal_window.py:send_text, serial_manager.py:send_data; tests test_serial_manager.py |
-| FR-097 | When the Terminal button in the main window is pressed, the application shall open the… | app.py:show_terminal |
-| FR-098 | If the Terminal Port is not open when the user attempts to send data from… | app.py:handle_terminal_send |
-| FR-155 | When Send is pressed (or <Enter> is pressed in the transmit field) with the transmit… | terminal_window.py:send_text, app.py:handle_terminal_send; tests test_gui_smoke.py |
+| FR-097 | When the Terminal button in the main window is pressed, the application shall open the… | mw_remote.py:show_terminal |
+| FR-098 | If the Terminal Port is not open when the user attempts to send data from… | mw_remote.py:handle_terminal_send |
+| FR-155 | When Send is pressed (or <Enter> is pressed in the transmit field) with the transmit… | terminal_window.py:send_text, mw_remote.py:handle_terminal_send; tests test_gui_smoke.py |
 | FR-156 | The transmit field shall interpret caret notation for control characters… | terminal_window.py:send_text, terminal_window.py:_parse_send_text; tests test_gui_smoke.py |
 
 ## 3.11 File context-menu actions
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-110 | The Host Files list (UIR-011) shall provide a right-click context menu (UIR-018) offering the actions… | app.py:_host_context_menu, _host_to_remote, _host_view, _host_rename, _host_delete |
-| FR-111 | The Remote Files list (UIR-012) shall provide a right-click context menu (UIR-019) offering the actions… | app.py:_remote_context_menu, _remote_to_host, _remote_view, _remote_rename, _remote_delete |
+| FR-110 | The Host Files list (UIR-011) shall provide a right-click context menu (UIR-018) offering the actions… | mw_context_menu.py:_host_context_menu, mw_context_menu.py:_host_to_remote, mw_context_menu.py:_host_view, mw_context_menu.py:_host_rename, mw_context_menu.py:_host_delete |
+| FR-111 | The Remote Files list (UIR-012) shall provide a right-click context menu (UIR-019) offering the actions… | mw_context_menu.py:_remote_context_menu, mw_context_menu.py:_remote_to_host, mw_context_menu.py:_remote_view, mw_context_menu.py:_remote_rename, mw_context_menu.py:_remote_delete |
 | FR-112 | The View/Edit action (host, FR-110) and the View action (remote, FR-111) shall open the target… | app.py:_open_in_viewer, build_viewer_args, _os_open |
-| FR-113 | For a remote View (FR-111), the application shall download the file and open it… | app.py:_remote_view, _download_and_view, _on_view_file_ready, view_file_ready signal |
+| FR-113 | For a remote View (FR-111), the application shall download the file and open it… | mw_context_menu.py:_remote_view, mw_context_menu.py:_download_and_view, mw_context_menu.py:_on_view_file_ready, view_file_ready signal |
 | FR-113a | A remote View shall first download the selected file over X-Modem into a temporary folder… | — |
 | FR-113b | A remote View shall be permitted only when both the Terminal and Transport status flags… | — |
-| FR-114 | The Rename action (host FR-110, remote FR-111) shall present a modal File Action Dialog (UIR-057)… | app.py:_host_rename, _remote_rename, file_action_dialog.py:FileActionDialog |
-| FR-115 | The Delete action (host FR-110, remote FR-111) shall present a modal File Action Dialog (UIR-057)… | app.py:_host_delete, _remote_delete, file_action_dialog.py:FileActionDialog |
-| FR-116 | For **host** files, the Rename and Delete context actions shall operate on the host filesystem… | app.py:_host_rename, _host_delete |
+| FR-114 | The Rename action (host FR-110, remote FR-111) shall present a modal File Action Dialog (UIR-057)… | mw_context_menu.py:_host_rename, mw_context_menu.py:_remote_rename, file_action_dialog.py:FileActionDialog |
+| FR-115 | The Delete action (host FR-110, remote FR-111) shall present a modal File Action Dialog (UIR-057)… | mw_context_menu.py:_host_delete, mw_context_menu.py:_remote_delete, file_action_dialog.py:FileActionDialog |
+| FR-116 | For **host** files, the Rename and Delete context actions shall operate on the host filesystem… | mw_context_menu.py:_host_rename, mw_context_menu.py:_host_delete |
 | FR-116a | The Rename action shall rename the file on the host filesystem using a standard filesystem… | — |
 | FR-116b | The Delete action shall delete **every selected file** (FR-110) using a standard filesystem delete, in… | — |
 | FR-116c | After Delete the Host Files list shall be refreshed to reflect the result (FR-118) | — |
-| FR-117 | For **remote** files, the Rename and Delete context actions shall send the configured commands on… | app.py:_remote_rename, _remote_delete, _do_remote_file_cmd, _do_remote_file_cmds |
+| FR-117 | For **remote** files, the Rename and Delete context actions shall send the configured commands on… | mw_context_menu.py:_remote_rename, mw_context_menu.py:_remote_delete, mw_context_menu.py:_do_remote_file_cmd, mw_context_menu.py:_do_remote_file_cmds |
 | FR-117a | The Rename action shall send the configured rename_remote_cmd (UIR-055, default REN $2=$1) on the Terminal… | — |
 | FR-117b | The Delete action shall send the configured delete_remote_cmd (UIR-056, default ERA $1) on the Terminal… | — |
 | FR-117c | If the configured command is empty, no command is sent… | — |
-| FR-118 | After a successful Rename or Delete, the application shall refresh the affected file list so… | app.py:_host_rename, _host_delete, _do_remote_file_cmd, _do_remote_file_cmds |
-| FR-119 | The Host/Remote Files context menus (FR-110/FR-111) shall provide **To Remote** / **To Host** actions that… | app.py:_host_to_remote, _remote_to_host, _transfer_to_remote_batch, _transfer_to_host_batch |
+| FR-118 | After a successful Rename or Delete, the application shall refresh the affected file list so… | mw_context_menu.py:_host_rename, mw_context_menu.py:_host_delete, mw_context_menu.py:_do_remote_file_cmd, mw_context_menu.py:_do_remote_file_cmds |
+| FR-119 | The Host/Remote Files context menus (FR-110/FR-111) shall provide **To Remote** / **To Host** actions that… | mw_context_menu.py:_host_to_remote, mw_context_menu.py:_remote_to_host, mw_transfer_batches.py:_transfer_to_remote_batch, mw_transfer_batches.py:_transfer_to_host_batch |
 | FR-119a | The Host Files context menu (FR-110) shall provide a **To Remote** action and the Remote… | — |
 | FR-119b | When the right-clicked file is not part of the current selection, the action shall transfer… | — |
 | FR-119c | Each action shall behave exactly as the corresponding Copy to Remote / Copy to Host… | — |
@@ -212,11 +212,11 @@ _394 requirements across 54 sections._
 | FR-122 | The Config menu (UIR-003) shall contain a **Language** submenu listing every language for which a… | app.py:_setup_language_menu, menu_set_language, utils/i18n.py:available_languages, set_language |
 | FR-123 | Changing the active language (FR-122) shall re-translate all currently-visible user interface elements immediately, without requiring… | app.py:retranslate_ui, _register_text, terminal_window.py:retranslate_ui |
 | FR-124 | The active language shall be persisted and restored on the next start (DR-042)… | gui/window_state.py:language, app.py:__init__, utils/i18n.py:tr, set_language |
-| FR-125 | The main window title bar (UIR-005) shall display the currently-loaded configuration name… | app.py:_update_window_title, _config_name, load_config, menu_new, retranslate_ui |
+| FR-125 | The main window title bar (UIR-005) shall display the currently-loaded configuration name… | app.py:_update_window_title, _config_name, mw_config.py:load_config, mw_config.py:menu_new, retranslate_ui |
 | FR-125a | The title bar shall display the application name followed by the base name of the… | — |
 | FR-125b | When no configuration file is loaded (at first start with no remembered config, or after… | — |
 | FR-125c | The configuration name shall update whenever a config is loaded (File > Load or startup… | — |
-| FR-126 | The Host Files group title (UIR-011) shall display the current host directory… | app.py:_update_host_group_title, refresh_host_files, resizeEvent, setup_layout, retranslate_ui |
+| FR-126 | The Host Files group title (UIR-011) shall display the current host directory… | app.py:_update_host_group_title, mw_file_panes.py:refresh_host_files, resizeEvent, setup_layout, retranslate_ui |
 | FR-126a | The group title shall display the translated "Host Files" label followed by the current host… | — |
 | FR-126b | When the directory text is wider than the space available in the group box, the… | — |
 | FR-126c | The displayed directory shall track every change to the host directory (FR-060, FR-062) and shall… | — |
@@ -225,25 +225,25 @@ _394 requirements across 54 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-130 | Each file list pane (Host Files — UIR-011, Remote Files — UIR-012) shall provide a… | app.py:_build_filter_sort_row, _render_file_list, _apply_host_view, _apply_remote_view, refresh_host_files, _update_remote_list_ui; utils/file_filter.py:filter_names; tests test_file_filter.py, test_gui_smoke.py |
-| FR-131 | The filter shall match by file name with the following rules… | utils/file_filter.py:matches, has_wildcard, filter_names; app.py:_build_filter_sort_row (debounce QTimer); tests test_file_filter.py |
-| FR-132 | Each pane shall provide a sort control (UIR-080) offering sort by **Name** and by **Extension**… | utils/file_filter.py:sort_names; app.py:_build_filter_sort_row, _update_sort_arrow, _render_file_list; tests test_file_filter.py, test_gui_smoke.py |
-| FR-133 | The filter (FR-131) and sort (FR-132) shall be combined by applying the filter first and… | utils/file_filter.py:filter_and_sort; app.py:_render_file_list, _apply_host_view, _apply_remote_view; tests test_file_filter.py, test_gui_smoke.py |
-| FR-134 | The last-used filter text and sort settings (key and direction) shall be persisted **independently for… | gui/window_state.py:filter_text/sort_key/sort_descending (+ setters); app.py:_persist_filter_sort, _restore_filter_sort; tests test_gui_smoke.py |
-| FR-135 | The filter field shall provide an inline **clear** (×) control that empties it (restoring the… | app.py:_build_filter_sort_row (setClearButtonEnabled), _render_file_list (active-filter border), _clear_remote_files; tests test_gui_smoke.py |
+| FR-130 | Each file list pane (Host Files — UIR-011, Remote Files — UIR-012) shall provide a… | mw_file_panes.py:_build_filter_sort_row, mw_file_panes.py:_render_file_list, mw_file_panes.py:_apply_host_view, mw_file_panes.py:_apply_remote_view, mw_file_panes.py:refresh_host_files, mw_remote.py:_update_remote_list_ui; utils/file_filter.py:filter_names; tests test_file_filter.py, test_gui_smoke.py |
+| FR-131 | The filter shall match by file name with the following rules… | utils/file_filter.py:matches, has_wildcard, filter_names; mw_file_panes.py:_build_filter_sort_row (debounce QTimer); tests test_file_filter.py |
+| FR-132 | Each pane shall provide a sort control (UIR-080) offering sort by **Name** and by **Extension**… | utils/file_filter.py:sort_names; mw_file_panes.py:_build_filter_sort_row, mw_file_panes.py:_update_sort_arrow, mw_file_panes.py:_render_file_list; tests test_file_filter.py, test_gui_smoke.py |
+| FR-133 | The filter (FR-131) and sort (FR-132) shall be combined by applying the filter first and… | utils/file_filter.py:filter_and_sort; mw_file_panes.py:_render_file_list, mw_file_panes.py:_apply_host_view, mw_file_panes.py:_apply_remote_view; tests test_file_filter.py, test_gui_smoke.py |
+| FR-134 | The last-used filter text and sort settings (key and direction) shall be persisted **independently for… | gui/window_state.py:filter_text/sort_key/sort_descending (+ setters); mw_file_panes.py:_persist_filter_sort, mw_file_panes.py:_restore_filter_sort; tests test_gui_smoke.py |
+| FR-135 | The filter field shall provide an inline **clear** (×) control that empties it (restoring the… | mw_file_panes.py:_build_filter_sort_row (setClearButtonEnabled), mw_file_panes.py:_render_file_list (active-filter border), mw_file_panes.py:_clear_remote_files; tests test_gui_smoke.py |
 
 ## 3.14 Drag-and-drop file transfer
 
 | ID | Summary | Impl |
 |----|---------|------|
 | FR-136 | Each file-list pane (Host Files — UIR-011, Remote Files — UIR-012) shall be a **drag… | gui/file_list_widget.py:FileListWidget.startDrag, MIME_CPM_FILES; tests test_gui_smoke.py |
-| FR-137 | Each pane shall be a **drop target** for an internal drag (FR-136) originating from the… | gui/file_list_widget.py:FileListWidget.decode_drop, dropEvent; app.py:_on_files_dropped, _confirm_dnd_transfer, _confirm_dialog; tests test_gui_smoke.py |
+| FR-137 | Each pane shall be a **drop target** for an internal drag (FR-136) originating from the… | gui/file_list_widget.py:FileListWidget.decode_drop, dropEvent; mw_transfers.py:_on_files_dropped, mw_transfers.py:_confirm_dnd_transfer, _confirm_dialog; tests test_gui_smoke.py |
 | FR-137a | Dropping Host-pane files onto the Remote pane shall initiate Copy to Remote, and dropping Remote-pane… | — |
 | FR-137b | A drop onto the originating pane shall be a no-op | — |
 | FR-137c | A drop shall be permitted only when both the Terminal and Transport status flags are… | — |
 | FR-137d | A drop shall be **confirmed** by the user before the transfer begins, via a confirmation… | — |
 | FR-137e | An accepted drop shall reuse the existing batch transfer workers (_transfer_to_remote_batch / _transfer_to_host_batch), spawned on… | — |
-| FR-138 | The **Remote** pane shall additionally accept a drop of one or more files from the… | gui/file_list_widget.py:FileListWidget.decode_drop; app.py:_on_files_dropped; tests test_gui_smoke.py |
+| FR-138 | The **Remote** pane shall additionally accept a drop of one or more files from the… | gui/file_list_widget.py:FileListWidget.decode_drop; mw_transfers.py:_on_files_dropped; tests test_gui_smoke.py |
 | FR-139 | While a drag is over a pane, the pane shall give drop-zone feedback… | gui/file_list_widget.py:FileListWidget.dragEnterEvent, dragMoveEvent, dragLeaveEvent, _set_drop_active |
 | FR-139a | While a drag carrying an acceptable payload (FR-137/FR-138) is over a pane, that pane shall… | — |
 | FR-139b | A drag whose payload the pane would reject (a same-pane internal drag, or an external… | — |
@@ -252,14 +252,14 @@ _394 requirements across 54 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-140 | The application shall maintain a **transfer history** in which each entry records one file-transfer attempt… | utils/transfer_history.py:TransferHistory.add_entry; app.py:_record_history; tests test_transfer_history.py |
+| FR-140 | The application shall maintain a **transfer history** in which each entry records one file-transfer attempt… | utils/transfer_history.py:TransferHistory.add_entry; mw_history.py:_record_history; tests test_transfer_history.py |
 | FR-141 | The transfer history shall be **persisted** across sessions… | utils/transfer_history.py:TransferHistory (_read_file, _write_file, _prune_locked, prune_old_entries); tests test_transfer_history.py |
 | FR-141a | The history shall be stored as a JSON list of entries (oldest first) in a… | — |
 | FR-141b | A **retention policy** shall bound the file… | — |
 | FR-141c | A missing, unreadable, or malformed history file shall degrade to an empty history rather than… | — |
-| FR-142 | Each transfer shall record its per-file outcome in the history (FR-140) as it completes… | app.py:_transfer_to_remote_batch, _transfer_to_host_batch, _record_history; utils/transfer_history.py:TransferHistory.add_entry (lock); tests test_transfer_history.py, test_gui_smoke.py |
-| FR-143 | The application shall present a modal **Transfer History dialog** (UIR-082/UIR-083) showing the recorded entries (FR-140)… | gui/transfer_history_dialog.py:TransferHistoryDialog; app.py:show_history; tests test_gui_smoke.py |
-| FR-144 | The Transfer History dialog shall allow the user to **re-transfer** a selected entry… | gui/transfer_history_dialog.py:TransferHistoryDialog (_on_retransfer, retransfer_entry); app.py:show_history, _retransfer, _transfer_to_remote_batch/_transfer_to_host_batch (retry); tests test_gui_smoke.py |
+| FR-142 | Each transfer shall record its per-file outcome in the history (FR-140) as it completes… | mw_transfer_batches.py:_transfer_to_remote_batch, mw_transfer_batches.py:_transfer_to_host_batch, mw_history.py:_record_history; utils/transfer_history.py:TransferHistory.add_entry (lock); tests test_transfer_history.py, test_gui_smoke.py |
+| FR-143 | The application shall present a modal **Transfer History dialog** (UIR-082/UIR-083) showing the recorded entries (FR-140)… | gui/transfer_history_dialog.py:TransferHistoryDialog; mw_history.py:show_history; tests test_gui_smoke.py |
+| FR-144 | The Transfer History dialog shall allow the user to **re-transfer** a selected entry… | gui/transfer_history_dialog.py:TransferHistoryDialog (_on_retransfer, retransfer_entry); mw_history.py:show_history, mw_history.py:_retransfer, mw_transfer_batches.py:_transfer_to_remote_batch/mw_transfer_batches.py:_transfer_to_host_batch (retry); tests test_gui_smoke.py |
 | FR-144a | Re-transfer shall restore the file path and direction from the entry and re-initiate the transfer… | — |
 | FR-144b | The new attempt shall be recorded in the history marked as a re-transfer (retry) | — |
 | FR-144c | Re-transfer shall start only after the History dialog has closed, so its own modal progress… | — |
@@ -268,26 +268,26 @@ _394 requirements across 54 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-145 | Before transferring each file in a batch (FR-106), the application shall determine whether a file… | app.py:_destination_conflict, _fresh_remote_names, _transfer_to_remote_batch, _transfer_to_host_batch; tests test_conflict_resolution.py |
+| FR-145 | Before transferring each file in a batch (FR-106), the application shall determine whether a file… | mw_transfer_guards.py:_destination_conflict, mw_transfer_guards.py:_fresh_remote_names, mw_transfer_batches.py:_transfer_to_remote_batch, mw_transfer_batches.py:_transfer_to_host_batch; tests test_conflict_resolution.py |
 | FR-145a | The conflict check shall run before transferring each file in a batch (FR-106), against the… | — |
 | FR-145b | For a remote→host download (host), the destination is the host directory and the check is… | — |
 | FR-145c | For a host→remote upload (remote), the destination is the remote CP/M drive… | — |
 | FR-145d | If the remote refresh yields no names (e.g… | — |
-| FR-146 | When a destination conflict is detected (FR-145) and no batch-wide policy is in effect (FR-147)… | app.py:_resolve_conflict, _on_conflict_detected, conflict_detected signal, _erase_remote_file (Overwrite pre-delete); gui/conflict_dialog.py:FileConflictDialog; tests test_conflict_resolution.py, test_gui_smoke.py |
+| FR-146 | When a destination conflict is detected (FR-145) and no batch-wide policy is in effect (FR-147)… | mw_transfer_guards.py:_resolve_conflict, mw_transfer_guards.py:_on_conflict_detected, conflict_detected signal, mw_backup_restore.py:_erase_remote_file (Overwrite pre-delete); gui/conflict_dialog.py:FileConflictDialog; tests test_conflict_resolution.py, test_gui_smoke.py |
 | FR-146a | The modal conflict dialog (UIR-084) shall name the conflicting file and offer three actions… | — |
 | FR-146b | On **Overwrite** of a host→remote upload, the application shall first delete the existing remote file… | — |
 | FR-146c | A skipped file shall be recorded in the transfer history (FR-142) with the status skipped | — |
 | FR-146d | Because the batch runs on a worker thread, the prompt shall be raised on the… | — |
-| FR-147 | The conflict prompt (FR-146) shall offer an **"apply to all remaining conflicts"** option (a checkbox)… | app.py:_resolve_conflict, _conflict_policy; gui/conflict_dialog.py:FileConflictDialog (apply_to_all); tests test_conflict_resolution.py |
+| FR-147 | The conflict prompt (FR-146) shall offer an **"apply to all remaining conflicts"** option (a checkbox)… | mw_transfer_guards.py:_resolve_conflict, _conflict_policy; gui/conflict_dialog.py:FileConflictDialog (apply_to_all); tests test_conflict_resolution.py |
 
 ## 3.17 Host→remote filename validation
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-148 | Before each host→remote upload the application shall validate the file's base name against the **CP/M… | app.py:_transfer_to_remote_batch; terminal/cpm_parser.py:CPMParser.is_valid_8_3; tests test_filename_validation.py |
+| FR-148 | Before each host→remote upload the application shall validate the file's base name against the **CP/M… | mw_transfer_guards.py:_prompt_invalid_name, mw_transfer_guards.py:_on_invalid_name_detected, filename_validation_dialog.py:FilenameValidationDialog, cpm_parser.py:is_valid_8_3 (invoked from mw_transfer_batches.py:_transfer_to_remote_batch); tests test_filename_validation.py |
 | FR-148a | The validation shall run before transferring each file in a host→remote upload batch (FR-106) and… | — |
 | FR-148b | The validation shall apply to the upload (remote) direction only… | — |
-| FR-149 | When an upload file's name does not conform (FR-148), the application shall **prompt** the user… | app.py:_prompt_invalid_name, _on_invalid_name_detected, invalid_name_detected signal, _transfer_to_remote_batch, _send_one_to_remote, _destination_conflict; gui/filename_validation_dialog.py:FilenameValidationDialog; terminal/cpm_parser.py:CPMParser.suggest_8_3; tests test_filename_validation.py |
+| FR-149 | When an upload file's name does not conform (FR-148), the application shall **prompt** the user… | mw_transfer_guards.py:_prompt_invalid_name, mw_transfer_guards.py:_on_invalid_name_detected, invalid_name_detected signal, mw_transfer_batches.py:_transfer_to_remote_batch, mw_transfer_batches.py:_send_one_to_remote, mw_transfer_guards.py:_destination_conflict; gui/filename_validation_dialog.py:FilenameValidationDialog; terminal/cpm_parser.py:CPMParser.suggest_8_3; tests test_filename_validation.py |
 | FR-149a | The modal dialog (UIR-085) shall name the offending file and offer three actions… | — |
 | FR-149b | The **Rename** action shall pre-fill the replacement-name field with a conforming suggestion derived from the… | — |
 | FR-149c | On **Rename**, the file shall be uploaded to the remote under the replacement name (the… | — |
@@ -298,29 +298,29 @@ _394 requirements across 54 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-150 | The application shall provide a **Backup** action (UIR-086) that mirrors the currently-selected remote drive to… | app.py:do_backup, _backup_drive, _list_remote_file_names, _wipe_host_dir, _transfer_to_host_batch; tests test_backup_restore.py |
+| FR-150 | The application shall provide a **Backup** action (UIR-086) that mirrors the currently-selected remote drive to… | mw_backup_restore.py:do_backup, mw_backup_restore.py:_backup_drive, mw_backup_restore.py:_list_remote_file_names, mw_backup_restore.py:_wipe_host_dir, mw_transfer_batches.py:_transfer_to_host_batch; tests test_backup_restore.py |
 | FR-150a | Backup shall first refresh the destination (host) directory listing and the source (remote) drive listing… | — |
 | FR-150b | Backup shall then obtain the user's confirmation of the destructive operation (FR-152) | — |
 | FR-150c | On confirmation, Backup shall delete every file in the host directory (FR-153) | — |
 | FR-150d | Backup shall then download every file on the remote drive into the host directory, reusing… | — |
 | FR-150e | Backup shall run off the GUI thread and is permitted only when both the Terminal… | — |
-| FR-151 | The application shall provide a **Restore** action (UIR-087) that mirrors the current host directory to… | app.py:do_restore, _restore_drive, _list_remote_file_names, _wipe_remote_drive, _transfer_to_remote_batch; tests test_backup_restore.py |
+| FR-151 | The application shall provide a **Restore** action (UIR-087) that mirrors the current host directory to… | mw_backup_restore.py:do_restore, mw_backup_restore.py:_restore_drive, mw_backup_restore.py:_list_remote_file_names, mw_backup_restore.py:_wipe_remote_drive, mw_transfer_batches.py:_transfer_to_remote_batch; tests test_backup_restore.py |
 | FR-151a | Restore shall first snapshot the source (host) directory listing and refresh the destination (remote) drive… | — |
 | FR-151b | Restore shall then obtain the user's confirmation of the destructive operation (FR-152) | — |
 | FR-151c | On confirmation, Restore shall delete every file on the remote drive (FR-153) | — |
 | FR-151d | Restore shall then upload every file in the host directory (using the listing snapshotted in… | — |
 | FR-151e | Restore shall run off the GUI thread and is permitted only when both status flags… | — |
-| FR-152 | Before a Backup (FR-150) or Restore (FR-151) deletes anything, the application shall obtain the user's… | app.py:_confirm_backup_restore, _on_backup_restore_confirm, backup_restore_confirm signal; tests test_backup_restore.py |
+| FR-152 | Before a Backup (FR-150) or Restore (FR-151) deletes anything, the application shall obtain the user's… | mw_backup_restore.py:_confirm_backup_restore, mw_backup_restore.py:_on_backup_restore_confirm, backup_restore_confirm signal; tests test_backup_restore.py |
 | FR-152a | Before the prompt, the application shall **refresh the destination listing** (and, for Backup, also the… | — |
 | FR-152b | The application shall then display a modal **confirmation** dialog (UIR-088) warning that ALL files at… | — |
 | FR-152c | Cancel (and a window-manager close) shall abort the operation before any deletion or transfer occurs… | — |
 | FR-152d | Because Backup/Restore run on a worker thread, the prompt shall be raised on the GUI… | — |
-| FR-153 | On confirmation (FR-152), the application shall **delete every file at the destination** before transferring… | app.py:_wipe_host_dir, _wipe_remote_drive; tests test_backup_restore.py |
+| FR-153 | On confirmation (FR-152), the application shall **delete every file at the destination** before transferring… | mw_backup_restore.py:_wipe_host_dir, mw_backup_restore.py:_wipe_remote_drive; tests test_backup_restore.py |
 | FR-153a | The deletion shall occur on confirmation (FR-152) and before any file is transferred | — |
 | FR-153b | For Backup the destination is the host directory… | — |
 | FR-153c | For Restore the destination is the remote drive… | — |
 | FR-153d | The wipe shall operate on the destination listing refreshed in FR-152, deleting files individually (the… | — |
-| FR-154 | The file-copying phase of Backup and Restore shall **reuse the existing batch-transfer engine** (_transfer_to_host_batch /… | app.py:_backup_drive, _restore_drive, _transfer_to_host_batch, _transfer_to_remote_batch; tests test_backup_restore.py |
+| FR-154 | The file-copying phase of Backup and Restore shall **reuse the existing batch-transfer engine** (_transfer_to_host_batch /… | mw_backup_restore.py:_backup_drive, mw_backup_restore.py:_restore_drive, mw_transfer_batches.py:_transfer_to_host_batch, mw_transfer_batches.py:_transfer_to_remote_batch; tests test_backup_restore.py |
 
 ## 4.1 Menu bar
 
@@ -343,12 +343,12 @@ _394 requirements across 54 sections._
 | UIR-014 | The status bar shall be a single-line text label… | app.py:set_status |
 | UIR-015 | The Connect button shall be enabled at startup | — |
 | UIR-016 | The main window shall provide a separate Disconnect button, enabled at startup, that invokes the… | app.py |
-| UIR-017 | The Remote Files group shall contain a drive-selection drop-down, positioned immediately before the Update button… | app.py:setup_layout, change_drive |
-| UIR-018 | The Host Files multi-select widget (UIR-011) shall present a context menu on right-click containing the… | app.py:setup_layout, _host_context_menu |
-| UIR-019 | The Remote Files multi-select widget (UIR-012) shall present a context menu on right-click containing the… | app.py:setup_layout, _remote_context_menu |
-| UIR-079 | Each file pane (Host Files — UIR-011, Remote Files — UIR-012) shall present, in a… | app.py:_build_filter_sort_row, _render_file_list; lang/*.txt (main.filter_placeholder, main.filter_tooltip) |
-| UIR-080 | The filter row (UIR-079) shall also contain a **sort** control… | app.py:_build_filter_sort_row, _update_sort_arrow, retranslate_ui; lang/*.txt (main.sort.name, main.sort.extension, main.sort_by_tooltip, main.sort_direction_tooltip) |
-| UIR-081 | Both file-list multi-select widgets (UIR-011, UIR-012) shall support drag-and-drop file transfer as specified by FR-136–FR-139… | gui/file_list_widget.py:FileListWidget; app.py:setup_layout, _on_files_dropped, _confirm_dnd_transfer; lang/*.txt (dialog.dnd_confirm.*) |
+| UIR-017 | The Remote Files group shall contain a drive-selection drop-down, positioned immediately before the Update button… | app.py:setup_layout, mw_remote.py:change_drive |
+| UIR-018 | The Host Files multi-select widget (UIR-011) shall present a context menu on right-click containing the… | app.py:setup_layout, mw_context_menu.py:_host_context_menu |
+| UIR-019 | The Remote Files multi-select widget (UIR-012) shall present a context menu on right-click containing the… | app.py:setup_layout, mw_context_menu.py:_remote_context_menu |
+| UIR-079 | Each file pane (Host Files — UIR-011, Remote Files — UIR-012) shall present, in a… | mw_file_panes.py:_build_filter_sort_row, mw_file_panes.py:_render_file_list; lang/*.txt (main.filter_placeholder, main.filter_tooltip) |
+| UIR-080 | The filter row (UIR-079) shall also contain a **sort** control… | mw_file_panes.py:_build_filter_sort_row, mw_file_panes.py:_update_sort_arrow, retranslate_ui; lang/*.txt (main.sort.name, main.sort.extension, main.sort_by_tooltip, main.sort_direction_tooltip) |
+| UIR-081 | Both file-list multi-select widgets (UIR-011, UIR-012) shall support drag-and-drop file transfer as specified by FR-136–FR-139… | gui/file_list_widget.py:FileListWidget; app.py:setup_layout, mw_transfers.py:_on_files_dropped, mw_transfers.py:_confirm_dnd_transfer; lang/*.txt (dialog.dnd_confirm.*) |
 
 ## 4.3 Serial Configuration Dialog
 
@@ -385,7 +385,7 @@ _394 requirements across 54 sections._
 | UIR-049 | The dialog shall provide an "Xfer Launch Delay (s)" integer field (0..60 inclusive) with a… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:__init__ |
 | UIR-050 | The dialog shall provide a "Debug Logging" dropdown (OFF/ON, default OFF) controlling the verbose transfer… | config_dialogs.py:GeneralConfigDialog |
 | UIR-052 | The dialog shall provide an "Xfer Inter-file Delay (s)" integer field (0..60 inclusive) with a… | config_dialogs.py:GeneralConfigDialog |
-| UIR-053 | The dialog shall provide a "Default Host Directory" text field and an associated browse button… | config_dialogs.py:create_widgets, config_dialogs.py:on_browse, config_dialogs.py:GeneralConfigDialog, app.py:menu_general_config |
+| UIR-053 | The dialog shall provide a "Default Host Directory" text field and an associated browse button… | config_dialogs.py:create_widgets, config_dialogs.py:on_browse, config_dialogs.py:GeneralConfigDialog, mw_config.py:menu_general_config |
 | UIR-054 | The dialog shall provide a "Viewer/Editor" text field with a default value of notepad $1… | config_dialogs.py:GeneralConfigDialog |
 | UIR-055 | The dialog shall provide a "Rename" text field (within the Remote group, UIR-041) limited to… | config_dialogs.py:GeneralConfigDialog |
 | UIR-056 | The dialog shall provide a "Delete" text field (within the Remote group, UIR-041) limited to… | config_dialogs.py:GeneralConfigDialog |
@@ -435,8 +435,8 @@ _394 requirements across 54 sections._
 | UIR-057b | For the Rename action the field shall be editable and pre-populated with the file's name… | — |
 | UIR-057c | The dialog title shall name the action and target (e.g… | — |
 | UIR-058 | The General Configuration Dialog shall provide an "Echo Transfer Data" dropdown (OFF/ON, default OFF), persisted… | config_dialogs.py:GeneralConfigDialog; FR-086 |
-| UIR-089 | The General Configuration Dialog shall provide, in the "Remote" group below the Send to Remote… | config_dialogs.py:GeneralConfigDialog, ConfigDialog._build_field checkbox type; app.py:_xmodem_1k_enabled; NFR-003b, NFR-003g |
-| UIR-090 | The General Configuration Dialog shall provide two text fields (limited to 79 characters, default blank)… | config_dialogs.py:GeneralConfigDialog; app.py:_issue_remote_cmd |
+| UIR-089 | The General Configuration Dialog shall provide, in the "Remote" group below the Send to Remote… | config_dialogs.py:GeneralConfigDialog, ConfigDialog._build_field checkbox type; mw_transfers.py:_xmodem_1k_enabled; NFR-003b, NFR-003g |
+| UIR-090 | The General Configuration Dialog shall provide two text fields (limited to 79 characters, default blank)… | config_dialogs.py:GeneralConfigDialog; mw_transfers.py:_issue_remote_cmd |
 
 ## 4.9 Common dialog conventions
 
@@ -460,7 +460,7 @@ _394 requirements across 54 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| UIR-082 | The main-window toolbar (UIR-071) shall provide a **History** action that opens the Transfer History dialog… | app.py:setup_toolbar, show_history; lang/*.txt (toolbar.history) |
+| UIR-082 | The main-window toolbar (UIR-071) shall provide a **History** action that opens the Transfer History dialog… | app.py:setup_toolbar, mw_history.py:show_history; lang/*.txt (toolbar.history) |
 | UIR-083 | The Transfer History dialog (FR-143) shall be a modal dialog titled "Transfer History"… | gui/transfer_history_dialog.py:TransferHistoryDialog; lang/*.txt (history.*) |
 | UIR-083a | The dialog shall contain a **filter row** with a **Direction** drop-down (All / To Remote… | — |
 | UIR-083b | The dialog shall contain a read-only **table** with the columns Time, File, Direction, Status, Size… | — |
@@ -486,9 +486,9 @@ _394 requirements across 54 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| UIR-086 | The main-window toolbar (UIR-071) shall provide a **Backup** action — a labelled, icon-bearing button —… | app.py:setup_toolbar, do_backup; lang/*.txt (toolbar.backup) |
-| UIR-087 | The main-window toolbar (UIR-071) shall provide a **Restore** action — a labelled, icon-bearing button —… | app.py:setup_toolbar, do_restore; lang/*.txt (toolbar.restore) |
-| UIR-088 | The Backup/Restore confirmation dialog (FR-152) shall be a modal dialog titled "Confirm Backup"/"Confirm Restore" that… | app.py:_on_backup_restore_confirm; lang/*.txt (dialog.backup_restore.*, button.continue); FR-152 |
+| UIR-086 | The main-window toolbar (UIR-071) shall provide a **Backup** action — a labelled, icon-bearing button —… | app.py:setup_toolbar, mw_backup_restore.py:do_backup; lang/*.txt (toolbar.backup) |
+| UIR-087 | The main-window toolbar (UIR-071) shall provide a **Restore** action — a labelled, icon-bearing button —… | app.py:setup_toolbar, mw_backup_restore.py:do_restore; lang/*.txt (toolbar.restore) |
+| UIR-088 | The Backup/Restore confirmation dialog (FR-152) shall be a modal dialog titled "Confirm Backup"/"Confirm Restore" that… | mw_backup_restore.py:_on_backup_restore_confirm; lang/*.txt (dialog.backup_restore.*, button.continue); FR-152 |
 
 ## 4.16 Manual Window
 
@@ -506,7 +506,7 @@ _394 requirements across 54 sections._
 |----|---------|------|
 | IFR-001 | The application shall communicate with the remote CP/M system over a serial (RS-232 style) communications… | serial_manager.py:SerialManager |
 | IFR-002 | The application shall support configuring two logical serial ports — a Terminal Port and a… | config_dialogs.py:SerialConfigDialog, serial_manager.py:SerialManager |
-| IFR-003 | The application shall enumerate the serial ports installed on the host and present them for… | app.py:menu_serial_config |
+| IFR-003 | The application shall enumerate the serial ports installed on the host and present them for… | mw_config.py:menu_serial_config |
 | IFR-004 | Configuration data shall be exchanged with the file system as JSON files | config_handler.py:ConfigHandler, config_handler.py:load_json, config_handler.py:save_json; tests test_config_handler.py |
 
 ## 6.1 Line filtering
@@ -584,19 +584,19 @@ _394 requirements across 54 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| DR-045 | The transfer history (FR-140/FR-141) shall be stored as a UTF-8 JSON file — a list… | utils/transfer_history.py (DEFAULT_HISTORY_FILENAME, default_history_path, _read_file, _write_file); tests test_transfer_history.py |
+| DR-045 | The transfer history (FR-140/FR-141) shall be stored as a UTF-8 JSON file — a list… | transfer_history.py:TransferHistory, transfer_history.py:default_history_path, transfer_history.py:_read_file, transfer_history.py:_write_file (default name DEFAULT_HISTORY_FILENAME); tests test_transfer_history.py |
 
 ## 6.9 CP/M file-naming convention
 
 | ID | Summary | Impl |
 |----|---------|------|
-| DR-046 | A **CP/M 8.3 file name** (used by the upload validation of FR-148/FR-149) shall consist of… | terminal/cpm_parser.py:CPMParser.is_valid_8_3, suggest_8_3, CPM_INVALID_CHARS; tests test_filename_validation.py |
+| DR-046 | A **CP/M 8.3 file name** (used by the upload validation of FR-148/FR-149) shall consist of… | cpm_parser.py:is_valid_8_3, cpm_parser.py:suggest_8_3, cpm_parser.py:CPM_INVALID_CHARS; tests test_filename_validation.py |
 
 ## 6.10 Bundled user manual
 
 | ID | Summary | Impl |
 |----|---------|------|
-| DR-047 | The user manual (FR-023) shall ship with the application as a UTF-8 Markdown file cpm_fm_manual.md… | gui/manual_dialog.py (MANUAL_PATH, load_manual_markdown, render_manual_html); _pyinstaller_common.py:build_datas/HIDDEN_IMPORTS; pyproject.toml (markdown dependency, docs/*.md package data) |
+| DR-047 | The user manual (FR-023) shall ship with the application as a UTF-8 Markdown file cpm_fm_manual.md… | manual_dialog.py:load_manual_markdown, manual_dialog.py:render_manual_html (manual at MANUAL_PATH); _pyinstaller_common.py:build_datas/HIDDEN_IMPORTS; pyproject.toml (markdown dependency, docs/*.md package data) |
 | DR-047a | The file shall be located inside the package at src/cpm_fm/docs/, resolved at run time relative… | — |
 | DR-047b | The file shall be rendered to HTML for display (UIR-091) using the markdown library with… | — |
 | DR-047c | A missing or unreadable file shall not block opening the Manual Window (UIR-091)… | — |
@@ -605,9 +605,9 @@ _394 requirements across 54 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| CR-010 | The Copy to Remote and Copy to Host actions shall be guarded so that a… | app.py:do_copy_to_remote, do_copy_to_host |
+| CR-010 | The Copy to Remote and Copy to Host actions shall be guarded so that a… | mw_transfer_batches.py:do_copy_to_remote, mw_transfer_batches.py:do_copy_to_host |
 | CR-011 | The following settings are persisted but their behaviour is deferred to a future release and… | survey of app.py |
-| CR-015 | Internationalisation (FR-121) shall translate only human-facing prose… | gui/config_dialogs.py (field label_key translated, option values not); FR-121 |
+| CR-015 | Internationalisation (FR-121) shall translate only human-facing prose… | config_dialogs.py:ConfigDialog (field label_key translated, option values not), transfer_history_dialog.py:_cell_text; FR-121 |
 
 ## 8. Non-Functional Requirements
 
@@ -666,7 +666,7 @@ _394 requirements across 54 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| NFR-001 | The application shall remain responsive during serial reads and file transfers… | serial_manager.py:_read_loop, app.py transfer threads; v1.3 UI migration; tests test_serial_manager.py (read-loop dispatch & pause/resume) |
+| NFR-001 | The application shall remain responsive during serial reads and file transfers… | serial_manager.py:_read_loop, mw_transfer_batches.py transfer threads; v1.3 UI migration; tests test_serial_manager.py (read-loop dispatch & pause/resume) |
 | NFR-001a | Serial reads shall run on a background daemon thread | — |
 | NFR-001b | Each file transfer shall run on its own background thread | — |
 | NFR-001c | All GUI updates originating from those threads shall be marshalled onto the Qt GUI (main)… | — |
