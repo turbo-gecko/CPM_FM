@@ -182,6 +182,10 @@ For the findings the user confirms are in scope, produce a concrete, ordered pla
   (`python tools/traceability_sync/generate_views.py`) and re-run
   `generate_views.py --check` + `agent_toolset.py --coverage` to confirm the trace
   is clean.
+- For any plan item that changes user-visible behaviour, include a step to update
+  the end-user manual (`src/cpm_fm/docs/cpm_fm_manual.md`) — affected section(s),
+  Table of Contents, and Reference: Default Settings table — and bump its version
+  line to match `src/version.txt` (distinct from `docs/manual_test_plan.md`).
 - Route any *spec* edit (new/changed requirement, resolved ambiguity) through the
   `requirements-check` workflow, not this one.
 - Sequence by dependency and risk; call out items blocked pending Step 7
