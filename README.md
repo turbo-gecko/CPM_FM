@@ -3,6 +3,11 @@
 A cross-platform PySide6 desktop app for transferring files between a modern host and legacy
 [CP/M](https://en.wikipedia.org/wiki/CP/M) systems over a serial link, using the X-Modem protocol.
 
+>## Note (2026-06-27)
+>From version 2.14.2, major code, document and test refactoring occured to improve the
+>ability to make sure that requirements, code and tests are able to be kept in sync. If
+>you have cloned from an earlier version, expect a large number of changes to the project.
+
 ## Features
 
 - Browse host and remote (CP/M) file listings side by side, with a draggable splitter.
