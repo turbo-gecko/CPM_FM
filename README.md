@@ -108,6 +108,15 @@ ruff format src tests       # format
 mypy src                    # type-check
 ```
 
+Optionally install the pre-commit hooks (`.pre-commit-config.yaml`) to run the
+same lint/format and requirement-view freshness checks CI runs, before each
+commit:
+
+```bash
+pre-commit install          # one-time, after `pip install -e .[dev]`
+pre-commit run --all-files  # run the hooks manually
+```
+
 ## Project layout
 
 ```

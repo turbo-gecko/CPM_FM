@@ -1,0 +1,39 @@
+# Local pre-commit hooks that mirror the CI "Lint" and "Check requirement
+# views are in sync" steps (.github/workflows/ci.yml), so drift is caught
+# before a push instead of failing CI.
+#
+# Setup (once):   pip install pre-commit && pre-commit install
+# Run manually:   pre-commit run --all-files
+#
+# These use `repo: local` and the tools already installed via `.[dev]`, so
+# the hook versions always match what CI and the project pin — no second,
+# separately-pinned ruff to drift out of step.
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check (src tests)
+        entry: ruff check
+        language: system
+        types: [python]
+        files: ^(src|tests)/
+        args: [src, tests]
+        pass_filenames: false
+
+      - id: ruff-format
+        name: ruff format --check (src tests)
+        entry: ruff format --check
+        language: system
+        types: [python]
+        files: ^(src|tests)/
+        args: [src, tests]
+        pass_filenames: false
+
+      - id: requirement-views-fresh
+        name: requirement views in sync
+        # Fails if docs/requirements_views/ is stale vs the SRS / architecture
+        # doc / code Satisfies: tags. Also runs the table-structure validator.
+        entry: python tools/traceability_sync/generate_views.py --check
+        language: system
+        pass_filenames: false
+        files: ^(src/.*\.py|docs/.*\.md|tools/traceability_sync/.*\.py)$
