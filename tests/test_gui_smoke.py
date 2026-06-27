@@ -111,7 +111,7 @@ def _arm_transfer(win, monkeypatch, success=True, calls=None):
         os.path.join(tempfile.mkdtemp(prefix="cpm_fm_hist_"), "history.json")
     )
     monkeypatch.setattr(win.serial_mgr, "send_data", lambda *a, **k: None)
-    monkeypatch.setattr("cpm_fm.app.XModem", _fake_xmodem_cls(success, calls))
+    monkeypatch.setattr("cpm_fm.gui.mw_transfer_batches.XModem", _fake_xmodem_cls(success, calls))
     # Neutralise worker-thread sleeps (launch delay, FR-109 inter-file idle/settle)
     # so batch tests run fast while still exercising the real wait logic.
     monkeypatch.setattr("cpm_fm.app.time.sleep", lambda *a, **k: None)
@@ -1484,7 +1484,7 @@ def _arm_transfer_with_xmodem(win, monkeypatch, xmodem_cls):
         os.path.join(tempfile.mkdtemp(prefix="cpm_fm_hist_"), "history.json")
     )
     monkeypatch.setattr(win.serial_mgr, "send_data", lambda *a, **k: None)
-    monkeypatch.setattr("cpm_fm.app.XModem", xmodem_cls)
+    monkeypatch.setattr("cpm_fm.gui.mw_transfer_batches.XModem", xmodem_cls)
     monkeypatch.setattr("cpm_fm.app.time.sleep", lambda *a, **k: None)
 
 
