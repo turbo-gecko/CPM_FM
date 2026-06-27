@@ -48,6 +48,10 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "rename_remote_cmd": "REN $2=$1",
     "delete_remote_cmd": "ERA $1",
     "host_directory": "",
+    # FR-047/UIR-059: optional boot-into-CP/M keystroke sequence. A newline-
+    # separated script (SEND/SENDRAW/WAIT/WAITFOR directives) run to drive a
+    # remote that does not boot straight into CP/M. Empty disables the feature.
+    "boot_sequence": "",
 }
 
 

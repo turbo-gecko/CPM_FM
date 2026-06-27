@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLineEdit,
+    QPlainTextEdit,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -30,7 +31,7 @@ class ConfigDialog(QDialog):
     Builds a two-column form (UIR-021) from a declarative field list. Each
     field is a dict with keys: ``key``, ``label_key`` (an i18n key resolved via
     :func:`tr` at build time — FR-121), ``type`` ("dropdown", "text",
-    "directory" or "checkbox"), ``default``, and optionally ``options`` (dropdown),
+    "directory", "checkbox" or "multiline"), ``default``, and optionally ``options`` (dropdown),
     ``maxlength`` (text), ``int_range`` (text, an inclusive ``(lo, hi)`` tuple)
     and ``group`` (an i18n key for a titled :class:`QGroupBox` the field is
     placed in). Fields that share a ``group`` value are gathered into one boxed,
@@ -153,6 +154,13 @@ class ConfigDialog(QDialog):
             check.setChecked(current.upper() == "ON")
             self.entries[key] = check
             widget = check
+        elif field["type"] == "multiline":
+            # UIR-059: a multi-line free-text editor (e.g. the boot-sequence
+            # script). Persisted verbatim, newlines included.
+            editor = QPlainTextEdit()
+            editor.setPlainText(current)
+            self.entries[key] = editor
+            widget = editor
         elif field["type"] == "directory":
             # Create a horizontal layout for the path and the browse button
             dir_container = QWidget()
@@ -200,6 +208,8 @@ class ConfigDialog(QDialog):
             return widget.currentText()
         if isinstance(widget, QCheckBox):
             return "ON" if widget.isChecked() else "OFF"
+        if isinstance(widget, QPlainTextEdit):
+            return widget.toPlainText()
         return widget.text()
 
     def save(self):
@@ -339,14 +349,14 @@ class GeneralConfigDialog(ConfigDialog):
     Specialized dialog for General Configuration
     (SRS docs/cpm_fm_requirements.md, UIR-040 through UIR-048).
 
-    Satisfies: UIR-040-UIR-058.
+    Satisfies: UIR-040-UIR-059.
     """
 
     def __init__(self, parent, settings, callback, window_state=None):
         """
         Satisfies: UIR-041, UIR-042, UIR-045, UIR-046, UIR-047, UIR-048,
         UIR-049, UIR-050, UIR-052, UIR-053, UIR-054, UIR-055, UIR-056,
-        UIR-058.
+        UIR-058, UIR-059.
 
         Command text fields limited to 79 characters. UIR-041: the remote
         command fields (List Files, Receive from Remote, Send to Remote, Rename,
@@ -487,6 +497,15 @@ class GeneralConfigDialog(ConfigDialog):
                 "key": "host_directory",
                 "label_key": "config.general.host_directory",
                 "type": "directory",
+                "default": "",
+            },
+            # UIR-059: optional multi-line boot-into-CP/M keystroke sequence
+            # (FR-047). Placed last so the tall editor sits at the bottom of the
+            # ungrouped layout. Empty by default — feature disabled.
+            {
+                "key": "boot_sequence",
+                "label_key": "config.general.boot_sequence",
+                "type": "multiline",
                 "default": "",
             },
         ]

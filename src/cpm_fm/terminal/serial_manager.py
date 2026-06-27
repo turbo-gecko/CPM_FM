@@ -209,6 +209,26 @@ class SerialManager:
                 print(f"Error sending data: {e}")
         return False
 
+    def send_raw(self, port_type: str, data: bytes) -> bool:
+        """
+        Sends raw bytes through the specified port, unchanged.
+
+        Unlike :meth:`send_data` (which ASCII-encodes a string), this writes the
+        given bytes verbatim, so control characters above 0x7F survive intact.
+        Used by the boot-sequence ``SENDRAW`` directive (FR-047) for keys such as
+        Ctrl-C (0x03) or ESC (0x1B).
+
+        Satisfies: FR-047.
+        """
+        port = self.terminal_port if port_type == "terminal" else self.transport_port
+        if port and port.is_open:
+            try:
+                port.write(data)
+                return True
+            except Exception as e:
+                print(f"Error sending raw data: {e}")
+        return False
+
     def _read_loop(self):
         """
         Background thread to read data from the terminal port.

@@ -73,6 +73,8 @@ status.updating_remote_list = 원격 파일 목록 업데이트 중...
 status.changing_drive = 드라이브 {drive}:(으)로 변경 중...
 status.remote_list_updated = 원격 파일 목록 업데이트됨
 status.checking_remote_fs = 원격 파일 시스템 확인 중
+status.boot_running = 부팅 시퀀스 실행 중
+status.boot_failed = 부팅 시퀀스가 CP/M에 도달하지 못함
 status.loaded_config = 설정 로드됨: {filename}
 status.saved_config = 설정이 {path}에 저장됨
 status.new_config_created = 새 설정이 생성됨
@@ -159,6 +161,7 @@ terminal.clear = 지우기
 terminal.local_echo = 로컬 에코
 terminal.autoscroll = 자동 스크롤
 terminal.send = 전송
+terminal.boot = CP/M으로 부팅
 
 # --- Serial Configuration dialog ----------------------------------------------
 config.serial.title = 시리얼 설정
@@ -192,6 +195,7 @@ config.general.viewer = 뷰어/편집기
 config.general.rename_remote = 이름 바꾸기
 config.general.delete_remote = 삭제
 config.general.host_directory = 기본 호스트 디렉터리
+config.general.boot_sequence = 부팅 시퀀스
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = 기록

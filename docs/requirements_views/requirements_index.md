@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_404 requirements across 54 sections._
+_409 requirements across 54 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -77,9 +77,12 @@ _404 requirements across 54 sections._
 | FR-041 | After the Connect workflow has set both the Terminal status flag (FR-032) and the Transport… | mw_remote.py:do_connect, mw_remote.py:_do_connect_probe_logic, mw_remote.py:_capture_terminal_response, cpm_parser.py:drive_prompt_letter |
 | FR-042 | If a drive prompt is detected, the application shall set the remote drive-selection drop-down (UIR-017)… | mw_remote.py:_on_connect_probe_ok, mw_remote.py:refresh_remote_files, connect_probe_ok signal |
 | FR-043 | If no drive prompt is detected, the application shall send the configured EOL character(s) on… | mw_remote.py:_do_connect_probe_logic |
-| FR-044 | If no drive prompt is detected after the retry (FR-043), the application shall inform the… | mw_remote.py:_do_connect_probe_logic, mw_remote.py:_on_connect_probe_failed, connect_probe_failed signal, gui/remote_unavailable_dialog.py:RemoteUnavailableDialog |
+| FR-044 | If no drive prompt is detected after the retry (FR-043), the application shall first attempt… | mw_remote.py:_do_connect_probe_logic, mw_remote.py:_on_connect_probe_failed, connect_probe_failed signal, gui/remote_unavailable_dialog.py:RemoteUnavailableDialog |
 | FR-045 | The Remote Filesystem Unavailable dialog (UIR-092) shall offer three actions and the application shall act… | mw_remote.py:_on_connect_probe_failed, mw_remote.py:do_disconnect, mw_remote.py:show_terminal |
 | FR-046 | The remote-file-system probe (FR-041–FR-045) shall be performed only when both the Terminal and Transport status… | mw_remote.py:do_connect |
+| FR-047 | The application shall support an optional, user-configured **boot sequence** (the boot_sequence setting, UIR-059… | terminal/boot_sequence.py:parse_boot_sequence, mw_remote.py:run_boot_sequence |
+| FR-048 | If the post-connect probe detects no drive prompt after its retry (FR-043) and a non-empty… | mw_remote.py:_do_connect_probe_logic, mw_remote.py:run_boot_sequence |
+| FR-049 | When the Terminal Window's "Boot into CP/M" button (UIR-068) is pressed, the application shall execute… | mw_remote.py:run_boot_sequence, mw_remote.py:show_terminal, terminal_window.py:create_widgets |
 
 ## 3.6 Disconnecting from the remote system
 
@@ -408,6 +411,7 @@ _404 requirements across 54 sections._
 | UIR-065 | The Terminal Window shall provide a "Local Echo" checkbox, centred, that is disabled by default | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets |
 | UIR-066 | The Terminal Window shall provide an "Autoscroll" checkbox, right-aligned, that is enabled by default | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets |
 | UIR-067 | The Terminal Window shall provide a "Transmit" group containing a single-line text field aligned left… | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets |
+| UIR-068 | The Terminal Window shall provide a "Boot into CP/M" button, in the control row (UIR-064)… | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets, terminal_window.py:set_boot_enabled, mw_remote.py:show_terminal |
 
 ## 4.6 Visual theme and modern layout (v1.3)
 
@@ -441,6 +445,7 @@ _404 requirements across 54 sections._
 | UIR-057b | For the Rename action the field shall be editable and pre-populated with the file's name… | — |
 | UIR-057c | The dialog title shall name the action and target (e.g… | — |
 | UIR-058 | The General Configuration Dialog shall provide an "Echo Transfer Data" dropdown (OFF/ON, default OFF), persisted… | config_dialogs.py:GeneralConfigDialog; FR-086 |
+| UIR-059 | The General Configuration Dialog shall provide a multi-line "Boot Sequence" text field, persisted as the… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:_build_field |
 | UIR-089 | The General Configuration Dialog shall provide, in the "Remote" group below the Send to Remote… | config_dialogs.py:GeneralConfigDialog, ConfigDialog._build_field checkbox type; mw_transfers.py:_xmodem_1k_enabled; NFR-003b, NFR-003g |
 | UIR-090 | The General Configuration Dialog shall provide two text fields (limited to 79 characters, default blank)… | config_dialogs.py:GeneralConfigDialog; mw_transfers.py:_issue_remote_cmd |
 

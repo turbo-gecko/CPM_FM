@@ -73,6 +73,8 @@ status.updating_remote_list = 正在更新远程文件列表...
 status.changing_drive = 切换到驱动器 {drive}:...
 status.remote_list_updated = 远程文件列表已更新
 status.checking_remote_fs = 正在检查远程文件系统
+status.boot_running = 正在执行启动序列
+status.boot_failed = 启动序列未能进入 CP/M
 status.loaded_config = 配置已加载: {filename}
 status.saved_config = 配置已保存到 {path}
 status.new_config_created = 新配置已创建
@@ -159,6 +161,7 @@ terminal.clear = 清除
 terminal.local_echo = 本地回显
 terminal.autoscroll = 自动滚动
 terminal.send = 发送
+terminal.boot = 启动进入 CP/M
 
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = 串口配置
@@ -192,6 +195,7 @@ config.general.viewer = 查看器/编辑器
 config.general.rename_remote = 重命名
 config.general.delete_remote = 删除
 config.general.host_directory = 默认主机目录
+config.general.boot_sequence = 启动序列
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = 历史

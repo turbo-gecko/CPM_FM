@@ -25,9 +25,9 @@ class TerminalWindow(QMainWindow):
     Satisfies: UIR-060-UIR-067.
     """
 
-    def __init__(self, parent, send_callback, clear_callback=None):
+    def __init__(self, parent, send_callback, clear_callback=None, boot_callback=None):
         """
-        Satisfies: UIR-060.
+        Satisfies: UIR-060, UIR-068.
 
         No Qt parent, so this is an independent non-modal top-level window.
         The owning MainWindow keeps a reference to it.
@@ -42,6 +42,8 @@ class TerminalWindow(QMainWindow):
         # Invoked when the Clear button is pressed, so the owner can clear the
         # receive/transmit data buffers alongside the display (FR-090/FR-092).
         self.clear_callback = clear_callback
+        # FR-049/UIR-068: invoked when the "Boot into CP/M" button is pressed.
+        self.boot_callback = boot_callback
 
         self.create_widgets()
 
@@ -80,6 +82,14 @@ class TerminalWindow(QMainWindow):
         self.btn_clear = QPushButton(clicked=self.clear_text)
         self._register_text(self.btn_clear.setText, "terminal.clear")
         ctrl_layout.addWidget(self.btn_clear)
+
+        # UIR-068: "Boot into CP/M" button, to the right of Clear. Disabled until
+        # the owner enables it via set_boot_enabled (i.e. when a boot sequence is
+        # configured).
+        self.btn_boot = QPushButton(clicked=self._on_boot)
+        self._register_text(self.btn_boot.setText, "terminal.boot")
+        self.btn_boot.setEnabled(False)
+        ctrl_layout.addWidget(self.btn_boot)
         ctrl_layout.addStretch()
 
         self.chk_echo = QCheckBox()  # UIR-065: disabled by default.
@@ -109,6 +119,21 @@ class TerminalWindow(QMainWindow):
         self.receive_area.clear()
         if self.clear_callback:
             self.clear_callback()
+
+    def _on_boot(self):
+        """Run the configured boot sequence (FR-049).
+
+        Satisfies: FR-049, UIR-068.
+        """
+        if self.boot_callback:
+            self.boot_callback()
+
+    def set_boot_enabled(self, enabled: bool):
+        """Enable/disable the "Boot into CP/M" button (UIR-068).
+
+        Satisfies: UIR-068.
+        """
+        self.btn_boot.setEnabled(enabled)
 
     def send_text(self):
         """Satisfies: FR-096.

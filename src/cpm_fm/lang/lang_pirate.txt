@@ -78,6 +78,8 @@ status.updating_remote_list = Refreshin' foreign charts...
 status.changing_drive = Changin' course to drive {drive}:...
 status.remote_list_updated = Foreign charts updated
 status.checking_remote_fs = Scoutin' the remote file system
+status.boot_running = Runnin' the wakin' orders
+status.boot_failed = The wakin' orders ne'er reached CP/M
 status.loaded_config = Loaded orders: {filename}
 status.saved_config = Stashed orders in {path}
 status.new_config_created = New ship's orders created
@@ -164,6 +166,7 @@ terminal.clear = Scour the Deck
 terminal.local_echo = Echo the Shout
 terminal.autoscroll = Auto-drift
 terminal.send = Launch Cargo
+terminal.boot = Hoist into CP/M
 
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = Signal Flag Config
@@ -197,6 +200,7 @@ config.general.viewer = Spyglass/Carver
 config.general.rename_remote = Rename
 config.general.delete_remote = Delete
 config.general.host_directory = Home Port Directory
+config.general.boot_sequence = Wakin' Orders
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = Logbook

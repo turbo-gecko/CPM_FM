@@ -73,6 +73,8 @@ status.updating_remote_list = Ενημέρωση λίστας απομακρυσ
 status.changing_drive = Αλλαγή σε δίσκο {drive}:...
 status.remote_list_updated = Η λίστα απομακρυσμένων αρχείων ενημερώθηκε
 status.checking_remote_fs = Έλεγχος απομακρυσμένου συστήματος αρχείων
+status.boot_running = Εκτέλεση ακολουθίας εκκίνησης
+status.boot_failed = Η ακολουθία εκκίνησης δεν έφτασε στο CP/M
 status.loaded_config = Φόρτωση ρυθμίσεων: {filename}
 status.saved_config = Αποθήκευση ρυθμίσεων στο {path}
 status.new_config_created = Δημιουργήθηκαν νέες ρυθμίσεις
@@ -159,6 +161,7 @@ terminal.clear = Καθαρισμός
 terminal.local_echo = Τοπική αντήχηση
 terminal.autoscroll = Αυτόματη κύλιση
 terminal.send = Αποστολή
+terminal.boot = Εκκίνηση σε CP/M
 
 # --- Serial Configuration dialog ------------------------------------------------
 config.serial.title = Σειριακές Ρυθμίσεις
@@ -192,6 +195,7 @@ config.general.viewer = Προβολέας/Επεξεργαστής
 config.general.rename_remote = Μετονομασία
 config.general.delete_remote = Διαγραφή
 config.general.host_directory = Προεπιλεγμένος κατάλογος ξενιστή
+config.general.boot_sequence = Ακολουθία εκκίνησης
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = Ιστορικό

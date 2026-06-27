@@ -89,6 +89,8 @@ status.updating_remote_list = Updating remote file list...
 status.changing_drive = Changing to drive {drive}:...
 status.remote_list_updated = Remote file list updated
 status.checking_remote_fs = Checking remote file system
+status.boot_running = Running boot sequence
+status.boot_failed = Boot sequence did not reach CP/M
 status.loaded_config = Loaded config: {filename}
 status.saved_config = Saved config to {path}
 status.new_config_created = New configuration created
@@ -188,6 +190,7 @@ terminal.clear = Clear
 terminal.local_echo = Local Echo
 terminal.autoscroll = Autoscroll
 terminal.send = Send
+terminal.boot = Boot into CP/M
 
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = Serial Config
@@ -221,6 +224,7 @@ config.general.viewer = Viewer/Editor
 config.general.rename_remote = Rename
 config.general.delete_remote = Delete
 config.general.host_directory = Default Host Directory
+config.general.boot_sequence = Boot Sequence
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 history.title = Transfer History

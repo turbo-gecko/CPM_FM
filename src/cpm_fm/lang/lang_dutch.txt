@@ -73,6 +73,8 @@ status.updating_remote_list = Afstandsbestandslijst bijwerken...
 status.changing_drive = Overschakelen naar station {drive}:...
 status.remote_list_updated = Afstandsbestandslijst bijgewerkt
 status.checking_remote_fs = Extern bestandssysteem controleren
+status.boot_running = Opstartreeks wordt uitgevoerd
+status.boot_failed = Opstartreeks heeft CP/M niet bereikt
 status.loaded_config = Configuratie geladen: {filename}
 status.saved_config = Configuratie opgeslagen in {path}
 status.new_config_created = Nieuwe configuratie aangemaakt
@@ -159,6 +161,7 @@ terminal.clear = Wissen
 terminal.local_echo = Lokale echo
 terminal.autoscroll = Automatisch scrollen
 terminal.send = Verzenden
+terminal.boot = Opstarten in CP/M
 
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = Seriële Configuratie
@@ -192,6 +195,7 @@ config.general.viewer = Viewer/Editor
 config.general.rename_remote = Hernoemen
 config.general.delete_remote = Verwijderen
 config.general.host_directory = Standaard hostmap
+config.general.boot_sequence = Opstartreeks
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = Geschiedenis

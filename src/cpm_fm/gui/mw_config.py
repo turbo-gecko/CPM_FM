@@ -233,6 +233,10 @@ class _ConfigMixin(MainWindowMixinBase):
                 self.host_dir = new_host_dir
                 self.refresh_host_files()
 
+            # UIR-068: a change to the boot sequence may enable/disable the
+            # Terminal Window's boot button while that window is open.
+            self._refresh_boot_button()
+
             # FR-021a: persist only the general settings to the active config
             # file, leaving the serial settings in that file untouched. If no
             # file is loaded the helper warns and the change stays session-only.
