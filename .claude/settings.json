@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"SessionStart\\\",\\\"additionalContext\\\":\\\"CPM_FM project rule: BEFORE any work in this repo (searching, editing, planning, or delegating to sub-agents), read AGENTS.md and CLAUDE.md first. Any feature or requirement change MUST follow the mandatory 8-step Requirement-change workflow in AGENTS.md (update SRS, implement with Satisfies tags, regenerate views, add Verifies-tagged tests, run pytest, update manual test plan/scorecard, bump version). Present a plan and get approval before implementing.\\\"}}\"",
+            "statusMessage": "Loading CPM_FM project rules"
+          }
+        ]
+      }
+    ]
+  }
+}
