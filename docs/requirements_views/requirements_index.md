@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_396 requirements across 54 sections._
+_404 requirements across 54 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -74,6 +74,12 @@ _396 requirements across 54 sections._
 | FR-038 | On connect, if the Transport Port is different from the Terminal Port and is not… | mw_remote.py:do_connect, serial_manager.py:open_port |
 | FR-039 | If the Transport Port cannot be opened, the application shall display an error dialog containing… | mw_remote.py:do_connect |
 | FR-040 | If the Transport Port is successfully opened, the application shall set the Transport status flag… | mw_remote.py:do_connect, serial_manager.py:open_port |
+| FR-041 | After the Connect workflow has set both the Terminal status flag (FR-032) and the Transport… | mw_remote.py:do_connect, mw_remote.py:_do_connect_probe_logic, mw_remote.py:_capture_terminal_response, cpm_parser.py:drive_prompt_letter |
+| FR-042 | If a drive prompt is detected, the application shall set the remote drive-selection drop-down (UIR-017)… | mw_remote.py:_on_connect_probe_ok, mw_remote.py:refresh_remote_files, connect_probe_ok signal |
+| FR-043 | If no drive prompt is detected, the application shall send the configured EOL character(s) on… | mw_remote.py:_do_connect_probe_logic |
+| FR-044 | If no drive prompt is detected after the retry (FR-043), the application shall inform the… | mw_remote.py:_do_connect_probe_logic, mw_remote.py:_on_connect_probe_failed, connect_probe_failed signal, gui/remote_unavailable_dialog.py:RemoteUnavailableDialog |
+| FR-045 | The Remote Filesystem Unavailable dialog (UIR-092) shall offer three actions and the application shall act… | mw_remote.py:_on_connect_probe_failed, mw_remote.py:do_disconnect, mw_remote.py:show_terminal |
+| FR-046 | The remote-file-system probe (FR-041–FR-045) shall be performed only when both the Terminal and Transport status… | mw_remote.py:do_connect |
 
 ## 3.6 Disconnecting from the remote system
 
@@ -499,6 +505,7 @@ _396 requirements across 54 sections._
 | UIR-091b | Headings shall carry GitHub-style anchors so the manual's table-of-contents links navigate within the document… | — |
 | UIR-091c | The window shall provide a single **Close** button (centred per UIR-075) that dismisses it | — |
 | UIR-091d | If the manual file cannot be read, the window shall display an explanatory message rather… | — |
+| UIR-092 | The Remote Filesystem Unavailable dialog (FR-044) shall be a modal dialog whose body informs the… | gui/remote_unavailable_dialog.py:RemoteUnavailableDialog; lang/*.txt (dialog.remote_unavailable.title, dialog.remote_unavailable.body, button.abort, button.continue, button.terminal); FR-044, FR-045 |
 
 ## 5. External Interface Requirements
 
@@ -543,6 +550,7 @@ _396 requirements across 54 sections._
 | DR-025 | The parser shall return an empty dictionary if no valid file entries are found | cpm_parser.py:CPMParser, cpm_parser.py:parse_dir_output |
 | DR-026 | The parser shall tolerate irregular spacing, extra colons within filenames, and mixed line endings (\n… | cpm_parser.py:CPMParser, cpm_parser.py:parse_dir_output |
 | DR-033 | The drive-prompt detection routine shall report a drive prompt for drive X as present when… | cpm_parser.py:has_drive_prompt; FR-101, FR-102; tests test_cpm_parser.py |
+| DR-033a | The application shall provide a drive-prompt letter-extraction routine that, applying the same matching rule as… | cpm_parser.py:drive_prompt_letter; FR-041, FR-042; tests test_cpm_parser.py |
 
 ## 6.4 Parser constraints
 

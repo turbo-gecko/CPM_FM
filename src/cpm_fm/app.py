@@ -132,6 +132,15 @@ class MainWindow(
     # worker thread when the drive's prompt does not appear, so the "Drive not
     # found" dialog and the list-clear run on the GUI thread (NFR-004).
     drive_not_found = Signal(str)
+    # FR-041/FR-042: emitted (with the detected drive letter) from the
+    # post-connect probe worker thread when the remote returns a drive prompt,
+    # so the drive drop-down update and remote-list refresh run on the GUI
+    # thread (NFR-004).
+    connect_probe_ok = Signal(str)
+    # FR-044/FR-045: emitted from the post-connect probe worker thread when no
+    # drive prompt is returned after the retry, so the modal Remote Filesystem
+    # Unavailable dialog runs on the GUI thread (NFR-004).
+    connect_probe_failed = Signal()
     # FR-113: emitted (with the downloaded temp-file path) from the remote-view
     # worker thread once the file has been received, so the viewer is launched
     # on the GUI thread (NFR-004).
@@ -369,6 +378,8 @@ class MainWindow(
         self.transfer_file_started.connect(self._on_transfer_file_started)
         self.transfer_progress.connect(self._on_transfer_progress)
         self.drive_not_found.connect(self._on_drive_not_found)
+        self.connect_probe_ok.connect(self._on_connect_probe_ok)
+        self.connect_probe_failed.connect(self._on_connect_probe_failed)
         self.view_file_ready.connect(self._on_view_file_ready)
         self.transfer_cancelled.connect(self._on_transfer_cancelled)
         self.conflict_detected.connect(self._on_conflict_detected)

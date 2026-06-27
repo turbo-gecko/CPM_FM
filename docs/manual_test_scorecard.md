@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.20 |
-| Scorecard for plan version | 1.20 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.21 |
+| Scorecard for plan version | 1.21 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -70,6 +70,12 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-C04 | Bad transport port → "unable to be opened" | FR-039 | | | |
 | MT-C05 | Shared port → transport connected, no crash | FR-037 | | | |
 | MT-C06 | Connect does NOT open Terminal Window | FR-035/097 | | | |
+| MT-C11 | Connect probe → drive prompt sets drive + lists | FR-041/042 | | | |
+| MT-C12 | No drive prompt → modal Abort/Continue/Terminal | FR-041/043/044/045, UIR-092 | | | |
+| MT-C12a | Probe dialog Abort → ports closed, list cleared | FR-045 | | | |
+| MT-C12b | Probe dialog Continue → no action, ports stay open | FR-045 | | | |
+| MT-C12c | Probe dialog Terminal → Terminal Window opens, ports stay open | FR-045/097 | | | |
+| MT-C13 | ZCPR prompt (A0>/4A>) recognised by probe | DR-033/FR-042 | | | |
 | MT-C07 | Disconnect closes terminal; status + indicator | FR-050/052/053 | | | |
 | MT-C08 | Two-port disconnect closes both | FR-055/057 | | | |
 | MT-C09 | Clean disconnect clears remote list | FR-058 | | | |

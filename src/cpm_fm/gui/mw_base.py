@@ -76,6 +76,9 @@ class MainWindowMixinBase:
         conflict_detected: Any
         invalid_name_detected: Any
         backup_restore_confirm: Any
+        drive_not_found: Any
+        connect_probe_ok: Any
+        connect_probe_failed: Any
 
         # --- methods that remain on MainWindow / non-transfer sections ---
         def set_status(self, text: str) -> None: ...
