@@ -134,6 +134,23 @@ On Windows, prefer the array/sequential PowerShell forms documented in
 and run pytest in a single chained call). For building a redistributable executable,
 see [Building a standalone package](#building-a-standalone-package).
 
+#### Integration (hardware-in-the-loop) suite
+
+The [`integration/`](integration/) suite drives the **real** app against a **real CP/M
+machine** over serial — X-Modem protocol round-trips, the GUI over real serial, and
+widget-tree look-and-feel assertions. It is **bench-only**: not run by CI or the default
+`pytest` (the root run's `testpaths` is `tests/`), and it needs a configured target
+(`integration/hil_config.json`, gitignored). Run it explicitly when hardware is connected:
+
+```bash
+pytest integration/                    # default target; --target / --all-targets pick rigs
+pytest integration/ --run-destructive  # also the backup/restore (whole-drive-wipe) cases
+python integration/run.py              # interactive target picker
+```
+
+See [`integration/README.md`](integration/README.md) for wiring, target setup, and the
+manual-vs-automated split. It is additive test infrastructure and defines no requirements.
+
 ### Keeping requirements, code, tests, and docs in sync
 
 The authoritative documents are:
@@ -168,14 +185,22 @@ mandatory workflow; see [`AGENTS.md`](AGENTS.md) for the agent-facing version):
    `Verifies:` line citing the requirement ID(s). Run `pytest`, then check coverage:
    `python tools/traceability_sync/agent_toolset.py --coverage` (lists requirements with
    no verifying test and any stale tags).
-5. **Iterate steps 2–4** until the suite is green and the trace is clean
+5. **Update the integration (HIL) suite** ([`integration/`](integration/)) when the change
+   touches behaviour it covers — the X-Modem protocol round-trips, the GUI-over-real-serial
+   flows, or the widget-tree look-and-feel. Add/adjust the relevant `integration/test_*.py`
+   with accurate `@pytest.mark.mt("MT-..", "FR-..")` tags and verify with a bench run
+   (`pytest integration/`; add `--run-destructive` for backup/restore) when hardware is
+   available, or note that the bench run is pending. The HIL suite needs a real CP/M peer,
+   so it is **not** run by CI or the default `pytest`; state explicitly when no integration
+   change is needed rather than skipping it.
+6. **Iterate steps 2–4** until the suite is green and the trace is clean
    (`generate_views.py --check` exits 0, no stale tags).
-6. **Update the manual test plan** ([`docs/manual_test_plan.md`](docs/manual_test_plan.md))
+7. **Update the manual test plan** ([`docs/manual_test_plan.md`](docs/manual_test_plan.md))
    and bump its plan version.
-7. **Update the manual test scorecard**
+8. **Update the manual test scorecard**
    ([`docs/manual_test_scorecard.md`](docs/manual_test_scorecard.md)) to match, bumping
    its score version.
-8. **Record the change:** bump [`src/version.txt`](src/version.txt) and the SRS version
+9. **Record the change:** bump [`src/version.txt`](src/version.txt) and the SRS version
    field (DR-040/DR-041), add a row to
    [`docs/requirements_change_history.md`](docs/requirements_change_history.md), and — if
    a review resolved an ambiguity or gap — an entry in
@@ -199,7 +224,8 @@ flowchart TD
     G --> H[pytest + agent_toolset.py --coverage]
     H --> I{Suite green &<br/>trace clean?}
     I -- No --> E
-    I -- Yes --> J[Update manual test plan<br/>+ scorecard]
+    I -- Yes --> IT[Update integration/ HIL tests<br/>if HIL-covered + bench run<br/>pytest integration/]
+    IT --> J[Update manual test plan<br/>+ scorecard]
     J --> K[Bump version + SRS field<br/>+ change history / issue log]
     K --> L[Commit]
 ```
@@ -387,6 +413,13 @@ src/cpm_fm/          application package (src-layout)
   icons/             runtime window icon
   docs/              bundled user manual (cpm_fm_manual.md), shown by Help > Manual
 tests/               pytest suite (each test tagged with Verifies: requirement IDs)
+integration/         bench-only hardware-in-the-loop (HIL) suite, separate from tests/;
+                     run with `pytest integration/` (needs a real CP/M peer)
+  helpers/           peer + GUI drivers, config/settings-copy/integrity/dialogs/results
+  test_*.py          protocol, GUI, and visual tiers (tagged with MT-IDs + requirement IDs)
+  run.py             interactive target picker
+  hil_config.example.json  target-config template (real hil_config.json is gitignored)
+  README.md          wiring, target setup, safety, and the manual-vs-automated split
 examples/            sample serial/general settings JSON
 tools/               developer tooling, incl. traceability_sync/ (view generator,
                      coverage/trace helper)
