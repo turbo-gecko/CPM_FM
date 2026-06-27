@@ -143,7 +143,7 @@ def _arm(win, monkeypatch, calls, sent=None):
         monkeypatch.setattr(win.serial_mgr, "send_data", lambda *a, **k: None)
     else:
         monkeypatch.setattr(win.serial_mgr, "send_data", lambda *a, **k: sent.append(a))
-    monkeypatch.setattr("cpm_fm.app.XModem", _fake_xmodem_cls(calls))
+    monkeypatch.setattr("cpm_fm.gui.mw_transfer_batches.XModem", _fake_xmodem_cls(calls))
     monkeypatch.setattr("cpm_fm.app.time.sleep", lambda *a, **k: None)
     # No remote conflicts unless a test says otherwise.
     monkeypatch.setattr(win, "_fresh_remote_names", lambda: set())
@@ -312,7 +312,7 @@ def test_on_invalid_name_detected_records_choice_and_releases_worker(qapp, monke
             def exec(self):
                 return 1
 
-        monkeypatch.setattr("cpm_fm.app.FilenameValidationDialog", _FakeDialog)
+        monkeypatch.setattr("cpm_fm.gui.mw_transfer_guards.FilenameValidationDialog", _FakeDialog)
         win._invalid_name_answered.clear()
         win._on_invalid_name_detected("bad name.txt")
         assert win._invalid_name_result == (RENAME, "RENAMED.TXT")

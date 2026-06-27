@@ -78,7 +78,7 @@ def _arm(win, monkeypatch, calls):
         os.path.join(tempfile.mkdtemp(prefix="cpm_fm_hist_"), "history.json")
     )
     monkeypatch.setattr(win.serial_mgr, "send_data", lambda *a, **k: None)
-    monkeypatch.setattr("cpm_fm.app.XModem", _fake_xmodem_cls(calls))
+    monkeypatch.setattr("cpm_fm.gui.mw_transfer_batches.XModem", _fake_xmodem_cls(calls))
     monkeypatch.setattr("cpm_fm.app.time.sleep", lambda *a, **k: None)
 
 
@@ -213,7 +213,7 @@ def test_on_conflict_detected_records_choice_and_releases_worker(qapp, monkeypat
             def exec(self):
                 return 1
 
-        monkeypatch.setattr("cpm_fm.app.FileConflictDialog", _FakeDialog)
+        monkeypatch.setattr("cpm_fm.gui.mw_transfer_guards.FileConflictDialog", _FakeDialog)
         win._conflict_answered.clear()
         win._on_conflict_detected("FOO.TXT", "host")
         assert win._conflict_result == (SKIP, True)
