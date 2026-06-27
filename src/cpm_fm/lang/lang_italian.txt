@@ -73,6 +73,8 @@ status.updating_remote_list = Aggiornamento lista file remoti...
 status.changing_drive = Passaggio all'unità {drive}:...
 status.remote_list_updated = Lista file remoti aggiornata
 status.checking_remote_fs = Verifica del file system remoto
+status.boot_running = Esecuzione della sequenza di avvio
+status.boot_failed = La sequenza di avvio non ha raggiunto CP/M
 status.loaded_config = Configurazione caricata: {filename}
 status.saved_config = Configurazione salvata in {path}
 status.new_config_created = Nuova configurazione creata
@@ -159,6 +161,7 @@ terminal.clear = Cancella
 terminal.local_echo = Eco locale
 terminal.autoscroll = Scorrimento automatico
 terminal.send = Invia
+terminal.boot = Avvia in CP/M
 
 # --- Serial Configuration dialog ----------------------------------------------
 config.serial.title = Configurazione Seriale
@@ -192,6 +195,7 @@ config.general.viewer = Visualizzatore/Editor
 config.general.rename_remote = Rinomina
 config.general.delete_remote = Elimina
 config.general.host_directory = Directory host predefinita
+config.general.boot_sequence = Sequenza di avvio
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = Cronologia

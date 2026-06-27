@@ -73,6 +73,8 @@ status.updating_remote_list = Aktualizowanie listy plików zdalnych...
 status.changing_drive = Zmiana napędu na {drive}:...
 status.remote_list_updated = Lista plików zdalnych zaktualizowana
 status.checking_remote_fs = Sprawdzanie zdalnego systemu plików
+status.boot_running = Wykonywanie sekwencji rozruchowej
+status.boot_failed = Sekwencja rozruchowa nie osiągnęła CP/M
 status.loaded_config = Załadowano konfigurację: {filename}
 status.saved_config = Konfiguracja zapisana w {path}
 status.new_config_created = Utworzono nową konfigurację
@@ -159,6 +161,7 @@ terminal.clear = Wyczyść
 terminal.local_echo = Lokalny echo
 terminal.autoscroll = Automatyczne przewijanie
 terminal.send = Wyślij
+terminal.boot = Uruchom w CP/M
 
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = Konfiguracja portu szeregowego
@@ -192,6 +195,7 @@ config.general.viewer = Podgląd/Edytor
 config.general.rename_remote = Zmień nazwę
 config.general.delete_remote = Usuń
 config.general.host_directory = Domyślny katalog hosta
+config.general.boot_sequence = Sekwencja rozruchowa
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = Historia

@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.13.0**
+**Version 2.16.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -18,15 +18,16 @@ It works with real vintage CP/M hardware as well as emulators, provided they exp
 6. [Getting Started — A Typical Session](#6-getting-started--a-typical-session)
 7. [Configuration](#7-configuration)
 8. [Connecting and Disconnecting](#8-connecting-and-disconnecting)
-9. [Browsing Files](#9-browsing-files)
-10. [Transferring Files](#10-transferring-files)
-11. [Managing Files (Rename, Delete, View/Edit)](#11-managing-files-rename-delete-viewedit)
-12. [The Terminal Window](#12-the-terminal-window)
-13. [Transfer History](#13-transfer-history)
-14. [Backup and Restore](#14-backup-and-restore)
-15. [Language Support](#15-language-support)
-16. [Tips and Troubleshooting](#16-tips-and-troubleshooting)
-17. [Reference: Default Settings](#17-reference-default-settings)
+9. [Booting the Remote into CP/M](#9-booting-the-remote-into-cpm)
+10. [Browsing Files](#10-browsing-files)
+11. [Transferring Files](#11-transferring-files)
+12. [Managing Files (Rename, Delete, View/Edit)](#12-managing-files-rename-delete-viewedit)
+13. [The Terminal Window](#13-the-terminal-window)
+14. [Transfer History](#14-transfer-history)
+15. [Backup and Restore](#15-backup-and-restore)
+16. [Language Support](#16-language-support)
+17. [Tips and Troubleshooting](#17-tips-and-troubleshooting)
+18. [Reference: Default Settings](#18-reference-default-settings)
 
 ---
 
@@ -38,6 +39,7 @@ CP/M File Manager bridges the gap between a modern PC and a CP/M machine. Once y
 - **Copy files** in either direction using the X-Modem protocol.
 - **Manage** remote files — rename, delete, and view them — using CP/M commands issued for you automatically.
 - **Talk directly** to the CP/M system through a built-in serial terminal.
+- **Drive a reluctant machine into CP/M** automatically with a configurable boot sequence, for systems that start at a ROM monitor or boot menu rather than booting straight into CP/M.
 - **Back up an entire CP/M drive** to your PC, or **restore** files from your PC to a CP/M drive in one operation.
 - **Track every transfer** in a persistent, searchable history.
 
@@ -56,6 +58,7 @@ The interface follows a Material Design theme that respects your operating syste
 - **PySide6** (≥ 6.6) — the Qt GUI framework
 - **qt-material** (≥ 2.14) — the Material Design theme
 - **pyserial** (≥ 3.5) — serial port access
+- **markdown** (≥ 3.5) — renders this manual inside the application
 
 ---
 
@@ -92,7 +95,9 @@ The main window is organized into four areas:
 
 - **File** — New, Load, Save, Exit
 - **Config** — Serial, General, Language
-- **Help** — About
+- **Help** — Manual, About
+
+The **Help → Manual** item opens this user manual in a built-in viewer.
 
 ### Toolbar
 
@@ -124,7 +129,7 @@ A draggable splitter sits between the panes so you can resize them.
 1. **Configure your serial port(s).** Open **Config → Serial**, select the correct port(s) and matching speed/parity/etc., and click Save to apply them. (On a first run, before you have saved a configuration file, a notice reminds you that these settings apply to this session only until you do **File → Save** in step 3.) (See [Section 7](#7-configuration).)
 2. **Set your host working directory.** Open **Config → General** and choose a Host Directory, or use the **Change Directory** button in the Host pane later.
 3. **Save your configuration** via **File → Save** so it reloads automatically next time.
-4. **Connect** using the toolbar **Connect** button. Watch the status-bar indicators turn green.
+4. **Connect** using the toolbar **Connect** button. Watch the status-bar indicators turn green. The program then checks that the remote is at the CP/M prompt and, if so, automatically selects the current drive and lists its files (see [Section 8](#8-connecting-and-disconnecting)).
 5. **Select a remote drive** (A: – P:) from the dropdown in the Remote pane and click **Update** to list its files.
 6. **Transfer files** by selecting them and clicking **Copy to Remote** / **Copy to Host**, or by dragging between panes.
 7. **Disconnect** when finished.
@@ -161,7 +166,7 @@ Configure how the program talks to the serial hardware:
 
 ### Config → General
 
-Configure CP/M command templates and behavior:
+Configure CP/M command templates and behavior. The remote-command fields are gathered into a **Remote** group at the top; the remaining settings follow below it.
 
 **Remote command templates** (the `$1`/`$2` placeholders are filled in automatically):
 
@@ -170,8 +175,13 @@ Configure CP/M command templates and behavior:
 | **List Files Cmd** | Lists the directory | `DIR` |
 | **Recv from Remote** | Tells CP/M to send a file to the PC | `PCPUT $1` |
 | **Send to Remote** | Tells CP/M to receive a file from the PC | `PCGET $1` |
+| **Use XMODEM-1K** | Send host→remote transfers as 1024-byte blocks | OFF |
+| **Recv from Remote (1K)** | The 1K-mode receive command (blank = use the standard one) | *(blank)* |
+| **Send to Remote (1K)** | The 1K-mode send command (blank = use the standard one) | *(blank)* |
 | **Rename** | Renames a remote file (`$1` = old, `$2` = new) | `REN $2=$1` |
 | **Delete** | Deletes a remote file | `ERA $1` |
+
+> **XMODEM-1K.** When **Use XMODEM-1K** is ON, host→remote transfers use 1024-byte STX frames instead of the standard 128-byte frames, which is faster over a reliable link. If your CP/M helper needs a different command for 1K mode, set it in the **(1K)** fields; a blank 1K field falls back to its standard counterpart. When enabling 1K mode, also raise the **Transfer Timeout** (see Config → Serial) — 1000 ms is a good starting point.
 
 **Other settings:**
 
@@ -179,11 +189,12 @@ Configure CP/M command templates and behavior:
 |---------|---------|---------|
 | **Transfer Launch Delay** | Seconds to wait after issuing the CP/M command before starting the X-Modem handshake, giving the CP/M program time to start. | 3 |
 | **Inter-File Delay** | Seconds to pause between files in a batch, so the CP/M prompt returns before the next command. | 2 |
-| **EOL** | Line terminator used when sending text from the Terminal: CR, LF, or CRLF. | CR |
+| **EOL** | Line terminator used when sending text from the Terminal and the boot sequence: CR, LF, or CRLF. | CR |
 | **Debug Logging** | Writes verbose transfer tracing to standard output. | OFF |
 | **Echo Transfer Data** | Shows raw X-Modem bytes as hex tokens (e.g. `<01><06>`) in the Terminal window. | OFF |
 | **Viewer Command** | The program used to view/edit a file; `$1` is replaced with the file path. | `notepad $1` |
 | **Host Directory** | The host working directory, saved with the configuration. | — |
+| **Boot Sequence** | An optional script of keystrokes that drives the remote into CP/M when it does not boot there on its own. See [Section 9](#9-booting-the-remote-into-cpm). | *(blank)* |
 
 > **The Save button in each dialog.** The **Save** button in the Serial dialog writes **only the serial settings** to the configuration file you currently have loaded, leaving the general settings in that file untouched. Likewise, the **Save** button in the General dialog writes **only the general settings**, leaving the serial settings untouched. Neither button opens a file picker. If no configuration file is loaded yet, the change is applied to the current session only and a warning reminds you to use **File → Save** to write it to a file. To save *everything* to a file (or to a new file), use **File → Save**.
 
@@ -203,11 +214,145 @@ Click **Connect** on the toolbar to open the serial port(s):
 - The program opens the **Terminal Port** first. On success, the Terminal indicator turns green and the status bar reads "Terminal port open." On failure, an error dialog explains the problem.
 - If the **Transport Port** is different from the Terminal Port, it is opened separately. If it is the same physical port, the program simply shares the already-open connection.
 
+### Checking the remote file system
+
+Once both ports are open, the program automatically checks whether the remote is ready at the CP/M command prompt. It sends an end-of-line and looks for a CP/M **drive prompt** (such as `A>`, and ZCPR/NZCOM-style prompts like `A0>` are also recognized). The status bar briefly shows "Checking remote file system."
+
+- **If a prompt is found**, the drive dropdown in the Remote pane is set to the remote's current drive and its files are listed for you — no need to press **Update** manually.
+- **If no prompt is found**, the program sends one more end-of-line and checks again.
+- **If there is still no prompt**, the program either runs your **boot sequence** (if one is configured — see [Section 9](#9-booting-the-remote-into-cpm)) and checks one more time, or — if no boot sequence is configured, or the remote still does not respond — shows the **Remote Filesystem Unavailable** dialog with three choices:
+  - **Abort** — Close the port(s) (as **Disconnect** does) and clear the remote list.
+  - **Continue** — Leave the port(s) open and take no further action.
+  - **Terminal** — Open the Terminal window so you can interact with the remote directly to diagnose the problem.
+
+### Disconnecting
+
 Click **Disconnect** to close the port(s). Both indicators turn red, and the remote file listing is cleared.
 
 ---
 
-## 9. Browsing Files
+## 9. Booting the Remote into CP/M
+
+Some machines do not boot straight into CP/M — they may stop at a ROM monitor, a boot menu, or wait for a keypress. The **boot sequence** lets you record the keystrokes needed to drive such a machine into CP/M so you do not have to type them by hand every time.
+
+You write the sequence as a short script in **Config → General → Boot Sequence**. It is empty by default, which leaves the feature switched off.
+
+### When the boot sequence runs
+
+The boot sequence is run **only when it is needed**, never against a machine that is already at the CP/M prompt:
+
+- **Automatically on Connect.** If the post-connect check (see [Section 8](#8-connecting-and-disconnecting)) finds no CP/M drive prompt and a boot sequence is configured, the program runs the sequence and then checks once more. If CP/M is now responding, it continues normally; only if it still does not respond is the *Remote Filesystem Unavailable* dialog shown.
+- **Manually.** The Terminal window has a **Boot into CP/M** button (see [Section 13](#13-the-terminal-window)) that runs the sequence on demand and then re-checks for the CP/M prompt. The button is disabled (greyed out) whenever the boot sequence is empty, and becomes enabled as soon as you save a sequence.
+
+Because the automatic run happens **only** when the remote is *not* already at CP/M, restarting the application while the machine stays powered on (and therefore still in CP/M) will not send any unwanted keystrokes.
+
+### Script format
+
+The script has one instruction (a *directive*) per line:
+
+- Blank lines are ignored.
+- A line whose first non-blank character is `#` is a comment and is ignored.
+- The directive keyword is **not** case-sensitive (`SEND`, `send`, and `Send` are equivalent).
+- Directives run from top to bottom, in order.
+
+If a line cannot be understood (an unknown keyword, an invalid hexadecimal byte, or a non-numeric delay), the sequence stops and the status bar reports the problem.
+
+### Directives
+
+| Directive | What it does |
+|-----------|--------------|
+| `SEND <text>` | Sends `<text>` followed by the configured end-of-line (the **EOL** setting in Config → General). This is the equivalent of typing the text and pressing Enter. `SEND` on its own (no text) sends just the end-of-line — a bare Enter. |
+| `SENDRAW <hh> [hh …]` | Sends one or more raw bytes given as two-digit hexadecimal values, separated by spaces, with **no** end-of-line added. Use this for control keys and other non-printing characters. |
+| `WAIT <seconds>` | Pauses for the given number of seconds before the next directive. Decimals are allowed (e.g. `WAIT 0.5`). |
+| `WAITFOR <text> [seconds]` | Watches the incoming serial data and waits until `<text>` appears, or until the optional timeout (in seconds) elapses — whichever comes first. If no timeout is given, it waits up to **10 seconds**. Use this to synchronize with a prompt the machine prints. |
+
+#### `SEND` — type a line
+
+`SEND` transmits text exactly as typed, then appends the end-of-line character(s) chosen by the **EOL** setting (CR by default). For example, to type the CP/M boot command at a monitor:
+
+```
+SEND CPM
+```
+
+A bare `SEND` (with nothing after it) sends only the end-of-line, which is handy for "press Enter to continue" prompts.
+
+#### `SENDRAW` — send control keys and raw bytes
+
+`SENDRAW` sends the listed bytes verbatim, with nothing added. Each byte is written as two hexadecimal digits. Common values:
+
+| Hex | Key / byte |
+|-----|------------|
+| `03` | Ctrl-C (interrupt / abort auto-boot) |
+| `0D` | Carriage Return (Enter) |
+| `0A` | Line Feed |
+| `1B` | ESC (Escape) |
+| `20` | Space |
+| `01`–`1A` | Ctrl-A … Ctrl-Z |
+
+For example, to press **ESC** then **Enter**:
+
+```
+SENDRAW 1B 0D
+```
+
+#### `WAIT` — pause
+
+`WAIT` simply waits. Use it to give a monitor or boot ROM time to react before sending the next keystroke:
+
+```
+SEND
+WAIT 1.5
+SEND CPM
+```
+
+#### `WAITFOR` — wait for a prompt
+
+`WAITFOR` is more reliable than a fixed `WAIT` when you know what text the machine prints. It watches the incoming data until the text appears (a substring match) or the timeout runs out:
+
+```
+WAITFOR Monitor>
+```
+
+You can give an explicit timeout in seconds as the last word:
+
+```
+WAITFOR Monitor> 5
+```
+
+The text being waited for may itself contain spaces — the program treats the final word as a timeout only when it is a number.
+
+### Examples
+
+**A monitor that needs Enter, then `C` to cold-boot CP/M:**
+
+```
+# Wake the monitor, then cold-boot CP/M
+WAITFOR Monitor> 5
+SEND C
+WAITFOR A> 10
+```
+
+**Interrupt an auto-boot with Ctrl-C, then launch CP/M:**
+
+```
+SENDRAW 03        # Ctrl-C to stop the auto-boot countdown
+WAIT 1
+SEND CPM          # type the command that starts CP/M
+```
+
+**Simplest case — just nudge it with a couple of returns:**
+
+```
+SEND
+WAIT 0.5
+SEND
+```
+
+> **Tip:** Build your sequence interactively first. Open the Terminal window, perform the boot keystrokes by hand, and note exactly what the machine prints and what you type. Then translate each step into `SEND` / `SENDRAW` / `WAIT` / `WAITFOR` lines, using `WAITFOR` against the prompts you saw for the most reliable result.
+
+---
+
+## 10. Browsing Files
 
 Each pane has its own controls for navigating, filtering, and sorting.
 
@@ -233,7 +378,7 @@ Each pane has its own controls for navigating, filtering, and sorting.
 
 ---
 
-## 10. Transferring Files
+## 11. Transferring Files
 
 There are several ways to start a transfer:
 
@@ -241,7 +386,7 @@ There are several ways to start a transfer:
 - **Drag and drop** files from one pane to the other.
 - **Drag files from your operating system's file manager** onto the Remote pane to upload them.
 - Right-click selected files and choose **To Remote** / **To Host**.
-- Re-run a previous transfer from the [Transfer History](#13-transfer-history).
+- Re-run a previous transfer from the [Transfer History](#14-transfer-history).
 
 ### The Transfer Progress Dialog
 
@@ -273,7 +418,7 @@ CP/M filenames must follow the **8.3 convention**: a base name of 1–8 characte
 
 ---
 
-## 11. Managing Files (Rename, Delete, View/Edit)
+## 12. Managing Files (Rename, Delete, View/Edit)
 
 Right-click files in either pane for a context menu.
 
@@ -297,15 +442,17 @@ The rename and delete dialogs follow a consistent layout: **Cancel** on the left
 
 ---
 
-## 12. The Terminal Window
+## 13. The Terminal Window
 
 Open the Terminal from the toolbar **Terminal** button. It is a non-modal window — it stays available in the background and reopens in the same state when you click the button again.
 
 ### Layout
 
 - **Receive area** (top) — A read-only, monospaced display of everything received from CP/M, plus optional local echo and transfer byte hex. Line endings are normalized and backspaces are handled.
-- **Controls** — **Clear** (empties the buffers and display), **Local Echo** (echoes what you type into the receive area; off by default), and **Autoscroll** (keeps the newest text in view; on by default).
+- **Controls** — **Clear** (empties the buffers and display), **Boot into CP/M** (runs the configured boot sequence — see [Section 9](#9-booting-the-remote-into-cpm)), **Local Echo** (echoes what you type into the receive area; off by default), and **Autoscroll** (keeps the newest text in view; on by default).
 - **Transmit field** (bottom) — Type a command and press **Enter** or click **Send**.
+
+> The **Boot into CP/M** button is disabled until you configure a boot sequence in Config → General; once a sequence is saved it becomes available without reopening the window.
 
 ### Sending Control Characters
 
@@ -320,7 +467,7 @@ A lone control character is sent exactly on its own, without a trailing EOL.
 
 ---
 
-## 13. Transfer History
+## 14. Transfer History
 
 The program records **every transfer attempt** — success, failure, cancellation, or skip — in a persistent history file (`~/.cpm_fm_history.json`). Open it from the toolbar **History** button.
 
@@ -336,7 +483,7 @@ In the History dialog you can:
 
 ---
 
-## 14. Backup and Restore
+## 15. Backup and Restore
 
 These operations move an entire drive's worth of files in one step. **Both are destructive at the destination** and require confirmation.
 
@@ -356,7 +503,7 @@ These operations move an entire drive's worth of files in one step. **Both are d
 
 ---
 
-## 15. Language Support
+## 16. Language Support
 
 The interface is fully translated into **12 languages**: English, Spanish, French, German, Italian, Dutch, Polish, Greek, Mandarin, Cantonese, Korean — and a Pirate Easter egg.
 
@@ -364,10 +511,12 @@ Switch languages at any time via **Config → Language**. The change is applied 
 
 ---
 
-## 16. Tips and Troubleshooting
+## 17. Tips and Troubleshooting
 
 - **A transfer never starts / times out.** Make sure the CP/M side launched its X-Modem helper. Increase the **Transfer Launch Delay** if your CP/M program is slow to start.
+- **The machine doesn't reach CP/M when you connect.** If it sits at a ROM monitor or boot menu, set up a **Boot Sequence** (see [Section 9](#9-booting-the-remote-into-cpm)); the program will run it automatically when the connect check finds no CP/M prompt, or you can run it on demand with the Terminal window's **Boot into CP/M** button.
 - **Characters get dropped during terminal use or transfers.** Increase **Msec per Char** and/or **Msec per Line**, or lower the baud rate.
+- **XMODEM-1K transfers are unreliable.** Raise the **Transfer Timeout** (try 1000 ms) so each larger 1024-byte block has time to arrive.
 - **The remote drive shows no files or "Drive Not Found."** Confirm you are connected (Terminal indicator green), the drive letter exists on the CP/M system, and the **List Files Cmd** matches your CP/M's directory command.
 - **Files fail with name errors on upload.** This is the 8.3 validation step — accept the suggested CP/M-compatible name in the dialog.
 - **Sharing one serial port** for both Terminal and Transport is supported; the program pauses terminal reading during transfers automatically.
@@ -376,7 +525,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 
 ---
 
-## 17. Reference: Default Settings
+## 18. Reference: Default Settings
 
 | Setting | Default |
 |---------|---------|
@@ -390,6 +539,8 @@ Switch languages at any time via **Config → Language**. The change is applied 
 | List Files Cmd | `DIR` |
 | Recv from Remote | `PCPUT $1` |
 | Send to Remote | `PCGET $1` |
+| Use XMODEM-1K | OFF |
+| Recv / Send from Remote (1K) | *(blank)* |
 | Rename | `REN $2=$1` |
 | Delete | `ERA $1` |
 | Transfer Launch Delay | 3 seconds |
@@ -398,6 +549,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 | Debug Logging | OFF |
 | Echo Transfer Data | OFF |
 | Viewer Command | `notepad $1` |
+| Boot Sequence | *(blank)* |
 
 ---
 

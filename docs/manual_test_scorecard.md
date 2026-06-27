@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.21 |
-| Scorecard for plan version | 1.21 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.22 |
+| Scorecard for plan version | 1.22 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -76,6 +76,8 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-C12b | Probe dialog Continue → no action, ports stay open | FR-045 | | | |
 | MT-C12c | Probe dialog Terminal → Terminal Window opens, ports stay open | FR-045/097 | | | |
 | MT-C13 | ZCPR prompt (A0>/4A>) recognised by probe | DR-033/FR-042 | | | |
+| MT-C14 | Boot sequence recovers a non-auto-booting remote → lists populate | FR-047/048 | | | |
+| MT-C15 | Empty boot sequence → failed probe shows dialog directly | FR-044/048 | | | |
 | MT-C07 | Disconnect closes terminal; status + indicator | FR-050/052/053 | | | |
 | MT-C08 | Two-port disconnect closes both | FR-055/057 | | | |
 | MT-C09 | Clean disconnect clears remote list | FR-058 | | | |
@@ -103,6 +105,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-G06 | Default Host Directory browse | UIR-053 | | | |
 | MT-G07 | Viewer; Rename/Delete (in Remote group) defaults | UIR-054/055/056 | | | |
 | MT-G08 | No "Change Disk" field | UIR-043 | | | |
+| MT-G10 | Boot Sequence multi-line field round-trips | UIR-059 | | | |
 
 ### §8 Config load / save
 | ID | Title | Req | Result | Env | Notes |
@@ -237,6 +240,8 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-W07 | Send with port closed → status msg | FR-098 | | | |
 | MT-W08 | Empty field Send transmits bare EOL | FR-155 | | | |
 | MT-W09 | Caret notation sends control chars (no EOL) | FR-156 | | | |
+| MT-W10 | Boot button disabled when sequence empty; live enable on Save | UIR-068 | | | |
+| MT-W11 | Manual "Boot into CP/M" runs sequence + re-probes | FR-049 | | | |
 
 ### §13 File context-menu actions
 | ID | Title | Req | Result | Env | Notes |

@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QMessageBox
 from cpm_fm.gui.mw_base import MainWindowMixinBase
 from cpm_fm.gui.remote_unavailable_dialog import RemoteUnavailableDialog
 from cpm_fm.gui.terminal_window import TerminalWindow
+from cpm_fm.terminal.boot_sequence import SEND, SENDRAW, WAIT, WAITFOR, parse_boot_sequence
 from cpm_fm.terminal.cpm_parser import CPMParser
 from cpm_fm.utils.i18n import tr
 
@@ -32,16 +33,33 @@ class _RemoteMixin(MainWindowMixinBase):
         """
         if not self.terminal_win:
             self.terminal_win = TerminalWindow(
-                self, self.handle_terminal_send, self.clear_terminal_buffers
+                self,
+                self.handle_terminal_send,
+                self.clear_terminal_buffers,
+                self.do_boot_sequence,
             )
             self.terminal_win.chk_echo.toggled.connect(self._set_local_echo)
             # FR-004: restore the Terminal Window's saved geometry on first open.
             self.window_state.restore_geometry("terminal", self.terminal_win)
         else:
             self.terminal_win.showNormal()
+        # UIR-068: the boot button is enabled only when a sequence is configured.
+        self._refresh_boot_button()
         self.terminal_win.show()
         self.terminal_win.raise_()
         self.terminal_win.activateWindow()
+
+    def _refresh_boot_button(self):
+        """Sync the Terminal Window boot button's enabled state to the config.
+
+        Enabled only when a non-empty boot sequence is configured (UIR-068);
+        re-evaluated on open and whenever the configuration changes while the
+        window is open.
+
+        Satisfies: UIR-068.
+        """
+        if self.terminal_win is not None:
+            self.terminal_win.set_boot_enabled(self._boot_sequence_configured())
 
     def _set_local_echo(self, enabled: bool):
         """
@@ -138,23 +156,131 @@ class _RemoteMixin(MainWindowMixinBase):
 
     def _do_connect_probe_logic(self):
         """
-        Satisfies: FR-041, FR-043, FR-044, FR-046.
+        Satisfies: FR-041, FR-043, FR-044, FR-046, FR-048.
 
-        Runs on a worker thread. Send a bare EOL and look for any CP/M drive
-        prompt; if none is seen, send one more EOL and look again (FR-043, a
-        single retry). On success emit connect_probe_ok with the detected drive
-        letter (FR-042); otherwise emit connect_probe_failed (FR-044). The UI
-        updates run on the GUI thread via those signals (NFR-004).
+        Runs on a worker thread. Probe for a CP/M drive prompt (FR-041/FR-043).
+        If none is found and a boot sequence is configured (FR-047), run the
+        sequence and probe once more (FR-048, at most one recovery attempt). On
+        success emit connect_probe_ok with the detected drive letter (FR-042);
+        otherwise emit connect_probe_failed, which presents the Remote
+        Filesystem Unavailable dialog (FR-044). The UI updates run on the GUI
+        thread via those signals (NFR-004).
+        """
+        letter = self._probe_for_drive()
+        if letter is None and self._boot_sequence_configured():
+            # FR-048: attempt boot-sequence recovery, then re-probe once.
+            self.run_boot_sequence()
+            letter = self._probe_for_drive()
+        if letter is not None:
+            self.connect_probe_ok.emit(letter)
+        else:
+            self.connect_probe_failed.emit()
+
+    def _probe_for_drive(self):
+        """Send a bare EOL and look for a CP/M drive prompt, with one retry.
+
+        Returns the detected drive letter (DR-033a) or ``None``. Runs on a
+        worker thread; FR-043's single retry is performed here.
+
+        Satisfies: FR-041, FR-043.
         """
         text = self._capture_terminal_response("")
         letter = CPMParser.drive_prompt_letter(text)
         if letter is None:
             text = self._capture_terminal_response("")
             letter = CPMParser.drive_prompt_letter(text)
+        return letter
+
+    def _boot_sequence_configured(self) -> bool:
+        """True when a non-empty boot sequence (FR-047) is configured.
+
+        Satisfies: FR-047, FR-048.
+        """
+        return bool(self.settings.get("boot_sequence", "").strip())
+
+    def run_boot_sequence(self) -> bool:
+        """Execute the configured boot sequence on the Terminal Port.
+
+        Parses the ``boot_sequence`` setting (FR-047) and runs each directive in
+        order: SEND (text + EOL), SENDRAW (raw control bytes), WAIT (sleep), and
+        WAITFOR (capture until a string appears or the timeout elapses).
+        Synchronous and intended to run on a worker thread (it sleeps and waits
+        on serial I/O). Returns True if a non-empty sequence ran to completion,
+        False if the sequence was empty or failed to parse.
+
+        Satisfies: FR-047, FR-048, FR-049, NFR-004.
+        """
+        script = self.settings.get("boot_sequence", "")
+        if not script.strip():
+            return False
+        try:
+            steps = parse_boot_sequence(script)
+        except ValueError as e:
+            print(f"Boot sequence parse error: {e}")
+            self.set_status(tr("status.boot_failed"))
+            return False
+        self.set_status(tr("status.boot_running"))
+        for step in steps:
+            if step.kind == SEND:
+                # handle_terminal_send appends the configured EOL and echoes.
+                self.handle_terminal_send(step.text)
+            elif step.kind == SENDRAW:
+                self.serial_mgr.send_raw("terminal", step.data)
+            elif step.kind == WAIT:
+                time.sleep(step.seconds)
+            elif step.kind == WAITFOR:
+                self._wait_for_text(step.text, step.seconds)
+        return True
+
+    def _wait_for_text(self, target: str, timeout: float) -> bool:
+        """Capture Terminal Port output until ``target`` appears or ``timeout``.
+
+        Reuses the capture buffer fed by ``handle_terminal_recv``. Returns True
+        if the text appeared before the timeout. Runs on a worker thread.
+
+        Satisfies: FR-047.
+        """
+        self._remote_capture_buffer = ""
+        self._capture_active = True
+        waited = 0.0
+        poll = 0.05
+        found = False
+        while waited < timeout:
+            if target in self._remote_capture_buffer:
+                found = True
+                break
+            time.sleep(poll)
+            waited += poll
+        self._capture_active = False
+        return found
+
+    def do_boot_sequence(self):
+        """Manually run the boot sequence from the Terminal Window (FR-049).
+
+        Runs the sequence and re-probes on a worker thread (NFR-004). On success
+        the drive drop-down and Remote Files list update via connect_probe_ok
+        (FR-042); on failure the status bar reports it and no modal dialog is
+        shown (the user is already at the Terminal Window).
+
+        Satisfies: FR-049.
+        """
+        if not self.serial_mgr.terminal_connected:
+            self.set_status(tr("status.terminal_not_open_send"))
+            return
+        threading.Thread(target=self._do_boot_sequence_logic, daemon=True).start()
+
+    def _do_boot_sequence_logic(self):
+        """Worker: run the boot sequence then re-probe (FR-049).
+
+        Satisfies: FR-049.
+        """
+        if not self.run_boot_sequence():
+            return
+        letter = self._probe_for_drive()
         if letter is not None:
             self.connect_probe_ok.emit(letter)
         else:
-            self.connect_probe_failed.emit()
+            self.set_status(tr("status.boot_failed"))
 
     def _on_connect_probe_ok(self, drive):
         """

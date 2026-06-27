@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_164/404 requirements have a verifying test; 240 untested; 0 stale tag(s)._
+_169/409 requirements have a verifying test; 240 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -52,9 +52,12 @@ _164/404 requirements have a verifying test; 240 untested; 0 stale tag(s)._
 | FR-041 | `tests/test_gui_smoke.py:test_connect_probes_when_both_ports_connected` |
 | FR-042 | `tests/test_cpm_parser.py:test_drive_prompt_letter_extracts_plain_prompt`, `tests/test_gui_smoke.py:test_connect_probe_ok_sets_drive_and_refreshes` |
 | FR-043 | `tests/test_cpm_parser.py:test_drive_prompt_letter_none_when_absent`, `tests/test_gui_smoke.py:test_connect_probe_retries_then_succeeds` |
-| FR-044 | `tests/test_gui_smoke.py:test_connect_probe_failure_abort_disconnects`, `tests/test_i18n.py:test_remote_unavailable_keys_resolve` |
+| FR-044 | `tests/test_gui_smoke.py:test_boot_no_recovery_when_sequence_empty`, `tests/test_gui_smoke.py:test_connect_probe_failure_abort_disconnects`, `tests/test_i18n.py:test_remote_unavailable_keys_resolve` |
 | FR-045 | `tests/test_gui_smoke.py:test_connect_probe_failure_abort_disconnects`, `tests/test_gui_smoke.py:test_connect_probe_failure_continue_no_action`, `tests/test_gui_smoke.py:test_connect_probe_failure_terminal_opens_terminal` |
 | FR-046 | `tests/test_gui_smoke.py:test_connect_probes_when_both_ports_connected`, `tests/test_gui_smoke.py:test_connect_skips_probe_when_transport_unavailable` |
+| FR-047 | `tests/test_boot_sequence.py:test_comments_and_blank_lines_ignored`, `tests/test_boot_sequence.py:test_empty_script_yields_no_steps`, `tests/test_boot_sequence.py:test_full_sequence_order_preserved`, `tests/test_boot_sequence.py:test_keyword_is_case_insensitive`, `tests/test_boot_sequence.py:test_send_preserves_argument_text`, `tests/test_boot_sequence.py:test_send_with_empty_text_is_a_bare_eol`, `tests/test_boot_sequence.py:test_sendraw_parses_hex_bytes`, `tests/test_boot_sequence.py:test_sendraw_rejects_invalid_hex`, `tests/test_boot_sequence.py:test_sendraw_rejects_out_of_range_byte`, `tests/test_boot_sequence.py:test_sendraw_requires_at_least_one_byte`, `tests/test_boot_sequence.py:test_unknown_directive_rejected`, `tests/test_boot_sequence.py:test_wait_parses_decimal_seconds`, `tests/test_boot_sequence.py:test_wait_rejects_non_numeric_and_negative`, `tests/test_boot_sequence.py:test_waitfor_requires_target`, `tests/test_boot_sequence.py:test_waitfor_target_may_contain_spaces_when_no_timeout`, `tests/test_boot_sequence.py:test_waitfor_with_trailing_timeout`, `tests/test_boot_sequence.py:test_waitfor_without_timeout_uses_default`, `tests/test_gui_smoke.py:test_run_boot_sequence_empty_returns_false`, `tests/test_gui_smoke.py:test_run_boot_sequence_executes_directives` |
+| FR-048 | `tests/test_gui_smoke.py:test_boot_auto_recovery_runs_sequence_then_reprobes`, `tests/test_gui_smoke.py:test_boot_no_recovery_when_sequence_empty` |
+| FR-049 | `tests/test_gui_smoke.py:test_manual_boot_failure_sets_status_without_dialog`, `tests/test_gui_smoke.py:test_manual_boot_success_reprobes_and_sets_drive` |
 | FR-050 | `tests/test_gui_smoke.py:test_disconnect_attempts_close_when_flags_false`, `tests/test_serial_manager.py:test_close_terminal_port_closes_and_clears_flag` |
 | FR-051 | `tests/test_gui_smoke.py:test_disconnect_keeps_remote_list_when_close_fails` |
 | FR-052 | `tests/test_serial_manager.py:test_close_terminal_port_closes_and_clears_flag`, `tests/test_serial_manager.py:test_close_terminal_port_returns_false_on_error` |
@@ -161,6 +164,8 @@ _164/404 requirements have a verifying test; 240 untested; 0 stale tag(s)._
 | UIR-051 | `tests/test_gui_smoke.py:test_batch_progress_dialog_shows_file_position`, `tests/test_gui_smoke.py:test_progress_dialog_cancel_button_requests_cancel`, `tests/test_gui_smoke.py:test_progress_dialog_started_and_updates`, `tests/test_gui_smoke.py:test_progress_dialog_title_for_receive` |
 | UIR-057 | `tests/test_gui_smoke.py:test_file_action_dialog_button_layout` |
 | UIR-058 | `tests/test_gui_smoke.py:test_general_config_has_echo_transfer_field`, `tests/test_gui_smoke.py:test_transfer_byte_echo_respects_setting` |
+| UIR-059 | `tests/test_gui_smoke.py:test_general_config_boot_sequence_multiline_round_trips` |
+| UIR-068 | `tests/test_gui_smoke.py:test_boot_button_reflects_config` |
 | UIR-075 | `tests/test_backup_restore.py:test_on_backup_restore_confirm_button_order`, `tests/test_gui_smoke.py:test_button_row_both_cancel_left_apply_right`, `tests/test_gui_smoke.py:test_button_row_single_button_is_centered`, `tests/test_gui_smoke.py:test_dnd_confirm_dialog_button_order_and_labels`, `tests/test_gui_smoke.py:test_file_action_dialog_button_layout` |
 | UIR-076 | `tests/test_gui_smoke.py:test_about_dialog_contents`, `tests/test_version.py:test_identity_constants` |
 | UIR-077 | `tests/test_gui_smoke.py:test_config_menu_has_language_submenu`, `tests/test_i18n.py:test_display_name_is_capitalised` |

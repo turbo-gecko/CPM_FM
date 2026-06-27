@@ -2239,6 +2239,36 @@ def test_general_config_xmodem_1k_checkbox_round_trips(qapp, monkeypatch):
         dlg2.deleteLater()
 
 
+def test_general_config_boot_sequence_multiline_round_trips(qapp, monkeypatch):
+    """Verifies: UIR-059."""
+    # UIR-059: the dialog exposes a multi-line "Boot Sequence" editor persisted
+    # as boot_sequence (default empty), preserving newlines on save.
+    from PySide6.QtWidgets import QPlainTextEdit
+
+    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+
+    monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
+
+    saved: dict = {}
+    dlg = GeneralConfigDialog(None, {}, saved.update)
+    try:
+        editor = dlg.entries["boot_sequence"]
+        assert isinstance(editor, QPlainTextEdit)
+        assert editor.toPlainText() == ""  # default empty
+        editor.setPlainText("WAITFOR Boot:\nSEND DDT")
+        dlg.save()
+        assert saved["boot_sequence"] == "WAITFOR Boot:\nSEND DDT"
+    finally:
+        dlg.deleteLater()
+
+    # An existing value is rendered verbatim, newlines included.
+    dlg2 = GeneralConfigDialog(None, {"boot_sequence": "SEND A\nWAIT 1"}, lambda s: None)
+    try:
+        assert dlg2.entries["boot_sequence"].toPlainText() == "SEND A\nWAIT 1"
+    finally:
+        dlg2.deleteLater()
+
+
 def test_config_menu_has_language_submenu(qapp, state):
     """Verifies: UIR-003, UIR-077."""
     # UIR-003/UIR-077: the Config menu contains a Language submenu listing every
@@ -3009,3 +3039,155 @@ def test_history_dialog_retransfer_sets_entry_and_accepts(qapp, state, tmp_path)
         assert dlg.result() == dlg.DialogCode.Accepted
     finally:
         dlg.deleteLater()
+
+
+# --- Boot-into-CP/M sequence (FR-047/FR-048/FR-049, UIR-068) -------------------
+
+
+def test_run_boot_sequence_executes_directives(qapp, monkeypatch, state):
+    """Verifies: FR-047."""
+    # FR-047: SEND goes out via handle_terminal_send (EOL appended there),
+    # SENDRAW writes raw control bytes, WAIT sleeps; order is preserved.
+    import cpm_fm.gui.mw_remote as mw_remote
+
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.settings["boot_sequence"] = "SEND DDT\nSENDRAW 03\nWAIT 0.01"
+        sent: list[str] = []
+        raw: list[tuple] = []
+        monkeypatch.setattr(win, "handle_terminal_send", lambda t: sent.append(t))
+        monkeypatch.setattr(
+            win.serial_mgr, "send_raw", lambda port, data: raw.append((port, data)) or True
+        )
+        monkeypatch.setattr(mw_remote.time, "sleep", lambda s: None)
+        assert win.run_boot_sequence() is True
+        assert sent == ["DDT"]
+        assert raw == [("terminal", b"\x03")]
+    finally:
+        win.close()
+
+
+def test_run_boot_sequence_empty_returns_false(qapp, state):
+    """Verifies: FR-047."""
+    # An empty sequence disables the feature: run_boot_sequence is a no-op.
+    win = MainWindow(state)
+    try:
+        win.settings["boot_sequence"] = ""
+        assert win.run_boot_sequence() is False
+    finally:
+        win.close()
+
+
+def test_boot_auto_recovery_runs_sequence_then_reprobes(qapp, monkeypatch, state):
+    """Verifies: FR-048."""
+    # FR-048: the first probe finds no prompt, so with a sequence configured the
+    # boot runs and the re-probe (now seeing a prompt) sets the drive.
+    win = MainWindow(state)
+    try:
+        win.settings["boot_sequence"] = "SEND \\r"
+        booted = {"done": False}
+
+        def fake_run():
+            booted["done"] = True
+            return True
+
+        monkeypatch.setattr(win, "run_boot_sequence", fake_run)
+        monkeypatch.setattr(
+            win,
+            "_capture_terminal_response",
+            lambda cmd, cancellable=False: "A>\n" if booted["done"] else "junk\n",
+        )
+        refreshed: list = []
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: refreshed.append(True))
+        win._do_connect_probe_logic()
+        qapp.processEvents()  # deliver the queued connect_probe_ok signal
+        assert booted["done"] is True
+        assert win.drive_combo.currentText() == "A:"
+        assert refreshed == [True]
+    finally:
+        win.close()
+
+
+def test_boot_no_recovery_when_sequence_empty(qapp, monkeypatch, state):
+    """Verifies: FR-044, FR-048."""
+    # FR-048/FR-044: with no sequence configured, a failed probe goes straight
+    # to the Remote Filesystem Unavailable dialog — no boot is attempted.
+    from cpm_fm.gui.remote_unavailable_dialog import RemoteUnavailableDialog
+
+    win = MainWindow(state)
+    try:
+        win.settings["boot_sequence"] = ""
+        boot_calls: list = []
+        monkeypatch.setattr(win, "run_boot_sequence", lambda: boot_calls.append(True) or True)
+        monkeypatch.setattr(
+            win, "_capture_terminal_response", lambda cmd, cancellable=False: "junk\n"
+        )
+        shown: list = []
+        monkeypatch.setattr(
+            RemoteUnavailableDialog,
+            "exec",
+            lambda self: (
+                shown.append(True) or setattr(self, "choice", RemoteUnavailableDialog.CONTINUE)
+            ),
+        )
+        win._do_connect_probe_logic()
+        qapp.processEvents()
+        assert boot_calls == []
+        assert shown == [True]
+    finally:
+        win.close()
+
+
+def test_boot_button_reflects_config(qapp, state):
+    """Verifies: UIR-068."""
+    # UIR-068: the Terminal Window boot button is enabled only when a non-empty
+    # boot sequence is configured, re-evaluated on demand.
+    win = MainWindow(state)
+    try:
+        win.settings["boot_sequence"] = ""
+        win.show_terminal()
+        assert win.terminal_win.btn_boot.isEnabled() is False
+        win.settings["boot_sequence"] = "SEND \\r"
+        win._refresh_boot_button()
+        assert win.terminal_win.btn_boot.isEnabled() is True
+        win.settings["boot_sequence"] = "   "  # whitespace only counts as empty
+        win._refresh_boot_button()
+        assert win.terminal_win.btn_boot.isEnabled() is False
+    finally:
+        win.close()
+
+
+def test_manual_boot_success_reprobes_and_sets_drive(qapp, monkeypatch, state):
+    """Verifies: FR-049."""
+    # FR-049: a manual boot that reaches CP/M updates the drive drop-down and
+    # refreshes the remote list via the connect_probe_ok path.
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(win, "run_boot_sequence", lambda: True)
+        monkeypatch.setattr(win, "_probe_for_drive", lambda: "B")
+        refreshed: list = []
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: refreshed.append(True))
+        win._do_boot_sequence_logic()
+        qapp.processEvents()
+        assert win.drive_combo.currentText() == "B:"
+        assert refreshed == [True]
+    finally:
+        win.close()
+
+
+def test_manual_boot_failure_sets_status_without_dialog(qapp, monkeypatch, state):
+    """Verifies: FR-049."""
+    # FR-049: a manual boot that still fails reports in the status bar and does
+    # NOT raise the modal Remote Filesystem Unavailable dialog.
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(win, "run_boot_sequence", lambda: True)
+        monkeypatch.setattr(win, "_probe_for_drive", lambda: None)
+        statuses: list = []
+        monkeypatch.setattr(win, "set_status", lambda t: statuses.append(t))
+        win._do_boot_sequence_logic()
+        qapp.processEvents()
+        assert "Boot sequence did not reach CP/M" in statuses
+    finally:
+        win.close()

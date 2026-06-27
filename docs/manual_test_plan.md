@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.21 |
+| Version | 1.22 |
 | Status | Draft |
 | Date | 2026-06-27 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.15.0) |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.16.0) |
 
 ---
 
@@ -145,6 +145,8 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 | MT-C12b | FR-045 | Re-trigger MT-C12, press **Continue**. | The dialog closes; the port(s) remain open; the Remote Files list stays empty; no other action taken. |
 | MT-C12c | FR-045, FR-097 | Re-trigger MT-C12, press **Terminal**. | The Terminal Window opens for debugging; the port(s) remain open. |
 | MT-C13 | DR-033, FR-042 | On a ZCPR/NZCOM-style system whose prompt embeds the user area (e.g. `A0>` or `4A>`), press **Connect**. | The probe recognises the ZCPR prompt; the drive drop-down and Remote Files list update as in MT-C11 — the "file system unavailable" dialog (MT-C12) does **not** appear. |
+| MT-C14 [CP/M] | FR-047, FR-048 | On a remote that does **not** boot straight into CP/M (sits at a monitor/boot prompt), configure a Boot Sequence (MT-G10) that drives it into CP/M, then press **Connect**. | The initial probe finds no drive prompt; the app runs the boot sequence, then re-probes once. On reaching CP/M the drive drop-down and Remote Files list populate as in MT-C11 — the "file system unavailable" dialog does **not** appear. |
+| MT-C15 [CP/M] | FR-044, FR-048 | Press **Connect** with the remote unreachable and the Boot Sequence **empty**. | No boot sequence runs; after the two probe attempts the Remote Filesystem Unavailable dialog (MT-C12) appears directly, exactly as before this feature. |
 | MT-C07 | FR-050, FR-052, FR-053 | While connected (shared or single port), press **Disconnect**. | Terminal Port closes; status bar shows "Terminal port closed"; Terminal indicator → *not-connected*. |
 | MT-C08 [2-port] | FR-055, FR-057 | While connected on two ports, press **Disconnect**. | Both ports close; Transport flag/indicator → *not-connected*. |
 | MT-C09 | FR-058 | Connect, Update to populate the Remote list, then Disconnect (clean close). | Remote Files list is **cleared** after the successful disconnect. |
@@ -178,6 +180,7 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 | MT-G06 | UIR-053 | Click the Default Host Directory browse button, pick a folder. | A folder-select dialog appears; the chosen path populates the field. |
 | MT-G07 | UIR-054, UIR-055, UIR-056 | Inspect the Viewer/Editor field, and the "Rename" and "Delete" fields (in the Remote group). | Defaults `notepad $1`, `REN $2=$1`, `ERA $1`; the Rename/Delete fields are labelled just "Rename"/"Delete" (no "Remote" suffix) and limited to 79 chars. |
 | MT-G08 | UIR-043 | Confirm there is **no** "Change Disk" field. | The withdrawn field is absent. |
+| MT-G10 | UIR-059 | Inspect the "Boot Sequence" field (below the ungrouped settings). Type a multi-line script (e.g. `WAITFOR Boot:` then `SEND ` then `WAIT 1`), Save, reopen the dialog. | A multi-line text editor labelled "Boot Sequence", empty by default, accepting several lines. After Save and reopen the entered text (newlines included) is shown verbatim. |
 
 ---
 
@@ -392,6 +395,8 @@ files** — these tests delete data by design.
 | MT-W07 | FR-098 | With the Terminal Port **closed**, type text and press Send. | Status bar: "Terminal port not open - cannot send"; nothing transmitted. |
 | MT-W08 | FR-155 | Connected: with the transmit field **empty**, press Send (or <Enter> in the field). | A bare end-of-line (the configured EOL) is transmitted on its own; on a CP/M remote this advances to a fresh CCP prompt. |
 | MT-W09 [CP/M] | FR-156 | Connected to a program that responds to Ctrl-C (e.g. during a running command): type `^C` in the transmit field and press Send. | The single control byte 0x03 is sent with **no** trailing EOL; the remote receives an interrupt. Also verify `^^` sends a literal caret (with EOL) and `^[` sends ESC (0x1B). |
+| MT-W10 | UIR-068 | Open the Terminal Window with the Boot Sequence (MT-G10) **empty**, then set a non-empty Boot Sequence in General Config (window left open) and Save. | With an empty Boot Sequence the **"Boot into CP/M"** button (to the right of Clear) is disabled (greyed); after saving a non-empty sequence it becomes enabled without reopening the window. |
+| MT-W11 [CP/M] | FR-049 | Connected with a valid Boot Sequence configured, in the Terminal Window press **Boot into CP/M**. | The status bar shows the boot sequence running; the keystrokes are transmitted; on reaching CP/M the drive drop-down and Remote Files list update. If CP/M is not reached the status bar reports the failure and **no** modal "file system unavailable" dialog appears. |
 
 ---
 
@@ -486,6 +491,7 @@ or real cross-session persistence:
 - File-conflict prompt on transfer (live dialog render, real overwrite/skip on the filesystem & remote, real pre-upload `DIR` refresh): `FR-145`–`FR-147` (live), `UIR-084` (the detection, the batch-wide policy, and the Skip/Cancel batch handling are covered automatically by `tests/test_conflict_resolution.py`; the manual cases confirm the on-screen dialog, that Overwrite/Skip really replace/preserve the destination file, and that an upload conflict is detected against a freshly refreshed remote listing).
 - Host→remote filename validation (live dialog render, real upload under a renamed name, inline re-validation): `FR-148`, `FR-149` (live), `UIR-085` (the 8.3 validation/suggestion logic and the rename/skip/cancel batch handling are covered automatically by `tests/test_filename_validation.py`; the manual cases confirm the on-screen dialog, that Rename really uploads the file to the remote under the new name, and that a still-invalid replacement is rejected inline).
 - Whole-drive backup and restore (live destructive round-trip, real destination wipe, on-screen confirmation): `FR-150`–`FR-154` (live), `UIR-086`–`UIR-088` (the orchestration ordering, the wipe helpers, the empty-source short-circuit, the connection guard, and the confirmation slot are covered automatically by `tests/test_backup_restore.py`; the manual cases confirm the on-screen confirmation dialog, that the destination is really emptied first, and the live transfer round-trip in both directions).
+- Boot-into-CP/M sequence (live keystroke playback into a real remote, probe-failure recovery, live re-probe): `FR-047`, `FR-048`, `FR-049` (live), `UIR-068` (the script parser in `terminal/boot_sequence.py`, the directive execution, the auto-recovery/re-probe wiring, the button enable/disable, and the multi-line config field are covered automatically by `tests/test_boot_sequence.py` and `tests/test_gui_smoke.py`; the manual cases confirm the keystrokes really drive a non-auto-booting remote into CP/M and that the failed-probe recovery and manual button behave over a real link).
 - Non-functional (real): `NFR-001`, `NFR-004` (live), `STR-003`, `FR-088`.
 
 Purely algorithmic and headless-logic requirements (`DR-*`, the X-Modem progress/handshake internals,
