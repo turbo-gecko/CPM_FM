@@ -24,8 +24,6 @@ class MainWindowMixinBase:
     static type checker can resolve those members; the declarations live under
     ``TYPE_CHECKING`` only, so at runtime this base is empty and contributes no
     behaviour or state (the real attributes are created by ``MainWindow``).
-
-    Satisfies: CR-007, CR-009.
     """
 
     if TYPE_CHECKING:
