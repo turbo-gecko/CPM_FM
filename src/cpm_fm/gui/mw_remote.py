@@ -1,0 +1,312 @@
+from __future__ import annotations
+
+import threading
+import time
+
+from PySide6.QtWidgets import QMessageBox
+
+from cpm_fm.gui.mw_base import MainWindowMixinBase
+from cpm_fm.gui.terminal_window import TerminalWindow
+from cpm_fm.terminal.cpm_parser import CPMParser
+from cpm_fm.utils.i18n import tr
+
+EOL_MAP = {"CR": "\r", "LF": "\n", "CRLF": "\r\n"}
+
+
+class _RemoteMixin(MainWindowMixinBase):
+    """Terminal, connection, and remote-listing logic for MainWindow (mixin).
+
+    Opening/closing the Terminal Window (FR-097) and the local-echo and
+    send/receive buffer handling (FR-090-FR-095); the Connect/Disconnect
+    workflow over the Terminal/Transport ports (FR-030-FR-058); and the remote
+    directory listing, terminal-response capture, and drive-change logic
+    (FR-073-FR-079, FR-100-FR-104). Worker-thread methods marshal UI updates
+    back via signals (NFR-004). Shared with the transfer/guard mixins through
+    ``handle_terminal_send`` and ``_capture_terminal_response``.
+    """
+
+    def show_terminal(self):
+        """
+        Satisfies: FR-097.
+        """
+        if not self.terminal_win:
+            self.terminal_win = TerminalWindow(
+                self, self.handle_terminal_send, self.clear_terminal_buffers
+            )
+            self.terminal_win.chk_echo.toggled.connect(self._set_local_echo)
+            # FR-004: restore the Terminal Window's saved geometry on first open.
+            self.window_state.restore_geometry("terminal", self.terminal_win)
+        else:
+            self.terminal_win.showNormal()
+        self.terminal_win.show()
+        self.terminal_win.raise_()
+        self.terminal_win.activateWindow()
+
+    def _set_local_echo(self, enabled: bool):
+        """
+        Satisfies: FR-093.
+        """
+        self._local_echo = enabled
+
+    def handle_terminal_send(self, text, append_eol: bool = True):
+        """
+        Satisfies: FR-092, FR-093, FR-094, FR-098.
+
+        May be called from the GUI thread (Send button) or a worker thread
+        (the remote-list refresh). Sends data and buffers it directly; the
+        local-echo display is marshalled to the GUI thread via term_write.
+
+        ``append_eol`` is set False by the Terminal window when the transmit
+        field resolves to a bare control character (e.g. ``^C``), so that the
+        control byte is sent on its own without a trailing EOL.
+        """
+        if not self.serial_mgr.terminal_connected:
+            self.set_status(tr("status.terminal_not_open_send"))
+            return
+
+        eol = self.settings.get("eol", "CR")
+        eol_char = EOL_MAP.get(eol, "\r")
+
+        # Prevent double-terminators if already appended (e.g. in _do_refresh_remote_logic)
+        if append_eol and not text.endswith(eol_char):
+            text += eol_char
+
+        self.serial_mgr.send_data("terminal", text)
+        # FR-092: store transmitted data (with EOL) in the transmit buffer.
+        self._tx_buffer += text
+        # FR-093: local echo copies transmitted data (a byte-for-byte copy,
+        # including its EOL) to the receive area only.
+        if self._local_echo:
+            self.term_write.emit(text)
+
+    def handle_terminal_recv(self, text):
+        """
+        Satisfies: FR-090, FR-091.
+
+        Runs on the serial read daemon thread. Buffer bookkeeping happens here
+        (plain strings, not widgets); the display write is marshalled via the
+        term_write signal (NFR-004).
+        FR-090: store all received data in the receive buffer.
+        """
+        self._rx_buffer += text
+        if self._capture_active:
+            self._remote_capture_buffer += text
+        self.term_write.emit(text)
+
+    def clear_terminal_buffers(self):
+        """
+        Satisfies: FR-095.
+
+        FR-090/FR-092: the Clear button is the explicit-clear trigger for
+        both the receive and transmit data buffers.
+        """
+        self._rx_buffer = ""
+        self._tx_buffer = ""
+
+    def do_connect(self):
+        """
+        Satisfies: FR-030, FR-031, FR-032, FR-034, FR-037, FR-038, FR-039, FR-040.
+        """
+        if self.serial_mgr.open_port("terminal", self.settings):
+            self.set_status(tr("status.terminal_port_open"))
+            term_port = self.settings.get("terminal_port")
+            trans_port = self.settings.get("transport_port")
+            if term_port != trans_port:
+                if not self.serial_mgr.open_port("transport", self.settings):
+                    QMessageBox.critical(
+                        self, tr("dialog.error.title"), tr("error.transport_unable_open")
+                    )
+            else:
+                # FR-037: same physical port. Point the Transport Port at the
+                # already-open Terminal Port object so transfers have a real
+                # port to use (not None) and set the Transport flag.
+                self.serial_mgr.transport_port = self.serial_mgr.terminal_port
+                self.serial_mgr.transport_connected = True
+        else:
+            QMessageBox.critical(self, tr("dialog.error.title"), tr("error.terminal_unable_open"))
+        self._update_indicators()
+
+    def do_disconnect(self):
+        """
+        Satisfies: FR-050-FR-058.
+
+        Robustness: the close attempts are unconditional — they do NOT depend
+        on the terminal_connected / transport_connected status flags. Those
+        flags can drift out of sync with the real port state (e.g. the port is
+        still open and communicating but a flag was cleared), and a guarded
+        disconnect would then refuse to act, leaving the comms sessions open.
+        The underlying close_*_port() methods are safe to call when the port is
+        already closed (they no-op and return True), so always attempting the
+        close is the correct, defensive behaviour.
+        """
+        term_port = self.settings.get("terminal_port")
+        trans_port = self.settings.get("transport_port")
+
+        # FR-050/FR-051: close the Terminal Port; on failure show an error
+        # dialog and cancel the current workflow.
+        if not self.serial_mgr.close_terminal_port():
+            QMessageBox.critical(self, tr("dialog.error.title"), tr("error.terminal_unable_close"))
+            self._update_indicators()
+            return
+        # FR-052 (flag cleared by close_terminal_port) / FR-053 (status text).
+        self.set_status(tr("status.terminal_port_closed"))
+        # FR-058: the remote listing was read over the now-closed Terminal
+        # Port, so it is stale — clear it.
+        self._clear_remote_files()
+
+        if trans_port == term_port:
+            # FR-054: same physical port — it was just closed above as the
+            # Terminal Port. Clear the Transport flag and drop the shared
+            # reference so it cannot point at the now-closed port object.
+            self.serial_mgr.transport_port = None
+            self.serial_mgr.transport_connected = False
+        else:
+            # FR-055/FR-056/FR-057: different port — always attempt to close it.
+            if not self.serial_mgr.close_transport_port():
+                QMessageBox.critical(
+                    self, tr("dialog.error.title"), tr("error.transport_unable_close")
+                )
+                self._update_indicators()
+                return
+
+        self._update_indicators()
+
+    def do_refresh_remote_files(self):
+        """Handle the Remote Files "Update" button click.
+
+        Mirrors do_copy_to_host: when the port is not open, raise the same
+        critical error dialog (in addition to the status-bar message and the
+        list being cleared by refresh_remote_files), then delegate. The
+        auto-refresh callers (post-transfer) call refresh_remote_files directly
+        so they never raise this dialog.
+        """
+        if not self.serial_mgr.terminal_connected:
+            QMessageBox.critical(self, tr("dialog.error.title"), tr("error.terminal_not_connected"))
+        self.refresh_remote_files()
+
+    def refresh_remote_files(self):
+        """
+        Satisfies: FR-073, FR-074.
+
+        FR-073: populate the Remote Files list for the drive currently shown in
+        the drive-selection drop-down (UIR-017). Switch to that drive first (as
+        if it had just been selected - FR-100-FR-104) before listing, so the
+        displayed files always match the drive next to the Update button even
+        when the remote's current drive was changed directly in the Terminal
+        Window. Runs the drive-change logic on a worker thread.
+        """
+        if not self.serial_mgr.terminal_connected:
+            self.set_status(tr("status.terminal_not_open_list"))
+            self._clear_remote_files()
+            return
+        drive = self.drive_combo.currentText()[0]  # 'A'..'P'
+        threading.Thread(target=self._do_change_drive_logic, args=(drive,), daemon=True).start()
+
+    def _capture_terminal_response(self, command: str, cancellable: bool = False) -> str:
+        """
+        Satisfies: FR-075, FR-076, FR-101, FR-120, FR-145.
+
+        Send `command` (with the configured EOL appended) on the Terminal Port
+        and capture the echoed output into the capture buffer until it idles
+        out, returning the captured text. Runs on a worker thread.
+        FR-076: wait at least one second for output to start accumulating,
+        then wait for the receive buffer to time out (no new data within the
+        idle window) before processing, bounded by a safety maximum.
+
+        ``cancellable`` is set by transfer callers (the pre-upload remote
+        listing, FR-145) so a Cancel during this read wakes the worker promptly
+        instead of blocking for the whole idle/settle budget (FR-120); the
+        partial capture so far is returned. It is left False for the standalone
+        Remote-list refresh / drive-change reads, which are not part of a
+        transfer and must not observe a stale transfer-cancel flag.
+        """
+        self._remote_capture_buffer = ""
+        self._capture_active = True
+        eol_char = EOL_MAP.get(self.settings.get("eol", "CR"), "\r")
+        self.handle_terminal_send(command + eol_char)
+
+        def _settle(secs: float) -> bool:
+            # Returns True when the wait should stop early (cancellation).
+            if cancellable:
+                return self._cancellable_sleep(secs)
+            time.sleep(secs)
+            return False
+
+        idle_window = 0.5
+        max_wait = 10.0
+        if not _settle(1.0):
+            waited = 1.0
+            while waited < max_wait:
+                prev_len = len(self._remote_capture_buffer)
+                if _settle(idle_window):
+                    break
+                waited += idle_window
+                if len(self._remote_capture_buffer) == prev_len:
+                    break
+        self._capture_active = False
+        return self._remote_capture_buffer
+
+    def _do_refresh_remote_logic(self):
+        """
+        Satisfies: FR-077, FR-078, FR-079.
+        """
+        self.set_status(tr("status.updating_remote_list"))
+        cmd = self.settings.get("list_files_cmd", "DIR")
+        text = self._capture_terminal_response(cmd)
+        files_dict = CPMParser.parse_dir_output(text)
+        self.remote_files_ready.emit(files_dict)
+
+    def change_drive(self, index):
+        """
+        Satisfies: FR-100, FR-104.
+
+        FR-100/FR-104: switch the remote drive to the selected letter. Mirror
+        FR-074 and refuse when the Terminal Port is closed.
+        """
+        if not self.serial_mgr.terminal_connected:
+            self.set_status(tr("status.terminal_not_open_list"))
+            self._clear_remote_files()
+            return
+        drive = self.drive_combo.itemText(index)[0]  # 'A'..'P'
+        threading.Thread(target=self._do_change_drive_logic, args=(drive,), daemon=True).start()
+
+    def _do_change_drive_logic(self, drive):
+        """
+        Satisfies: FR-100, FR-101, FR-102, FR-103.
+
+        FR-100/FR-101: send "<letter>:" and capture the response. FR-102: if
+        the new "<letter>>" drive prompt appears, populate the Remote Files
+        list exactly as the Update button would (FR-073). FR-103: otherwise
+        clear the list and report "Drive not found". Runs on a worker thread,
+        so calling _do_refresh_remote_logic directly is correct (it marshals
+        its UI update via the remote_files_ready signal).
+        """
+        self.set_status(tr("status.changing_drive", drive=drive))
+        text = self._capture_terminal_response(f"{drive}:")
+        if CPMParser.has_drive_prompt(text, drive):
+            self._do_refresh_remote_logic()
+        else:
+            self.drive_not_found.emit(drive)
+
+    def _on_drive_not_found(self, drive):
+        """
+        Satisfies: FR-103.
+
+        FR-103: runs on the GUI thread (queued from the drive-change worker).
+        """
+        self._clear_remote_files()
+        QMessageBox.warning(
+            self, tr("dialog.drive_not_found.title"), tr("error.drive_not_found_body", drive=drive)
+        )
+
+    def _update_remote_list_ui(self, files_dict):
+        """
+        Satisfies: FR-078, FR-079, FR-133.
+        """
+        # FR-133: store the parsed names as the canonical list and render them
+        # through the active filter/sort controls. With the default settings
+        # (no filter, sort by name ascending) this reproduces the FR-078
+        # ascending-alphabetical display.
+        self._remote_files = list(files_dict.keys())
+        self._apply_remote_view()
+        self.set_status(tr("status.remote_list_updated"))

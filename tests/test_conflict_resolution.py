@@ -79,7 +79,7 @@ def _arm(win, monkeypatch, calls):
     )
     monkeypatch.setattr(win.serial_mgr, "send_data", lambda *a, **k: None)
     monkeypatch.setattr("cpm_fm.gui.mw_transfer_batches.XModem", _fake_xmodem_cls(calls))
-    monkeypatch.setattr("cpm_fm.app.time.sleep", lambda *a, **k: None)
+    monkeypatch.setattr("cpm_fm.gui.mw_transfers.time.sleep", lambda *a, **k: None)
 
 
 # --------------------------------------------------------- detection (FR-145)

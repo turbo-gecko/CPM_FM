@@ -114,7 +114,7 @@ def _arm_transfer(win, monkeypatch, success=True, calls=None):
     monkeypatch.setattr("cpm_fm.gui.mw_transfer_batches.XModem", _fake_xmodem_cls(success, calls))
     # Neutralise worker-thread sleeps (launch delay, FR-109 inter-file idle/settle)
     # so batch tests run fast while still exercising the real wait logic.
-    monkeypatch.setattr("cpm_fm.app.time.sleep", lambda *a, **k: None)
+    monkeypatch.setattr("cpm_fm.gui.mw_transfers.time.sleep", lambda *a, **k: None)
 
 
 def _fake_action_dialog(value, accepted=True):
@@ -1436,7 +1436,7 @@ def test_cancellable_sleep_completes_when_not_cancelled(qapp, monkeypatch, state
     # loop completes instantly.
     win = MainWindow(state)
     try:
-        monkeypatch.setattr("cpm_fm.app.time.sleep", lambda *a, **k: None)
+        monkeypatch.setattr("cpm_fm.gui.mw_transfers.time.sleep", lambda *a, **k: None)
         assert win._cancellable_sleep(2.0) is False
     finally:
         win.close()
@@ -1465,7 +1465,7 @@ def test_capture_terminal_response_cancellable_bails_early(qapp, monkeypatch, st
         assert win._capture_terminal_response("DIR", cancellable=True) == ""
         # The non-cancellable form must NOT consult the (possibly stale) flag;
         # neutralise time.sleep so it still completes instantly here.
-        monkeypatch.setattr("cpm_fm.app.time.sleep", lambda *a, **k: None)
+        monkeypatch.setattr("cpm_fm.gui.mw_transfers.time.sleep", lambda *a, **k: None)
         assert win._capture_terminal_response("DIR") == ""
     finally:
         win.close()
@@ -1485,7 +1485,7 @@ def _arm_transfer_with_xmodem(win, monkeypatch, xmodem_cls):
     )
     monkeypatch.setattr(win.serial_mgr, "send_data", lambda *a, **k: None)
     monkeypatch.setattr("cpm_fm.gui.mw_transfer_batches.XModem", xmodem_cls)
-    monkeypatch.setattr("cpm_fm.app.time.sleep", lambda *a, **k: None)
+    monkeypatch.setattr("cpm_fm.gui.mw_transfers.time.sleep", lambda *a, **k: None)
 
 
 def test_cancelled_transfer_is_not_reported_as_error(qapp, monkeypatch, state):

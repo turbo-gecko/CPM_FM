@@ -32,6 +32,10 @@ class MainWindowMixinBase:
         serial_mgr: SerialManager
         window_state: WindowState
         _rx_buffer: str
+        _tx_buffer: str
+        _local_echo: bool
+        _remote_capture_buffer: str
+        _capture_active: bool
         _transfer_cancel: threading.Event
         _conflict_policy: str | None
         _conflict_answered: threading.Event
@@ -57,6 +61,7 @@ class MainWindowMixinBase:
         # ``SignalInstance`` (with ``.emit``) only resolves on a ``QObject``;
         # the mixins are plain classes, so ``Any`` lets them call ``.emit``
         # without re-declaring each signal's argument types here.
+        term_write: Any
         transfer_cancelled: Any
         batch_started: Any
         transfer_file_started: Any
