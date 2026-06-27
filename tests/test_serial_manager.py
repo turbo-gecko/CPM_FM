@@ -52,7 +52,10 @@ def capture(monkeypatch):
     ],
 )
 def test_flow_control_flat_key(capture, flow, expected):
-    """UIR-028: the flat `flow` key maps to the matching pyserial handshake."""
+    """UIR-028: the flat `flow` key maps to the matching pyserial handshake.
+
+    Verifies: UIR-028.
+    """
     mgr = SerialManager()
     ok = mgr.open_port("transport", {"transport_port": "COM1", "flow": flow})
     assert ok
@@ -61,7 +64,10 @@ def test_flow_control_flat_key(capture, flow, expected):
 
 
 def test_flow_control_nested_key(capture):
-    """NFR-002: the nested `flow_control` key is honoured as a fallback."""
+    """NFR-002: the nested `flow_control` key is honoured as a fallback.
+
+    Verifies: NFR-002.
+    """
     mgr = SerialManager()
     settings = {"serial": {"transfer_port": "COM4", "flow_control": "RTS/CTS"}}
     ok = mgr.open_port("transport", settings)
@@ -72,7 +78,10 @@ def test_flow_control_nested_key(capture):
 
 
 def test_flow_control_defaults_off_when_absent(capture):
-    """No flow setting -> all handshakes disabled (UIR-028 default NONE)."""
+    """No flow setting -> all handshakes disabled (UIR-028 default NONE).
+
+    Verifies: UIR-028.
+    """
     mgr = SerialManager()
     ok = mgr.open_port("transport", {"transport_port": "COM1"})
     assert ok
@@ -99,7 +108,10 @@ def test_flow_control_defaults_off_when_absent(capture):
     ],
 )
 def test_parity_maps_to_pyserial_constant(capture, parity, expected):
-    """FR-030: each parity name maps to its pyserial constant; unknown -> NONE."""
+    """FR-030: each parity name maps to its pyserial constant; unknown -> NONE.
+
+    Verifies: FR-030.
+    """
     mgr = SerialManager()
     assert mgr.open_port("transport", {"transport_port": "COM1", "parity": parity})
     assert capture.last_kwargs["parity"] == expected
@@ -107,7 +119,10 @@ def test_parity_maps_to_pyserial_constant(capture, parity, expected):
 
 def test_numeric_fields_are_coerced_to_int(capture):
     """FR-030: speed/data/stopbits arrive as strings from the dialog and must be
-    passed to pyserial as ints."""
+    passed to pyserial as ints.
+
+    Verifies: FR-030.
+    """
     mgr = SerialManager()
     settings = {"transport_port": "COM1", "speed": "9600", "data": "7", "stopbits": "2"}
     assert mgr.open_port("transport", settings)
@@ -120,7 +135,10 @@ def test_numeric_fields_are_coerced_to_int(capture):
 
 def test_nested_key_names_are_honoured(capture):
     """NFR-002: the nested settings shape uses transfer_port/data_bits/
-    stop_bits, which must be read when the flat keys are absent."""
+    stop_bits, which must be read when the flat keys are absent.
+
+    Verifies: NFR-002.
+    """
     mgr = SerialManager()
     settings = {
         "serial": {
@@ -137,7 +155,10 @@ def test_nested_key_names_are_honoured(capture):
 
 
 def test_numeric_defaults_applied_when_absent(capture):
-    """FR-030: with no numeric settings the documented pyserial defaults apply."""
+    """FR-030: with no numeric settings the documented pyserial defaults apply.
+
+    Verifies: FR-030.
+    """
     mgr = SerialManager()
     assert mgr.open_port("transport", {"transport_port": "COM1"})
     assert capture.last_kwargs["baudrate"] == 115200
@@ -147,7 +168,10 @@ def test_numeric_defaults_applied_when_absent(capture):
 
 def test_read_timeout_defaults_to_100ms_when_absent(capture):
     """UIR-032/UIR-033: with no timeout setting, the port read timeout defaults
-    to 0.1s (the previously hard-coded value)."""
+    to 0.1s (the previously hard-coded value).
+
+    Verifies: UIR-032, UIR-033.
+    """
     mgr = SerialManager()
     assert mgr.open_port("transport", {"transport_port": "COM1"})
     assert capture.last_kwargs["timeout"] == pytest.approx(0.1)
@@ -155,7 +179,10 @@ def test_read_timeout_defaults_to_100ms_when_absent(capture):
 
 def test_read_timeout_is_per_port_and_converted_ms_to_seconds(capture):
     """UIR-032/UIR-033: each port reads its own millisecond timeout setting and
-    passes it to pyserial in seconds."""
+    passes it to pyserial in seconds.
+
+    Verifies: UIR-032, UIR-033.
+    """
     mgr = SerialManager()
     settings = {
         "terminal_port": "COM1",
@@ -178,7 +205,10 @@ def test_read_timeout_falls_back_on_non_numeric_value(capture):
 
 def test_open_port_returns_false_on_serial_error(monkeypatch):
     """FR-030: a pyserial failure is caught and reported as False, leaving the
-    connected flag clear (no half-open state)."""
+    connected flag clear (no half-open state).
+
+    Verifies: FR-030.
+    """
 
     def _boom(**kwargs):
         raise serial.SerialException("port busy")
@@ -215,7 +245,10 @@ class _FakePort:
 
 
 def test_send_data_writes_ascii_to_open_port():
-    """FR-096: data is written to the selected open port and reports True."""
+    """FR-096: data is written to the selected open port and reports True.
+
+    Verifies: FR-096.
+    """
     mgr = SerialManager()
     mgr.terminal_port = _FakePort()
     assert mgr.send_data("terminal", "DIR\r") is True
@@ -223,7 +256,10 @@ def test_send_data_writes_ascii_to_open_port():
 
 
 def test_send_data_replaces_non_ascii():
-    """FR-096: non-ASCII characters are replaced rather than raising."""
+    """FR-096: non-ASCII characters are replaced rather than raising.
+
+    Verifies: FR-096.
+    """
     mgr = SerialManager()
     mgr.transport_port = _FakePort()
     assert mgr.send_data("transport", "café") is True
@@ -231,7 +267,10 @@ def test_send_data_replaces_non_ascii():
 
 
 def test_send_data_returns_false_when_port_closed():
-    """FR-096: with no open port the send reports False and writes nothing."""
+    """FR-096: with no open port the send reports False and writes nothing.
+
+    Verifies: FR-096.
+    """
     mgr = SerialManager()
     mgr.terminal_port = _FakePort(is_open=False)
     assert mgr.send_data("terminal", "DIR\r") is False
@@ -239,13 +278,19 @@ def test_send_data_returns_false_when_port_closed():
 
 
 def test_send_data_returns_false_when_port_none():
-    """FR-096: a missing port object reports False (no AttributeError)."""
+    """FR-096: a missing port object reports False (no AttributeError).
+
+    Verifies: FR-096.
+    """
     mgr = SerialManager()
     assert mgr.send_data("transport", "x") is False
 
 
 def test_close_terminal_port_closes_and_clears_flag():
-    """FR-050/FR-052: closing the terminal port closes it and clears the flag."""
+    """FR-050/FR-052: closing the terminal port closes it and clears the flag.
+
+    Verifies: FR-050, FR-052.
+    """
     mgr = SerialManager()
     port = _FakePort()
     mgr.terminal_port = port
@@ -256,7 +301,10 @@ def test_close_terminal_port_closes_and_clears_flag():
 
 
 def test_close_terminal_port_returns_false_on_error():
-    """FR-052: a failure while closing is reported as False, not raised."""
+    """FR-052: a failure while closing is reported as False, not raised.
+
+    Verifies: FR-052.
+    """
     mgr = SerialManager()
     mgr.terminal_port = _FakePort(raise_on_close=True)
     mgr.terminal_connected = True
@@ -264,7 +312,10 @@ def test_close_terminal_port_returns_false_on_error():
 
 
 def test_close_transport_port_closes_and_clears_flag():
-    """FR-055/FR-057: closing the transport port closes it and clears the flag."""
+    """FR-055/FR-057: closing the transport port closes it and clears the flag.
+
+    Verifies: FR-055, FR-057.
+    """
     mgr = SerialManager()
     port = _FakePort()
     mgr.transport_port = port
@@ -275,7 +326,10 @@ def test_close_transport_port_closes_and_clears_flag():
 
 
 def test_close_transport_port_returns_false_on_error():
-    """FR-057: a failure while closing the transport port is reported as False."""
+    """FR-057: a failure while closing the transport port is reported as False.
+
+    Verifies: FR-057.
+    """
     mgr = SerialManager()
     mgr.transport_port = _FakePort(raise_on_close=True)
     mgr.transport_connected = True
@@ -319,7 +373,10 @@ def _run_read_loop_briefly(mgr, stop_when, max_ms=500):
 
 def test_read_loop_dispatches_decoded_data():
     """FR-036/FR-091: bytes from the terminal port are decoded and pushed to the
-    on_data_received callback."""
+    on_data_received callback.
+
+    Verifies: FR-036, FR-091.
+    """
     mgr = SerialManager()
     received: list[str] = []
     mgr.on_data_received = received.append
@@ -330,7 +387,10 @@ def test_read_loop_dispatches_decoded_data():
 
 def test_read_loop_suspends_dispatch_while_paused():
     """FR-037: while paused the read loop consumes nothing, so a shared physical
-    port can be handed to an X-Modem transfer without the loop stealing bytes."""
+    port can be handed to an X-Modem transfer without the loop stealing bytes.
+
+    Verifies: FR-037.
+    """
     mgr = SerialManager()
     received: list[str] = []
     mgr.on_data_received = received.append

@@ -62,6 +62,7 @@ def _arm(win, monkeypatch, tmp_path):
 
 
 def test_backup_order_refresh_confirm_wipe_transfer(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-150, FR-152, FR-153, FR-154."""
     # FR-150/FR-152/FR-153/FR-154: the destination is refreshed and confirmed
     # before the wipe, and the wipe happens before the transfer.
     win = MainWindow(state)
@@ -92,6 +93,7 @@ def test_backup_order_refresh_confirm_wipe_transfer(qapp, monkeypatch, state, tm
 
 
 def test_backup_refreshes_host_pane_after_wipe(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-152."""
     # The wiped (now-deleted) files must not linger in the Host pane while the
     # backup downloads: the pane is refreshed after the wipe, before transfer.
     win = MainWindow(state)
@@ -112,6 +114,7 @@ def test_backup_refreshes_host_pane_after_wipe(qapp, monkeypatch, state, tmp_pat
 
 
 def test_backup_cancel_stops_before_wipe(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-152."""
     # FR-152: Cancel aborts before any deletion or transfer.
     win = MainWindow(state)
     try:
@@ -128,6 +131,7 @@ def test_backup_cancel_stops_before_wipe(qapp, monkeypatch, state, tmp_path):
 
 
 def test_backup_empty_source_wipes_but_skips_transfer(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-154."""
     # FR-154: an empty source still wipes the destination but transfers nothing.
     win = MainWindow(state)
     try:
@@ -147,6 +151,7 @@ def test_backup_empty_source_wipes_but_skips_transfer(qapp, monkeypatch, state, 
 
 
 def test_restore_order_refresh_confirm_wipe_transfer(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-151, FR-152, FR-153, FR-154."""
     # FR-151/FR-152/FR-153/FR-154: refresh + confirm before wipe; wipe before transfer.
     win = MainWindow(state)
     try:
@@ -178,6 +183,7 @@ def test_restore_order_refresh_confirm_wipe_transfer(qapp, monkeypatch, state, t
 
 
 def test_restore_cancel_stops_before_wipe(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-152."""
     # FR-152: Cancel aborts before any deletion or transfer.
     win = MainWindow(state)
     try:
@@ -200,6 +206,7 @@ def test_restore_cancel_stops_before_wipe(qapp, monkeypatch, state, tmp_path):
 
 
 def test_wipe_host_dir_removes_all_files(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-153."""
     # FR-153: every regular file in the host directory is deleted.
     win = MainWindow(state)
     try:
@@ -213,6 +220,7 @@ def test_wipe_host_dir_removes_all_files(qapp, monkeypatch, state, tmp_path):
 
 
 def test_wipe_host_dir_preserves_subdirectories(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-153."""
     # FR-153: subdirectories within the host directory are NOT removed.
     win = MainWindow(state)
     try:
@@ -230,6 +238,7 @@ def test_wipe_host_dir_preserves_subdirectories(qapp, monkeypatch, state, tmp_pa
 
 
 def test_wipe_remote_drive_issues_delete_per_file(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-153."""
     # FR-153: one configured delete command is sent per remote file.
     win = MainWindow(state)
     try:
@@ -248,6 +257,7 @@ def test_wipe_remote_drive_issues_delete_per_file(qapp, monkeypatch, state, tmp_
 
 
 def test_do_backup_requires_connection(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-080, CR-010."""
     # FR-080/CR-010: with no connection, no worker thread is started.
     win = MainWindow(state)
     try:
@@ -295,6 +305,7 @@ class _StubDialog(QDialog):
     ],
 )
 def test_on_backup_restore_confirm_records_choice(qapp, monkeypatch, state, result, expected):
+    """Verifies: FR-152, UIR-088."""
     # FR-152/UIR-088: Continue => True; Cancel / window-manager close => False.
     # The worker is released by the answered event in every case.
     win = MainWindow(state)
@@ -310,6 +321,7 @@ def test_on_backup_restore_confirm_records_choice(qapp, monkeypatch, state, resu
 
 
 def test_on_backup_restore_confirm_button_order(qapp, monkeypatch, state):
+    """Verifies: UIR-075."""
     # UIR-075: the confirmation dialog places Cancel at the far left and Continue
     # at the far right. Regression for the old QMessageBox, whose buttons were
     # ordered by the native platform style and could not honour the convention.

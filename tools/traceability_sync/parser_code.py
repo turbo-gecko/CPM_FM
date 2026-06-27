@@ -32,16 +32,23 @@ class CodeElement(BaseModel):
 class RequirementExtractor(ast.NodeVisitor):
     """
     AST visitor to extract requirement IDs from docstrings of functions and classes.
+
+    The docstring tag that introduces the ID clause is configurable via ``tag``
+    (default ``"Satisfies:"`` for implementation code). Tests use the parallel
+    ``"Verifies:"`` tag so the same robust parsing serves both the
+    code→requirements and test→requirements traces.
     """
-    def __init__(self, module_path: str):
+    def __init__(self, module_path: str, tag: str = "Satisfies:"):
         self.module_path = module_path
+        self.tag = tag
         self.found_elements: list[CodeElement] = []
 
     def _extract_req_ids(self, docstring: Optional[str]) -> list[tuple]:
         """
-        Extracts every requirement ID from a docstring's 'Satisfies:' line.
+        Extracts every requirement ID from a docstring's tag line (``self.tag``).
 
-        A single ``Satisfies:`` tag commonly lists multiple IDs, in two forms:
+        A single tag (e.g. ``Satisfies:`` or ``Verifies:``) commonly lists
+        multiple IDs, in two forms:
           * a comma-separated list, e.g. ``Satisfies: FR-030, FR-031, FR-040.``
           * an inclusive range, e.g. ``Satisfies: FR-050-FR-058.`` or
             ``Satisfies: DR-001-DR-032.`` (same prefix on both ends).
@@ -63,19 +70,20 @@ class RequirementExtractor(ast.NodeVisitor):
             return []
 
         ids: list[tuple] = []
-        # Consider the text after the first "Satisfies:" tag. The clause may wrap
-        # onto following lines, but ONLY lines consisting solely of requirement
-        # IDs and separators are treated as continuations — the first line that
-        # carries any prose ends the clause, so IDs mentioned elsewhere in the
-        # docstring cannot leak in. This lets a long list (e.g. the X-Modem
-        # NFR-003a..NFR-003o set) wrap without breaking parsing.
+        # Consider the text after the first tag (``self.tag``). The clause may
+        # wrap onto following lines, but ONLY lines consisting solely of
+        # requirement IDs and separators are treated as continuations — the
+        # first line that carries any prose ends the clause, so IDs mentioned
+        # elsewhere in the docstring cannot leak in. This lets a long list (e.g.
+        # the X-Modem NFR-003a..NFR-003o set) wrap without breaking parsing.
         cont_re = re.compile(r"(?:[A-Z]+-\d+[a-z]?[\s,.;]*)+")
+        tag_re = re.compile(rf"{re.escape(self.tag)}\s*(.*)")
         clause_parts: list[str] = []
         collecting = False
         for raw in docstring.splitlines():
             line = raw.strip()
             if not collecting:
-                m = re.match(r"Satisfies:\s*(.*)", line)
+                m = tag_re.match(line)
                 if m:
                     clause_parts.append(m.group(1))
                     collecting = True
@@ -150,37 +158,40 @@ class RequirementExtractor(ast.NodeVisitor):
         self._record(node.name, ast.get_docstring(node))
         self.generic_visit(node)
 
-def scan_codebase(root_dir: str) -> list[CodeElement]:
+def scan_codebase(root_dir: str, tag: str = "Satisfies:") -> list[CodeElement]:
     """
     Scans all .py files in the given directory for requirements mapped in docstrings.
-    
+
     Args:
         root_dir: The root directory to start the scan from.
-        
+        tag: The docstring tag that introduces the requirement-ID clause.
+            ``"Satisfies:"`` (default) for implementation code under ``src/``;
+            ``"Verifies:"`` for the test suite under ``tests/``.
+
     Returns:
         A list of CodeElement objects representing the discovered mappings.
     """
     all_elements: list[CodeElement] = []
     root_path = Path(root_dir)
-    
+
     if not root_path.exists():
         logger.error(f"Root directory {root_dir} does not exist.")
         return []
 
-    logger.info(f"Scanning codebase in {root_dir} for requirement tags...")
-    
+    logger.info(f"Scanning {root_dir} for '{tag}' requirement tags...")
+
     for py_file in root_path.rglob("*.py"):
         try:
             with open(py_file, encoding="utf-8") as f:
                 source = f.read()
-            
+
             tree = ast.parse(source)
-            extractor = RequirementExtractor(str(py_file.relative_to(root_path)))
+            extractor = RequirementExtractor(str(py_file.relative_to(root_path)), tag=tag)
             extractor.visit(tree)
             all_elements.extend(extractor.found_elements)
-            
+
         except Exception as e:
             logger.error(f"Failed to parse {py_file}: {e}")
-            
-    logger.info(f"Found {len(all_elements)} requirement mappings in code.")
+
+    logger.info(f"Found {len(all_elements)} requirement mappings in {root_dir}.")
     return all_elements

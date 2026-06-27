@@ -1,6 +1,7 @@
 import argparse
 import logging
 import re
+from pathlib import Path
 
 from parser_code import CodeElement, scan_codebase
 from parser_docs import parse_requirements_md, update_requirements_md
@@ -163,6 +164,27 @@ class TraceabilityAgent:
 
         return "\n".join(plan)
 
+    def test_coverage(self, tests_root: str = "tests") -> dict:
+        """Map defined requirements to the tests that verify them.
+
+        The test-suite counterpart of :func:`run_sync_analysis`: it scans
+        ``tests_root`` for ``Verifies:`` docstring tags and classifies each
+        defined requirement as covered or untested, plus surfaces ``Verifies:``
+        tags that cite an unknown ID. Delegates to
+        :func:`generate_views.build_req_to_tests` so the report and the
+        generated ``requirements_to_tests`` view never drift.
+
+        Returns ``{"covered": {req_id: [loc, ...]}, "untested": [req_id, ...],
+        "stale": {req_id: [loc, ...]}}``.
+        """
+        import generate_views
+
+        defined_ids: set[str] = set()
+        for req_file in self.requirements_files:
+            for row in parse_requirements_md(str(req_file)):
+                defined_ids.add(row.requirement_id)
+        return generate_views.build_req_to_tests(Path(tests_root), defined_ids)
+
     def apply_updates(self, *, dry_run: bool = False) -> dict:
         """Write the computed Source-cell updates back to the owning documents.
 
@@ -222,12 +244,43 @@ def main(argv=None) -> int:
         action="store_true",
         help="Write the rewrites back to the docs (run --dry-run first).",
     )
+    parser.add_argument(
+        "--coverage",
+        action="store_true",
+        help=(
+            "Report requirement→test coverage from test `Verifies:` tags "
+            "(untested requirements and stale tags); writes nothing."
+        ),
+    )
     args = parser.parse_args(argv)
 
     # Paths for the current project structure (relative to CWD).
     code_root = "src"
     req_files = ["docs/cpm_fm_requirements.md", "docs/cpm_fm_architecture.md"]
     agent = TraceabilityAgent(code_root, req_files)
+
+    if args.coverage:
+        cov = agent.test_coverage()
+        n_cov, n_un, n_stale = (
+            len(cov["covered"]),
+            len(cov["untested"]),
+            len(cov["stale"]),
+        )
+        total = n_cov + n_un
+        print("\n=== Requirement -> Test Coverage ===\n")
+        print(
+            f"{n_cov}/{total} requirements have a verifying test; "
+            f"{n_un} untested; {n_stale} stale tag(s)."
+        )
+        if cov["untested"]:
+            print("\n[UNTESTED REQUIREMENTS]")
+            for req_id in cov["untested"]:
+                print(f"  - {req_id}")
+        if cov["stale"]:
+            print("\n[STALE Verifies: TAGS — cite an undefined requirement ID]")
+            for req_id, locs in cov["stale"].items():
+                print(f"  - {req_id}: {', '.join(locs)}")
+        return 0
 
     if not (args.dry_run or args.apply):
         print(agent.generate_update_plan())

@@ -27,6 +27,7 @@ def _reset_language():
 
 
 def test_parser_ignores_comments_and_blank_lines(tmp_path):
+    """Verifies: DR-042."""
     # DR-042: '#' lines and blank lines are ignored; 'key = value' is parsed.
     f = tmp_path / "lang_test.txt"
     f.write_text(
@@ -38,6 +39,7 @@ def test_parser_ignores_comments_and_blank_lines(tmp_path):
 
 
 def test_parser_splits_on_first_equals(tmp_path):
+    """Verifies: DR-042."""
     # DR-042: only the FIRST '=' separates key from value, so values may contain '='.
     f = tmp_path / "lang_test.txt"
     f.write_text("config.json_filter = JSON files (*.json) = ok\n", encoding="utf-8")
@@ -46,27 +48,32 @@ def test_parser_splits_on_first_equals(tmp_path):
 
 
 def test_parser_missing_file_returns_empty(tmp_path):
+    """Verifies: DR-042."""
     # DR-042: an unreadable/missing file degrades to an empty mapping, never raises.
     assert i18n._parse(tmp_path / "does_not_exist.txt") == {}
 
 
 def test_tr_resolves_active_language():
+    """Verifies: FR-121."""
     # FR-121: a known key resolves to the active language's text.
     assert i18n.tr("menu.file") == "File"
 
 
 def test_tr_substitutes_named_placeholders():
+    """Verifies: DR-042."""
     # DR-042: values are str.format templates filled at run time.
     assert i18n.tr("error.drive_not_found_body", drive="B") == "Drive B: not found"
     assert i18n.tr("transfer.count", blocks=2, bytes_done=256) == "Blocks: 2    Bytes: 256"
 
 
 def test_tr_unknown_key_falls_back_to_key():
+    """Verifies: FR-124, DR-043."""
     # FR-124/DR-043: a key absent from every language falls back to the key itself.
     assert i18n.tr("no.such.key.exists") == "no.such.key.exists"
 
 
 def test_tr_falls_back_to_english_for_missing_translation():
+    """Verifies: FR-124, DR-043."""
     # FR-124/DR-043: a key present in English but not the active language falls
     # back to the English text. (Add a German-only gap by clearing its entry.)
     i18n.set_language("german")
@@ -82,6 +89,7 @@ def test_tr_malformed_template_does_not_raise(tmp_path, monkeypatch):
 
 
 def test_available_languages_discovers_shipped_files():
+    """Verifies: FR-122, NFR-005."""
     # FR-122/NFR-005: discovery finds the shipped language files and always
     # includes English.
     langs = i18n.available_languages()
@@ -92,12 +100,14 @@ def test_available_languages_discovers_shipped_files():
 
 
 def test_display_name_is_capitalised():
+    """Verifies: FR-122, UIR-077."""
     # FR-122/UIR-077: the menu label is the capitalised language name.
     assert i18n.display_name("english") == "English"
     assert i18n.display_name("german") == "German"
 
 
 def test_set_and_current_language_round_trip():
+    """Verifies: FR-122, FR-123."""
     # FR-122/FR-123: switching language is reflected by current_language().
     i18n.set_language("french")
     assert i18n.current_language() == "french"
@@ -108,6 +118,7 @@ def test_set_and_current_language_round_trip():
     "language", [lang for lang in i18n.available_languages() if lang != "english"]
 )
 def test_translation_keys_match_english(language):
+    """Verifies: DR-043."""
     # DR-043: each shipped translation must define exactly the same keys as the
     # English reference (no missing keys, no stray extra keys) so nothing silently
     # falls back and no dead entries accumulate. Parametrized over every shipped

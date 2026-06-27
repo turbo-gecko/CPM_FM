@@ -67,6 +67,7 @@ class _FakeSerial:
 
 
 def test_send_file_reports_progress_per_packet(tmp_path):
+    """Verifies: FR-105, NFR-003a."""
     # 300 bytes -> three 128-byte packets (128, 128, 44 real bytes).
     path = tmp_path / "UP.TXT"
     path.write_bytes(bytes(range(256)) + bytes(44))  # 300 bytes
@@ -83,6 +84,7 @@ def test_send_file_reports_progress_per_packet(tmp_path):
 
 
 def test_send_file_1k_uses_stx_1024_byte_frames(tmp_path):
+    """Verifies: NFR-003b, UIR-089."""
     # NFR-003/UIR-089: with use_1k, host->remote sends use 1024-byte STX frames.
     # 1100 bytes -> two 1024-byte packets (1024 real, 76 real + 948 pad).
     path = tmp_path / "UP1K.TXT"
@@ -111,6 +113,7 @@ def _checksum_packet(helper: XModem, seq: int, payload: bytes) -> bytes:
 
 
 def test_receive_file_reports_progress_with_unknown_total(tmp_path):
+    """Verifies: FR-105."""
     save = tmp_path / "DOWN.TXT"
 
     # Build two valid checksum-mode SOH packets (the mode the CP/M senders use).
@@ -129,6 +132,7 @@ def test_receive_file_reports_progress_with_unknown_total(tmp_path):
 
 
 def test_receive_file_polls_checksum_not_crc_first(tmp_path):
+    """Verifies: NFR-003f."""
     # Regression: the CP/M senders (PCPUT V1.0) are checksum-only and abort on a
     # stray 'C' ("Unknown response from host"). The receiver must lead with NAK,
     # never 'C'. Seed one checksum packet so the handshake locks checksum mode.
@@ -145,6 +149,7 @@ def test_receive_file_polls_checksum_not_crc_first(tmp_path):
 
 
 def test_send_file_cancel_aborts_and_sends_can(tmp_path):
+    """Verifies: FR-120, NFR-003m."""
     # FR-120: a cancellation request aborts the send, returns False, and emits
     # the CAN sequence so the remote receiver aborts too.
     path = tmp_path / "UP.TXT"
@@ -159,6 +164,7 @@ def test_send_file_cancel_aborts_and_sends_can(tmp_path):
 
 
 def test_receive_file_cancel_aborts_and_sends_can(tmp_path):
+    """Verifies: FR-120, NFR-003m."""
     # FR-120: a cancellation request aborts the receive, returns False, sends
     # CAN, and writes no (partial) file.
     save = tmp_path / "DOWN.TXT"
@@ -171,6 +177,7 @@ def test_receive_file_cancel_aborts_and_sends_can(tmp_path):
 
 
 def test_cancel_flushes_serial_in_both_directions(tmp_path):
+    """Verifies: FR-120, NFR-003n."""
     # FR-120: aborting flushes the transmit and receive buffers so the in-flight
     # packet stops draining to the remote and stale incoming bytes are dropped,
     # rather than the transfer appearing to continue until the buffers empty.
@@ -187,6 +194,7 @@ def test_cancel_flushes_serial_in_both_directions(tmp_path):
 
 
 def test_abort_does_not_hang_when_tx_cannot_drain(tmp_path):
+    """Verifies: FR-120, NFR-003o."""
     # FR-120 regression: when the line cannot drain after the abort (flow control
     # de-asserted by the aborting remote, so out_waiting never reaches 0), the
     # bounded transmit drain must still return promptly. An unbounded flush()
@@ -223,6 +231,7 @@ def test_abort_does_not_hang_when_tx_cannot_drain(tmp_path):
 
 
 def test_calculate_checksum_matches_independent_vector():
+    """Verifies: NFR-003d."""
     # NFR-003: checksum is (sum of bytes) mod 256, verified against fixed values.
     xm = XModem(_FakeSerial())
     assert xm._calculate_checksum(b"123456789") == 0xDD  # 477 & 0xFF
@@ -231,6 +240,7 @@ def test_calculate_checksum_matches_independent_vector():
 
 
 def test_crc16_matches_canonical_xmodem_vector():
+    """Verifies: NFR-003e."""
     # NFR-003: CRC-16/XMODEM (poly 0x1021, init 0x0000) against known answers.
     xm = XModem(_FakeSerial())
     assert xm._crc16(b"123456789") == 0x31C3  # canonical check value
@@ -239,6 +249,7 @@ def test_crc16_matches_canonical_xmodem_vector():
 
 
 def test_trailer_ok_validates_checksum_independently():
+    """Verifies: NFR-003d."""
     # NFR-003: a correct 1-byte checksum trailer passes; a wrong one fails.
     xm = XModem(_FakeSerial())
     assert xm._trailer_ok(b"123456789", bytes([0xDD]), crc_mode=False) is True
@@ -247,6 +258,7 @@ def test_trailer_ok_validates_checksum_independently():
 
 
 def test_trailer_ok_validates_crc_independently():
+    """Verifies: NFR-003e."""
     # NFR-003: a correct 2-byte big-endian CRC trailer passes; a wrong one fails.
     xm = XModem(_FakeSerial())
     assert xm._trailer_ok(b"123456789", bytes([0x31, 0xC3]), crc_mode=True) is True
@@ -260,6 +272,7 @@ def test_trailer_ok_validates_crc_independently():
 
 
 def test_send_file_returns_false_when_file_missing(tmp_path):
+    """Verifies: FR-081."""
     # FR-081: a non-existent source file fails fast and transmits nothing.
     fake = _FakeSerial(b"C" + ACK * 4)
     assert XModem(fake).send_file(str(tmp_path / "does_not_exist.bin")) is False
@@ -267,6 +280,7 @@ def test_send_file_returns_false_when_file_missing(tmp_path):
 
 
 def test_send_file_returns_false_when_no_start_char(tmp_path, monkeypatch):
+    """Verifies: FR-082."""
     # FR-082: if the receiver never sends a start character the send aborts with
     # False (and, absent a cancel, sends no CAN). The 60s handshake wait is
     # replaced by a stubbed timeout so the test does not block.
@@ -289,6 +303,7 @@ def test_send_file_aborts_after_nak_exhaustion(tmp_path):
 
 
 def test_send_file_pads_final_short_chunk_with_eof(tmp_path):
+    """Verifies: NFR-003c."""
     # NFR-003: a final chunk shorter than 128 bytes is padded to a full data
     # field with the 0x1A (Ctrl-Z) EOF byte before the trailer is computed.
     path = tmp_path / "UP.TXT"
@@ -359,6 +374,7 @@ class _CrcReceiveSerial:
 
 
 def test_receive_file_falls_through_to_crc_mode(tmp_path):
+    """Verifies: NFR-003f."""
     # NFR-003: when the sender ignores NAK (checksum) the receiver polls 'C' and
     # validates a 2-byte CRC trailer. (crc16 correctness is pinned independently
     # by test_crc16_matches_canonical_xmodem_vector.)
@@ -373,6 +389,7 @@ def test_receive_file_falls_through_to_crc_mode(tmp_path):
 
 
 def test_receive_file_accepts_1k_stx_frame(tmp_path):
+    """Verifies: NFR-003h."""
     # NFR-003: STX frames carry 1024 data bytes (XMODEM-1K) and must be accepted.
     save = tmp_path / "DOWN.BIN"
     helper = XModem(_FakeSerial())
@@ -424,6 +441,7 @@ class _ChunkedSerial:
 
 
 def test_receive_file_1k_frame_split_across_short_reads(tmp_path):
+    """Verifies: NFR-003i."""
     # Regression: the transport port's 0.1s read timeout means ser.read(1024)
     # returns only a fraction of a 1K frame, so the frame must be reassembled
     # across several reads. A single short read would truncate the payload and
@@ -440,6 +458,7 @@ def test_receive_file_1k_frame_split_across_short_reads(tmp_path):
 
 
 def test_receive_file_1k_polls_crc_first(tmp_path):
+    """Verifies: NFR-003g, UIR-089."""
     # NFR-003/UIR-089: XMODEM-1K is a CRC protocol — with use_1k the receiver
     # must lead with 'C' (not NAK) so a 1K-capable sender switches to 1024-byte
     # STX frames. The default (checksum-first) path is pinned separately by
@@ -456,6 +475,7 @@ def test_receive_file_1k_polls_crc_first(tmp_path):
 
 
 def test_receive_file_reacks_duplicate_packet_once(tmp_path):
+    """Verifies: NFR-003k."""
     # NFR-003: a re-sent packet (lost ACK) is re-ACK'd but stored only once.
     save = tmp_path / "DOWN.TXT"
     helper = XModem(_FakeSerial())
@@ -476,6 +496,7 @@ def test_receive_file_reacks_duplicate_packet_once(tmp_path):
 
 
 def test_receive_file_recovers_from_corrupt_trailer(tmp_path):
+    """Verifies: NFR-003l."""
     # NFR-003: a packet with a bad trailer is NAK'd and the resent good copy is
     # accepted. Only the checksum byte is corrupted, isolating the trailer check.
     save = tmp_path / "DOWN.TXT"
@@ -527,6 +548,7 @@ class _SilentTailSerial:
 
 
 def test_receive_file_completes_when_eot_is_lost(tmp_path):
+    """Verifies: NFR-003j."""
     # Regression: if the sender goes SILENT after the last packet (its EOT lost
     # or garbled) with every byte already received, the receive must finish with
     # the data after a bounded number of silent NAK retries rather than hang.
@@ -541,6 +563,7 @@ def test_receive_file_completes_when_eot_is_lost(tmp_path):
 
 
 def test_receive_file_resyncs_after_stray_bytes_between_packets(tmp_path):
+    """Verifies: NFR-003j."""
     # Regression: a burst of stray bytes mid-transfer (e.g. a lost frame-start
     # turning a 1K payload into noise) must NOT truncate the receive — while the
     # sender is still transmitting the receiver keeps NAKing and resyncs on the

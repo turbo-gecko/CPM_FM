@@ -22,6 +22,7 @@ def _history(tmp_path, **kwargs):
 
 
 def test_skipped_is_a_recognised_status(tmp_path):
+    """Verifies: FR-146."""
     # FR-146: a file the user declined to overwrite is recorded as "skipped".
     assert "skipped" in STATUSES
     h = _history(tmp_path)
@@ -33,6 +34,7 @@ def test_skipped_is_a_recognised_status(tmp_path):
 
 
 def test_add_entry_records_all_fields(tmp_path):
+    """Verifies: FR-140."""
     # FR-140: an entry carries filename, path, direction, status, size, error,
     # retry, and a timestamp.
     h = _history(tmp_path)
@@ -57,6 +59,7 @@ def test_add_entry_records_all_fields(tmp_path):
 
 
 def test_persistence_round_trip(tmp_path):
+    """Verifies: FR-141, DR-045."""
     # FR-141/DR-045: entries persist to JSON and reload in a fresh instance.
     h = _history(tmp_path)
     h.add_entry(filename="A.TXT", path="/h/A.TXT", direction="host", status="failure", error="boom")
@@ -70,6 +73,7 @@ def test_persistence_round_trip(tmp_path):
 
 
 def test_get_entries_returns_copy(tmp_path):
+    """Verifies: FR-140."""
     # FR-140: a caller cannot mutate the stored history via the returned list.
     h = _history(tmp_path)
     h.add_entry(filename="A.TXT", path="/h/A.TXT", direction="host", status="success")
@@ -80,6 +84,7 @@ def test_get_entries_returns_copy(tmp_path):
 
 
 def test_clear_history(tmp_path):
+    """Verifies: FR-143."""
     # FR-143: clearing empties the history and persists the empty list.
     h = _history(tmp_path)
     h.add_entry(filename="A.TXT", path="/h/A.TXT", direction="host", status="success")
@@ -89,6 +94,7 @@ def test_clear_history(tmp_path):
 
 
 def test_retention_trims_to_max_entries(tmp_path):
+    """Verifies: FR-141."""
     # FR-141: only the most-recent max_entries are kept (oldest dropped first).
     h = _history(tmp_path, max_entries=3, max_age_days=0)
     for i in range(5):
@@ -98,6 +104,7 @@ def test_retention_trims_to_max_entries(tmp_path):
 
 
 def test_retention_prunes_old_entries(tmp_path):
+    """Verifies: FR-141."""
     # FR-141: entries older than max_age_days are pruned; recent ones are kept.
     h = _history(tmp_path, max_age_days=30)
     old = (datetime.now() - timedelta(days=40)).isoformat(timespec="seconds")
@@ -113,6 +120,7 @@ def test_retention_prunes_old_entries(tmp_path):
 
 
 def test_prune_keeps_unparseable_timestamps(tmp_path):
+    """Verifies: FR-141."""
     # FR-141: an entry with an unparseable timestamp is retained, not dropped.
     path = tmp_path / "history.json"
     path.write_text(
@@ -125,11 +133,13 @@ def test_prune_keeps_unparseable_timestamps(tmp_path):
 
 
 def test_missing_file_starts_empty(tmp_path):
+    """Verifies: FR-141, DR-045."""
     # FR-141/DR-045: a missing history file yields an empty history, no error.
     assert _history(tmp_path).get_entries() == []
 
 
 def test_malformed_file_degrades_to_empty(tmp_path):
+    """Verifies: FR-141, DR-045."""
     # FR-141/DR-045: malformed JSON (or a non-list document) degrades to empty.
     path = tmp_path / "history.json"
     path.write_text("{ this is not valid json", encoding="utf-8")
@@ -139,6 +149,7 @@ def test_malformed_file_degrades_to_empty(tmp_path):
 
 
 def test_export_history(tmp_path):
+    """Verifies: FR-143."""
     # FR-143: export writes the current entries to a chosen JSON file.
     h = _history(tmp_path)
     h.add_entry(filename="A.TXT", path="/h/A.TXT", direction="host", status="success", size=10)
@@ -149,6 +160,7 @@ def test_export_history(tmp_path):
 
 
 def test_thread_safe_concurrent_add(tmp_path):
+    """Verifies: FR-142."""
     # FR-142: concurrent recording from many threads loses no entries and never
     # corrupts the store.
     h = _history(tmp_path, max_entries=10_000, max_age_days=0)

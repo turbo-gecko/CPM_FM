@@ -154,6 +154,7 @@ def _arm(win, monkeypatch, calls, sent=None):
 
 
 def test_remote_batch_skips_invalid_name(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-149."""
     # FR-149: Skip leaves the invalid-named file unsent and records "skipped";
     # the conforming file still transfers.
     win = MainWindow(state)
@@ -176,6 +177,7 @@ def test_remote_batch_skips_invalid_name(qapp, monkeypatch, state, tmp_path):
 
 
 def test_remote_batch_renames_invalid_name(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-149."""
     # FR-149: Rename uploads the file under the validated replacement name; the
     # PCGET launch command and the history both carry the new name.
     win = MainWindow(state)
@@ -197,6 +199,7 @@ def test_remote_batch_renames_invalid_name(qapp, monkeypatch, state, tmp_path):
 
 
 def test_remote_batch_cancel_on_invalid_name(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-149."""
     # FR-149: Cancel at an invalid name aborts the whole batch.
     win = MainWindow(state)
     try:
@@ -218,6 +221,7 @@ def test_remote_batch_cancel_on_invalid_name(qapp, monkeypatch, state, tmp_path)
 
 
 def test_remote_batch_valid_name_never_prompts(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-148."""
     # FR-148: a conforming name is uploaded without raising the validation prompt.
     win = MainWindow(state)
     try:
@@ -238,6 +242,7 @@ def test_remote_batch_valid_name_never_prompts(qapp, monkeypatch, state, tmp_pat
 
 
 def test_renamed_name_then_subject_to_conflict(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-145, FR-149."""
     # FR-145/FR-149: the renamed name is conflict-checked against the remote.
     win = MainWindow(state)
     try:
@@ -273,6 +278,7 @@ def test_dialog_rename_with_valid_name_accepts(qapp, state):
 
 
 def test_dialog_rename_with_invalid_name_stays_open(qapp, state):
+    """Verifies: FR-149."""
     # FR-149: an invalid replacement is rejected inline (dialog not accepted).
     win = MainWindow(state)
     try:
@@ -299,6 +305,7 @@ def test_dialog_skip_and_cancel(qapp, state):
 
 
 def test_on_invalid_name_detected_records_choice_and_releases_worker(qapp, monkeypatch, state):
+    """Verifies: FR-149, UIR-085."""
     # FR-149/UIR-085: the GUI slot shows the dialog, stores the choice, and sets
     # the event the worker thread blocks on.
     win = MainWindow(state)

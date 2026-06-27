@@ -2,7 +2,7 @@
 
 The full specification `docs/cpm_fm_requirements.md` (plus its architecture
 companion `docs/cpm_fm_architecture.md`) is large. **Do not read it whole.**
-Three slim, generated views in `docs/requirements_views/` exist so you can work
+Several slim, generated views in `docs/requirements_views/` exist so you can work
 without exhausting the context window. Use them by default. The views already
 fold in both files, so the index covers every requirement including the `CR-`/
 `NFR-` architectural constraints.
@@ -21,8 +21,16 @@ fold in both files, so the index covers every requirement including the `CR-`/
   Read `docs/requirements_views/requirements_index.md` (~13K tokens). It is a
   section-grouped, one-line-per-requirement summary. This alone is usually enough.
 
+- **Test coverage of a requirement (which test verifies it?):**
+  Use `docs/requirements_views/requirements_to_tests.md` — it maps each
+  requirement ID to the test(s) carrying a `Verifies:` tag for it, and lists
+  untested requirements and stale tags. (`python
+  tools/traceability_sync/agent_toolset.py --coverage` prints the same untested /
+  stale summary on demand.)
+
 - **Machine lookups (scripts/tooling):**
-  Use `docs/requirements_views/code_to_requirements.json`.
+  Use `docs/requirements_views/code_to_requirements.json` or
+  `requirements_to_tests.json`.
 
 ## Rules
 
@@ -36,6 +44,10 @@ fold in both files, so the index covers every requirement including the `CR-`/
   append-only. Don't load them for implementation work; append to them only as part of the
   requirement-change workflow (see `AGENTS.md`).
 - The files under `docs/requirements_views/` are **generated — never edit them.**
-  After changing the spec or any code `Satisfies:` tag, regenerate with:
+  After changing the spec, any code `Satisfies:` tag, or any test `Verifies:` tag,
+  regenerate with:
   `python tools/traceability_sync/generate_views.py`
+- Tag tests the way you tag code: a test function's docstring carries a
+  `Verifies:` line citing the requirement ID(s) it exercises, mirroring code
+  `Satisfies:` tags.
 - Cite requirement IDs (e.g. `FR-080`) when referencing behaviour.
