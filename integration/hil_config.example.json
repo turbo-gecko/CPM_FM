@@ -1,0 +1,28 @@
+{
+  "_comment": "Copy this file to hil_config.json (gitignored) and edit for your bench. settings_file may be absolute or relative to the repo root. See README.md and temp/integration_test_harness_plan.md section 2 for field meanings.",
+  "default_target": "rc2014",
+  "targets": {
+    "rc2014": {
+      "description": "RC2014 Z80 Pro, CP/M (single shared serial port)",
+      "settings_file": "examples/RC2014_Z_Pro.json",
+      "two_port": false,
+      "spare_port": null,
+      "scratch_drive": "J",
+      "connect_drive": "A",
+      "has_1k_sender": true,
+      "has_checksum_sender": true,
+      "flow_control_peer": false
+    },
+    "scz180": {
+      "description": "SC126 Z180, CP/M 3 (two-port example)",
+      "settings_file": "C:/cpm-bench/scz180.json",
+      "two_port": true,
+      "spare_port": "COM9",
+      "scratch_drive": "C",
+      "connect_drive": "A",
+      "has_1k_sender": true,
+      "has_checksum_sender": false,
+      "flow_control_peer": false
+    }
+  }
+}
