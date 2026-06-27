@@ -42,6 +42,9 @@ class MainWindowMixinBase:
         _conflict_result: tuple[str, bool]
         _invalid_name_answered: threading.Event
         _invalid_name_result: tuple[str, str]
+        _backup_confirm_answered: threading.Event
+        _backup_confirm_result: bool
+        host_dir: str
 
         # --- file-pane widgets and their canonical (unfiltered) name lists ---
         host_list: FileListWidget
@@ -70,6 +73,7 @@ class MainWindowMixinBase:
         remote_files_ready: Any
         conflict_detected: Any
         invalid_name_detected: Any
+        backup_restore_confirm: Any
 
         # --- methods that remain on MainWindow / non-transfer sections ---
         def set_status(self, text: str) -> None: ...
