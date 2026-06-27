@@ -190,6 +190,55 @@ def test_code_impl_extracts_only_the_code_citation():
     assert generate_views.code_impl("App_Design §Purpose") == "—"
 
 
+def test_validate_tables_clean_on_well_formed_table(tmp_path):
+    spec = tmp_path / "spec.md"
+    spec.write_text(_TABLE, encoding="utf-8")
+    assert generate_views.validate_tables(spec) == []
+
+
+def test_validate_tables_flags_unescaped_pipe_row(tmp_path):
+    # The DR-046 failure mode: a literal, unescaped '|' inside a cell makes the
+    # row split to one more cell than the 5-column header.
+    spec = tmp_path / "spec.md"
+    spec.write_text(
+        "| ID | Requirement | Priority | Verification | Source |\n"
+        "|----|---|---|---|---|\n"
+        "| DR-046 | Delimiters are a | b. | Mandatory | T | impl. `x.py:f` |\n",
+        encoding="utf-8",
+    )
+    errors = generate_views.validate_tables(spec)
+    assert len(errors) == 1
+    assert "expected 5 cells but row has 6" in errors[0]
+    assert "DR-046" in errors[0]
+
+
+def test_validate_tables_accepts_escaped_pipe(tmp_path):
+    # The same row with the pipe escaped as ``\|`` stays a single cell — exactly
+    # the DR-046 fix — so the validator must not flag it.
+    spec = tmp_path / "spec.md"
+    spec.write_text(
+        "| ID | Requirement | Priority | Verification | Source |\n"
+        "|----|---|---|---|---|\n"
+        "| DR-046 | Delimiters are a \\| b. | Mandatory | T | impl. `x.py:f` |\n",
+        encoding="utf-8",
+    )
+    assert generate_views.validate_tables(spec) == []
+
+
+def test_main_exits_nonzero_on_malformed_table(tmp_path, monkeypatch):
+    # The --check entry point must surface a malformed row as a non-zero exit,
+    # so CI / the pre-commit hook block it instead of silently mis-parsing.
+    bad = tmp_path / "bad.md"
+    bad.write_text(
+        "| ID | Requirement | Priority | Verification | Source |\n"
+        "|----|---|---|---|---|\n"
+        "| FR-001 | Has an a | b pipe. | Mandatory | T | — |\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(generate_views, "SPEC_FILES", [bad])
+    assert generate_views.main(["--check"]) == 3
+
+
 def test_generate_aggregates_multiple_spec_files(tmp_path, monkeypatch):
     srs = tmp_path / "srs.md"
     arch = tmp_path / "arch.md"
