@@ -27,6 +27,7 @@ sys.path.insert(0, str(_TOOLS))
 
 import agent_toolset  # noqa: E402
 import generate_views  # noqa: E402
+import parser_docs  # noqa: E402
 from parser_code import RequirementExtractor, scan_codebase  # noqa: E402
 
 
@@ -313,3 +314,126 @@ def test_apply_updates_routes_each_change_to_its_owning_file(tmp_path):
     assert "impl." in arch.read_text(encoding="utf-8")
     assert "impl." not in srs.read_text(encoding="utf-8")
     assert "builder" in arch.read_text(encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# parser_docs._merge_source — conservative, never-clobber-curation merging
+# ---------------------------------------------------------------------------
+def test_merge_source_fills_empty_or_placeholder_cell():
+    assert parser_docs._merge_source("—", "impl. `a.py:f`") == "impl. `a.py:f`"
+    assert parser_docs._merge_source("", "impl. `a.py:f`") == "impl. `a.py:f`"
+
+
+def test_merge_source_appends_to_legacy_reference_only_cell():
+    # No impl. segment present: append, discarding nothing.
+    assert (
+        parser_docs._merge_source("App_Design §Purpose", "impl. `a.py:f`")
+        == "App_Design §Purpose; impl. `a.py:f`"
+    )
+
+
+def test_merge_source_replaces_plain_citation_list():
+    # Trailing impl. text is a bare backticked citation list — safe to rewrite.
+    assert (
+        parser_docs._merge_source("impl. `old.py:f`, `old2.py:g`", "impl. `new.py:h`")
+        == "impl. `new.py:h`"
+    )
+    # A legacy prefix before the citation list is preserved.
+    assert (
+        parser_docs._merge_source("App_Design; impl. `old.py:f`", "impl. `new.py:h`")
+        == "App_Design; impl. `new.py:h`"
+    )
+
+
+def test_merge_source_refuses_to_clobber_curated_annotation():
+    # Each of these carries curated text after the citation; merging must bail
+    # out (return None) rather than discard it — the DR-045/047/CR-015 trap.
+    parenthetical = "impl. `a.py:f` (default name `X`)"
+    tests_citation = "impl. `a.py:f`; tests `test_a.py`"
+    cross_ref = "impl. `a.py:f`; FR-121"
+    for cell in (parenthetical, tests_citation, cross_ref):
+        assert parser_docs._merge_source(cell, "impl. `new.py:h`") is None
+
+
+# ---------------------------------------------------------------------------
+# parser_docs.update_requirements_md — skip-and-report + dry-run
+# ---------------------------------------------------------------------------
+def _spec_with_source(path, req_id, source_cell):
+    path.write_text(
+        "# Spec\n\n"
+        "| ID | Requirement | Priority | Verification | Source |\n"
+        "|----|---|---|---|---|\n"
+        f"| {req_id} | A requirement. | Mandatory | T | {source_cell} |\n",
+        encoding="utf-8",
+    )
+
+
+def test_update_skips_and_reports_curated_row_preserving_text(tmp_path):
+    spec = tmp_path / "spec.md"
+    curated = "impl. `old.py:f` (default name `X`); tests `test_old.py`"
+    _spec_with_source(spec, "DR-045", curated)
+    before = spec.read_text(encoding="utf-8")
+
+    report = parser_docs.update_requirements_md(
+        str(spec), {"DR-045": "impl. `new.py:h`"}
+    )
+
+    assert report["applied"] == 0
+    assert report["skipped"] == ["DR-045"]
+    # The curated cell — and the whole file — is byte-for-byte unchanged.
+    assert spec.read_text(encoding="utf-8") == before
+    assert "(default name `X`)" in spec.read_text(encoding="utf-8")
+    assert "tests `test_old.py`" in spec.read_text(encoding="utf-8")
+
+
+def test_update_rewrites_plain_citation_row(tmp_path):
+    spec = tmp_path / "spec.md"
+    _spec_with_source(spec, "FR-001", "impl. `old.py:f`")
+    report = parser_docs.update_requirements_md(
+        str(spec), {"FR-001": "impl. `new.py:h`"}
+    )
+    assert report["applied"] == 1
+    assert report["skipped"] == []
+    assert "impl. `new.py:h`" in spec.read_text(encoding="utf-8")
+    assert "old.py:f" not in spec.read_text(encoding="utf-8")
+
+
+def test_update_dry_run_writes_nothing_but_returns_diff(tmp_path):
+    spec = tmp_path / "spec.md"
+    _spec_with_source(spec, "FR-001", "impl. `old.py:f`")
+    before = spec.read_text(encoding="utf-8")
+
+    report = parser_docs.update_requirements_md(
+        str(spec), {"FR-001": "impl. `new.py:h`"}, dry_run=True
+    )
+
+    assert report["applied"] == 1
+    # Nothing written; the file is untouched.
+    assert spec.read_text(encoding="utf-8") == before
+    # The diff previews the rewrite that would have happened.
+    assert "new.py:h" in report["diff"]
+    assert report["diff"].startswith("---")
+
+
+def test_apply_updates_dry_run_leaves_docs_untouched(tmp_path):
+    code = tmp_path / "src"
+    code.mkdir()
+    (code / "mod.py").write_text(
+        'def builder():\n'
+        '    """Build it.\n'
+        '\n'
+        '    Satisfies: FR-001.\n'
+        '    """\n'
+        '    return None\n',
+        encoding="utf-8",
+    )
+    spec = tmp_path / "srs.md"
+    _spec_with_source(spec, "FR-001", "—")
+    before = spec.read_text(encoding="utf-8")
+
+    agent = agent_toolset.TraceabilityAgent(str(code), [str(spec)])
+    report = agent.apply_updates(dry_run=True)
+
+    assert report["applied"] == 1
+    assert spec.read_text(encoding="utf-8") == before  # nothing written
+    assert any("mod.py:builder" in d for d in report["diffs"].values())

@@ -1,3 +1,4 @@
+import difflib
 import logging
 import re
 from pathlib import Path
@@ -138,24 +139,39 @@ def parse_requirements_md(file_path: str) -> list[RequirementRow]:
     logger.info(f"Parsed {len(requirements)} requirements from {file_path}.")
     return requirements
 
-def _merge_source(existing: str, new_impl: str) -> str:
-    """Merge a freshly computed ``impl. ...`` citation into a Source cell
-    without discarding the cell's legacy document reference.
+# A *plain citation list*: one or more backticked tokens separated only by
+# commas (e.g. ```app.py:foo`, `config.py:bar```) — exactly the shape the
+# traceability tool itself emits. A trailing ``impl.`` segment of this shape is
+# safe to auto-rewrite; anything richer (a parenthetical, a ``; tests ...``
+# citation, a ``; FR-...`` cross-ref) is curated prose that must not be clobbered.
+_PLAIN_CITATIONS = re.compile(r"^`[^`]+`(?:\s*,\s*`[^`]+`)*$")
 
-    * If the cell already carries an ``impl.`` segment (always the trailing
-      part in this SRS), that segment is replaced with ``new_impl`` and any
-      legacy reference before it is preserved.
-    * If the cell holds only a legacy reference, ``new_impl`` is appended after
-      a ``; `` separator.
-    * If the cell is empty or a placeholder (``—``/``None``), it becomes
-      ``new_impl`` alone.
+
+def _merge_source(existing: str, new_impl: str) -> str | None:
+    """Merge a freshly computed ``impl. ...`` citation into a Source cell, or
+    signal that doing so safely is impossible.
+
+    Conservative by design — it never overwrites curated annotation:
+
+    * Empty / placeholder cell (``—``/``None``/``""``): becomes ``new_impl``.
+    * Cell with **no** ``impl.`` segment (legacy reference only): ``new_impl``
+      is appended after a ``; `` separator (nothing is discarded).
+    * Cell with an ``impl.`` segment whose trailing text is a *plain citation
+      list* (see :data:`_PLAIN_CITATIONS`): that segment is replaced with
+      ``new_impl`` and any legacy prefix before it is preserved.
+    * Cell with an ``impl.`` segment carrying any curated annotation after the
+      citation (a parenthetical, ``; tests ...``, a ``; FR-...`` cross-ref):
+      **returns ``None``** so the caller leaves the cell untouched and reports
+      it for manual review rather than clobbering the curation. This is the
+      DR-045/DR-047/CR-015 data-loss trap the v2.14.0 sync hit.
 
     Args:
         existing: The current Source cell text (already stripped).
         new_impl: The new implementation citation, e.g. ``impl. `app.py:foo` ``.
 
     Returns:
-        The merged Source cell text.
+        The merged Source cell text, or ``None`` when the cell must be left
+        untouched and flagged for manual review.
     """
     if existing in ("", "—", "None"):
         return new_impl
@@ -163,15 +179,21 @@ def _merge_source(existing: str, new_impl: str) -> str:
     lowered = existing.lower()
     idx = lowered.find("impl.")
     if idx != -1:
+        trailing = existing[idx + len("impl.") :].strip()
+        if not _PLAIN_CITATIONS.match(trailing):
+            # Curated annotation follows the citation — do not clobber it.
+            return None
         prefix = existing[:idx].rstrip().rstrip(";").rstrip()
         return f"{prefix}; {new_impl}" if prefix else new_impl
 
     return f"{existing.rstrip().rstrip(';').rstrip()}; {new_impl}"
 
 
-def update_requirements_md(file_path: str, updates: dict[str, str]):
+def update_requirements_md(
+    file_path: str, updates: dict[str, str], *, dry_run: bool = False
+) -> dict:
     """
-    Updates the implementation citation of a Markdown table without discarding
+    Update the implementation citation of a Markdown table without discarding
     the existing Source-column content.
 
     Only genuine data rows whose first cell is a requirement ID present in
@@ -180,15 +202,26 @@ def update_requirements_md(file_path: str, updates: dict[str, str]):
     that is not changed — are preserved verbatim, including literal ``\\|``
     sequences inside a cell.
 
+    A row whose Source cell carries curated annotation after its ``impl.``
+    citation is **never** rewritten: :func:`_merge_source` returns ``None`` for
+    it, the row is left exactly as-is, and its ID is added to the returned
+    ``skipped`` list for manual review.
+
     Args:
         file_path: Path to the requirements.md file.
         updates: Dictionary mapping Requirement ID to the new implementation string.
+        dry_run: When True, write nothing; the returned ``diff`` is a unified-diff
+            preview of the rewrites that *would* be applied.
+
+    Returns:
+        ``{"applied": int, "skipped": list[str], "diff": str}``.
     """
     path = Path(file_path)
     with open(path, encoding="utf-8") as f:
         lines = f.readlines()
 
     applied = 0
+    skipped: list[str] = []
     new_lines: list[str] = []
     for line in lines:
         body = line.rstrip("\n")
@@ -204,14 +237,37 @@ def update_requirements_md(file_path: str, updates: dict[str, str]):
                 req_id = inner[0].strip()
                 if req_id in updates:
                     merged = _merge_source(inner[-1].strip(), updates[req_id])
-                    inner[-1] = f" {merged} "
-                    body = "|" + "|".join(inner) + "|"
-                    line = body + (ending or "\n")
-                    applied += 1
+                    if merged is None:
+                        # Curated Source cell — leave it untouched, flag it.
+                        skipped.append(req_id)
+                    else:
+                        inner[-1] = f" {merged} "
+                        body = "|" + "|".join(inner) + "|"
+                        line = body + (ending or "\n")
+                        applied += 1
 
         new_lines.append(line)
 
-    with open(path, "w", encoding="utf-8") as f:
-        f.writelines(new_lines)
+    diff = "".join(
+        difflib.unified_diff(
+            lines,
+            new_lines,
+            fromfile=f"{file_path} (current)",
+            tofile=f"{file_path} (proposed)",
+        )
+    )
 
-    logger.info(f"Updated {applied} rows in {file_path}.")
+    if dry_run:
+        logger.info(f"[dry-run] {applied} row(s) would change in {file_path}.")
+    else:
+        with open(path, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
+        logger.info(f"Updated {applied} rows in {file_path}.")
+
+    if skipped:
+        logger.warning(
+            f"Skipped {len(skipped)} row(s) in {file_path} with curated Source "
+            f"annotation (manual review needed): {', '.join(skipped)}"
+        )
+
+    return {"applied": applied, "skipped": skipped, "diff": diff}
