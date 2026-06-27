@@ -128,6 +128,51 @@ def code_impl(source_cell: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Structural table validation
+# ---------------------------------------------------------------------------
+def validate_tables(spec_file: Path) -> list[str]:
+    """Check every Markdown table in ``spec_file`` for column-count integrity.
+
+    For each table (a header row immediately followed by a ``|---|`` separator),
+    every data row must split — on *unescaped* pipes, via :func:`_split_row`,
+    so an escaped ``\\|`` inside a cell is left intact — to exactly the header's
+    cell count. A literal, unescaped ``|`` inside a cell (the DR-046 bug)
+    fragments the row past the header count and is reported here.
+
+    Returns a list of human-readable error strings (``file:line: ...``); an
+    empty list means every table is well-formed. Reporting rather than raising
+    lets the caller aggregate errors across files before exiting.
+    """
+    lines = spec_file.read_text(encoding="utf-8").splitlines()
+    errors: list[str] = []
+    n = len(lines)
+    i = 0
+    while i < n:
+        header = lines[i].strip()
+        nxt = lines[i + 1].strip() if i + 1 < n else ""
+        # A table header is a pipe row whose next line is a |---| separator.
+        if header.startswith("|") and nxt.startswith("|") and "---" in nxt:
+            header_count = len(_split_row(header))
+            j = i + 2
+            while j < n and lines[j].strip().startswith("|"):
+                row = lines[j].strip()
+                # A second separator row (rare) is layout, not data — skip it.
+                if "---" not in row:
+                    count = len(_split_row(row))
+                    if count != header_count:
+                        errors.append(
+                            f"{spec_file.name}:{j + 1}: expected {header_count} "
+                            f"cells but row has {count} (unescaped '|' in a cell?) "
+                            f"— {row}"
+                        )
+                j += 1
+            i = j  # resume past the table block
+        else:
+            i += 1
+    return errors
+
+
+# ---------------------------------------------------------------------------
 # Parsing the SRS into ordered sections of requirement rows
 # ---------------------------------------------------------------------------
 def parse_sections(req_file: Path) -> list:
@@ -278,6 +323,17 @@ def main(argv=None) -> int:
         if not spec_file.exists():
             print(f"ERROR: spec file not found: {spec_file}", file=sys.stderr)
             return 2
+
+    # Structural guard (both --check and the write path): a malformed table row
+    # would otherwise mis-parse silently and corrupt the generated views.
+    table_errors: list[str] = []
+    for spec_file in SPEC_FILES:
+        table_errors.extend(validate_tables(spec_file))
+    if table_errors:
+        print("Malformed requirement-table row(s) — cell count != header:", file=sys.stderr)
+        for err in table_errors:
+            print(f"  - {err}", file=sys.stderr)
+        return 3
 
     contents = generate()
 
