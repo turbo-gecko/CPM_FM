@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from cpm_fm.gui.window_state import WindowState
     from cpm_fm.terminal.serial_manager import SerialManager
     from cpm_fm.utils.config_handler import ConfigHandler
+    from cpm_fm.utils.transfer_history import TransferHistory
 
 
 class MainWindowMixinBase:
@@ -32,6 +33,7 @@ class MainWindowMixinBase:
         settings: dict
         serial_mgr: SerialManager
         config_handler: ConfigHandler
+        transfer_history: TransferHistory
         window_state: WindowState
         _rx_buffer: str
         _tx_buffer: str
@@ -121,6 +123,8 @@ class MainWindowMixinBase:
         def _xmodem_1k_enabled(self) -> bool: ...
         def _wait_for_terminal_idle(self) -> None: ...
         def _finish_cancelled_batch(self, direction: str, succeeded: int) -> None: ...
+        def _transfer_to_remote_batch(self, filepaths, retry: bool = False) -> None: ...
+        def _transfer_to_host_batch(self, save_paths, retry: bool = False) -> None: ...
         def _fresh_remote_names(self) -> set[str]: ...
         def _prompt_invalid_name(self, name: str) -> tuple[str, str]: ...
         @staticmethod
