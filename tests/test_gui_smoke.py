@@ -195,6 +195,7 @@ def test_failed_transfer_does_not_refresh(qapp, monkeypatch, state):
 
 
 def test_progress_dialog_started_and_updates(qapp, state):
+    """Verifies: FR-105, UIR-051."""
     # FR-105/UIR-051: batch_started builds the modal dialog; transfer_file_started
     # names the file; transfer_progress updates the blocks/bytes label.
     win = MainWindow(state)
@@ -213,6 +214,7 @@ def test_progress_dialog_started_and_updates(qapp, state):
 
 
 def test_progress_dialog_title_for_receive(qapp, state):
+    """Verifies: UIR-051."""
     # UIR-051: the host (receive) direction titles the dialog "Receiving File".
     win = MainWindow(state)
     try:
@@ -225,6 +227,7 @@ def test_progress_dialog_title_for_receive(qapp, state):
 
 
 def test_progress_dialog_closes_on_completion(qapp, monkeypatch, state):
+    """Verifies: FR-105."""
     # FR-105: a successful transfer auto-closes the progress dialog.
     win = MainWindow(state)
     try:
@@ -239,6 +242,7 @@ def test_progress_dialog_closes_on_completion(qapp, monkeypatch, state):
 
 
 def test_progress_dialog_closes_on_error(qapp, monkeypatch, state):
+    """Verifies: FR-105."""
     # FR-105: a failed transfer auto-closes the progress dialog before the error.
     win = MainWindow(state)
     try:
@@ -253,6 +257,7 @@ def test_progress_dialog_closes_on_error(qapp, monkeypatch, state):
 
 
 def test_transfer_run_leaves_no_progress_dialog(qapp, monkeypatch, state):
+    """Verifies: FR-105."""
     # FR-105: end-to-end through a stubbed transfer, the dialog is opened then
     # closed, leaving no leaked dialog once the queued signals are delivered.
     win = MainWindow(state)
@@ -267,6 +272,7 @@ def test_transfer_run_leaves_no_progress_dialog(qapp, monkeypatch, state):
 
 
 def test_selected_filenames_returns_display_order(qapp, state):
+    """Verifies: FR-106, FR-107."""
     # FR-106/FR-107: every selected file is returned in list display order,
     # regardless of the order rows were clicked.
     win = MainWindow(state)
@@ -282,6 +288,7 @@ def test_selected_filenames_returns_display_order(qapp, state):
 
 
 def test_copy_to_remote_transfers_all_selected(qapp, monkeypatch, state):
+    """Verifies: FR-106, FR-107, FR-099."""
     # FR-106/FR-107: a multi-file Copy to Remote transfers every selected file
     # sequentially and refreshes the remote list once at the end.
     win = MainWindow(state)
@@ -300,6 +307,7 @@ def test_copy_to_remote_transfers_all_selected(qapp, monkeypatch, state):
 
 
 def test_copy_to_host_transfers_all_selected(qapp, monkeypatch, state):
+    """Verifies: FR-106, FR-107."""
     # FR-106/FR-107: symmetric multi-file Copy to Host.
     win = MainWindow(state)
     try:
@@ -317,6 +325,7 @@ def test_copy_to_host_transfers_all_selected(qapp, monkeypatch, state):
 
 
 def test_batch_aborts_on_failure(qapp, monkeypatch, state):
+    """Verifies: FR-108."""
     # FR-108: when a file fails mid-batch, the remaining files are skipped, an
     # error names the failed file, and the destination refreshes once because an
     # earlier file succeeded.
@@ -340,6 +349,7 @@ def test_batch_aborts_on_failure(qapp, monkeypatch, state):
 
 
 def test_batch_waits_for_prompt_between_files(qapp, monkeypatch, state):
+    """Verifies: FR-109."""
     # FR-109: the inter-file prompt wait runs before each file after the first,
     # and never before the first file.
     win = MainWindow(state)
@@ -357,6 +367,7 @@ def test_batch_waits_for_prompt_between_files(qapp, monkeypatch, state):
 
 
 def test_batch_progress_dialog_shows_file_position(qapp, state):
+    """Verifies: FR-105, UIR-051."""
     # FR-105/UIR-051: one dialog serves the batch; transfer_file_started switches
     # it between files on the SAME instance, showing "File i of N".
     win = MainWindow(state)
@@ -377,6 +388,7 @@ def test_batch_progress_dialog_shows_file_position(qapp, state):
 
 
 def test_drive_combo_lists_a_to_p(qapp, state):
+    """Verifies: UIR-017."""
     # UIR-017: the drive-selection drop-down lists A: through P: (16 drives).
     win = MainWindow(state)
     try:
@@ -387,6 +399,7 @@ def test_drive_combo_lists_a_to_p(qapp, state):
 
 
 def test_change_drive_success_refreshes_remote_list(qapp, monkeypatch, state):
+    """Verifies: FR-102."""
     # FR-102: when the "<letter>>" prompt appears, the remote list is populated
     # exactly as Update does. Stub the capture to avoid real serial/sleeps.
     win = MainWindow(state)
@@ -404,6 +417,7 @@ def test_change_drive_success_refreshes_remote_list(qapp, monkeypatch, state):
 
 
 def test_change_drive_not_found_clears_list_and_warns(qapp, monkeypatch, state):
+    """Verifies: FR-103."""
     # FR-103: no "<letter>>" prompt -> clear the remote list and warn the user.
     win = MainWindow(state)
     try:
@@ -423,6 +437,7 @@ def test_change_drive_not_found_clears_list_and_warns(qapp, monkeypatch, state):
 
 
 def test_change_drive_requires_open_terminal(qapp, monkeypatch, state):
+    """Verifies: FR-104."""
     # FR-104: selecting a drive with the Terminal Port closed clears the list,
     # sets the status, and starts no worker thread.
     win = MainWindow(state)
@@ -451,6 +466,7 @@ def test_change_drive_requires_open_terminal(qapp, monkeypatch, state):
 
 
 def test_update_switches_to_displayed_drive_first(qapp, monkeypatch, state):
+    """Verifies: FR-073."""
     # FR-073 (OI-22): the Update button must list the drive shown in the
     # drop-down, not the remote's then-current drive. It runs the drive-change
     # logic for the displayed drive, so the displayed letter is the one sent.
@@ -509,6 +525,7 @@ def test_update_auto_refresh_skips_error_dialog_when_disconnected(qapp, monkeypa
 
 
 def test_disconnect_clears_remote_list(qapp, monkeypatch, state):
+    """Verifies: FR-058."""
     # FR-058: a successful disconnect clears the (now-stale) Remote Files list.
     win = MainWindow(state)
     try:
@@ -525,6 +542,7 @@ def test_disconnect_clears_remote_list(qapp, monkeypatch, state):
 
 
 def test_disconnect_keeps_remote_list_when_close_fails(qapp, monkeypatch, state):
+    """Verifies: FR-058, FR-051."""
     # FR-058/FR-051: if the Terminal Port cannot be closed the disconnect is
     # cancelled and the Remote Files list is left untouched.
     win = MainWindow(state)
@@ -542,6 +560,7 @@ def test_disconnect_keeps_remote_list_when_close_fails(qapp, monkeypatch, state)
 
 
 def test_host_update_button_refreshes_host_only(qapp, monkeypatch, state):
+    """Verifies: FR-063."""
     # FR-063 (OI-14, v2.12): the Host Files group's Update button refreshes the
     # Host list only and must NOT re-populate the Remote list.
     from PySide6.QtWidgets import QPushButton
@@ -564,6 +583,7 @@ def test_host_update_button_refreshes_host_only(qapp, monkeypatch, state):
 
 
 def test_disconnect_attempts_close_when_flags_false(qapp, monkeypatch, state):
+    """Verifies: FR-050, FR-055."""
     # FR-050/FR-055 (OI-24): the close attempts are unconditional. Even when the
     # status flags read disconnected (they may have drifted out of sync with the
     # real port state), pressing Disconnect must still try to close both ports.
@@ -587,6 +607,7 @@ def test_disconnect_attempts_close_when_flags_false(qapp, monkeypatch, state):
 
 
 def test_connect_shared_port_assigns_transport_port(qapp, monkeypatch, state):
+    """Verifies: FR-037."""
     # FR-037: when the Transport and Terminal Ports are the same physical port,
     # connecting must point transport_port at the open terminal port object (not
     # leave it None) so transfers have a real port. Regression for the
@@ -612,6 +633,7 @@ def test_connect_shared_port_assigns_transport_port(qapp, monkeypatch, state):
 
 
 def test_load_config_clears_remote_list(qapp, state, tmp_path):
+    """Verifies: FR-017."""
     # FR-017: loading a configuration file clears the (now-stale) Remote Files list.
     win = MainWindow(state)
     try:
@@ -626,6 +648,7 @@ def test_load_config_clears_remote_list(qapp, state, tmp_path):
 
 
 def test_main_window_constructs(qapp, state):
+    """Verifies: FR-060, FR-070, UIR-014."""
     win = MainWindow(state)
     try:
         # Lists start consistent (FR-060 host populated lazily; FR-070 remote empty).
@@ -640,6 +663,7 @@ def test_main_window_constructs(qapp, state):
 
 
 def test_terminal_window_write_and_clear(qapp):
+    """Verifies: FR-095."""
     cleared = []
     term = TerminalWindow(
         None, send_callback=lambda t: None, clear_callback=lambda: cleared.append(1)
@@ -655,6 +679,7 @@ def test_terminal_window_write_and_clear(qapp):
 
 
 def test_terminal_write_text_line_endings(qapp):
+    """Verifies: FR-091."""
     # FR-091: CR, LF, and the CRLF pair each produce exactly one new line in the
     # receive area — no blank line between lines. Backspaces erase a character.
     term = TerminalWindow(None, send_callback=lambda t, eol: None)
@@ -675,6 +700,7 @@ def test_terminal_write_text_line_endings(qapp):
 
 
 def test_parse_send_text_control_characters(qapp):
+    """Verifies: FR-156."""
     # FR-156: caret notation maps to control bytes; ^^ is a literal caret; an
     # unrecognised escape is left literal. is_pure_control is True only when the
     # result is non-empty and contains no printable characters.
@@ -693,6 +719,7 @@ def test_parse_send_text_control_characters(qapp):
 
 
 def test_terminal_send_bare_enter_and_control(qapp):
+    """Verifies: FR-155, FR-156."""
     # FR-155/FR-156: send_text forwards the (parsed) text and an append_eol flag.
     sent = []
     term = TerminalWindow(None, send_callback=lambda t, eol: sent.append((t, eol)))
@@ -715,6 +742,7 @@ def test_terminal_send_bare_enter_and_control(qapp):
 
 
 def test_handle_terminal_send_append_eol_flag(qapp, monkeypatch, state):
+    """Verifies: FR-094, FR-156."""
     # FR-094/FR-156: handle_terminal_send appends the configured EOL by default,
     # but sends the data verbatim when append_eol is False.
     win = MainWindow(state)
@@ -734,6 +762,7 @@ def test_handle_terminal_send_append_eol_flag(qapp, monkeypatch, state):
 
 
 def test_geometry_and_last_config_persist_across_sessions(qapp, state, tmp_path):
+    """Verifies: FR-004, FR-005."""
     # FR-004/FR-005: a session's main-window geometry and last-used config file
     # are saved on close and applied to a fresh session sharing the same store.
     cfg = tmp_path / "serial.json"
@@ -759,6 +788,7 @@ def test_geometry_and_last_config_persist_across_sessions(qapp, state, tmp_path)
 
 
 def test_menu_load_remembers_and_reuses_config_folder(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-006."""
     # FR-006: File > Load defaults to the last-used config folder and records the
     # folder of the chosen file, separately from the Host Files directory.
     cfg = tmp_path / "serial.json"
@@ -788,6 +818,7 @@ def test_menu_load_remembers_and_reuses_config_folder(qapp, monkeypatch, state, 
 
 
 def test_menu_new_saves_to_current_file_resets_and_closes_ports(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-018, FR-019."""
     # FR-018/FR-019: New saves the current config to the remembered file, closes
     # any open ports, clears the remote list, and replaces settings with the
     # defaults (forgetting the remembered file path).
@@ -818,6 +849,7 @@ def test_menu_new_saves_to_current_file_resets_and_closes_ports(qapp, monkeypatc
 
 
 def test_menu_new_prompts_for_file_when_none_remembered(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-018."""
     # FR-018: with no remembered file, New presents the Save dialog before
     # resetting to the default configuration.
     target = tmp_path / "saved.json"
@@ -842,6 +874,7 @@ def test_menu_new_prompts_for_file_when_none_remembered(qapp, monkeypatch, state
 
 
 def test_help_menu_contains_about_action(qapp, state):
+    """Verifies: UIR-004."""
     # UIR-004: the Help menu lists an About action.
     from PySide6.QtWidgets import QMenu
 
@@ -857,6 +890,7 @@ def test_help_menu_contains_about_action(qapp, state):
 
 
 def test_menu_about_opens_dialog(qapp, monkeypatch, state):
+    """Verifies: FR-022."""
     # FR-022: selecting Help > About constructs and shows the About dialog.
     win = MainWindow(state)
     try:
@@ -878,6 +912,7 @@ def test_menu_about_opens_dialog(qapp, monkeypatch, state):
 
 
 def test_about_dialog_contents(qapp):
+    """Verifies: UIR-076."""
     # UIR-076: program name, version string, GitHub link, and an OK button.
     from PySide6.QtWidgets import QLabel, QPushButton
 
@@ -898,6 +933,7 @@ def test_about_dialog_contents(qapp):
 
 
 def test_help_menu_contains_manual_action(qapp, state):
+    """Verifies: UIR-004, FR-023."""
     # UIR-004: the Help menu lists a Manual action (FR-023).
     from PySide6.QtWidgets import QMenu
 
@@ -913,6 +949,7 @@ def test_help_menu_contains_manual_action(qapp, state):
 
 
 def test_menu_manual_opens_dialog(qapp, monkeypatch, state):
+    """Verifies: FR-023."""
     # FR-023: selecting Help > Manual constructs and shows the Manual dialog.
     win = MainWindow(state)
     try:
@@ -937,6 +974,7 @@ def test_menu_manual_opens_dialog(qapp, monkeypatch, state):
 
 
 def test_menu_manual_reuses_open_window(qapp, monkeypatch, state):
+    """Verifies: FR-023."""
     # FR-023: a second Help > Manual raises the existing window instead of
     # opening a second copy.
     win = MainWindow(state)
@@ -971,6 +1009,7 @@ def test_menu_manual_reuses_open_window(qapp, monkeypatch, state):
 
 
 def test_manual_dialog_contents(qapp):
+    """Verifies: UIR-091."""
     # UIR-091: titled "User Manual", renders the manual as HTML, Close button.
     from PySide6.QtWidgets import QPushButton, QTextBrowser
 
@@ -995,6 +1034,7 @@ def test_manual_dialog_contents(qapp):
 
 
 def test_render_manual_html_anchors_match_toc_links(qapp):
+    """Verifies: UIR-091."""
     # UIR-091: the manual is rendered to HTML with GitHub-style heading anchors
     # so its table-of-contents links navigate within the document.
     import re
@@ -1013,6 +1053,7 @@ def test_render_manual_html_anchors_match_toc_links(qapp):
 
 
 def test_manual_dialog_handles_missing_file(qapp, monkeypatch):
+    """Verifies: DR-047."""
     # DR-047: an unreadable manual shows a message rather than crashing.
     from PySide6.QtWidgets import QTextBrowser
 
@@ -1029,6 +1070,7 @@ def test_manual_dialog_handles_missing_file(qapp, monkeypatch):
 
 
 def test_menu_new_aborts_when_save_cancelled(qapp, monkeypatch, state):
+    """Verifies: FR-018."""
     # FR-018: cancelling the Save dialog cancels New entirely — the current
     # configuration, ports, and remote list are retained.
     win = MainWindow(state)
@@ -1053,6 +1095,7 @@ def test_menu_new_aborts_when_save_cancelled(qapp, monkeypatch, state):
 
 
 def test_menu_save_remembers_config_folder(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-006."""
     # FR-006: a successful File > Save records its folder for the next dialog.
     target = tmp_path / "out.json"
 
@@ -1073,6 +1116,7 @@ def test_menu_save_remembers_config_folder(qapp, monkeypatch, state, tmp_path):
 
 
 def test_build_viewer_args_substitutes_token():
+    """Verifies: FR-112."""
     # FR-112: $1 is replaced by the file path; a path with spaces stays a single
     # argument and is never re-split by the tokeniser.
     from cpm_fm.app import build_viewer_args
@@ -1084,6 +1128,7 @@ def test_build_viewer_args_substitutes_token():
 
 
 def test_lists_have_context_menus(qapp, state):
+    """Verifies: UIR-018, UIR-019."""
     # UIR-018/UIR-019: both file lists expose a custom (right-click) context menu.
     from PySide6.QtCore import Qt
 
@@ -1096,6 +1141,7 @@ def test_lists_have_context_menus(qapp, state):
 
 
 def test_host_view_launches_viewer(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-110, FR-112."""
     # FR-110/FR-112: View/Edit launches viewer_cmd with the host file path.
     win = MainWindow(state)
     try:
@@ -1112,6 +1158,7 @@ def test_host_view_launches_viewer(qapp, monkeypatch, state, tmp_path):
 
 
 def test_host_rename_renames_file(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-114, FR-116, FR-118."""
     # FR-114/FR-116/FR-118: Apply on the rename dialog renames the file and refreshes.
     win = MainWindow(state)
     try:
@@ -1131,6 +1178,7 @@ def test_host_rename_renames_file(qapp, monkeypatch, state, tmp_path):
 
 
 def test_host_rename_cancelled_makes_no_change(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-114."""
     # FR-114: Cancel leaves the file untouched.
     win = MainWindow(state)
     try:
@@ -1148,6 +1196,7 @@ def test_host_rename_cancelled_makes_no_change(qapp, monkeypatch, state, tmp_pat
 
 
 def test_host_delete_removes_file(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-115, FR-116, FR-118."""
     # FR-115/FR-116/FR-118: Apply on the delete dialog removes the file and refreshes.
     win = MainWindow(state)
     try:
@@ -1166,6 +1215,7 @@ def test_host_delete_removes_file(qapp, monkeypatch, state, tmp_path):
 
 
 def test_remote_rename_sends_command(qapp, monkeypatch, state):
+    """Verifies: FR-117."""
     # FR-117: remote Rename sends rename_remote_cmd with $1=old, $2=new.
     win = MainWindow(state)
     try:
@@ -1183,6 +1233,7 @@ def test_remote_rename_sends_command(qapp, monkeypatch, state):
 
 
 def test_remote_delete_sends_command(qapp, monkeypatch, state):
+    """Verifies: FR-117."""
     # FR-117: remote Delete sends delete_remote_cmd with $1=name.
     win = MainWindow(state)
     try:
@@ -1200,6 +1251,7 @@ def test_remote_delete_sends_command(qapp, monkeypatch, state):
 
 
 def test_host_delete_removes_all_selected_files(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-110, FR-116."""
     # FR-110/FR-116: Delete from the context menu removes every selected file.
     win = MainWindow(state)
     try:
@@ -1219,6 +1271,7 @@ def test_host_delete_removes_all_selected_files(qapp, monkeypatch, state, tmp_pa
 
 
 def test_remote_delete_sends_command_per_selected_file(qapp, monkeypatch, state):
+    """Verifies: FR-111, FR-117."""
     # FR-111/FR-117: remote Delete sends delete_remote_cmd once per selected file.
     win = MainWindow(state)
     try:
@@ -1236,6 +1289,7 @@ def test_remote_delete_sends_command_per_selected_file(qapp, monkeypatch, state)
 
 
 def test_context_menu_targets_uses_full_selection_when_clicked_item_selected(qapp, state):
+    """Verifies: FR-110."""
     # FR-110: clicking a file that is part of the multi-selection -> Delete
     # targets the whole selection; the single-file name is the clicked item.
     win = MainWindow(state)
@@ -1253,6 +1307,7 @@ def test_context_menu_targets_uses_full_selection_when_clicked_item_selected(qap
 
 
 def test_context_menu_targets_uses_clicked_item_when_outside_selection(qapp, state):
+    """Verifies: FR-110."""
     # FR-110: clicking a file NOT in the selection -> the action targets that one
     # file alone, not the (unrelated) selection.
     win = MainWindow(state)
@@ -1269,6 +1324,7 @@ def test_context_menu_targets_uses_clicked_item_when_outside_selection(qapp, sta
 
 
 def test_remote_rename_requires_open_terminal(qapp, monkeypatch, state):
+    """Verifies: FR-117."""
     # FR-117: with the Terminal Port closed, no command is issued.
     win = MainWindow(state)
     try:
@@ -1283,6 +1339,7 @@ def test_remote_rename_requires_open_terminal(qapp, monkeypatch, state):
 
 
 def test_do_remote_file_cmd_refreshes_remote_list(qapp, monkeypatch, state):
+    """Verifies: FR-118."""
     # FR-118: after sending the command the remote list is refreshed.
     win = MainWindow(state)
     try:
@@ -1300,6 +1357,7 @@ def test_do_remote_file_cmd_refreshes_remote_list(qapp, monkeypatch, state):
 
 
 def test_remote_view_requires_both_flags(qapp, monkeypatch, state):
+    """Verifies: FR-113, CR-010."""
     # FR-113/CR-010: remote View needs both status flags; otherwise it errors and
     # starts no download.
     win = MainWindow(state)
@@ -1318,6 +1376,7 @@ def test_remote_view_requires_both_flags(qapp, monkeypatch, state):
 
 
 def test_remote_view_downloads_then_opens(qapp, monkeypatch, state):
+    """Verifies: FR-113, FR-112."""
     # FR-113/FR-112: a successful download opens the temp file in the viewer.
     win = MainWindow(state)
     try:
@@ -1334,6 +1393,7 @@ def test_remote_view_downloads_then_opens(qapp, monkeypatch, state):
 
 
 def test_host_to_remote_transfers_under_cursor_file(qapp, monkeypatch, state):
+    """Verifies: FR-119."""
     # FR-119: To Remote transfers the single host file under the cursor via the
     # Copy to Remote batch worker.
     win = MainWindow(state)
@@ -1351,6 +1411,7 @@ def test_host_to_remote_transfers_under_cursor_file(qapp, monkeypatch, state):
 
 
 def test_host_to_remote_transfers_all_selected_files(qapp, monkeypatch, state):
+    """Verifies: FR-119, FR-106, FR-107."""
     # FR-119/FR-106/FR-107: To Remote transfers every selected host file via the
     # Copy to Remote batch worker, in order.
     win = MainWindow(state)
@@ -1370,6 +1431,7 @@ def test_host_to_remote_transfers_all_selected_files(qapp, monkeypatch, state):
 
 
 def test_remote_to_host_transfers_under_cursor_file(qapp, monkeypatch, state):
+    """Verifies: FR-119."""
     # FR-119: To Host transfers the single remote file under the cursor via the
     # Copy to Host batch worker.
     win = MainWindow(state)
@@ -1387,6 +1449,7 @@ def test_remote_to_host_transfers_under_cursor_file(qapp, monkeypatch, state):
 
 
 def test_remote_to_host_transfers_all_selected_files(qapp, monkeypatch, state):
+    """Verifies: FR-119, FR-106, FR-107."""
     # FR-119/FR-106/FR-107: To Host transfers every selected remote file via the
     # Copy to Host batch worker, in order.
     win = MainWindow(state)
@@ -1406,6 +1469,7 @@ def test_remote_to_host_transfers_all_selected_files(qapp, monkeypatch, state):
 
 
 def test_progress_dialog_cancel_button_requests_cancel(qapp):
+    """Verifies: FR-120, UIR-051."""
     # FR-120/UIR-051: the Cancel button invokes the callback and then disables
     # itself, showing that cancellation is underway.
     from cpm_fm.gui.transfer_dialog import TransferProgressDialog
@@ -1422,6 +1486,7 @@ def test_progress_dialog_cancel_button_requests_cancel(qapp):
 
 
 def test_request_transfer_cancel_sets_flag(qapp, state):
+    """Verifies: FR-120."""
     # FR-120: the GUI cancel handler raises the worker-polled cancel flag.
     win = MainWindow(state)
     try:
@@ -1433,6 +1498,7 @@ def test_request_transfer_cancel_sets_flag(qapp, state):
 
 
 def test_cancellable_sleep_returns_immediately_when_cancelled(qapp, state):
+    """Verifies: FR-120."""
     # FR-120: a worker-thread settle/launch wait wakes at once when a cancel is
     # already pending, rather than blocking for the whole interval. A long
     # interval with real (un-neutralised) time.sleep would hang the test if the
@@ -1446,6 +1512,7 @@ def test_cancellable_sleep_returns_immediately_when_cancelled(qapp, state):
 
 
 def test_cancellable_sleep_completes_when_not_cancelled(qapp, monkeypatch, state):
+    """Verifies: FR-120."""
     # FR-120: with no cancel pending the wait runs its full (step-counted)
     # interval and reports not-cancelled. time.sleep is neutralised so the step
     # loop completes instantly.
@@ -1458,6 +1525,7 @@ def test_cancellable_sleep_completes_when_not_cancelled(qapp, monkeypatch, state
 
 
 def test_wait_for_terminal_idle_returns_early_on_cancel(qapp, state):
+    """Verifies: FR-120, FR-109."""
     # FR-120: the between-files settle (FR-109) wakes promptly on cancel. A real
     # time.sleep is left in place so the test would hang on the first 1.0s wait
     # if the cancel were ignored.
@@ -1470,6 +1538,7 @@ def test_wait_for_terminal_idle_returns_early_on_cancel(qapp, state):
 
 
 def test_capture_terminal_response_cancellable_bails_early(qapp, monkeypatch, state):
+    """Verifies: FR-120, FR-145."""
     # FR-120/FR-145: the pre-upload remote listing returns promptly on cancel
     # (with whatever partial output arrived) instead of sleeping the full idle
     # budget. Real time.sleep is kept so an unhonoured cancel would hang here.
@@ -1504,6 +1573,7 @@ def _arm_transfer_with_xmodem(win, monkeypatch, xmodem_cls):
 
 
 def test_cancelled_transfer_is_not_reported_as_error(qapp, monkeypatch, state):
+    """Verifies: FR-120."""
     # FR-120: cancelling mid-transfer closes the dialog, sets a "cancelled"
     # status, and raises no error dialog; with nothing completed, no refresh.
     win = MainWindow(state)
@@ -1533,6 +1603,7 @@ def test_cancelled_transfer_is_not_reported_as_error(qapp, monkeypatch, state):
 
 
 def test_cancel_after_partial_batch_refreshes_and_skips_rest(qapp, monkeypatch, state):
+    """Verifies: FR-120."""
     # FR-120: when a multi-file batch is cancelled after some files completed,
     # the remaining files are skipped and the destination list refreshes once.
     win = MainWindow(state)
@@ -1564,6 +1635,7 @@ def test_cancel_after_partial_batch_refreshes_and_skips_rest(qapp, monkeypatch, 
 
 
 def test_button_row_both_cancel_left_apply_right(qapp):
+    """Verifies: UIR-075."""
     # UIR-075: with both buttons, Cancel is far left and the affirmative far right.
     from PySide6.QtWidgets import QPushButton
 
@@ -1580,6 +1652,7 @@ def test_button_row_both_cancel_left_apply_right(qapp):
 
 
 def test_button_row_single_button_is_centered(qapp):
+    """Verifies: UIR-075."""
     # UIR-075: a lone button is centred between two stretches.
     from PySide6.QtWidgets import QPushButton
 
@@ -1594,6 +1667,7 @@ def test_button_row_single_button_is_centered(qapp):
 
 
 def test_file_action_dialog_button_layout(qapp):
+    """Verifies: UIR-057, UIR-075."""
     # UIR-057/UIR-075: the File Action Dialog places Cancel far left, Apply far
     # right, both connected to reject/accept.
     from PySide6.QtWidgets import QHBoxLayout, QPushButton
@@ -1618,6 +1692,7 @@ def test_file_action_dialog_button_layout(qapp):
 
 
 def test_file_action_dialog_multi_file_shows_readonly_list(qapp):
+    """Verifies: FR-115."""
     # FR-115: a multi-file Delete shows every selected name in a read-only,
     # non-editable list instead of the single-line field.
     from PySide6.QtWidgets import QPlainTextEdit
@@ -1641,6 +1716,7 @@ def test_file_action_dialog_multi_file_shows_readonly_list(qapp):
 
 
 def test_general_config_remote_group_first(qapp, monkeypatch):
+    """Verifies: UIR-041, UIR-089, UIR-090."""
     # UIR-041: the General Config dialog gathers the remote command fields
     # (List Files, Receive/Send, the XMODEM-1K toggle + 1K commands, Rename,
     # Delete) into a "Remote" group placed first, with Rename/Delete labelled
@@ -1689,6 +1765,7 @@ def test_general_config_save_keeps_current_host_dir(qapp, state, monkeypatch):
     # General Config dialog without touching the host-directory field must not
     # revert the current selection, nor change the stored config value.
 
+    """Verifies: FR-021a."""
     win = MainWindow(state)
     try:
         # refresh_host_files lists the directory off disk; the paths here are
@@ -1730,6 +1807,7 @@ def test_general_config_save_keeps_current_host_dir(qapp, state, monkeypatch):
 
 
 def test_serial_config_save_persists_only_serial_to_active_file(qapp, state, monkeypatch, tmp_path):
+    """Verifies: FR-020a."""
     # FR-020a: the Serial dialog Save writes only the serial settings to the
     # currently loaded config file, leaves the general settings in that file
     # untouched, and never presents a Save dialog.
@@ -1783,6 +1861,7 @@ def test_serial_config_save_persists_only_serial_to_active_file(qapp, state, mon
 
 
 def test_general_config_save_persists_general_only(qapp, state, monkeypatch, tmp_path):
+    """Verifies: FR-021a."""
     # FR-021a: the General dialog Save writes only the general settings to the
     # currently loaded config file, leaving the serial settings untouched.
     import json
@@ -1831,6 +1910,7 @@ def test_general_config_save_persists_general_only(qapp, state, monkeypatch, tmp
 
 
 def test_dialog_save_warns_and_writes_nothing_when_no_config_loaded(qapp, state, monkeypatch):
+    """Verifies: FR-020a, FR-021a."""
     # FR-020a/FR-021a: with no config file loaded there is nothing to write to;
     # the dialog Save warns, applies the change to the session only, and writes
     # no file (no Save dialog is shown either).
@@ -1866,6 +1946,7 @@ def test_dialog_save_warns_and_writes_nothing_when_no_config_loaded(qapp, state,
 
 
 def test_issue_remote_cmd_uses_1k_command_when_enabled(qapp, state, monkeypatch):
+    """Verifies: UIR-089, UIR-090."""
     # UIR-089/UIR-090: with XMODEM-1K on, a non-blank _1k command replaces the
     # standard launch command; a blank _1k command falls back to the standard
     # one; with 1K off the standard command is always used.
@@ -1905,6 +1986,7 @@ def test_issue_remote_cmd_uses_1k_command_when_enabled(qapp, state, monkeypatch)
 
 
 def test_transfer_byte_echo_respects_setting(qapp, state):
+    """Verifies: FR-086, UIR-058."""
     # FR-086/UIR-058: the <HH> transfer-byte echo is emitted only when
     # echo_transfer_data is affirmative (default off) and suppressed otherwise.
     win = MainWindow(state)
@@ -1934,6 +2016,7 @@ def test_transfer_byte_echo_respects_setting(qapp, state):
 
 
 def test_general_config_has_echo_transfer_field(qapp, monkeypatch):
+    """Verifies: UIR-058."""
     # UIR-058: the General Config dialog exposes an "Echo Transfer Data"
     # OFF/ON dropdown persisted as echo_transfer_data, defaulting to OFF.
     from PySide6.QtWidgets import QComboBox
@@ -1953,6 +2036,7 @@ def test_general_config_has_echo_transfer_field(qapp, monkeypatch):
 
 
 def test_general_config_xmodem_1k_checkbox_round_trips(qapp, monkeypatch):
+    """Verifies: UIR-089, UIR-090."""
     # UIR-089/UIR-090: the dialog exposes a "Use XMODEM-1K" checkbox persisted as
     # xmodem_1k ("OFF"/"ON") plus two blank-by-default 1K command fields. The
     # checkbox reflects the current setting and saves back as "ON"/"OFF".
@@ -1986,6 +2070,7 @@ def test_general_config_xmodem_1k_checkbox_round_trips(qapp, monkeypatch):
 
 
 def test_config_menu_has_language_submenu(qapp, state):
+    """Verifies: UIR-003, UIR-077."""
     # UIR-003/UIR-077: the Config menu contains a Language submenu listing every
     # shipped language by its (capitalised) name, with the active one checked.
     from PySide6.QtWidgets import QMenu
@@ -2010,6 +2095,7 @@ def test_config_menu_has_language_submenu(qapp, state):
 
 
 def test_language_switch_retranslates_live(qapp, state):
+    """Verifies: FR-122, FR-123."""
     # FR-122/FR-123: switching language re-labels the visible UI immediately and
     # persists the choice; switching back restores the English text.
     from PySide6.QtWidgets import QPushButton
@@ -2034,6 +2120,7 @@ def test_language_switch_retranslates_live(qapp, state):
 
 
 def test_persisted_language_applied_on_construction(qapp, state):
+    """Verifies: FR-124."""
     # FR-124: a window built from a store that remembers German starts localised.
     state.language = "german"
     win = MainWindow(state)
@@ -2046,6 +2133,7 @@ def test_persisted_language_applied_on_construction(qapp, state):
 
 
 def test_host_to_remote_requires_both_flags(qapp, monkeypatch, state):
+    """Verifies: FR-119, CR-010."""
     # FR-119/CR-010: To Remote needs both status flags; otherwise it errors and
     # starts no transfer.
     win = MainWindow(state)
@@ -2072,6 +2160,7 @@ def _write_config(tmp_path, name="my_settings.json"):
 
 
 def test_window_title_plain_without_config(qapp, state):
+    """Verifies: FR-125, UIR-005."""
     # FR-125/UIR-005: with no config loaded the title is the application name alone.
     win = MainWindow(state)
     try:
@@ -2082,6 +2171,7 @@ def test_window_title_plain_without_config(qapp, state):
 
 
 def test_window_title_includes_loaded_config_basename(qapp, state, tmp_path):
+    """Verifies: FR-125."""
     # FR-125: loading a config appends its base name (no path, no extension).
     win = MainWindow(state)
     try:
@@ -2093,6 +2183,7 @@ def test_window_title_includes_loaded_config_basename(qapp, state, tmp_path):
 
 
 def test_window_title_cleared_by_new(qapp, state, tmp_path, monkeypatch):
+    """Verifies: FR-125, FR-019."""
     # FR-125/FR-019: File > New drops the config name from the title bar.
     win = MainWindow(state)
     try:
@@ -2109,6 +2200,7 @@ def test_window_title_cleared_by_new(qapp, state, tmp_path, monkeypatch):
 
 
 def test_host_group_title_includes_directory(qapp, state):
+    """Verifies: FR-126, UIR-011."""
     # FR-126/UIR-011: the Host Files group title carries the current directory,
     # left-elided so the trailing (most specific) part of the path is visible.
     win = MainWindow(state)
@@ -2136,6 +2228,7 @@ def _remote_names(win):
 
 
 def test_filter_sort_controls_present_on_both_panes(qapp, state):
+    """Verifies: UIR-079, UIR-080."""
     # UIR-079/UIR-080: each pane has a filter field, a sort drop-down (Name /
     # Extension), and a direction toggle button.
     from PySide6.QtWidgets import QComboBox, QLineEdit, QToolButton
@@ -2156,6 +2249,7 @@ def test_filter_sort_controls_present_on_both_panes(qapp, state):
 
 
 def test_host_filter_hides_nonmatching_files(qapp, state):
+    """Verifies: FR-130, FR-131."""
     # FR-130/FR-131: a filter restricts the host list to matching names.
     win = MainWindow(state)
     try:
@@ -2173,6 +2267,7 @@ def test_host_filter_hides_nonmatching_files(qapp, state):
 
 
 def test_host_sort_by_extension_and_direction(qapp, state):
+    """Verifies: FR-132."""
     # FR-132: the sort drop-down and direction button reorder the host list.
     from cpm_fm.utils.file_filter import SORT_EXTENSION
 
@@ -2193,6 +2288,7 @@ def test_host_sort_by_extension_and_direction(qapp, state):
 
 
 def test_active_filter_sets_visual_indicator(qapp, state):
+    """Verifies: UIR-079."""
     # UIR-079: an active (non-empty) filter flags the field with a styled border.
     win = MainWindow(state)
     try:
@@ -2209,6 +2305,7 @@ def test_active_filter_sets_visual_indicator(qapp, state):
 
 
 def test_remote_list_applies_filter_and_sort(qapp, state):
+    """Verifies: FR-133."""
     # FR-133: the remote listing is rendered through the pane's filter/sort.
     win = MainWindow(state)
     try:
@@ -2221,6 +2318,7 @@ def test_remote_list_applies_filter_and_sort(qapp, state):
 
 
 def test_default_remote_list_is_name_ascending(qapp, state):
+    """Verifies: FR-078, FR-133."""
     # FR-078/FR-133: with default controls the remote list is name-ascending,
     # preserving the long-standing default display.
     win = MainWindow(state)
@@ -2233,6 +2331,7 @@ def test_default_remote_list_is_name_ascending(qapp, state):
 
 
 def test_clear_remote_files_empties_canonical_and_widget(qapp, state):
+    """Verifies: FR-058, FR-103."""
     # FR-058/FR-103: clearing the remote list drops both the widget rows and the
     # canonical source, so a later filter change cannot resurrect stale entries.
     win = MainWindow(state)
@@ -2252,6 +2351,7 @@ def test_clear_remote_files_empties_canonical_and_widget(qapp, state):
 
 
 def test_filter_sort_settings_persist_across_sessions(qapp, state):
+    """Verifies: FR-134."""
     # FR-134: a pane's filter text and sort settings are saved and restored in a
     # later session sharing the same store.
     from cpm_fm.utils.file_filter import SORT_EXTENSION
@@ -2278,6 +2378,7 @@ def test_filter_sort_settings_persist_across_sessions(qapp, state):
 
 
 def test_sort_combo_labels_retranslate_live(qapp, state):
+    """Verifies: FR-123."""
     # FR-123: switching language re-labels the sort drop-down items while keeping
     # their userData (sort keys) intact.
     win = MainWindow(state)
@@ -2316,6 +2417,7 @@ def _url_mime(paths):
 
 
 def test_file_lists_are_drag_drop_capable(qapp, state):
+    """Verifies: FR-136, FR-137, UIR-081."""
     # FR-136/FR-137/UIR-081: both panes are drag-enabled, accept drops, and are
     # FileListWidget instances tagged with their pane.
     from cpm_fm.gui.file_list_widget import FileListWidget
@@ -2333,6 +2435,7 @@ def test_file_lists_are_drag_drop_capable(qapp, state):
 
 
 def test_decode_drop_internal_cross_pane(qapp, state):
+    """Verifies: FR-137."""
     # FR-137: a pane accepts an internal drag from the OTHER pane and reports the
     # source pane, names, and external=False.
     win = MainWindow(state)
@@ -2353,6 +2456,7 @@ def test_decode_drop_internal_cross_pane(qapp, state):
 
 
 def test_decode_drop_same_pane_rejected(qapp, state):
+    """Verifies: FR-137."""
     # FR-137: dropping a pane's own files back onto itself is a no-op (rejected).
     win = MainWindow(state)
     try:
@@ -2364,6 +2468,7 @@ def test_decode_drop_same_pane_rejected(qapp, state):
 
 
 def test_decode_drop_external_files_remote_only(qapp, state, tmp_path):
+    """Verifies: FR-138."""
     # FR-138: external OS file drops are accepted on the Remote pane (as absolute
     # paths, external=True) but rejected on the Host pane.
     f = tmp_path / "EXT.TXT"
@@ -2382,6 +2487,7 @@ def test_decode_drop_external_files_remote_only(qapp, state, tmp_path):
 
 
 def test_drop_host_to_remote_starts_copy_to_remote(qapp, monkeypatch, state):
+    """Verifies: FR-137."""
     # FR-137: dropping host files onto the Remote pane (confirmed) starts the
     # Copy to Remote batch worker with host-dir-joined paths.
     win = MainWindow(state)
@@ -2403,6 +2509,7 @@ def test_drop_host_to_remote_starts_copy_to_remote(qapp, monkeypatch, state):
 
 
 def test_drop_remote_to_host_starts_copy_to_host(qapp, monkeypatch, state):
+    """Verifies: FR-137."""
     # FR-137: dropping remote files onto the Host pane (confirmed) starts the
     # Copy to Host batch worker.
     win = MainWindow(state)
@@ -2422,6 +2529,7 @@ def test_drop_remote_to_host_starts_copy_to_host(qapp, monkeypatch, state):
 
 
 def test_drop_external_files_use_absolute_paths(qapp, monkeypatch, state):
+    """Verifies: FR-138."""
     # FR-138: an external OS drop onto the Remote pane transfers the dropped
     # absolute paths verbatim (not re-joined under the host directory).
     win = MainWindow(state)
@@ -2442,6 +2550,7 @@ def test_drop_external_files_use_absolute_paths(qapp, monkeypatch, state):
 
 
 def test_drop_requires_both_flags(qapp, monkeypatch, state):
+    """Verifies: FR-137, CR-010."""
     # FR-137/CR-010: a drop with the transport disconnected errors and starts no
     # transfer (and never even prompts for confirmation).
     win = MainWindow(state)
@@ -2461,6 +2570,7 @@ def test_drop_requires_both_flags(qapp, monkeypatch, state):
 
 
 def test_drop_cancelled_confirmation_starts_no_transfer(qapp, monkeypatch, state):
+    """Verifies: FR-137."""
     # FR-137: declining the confirmation dialog starts no transfer.
     win = MainWindow(state)
     try:
@@ -2477,6 +2587,7 @@ def test_drop_cancelled_confirmation_starts_no_transfer(qapp, monkeypatch, state
 
 
 def test_dnd_confirm_dialog_button_order_and_labels(qapp, monkeypatch, state):
+    """Verifies: UIR-075."""
     # UIR-075: the drag-and-drop transfer confirmation puts Cancel at the far
     # left and OK at the far right (was a Yes/No QMessageBox ordered by the
     # native platform style).
@@ -2508,6 +2619,7 @@ def test_dnd_confirm_dialog_button_order_and_labels(qapp, monkeypatch, state):
 
 
 def test_app_icon_resource_present_and_loadable(qapp):
+    """Verifies: UIR-078, DR-044."""
     # UIR-078/DR-044: the runtime icon ships as package data and app_icon()
     # returns a real (non-null) QIcon loaded from it.
     from cpm_fm.gui.theme import APP_ICON_PATH, app_icon
@@ -2519,6 +2631,7 @@ def test_app_icon_resource_present_and_loadable(qapp):
 
 
 def test_app_icon_missing_falls_back_to_empty(qapp, monkeypatch):
+    """Verifies: UIR-078, CR-006."""
     # UIR-078: a missing icon resource yields an empty QIcon rather than raising,
     # so start-up survives its absence (consistent with the optional CR-006 icons).
     from pathlib import Path
@@ -2534,6 +2647,7 @@ def test_app_icon_missing_falls_back_to_empty(qapp, monkeypatch):
 
 
 def test_successful_transfer_records_history(qapp, monkeypatch, state):
+    """Verifies: FR-142."""
     # FR-142: a successful upload records one "success" history entry with the
     # file's name, path, direction, and size.
     win = MainWindow(state)
@@ -2558,6 +2672,7 @@ def test_successful_transfer_records_history(qapp, monkeypatch, state):
 
 
 def test_failed_transfer_records_failure_history(qapp, monkeypatch, state):
+    """Verifies: FR-142."""
     # FR-142: a failed transfer records a "failure" entry with an error message.
     win = MainWindow(state)
     try:
@@ -2575,6 +2690,7 @@ def test_failed_transfer_records_failure_history(qapp, monkeypatch, state):
 
 
 def test_cancelled_transfer_records_cancelled_history(qapp, monkeypatch, state):
+    """Verifies: FR-142."""
     # FR-142: a user-cancelled file is recorded with "cancelled" status.
     win = MainWindow(state)
     try:
@@ -2602,6 +2718,7 @@ def test_cancelled_transfer_records_cancelled_history(qapp, monkeypatch, state):
 
 
 def test_retransfer_reuses_batch_with_retry_flag(qapp, monkeypatch, state):
+    """Verifies: FR-144."""
     # FR-144: re-transfer of a "remote" entry re-runs the remote batch worker
     # with retry=True for the recorded host path (which must exist).
     win = MainWindow(state)
@@ -2622,6 +2739,7 @@ def test_retransfer_reuses_batch_with_retry_flag(qapp, monkeypatch, state):
 
 
 def test_retransfer_missing_file_reports_and_starts_nothing(qapp, monkeypatch, state):
+    """Verifies: FR-144."""
     # FR-144: re-transfer of an upload whose source file is gone reports an error
     # and starts no transfer.
     win = MainWindow(state)
@@ -2641,6 +2759,7 @@ def test_retransfer_missing_file_reports_and_starts_nothing(qapp, monkeypatch, s
 
 
 def test_retransfer_blocked_when_not_connected(qapp, monkeypatch, state):
+    """Verifies: FR-144, FR-080."""
     # FR-144/FR-080: re-transfer requires both connection flags.
     win = MainWindow(state)
     try:
@@ -2656,6 +2775,7 @@ def test_retransfer_blocked_when_not_connected(qapp, monkeypatch, state):
 
 
 def test_history_toolbar_action_present(qapp, state):
+    """Verifies: UIR-082."""
     # UIR-082: a History action is present on the toolbar.
     win = MainWindow(state)
     try:
@@ -2670,6 +2790,7 @@ def test_history_toolbar_action_present(qapp, state):
 
 
 def test_history_dialog_lists_filters_and_clears(qapp, state, tmp_path):
+    """Verifies: FR-143."""
     # FR-143: the dialog lists entries (newest first), filters by direction, and
     # clears the history after confirmation.
     from PySide6.QtCore import QSettings
@@ -2705,6 +2826,7 @@ def test_history_dialog_lists_filters_and_clears(qapp, state, tmp_path):
 
 
 def test_history_dialog_retransfer_sets_entry_and_accepts(qapp, state, tmp_path):
+    """Verifies: FR-144."""
     # FR-144: clicking Re-transfer records the selected entry and closes (accepts).
     history = TransferHistory(str(tmp_path / "h.json"))
     history.add_entry(filename="UP.TXT", path="/h/UP.TXT", direction="remote", status="success")

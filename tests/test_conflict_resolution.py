@@ -86,6 +86,7 @@ def _arm(win, monkeypatch, calls):
 
 
 def test_destination_conflict_host_checks_filesystem(tmp_path):
+    """Verifies: FR-145."""
     # FR-145: a download conflict is the existence of the host target path.
     existing = tmp_path / "FOO.TXT"
     existing.write_text("hi", encoding="utf-8")
@@ -94,6 +95,7 @@ def test_destination_conflict_host_checks_filesystem(tmp_path):
 
 
 def test_destination_conflict_remote_checks_listing_case_insensitive():
+    """Verifies: FR-145."""
     # FR-145: an upload conflict checks the base name (upper-cased) against the
     # fresh remote listing.
     names = {"FOO.TXT", "BAR.COM"}
@@ -103,6 +105,7 @@ def test_destination_conflict_remote_checks_listing_case_insensitive():
 
 
 def test_fresh_remote_names_uppercases_and_emits(qapp, monkeypatch, state):
+    """Verifies: FR-145."""
     # FR-145: the pre-upload refresh returns upper-cased names and updates the
     # displayed Remote Files list via remote_files_ready.
     win = MainWindow(state)
@@ -123,6 +126,7 @@ def test_fresh_remote_names_uppercases_and_emits(qapp, monkeypatch, state):
 
 
 def test_fresh_remote_names_empty_on_capture_failure(qapp, monkeypatch, state):
+    """Verifies: FR-145."""
     # FR-145: if the refresh cannot be parsed, no names => no conflicts detected.
     win = MainWindow(state)
     try:
@@ -139,6 +143,7 @@ def test_fresh_remote_names_empty_on_capture_failure(qapp, monkeypatch, state):
 
 
 def test_resolve_conflict_uses_policy_without_prompting(qapp, monkeypatch, state):
+    """Verifies: FR-147."""
     # FR-147: once a batch policy is set, no further prompt is raised.
     win = MainWindow(state)
     try:
@@ -154,6 +159,7 @@ def test_resolve_conflict_uses_policy_without_prompting(qapp, monkeypatch, state
 
 
 def test_resolve_conflict_apply_to_all_sets_policy(qapp, monkeypatch, state):
+    """Verifies: FR-147."""
     # FR-147: resolving with "apply to all" ticked remembers the action and
     # applies it to subsequent conflicts without prompting again.
     win = MainWindow(state)
@@ -174,6 +180,7 @@ def test_resolve_conflict_apply_to_all_sets_policy(qapp, monkeypatch, state):
 
 
 def test_resolve_conflict_without_apply_to_all_prompts_each_time(qapp, monkeypatch, state):
+    """Verifies: FR-146, FR-147."""
     # FR-146/FR-147: without the checkbox, every conflict prompts and no policy
     # is remembered.
     win = MainWindow(state)
@@ -194,6 +201,7 @@ def test_resolve_conflict_without_apply_to_all_prompts_each_time(qapp, monkeypat
 
 
 def test_resolve_conflict_cancel_never_becomes_policy(qapp, monkeypatch, state):
+    """Verifies: FR-147."""
     # FR-147: Cancel ends the batch and is never remembered as a policy.
     win = MainWindow(state)
     try:
@@ -205,6 +213,7 @@ def test_resolve_conflict_cancel_never_becomes_policy(qapp, monkeypatch, state):
 
 
 def test_on_conflict_detected_records_choice_and_releases_worker(qapp, monkeypatch, state):
+    """Verifies: FR-146, UIR-084."""
     # FR-146/UIR-084: the GUI slot shows the dialog, stores the choice, and sets
     # the event the worker thread blocks on.
     win = MainWindow(state)
@@ -231,6 +240,7 @@ def test_on_conflict_detected_records_choice_and_releases_worker(qapp, monkeypat
 
 
 def test_host_batch_skips_existing_file(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-146."""
     # FR-146: a Skip leaves the existing file untouched (no receive) and records
     # a "skipped" history entry, while a non-conflicting file still transfers.
     win = MainWindow(state)
@@ -253,6 +263,7 @@ def test_host_batch_skips_existing_file(qapp, monkeypatch, state, tmp_path):
 
 
 def test_remote_batch_skips_existing_file(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-145, FR-146."""
     # FR-145/FR-146: an upload conflict is detected against the fresh remote
     # listing; Skip records "skipped" and does not send the file.
     win = MainWindow(state)
@@ -277,6 +288,7 @@ def test_remote_batch_skips_existing_file(qapp, monkeypatch, state, tmp_path):
 
 
 def test_remote_batch_overwrite_erases_then_sends(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-146."""
     # FR-146: choosing Overwrite on an upload conflict erases the existing remote
     # file first (so a receiver that won't silently overwrite cannot stall the
     # handshake) and then sends the file.
@@ -302,6 +314,7 @@ def test_remote_batch_overwrite_erases_then_sends(qapp, monkeypatch, state, tmp_
 
 
 def test_batch_cancel_aborts_whole_transfer(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-146."""
     # FR-146: Cancel at a conflict aborts the batch — no file is transferred.
     win = MainWindow(state)
     try:
@@ -323,6 +336,7 @@ def test_batch_cancel_aborts_whole_transfer(qapp, monkeypatch, state, tmp_path):
 
 
 def test_apply_to_all_skip_prompts_once_for_many_conflicts(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-147."""
     # FR-147: with "apply to all" the user is prompted only once even though
     # several files conflict.
     win = MainWindow(state)
@@ -353,6 +367,7 @@ def test_apply_to_all_skip_prompts_once_for_many_conflicts(qapp, monkeypatch, st
 
 
 def test_conflict_dialog_cancel_on_window_close(qapp, state):
+    """Verifies: UIR-084."""
     # UIR-084: closing the dialog via the window manager is equivalent to Cancel.
     win = MainWindow(state)
     try:

@@ -91,8 +91,12 @@ plus code `Satisfies:` tags — the index covers every `FR-`/`UIR-`/`DR-`/`CR-`/
 both files):
 - `requirements_index.md` — terse one-line-per-requirement summary (~13K tokens); use for **broad**
   understanding.
-- `code_to_requirements.md` (+ `.json`) — source file → requirement IDs it implements; use for
-  **targeted** work (look up the file you're editing, read just those IDs).
+- `code_to_requirements.md` (+ `.json`) — source file → requirement IDs it implements (from code
+  `Satisfies:` tags); use for **targeted** work (look up the file you're editing, read just those IDs).
+- `requirements_to_tests.md` (+ `.json`) — requirement ID → the test(s) that verify it (from test
+  `Verifies:` tags), plus an **Untested requirements** list and a **Stale tags** list; use to check
+  test coverage of a requirement. (Many `UIR-`/`FR-` GUI requirements are verified by
+  `docs/manual_test_plan.md` rather than unit tests — expected, not a gap.)
 The SRS (plus `docs/cpm_fm_architecture.md` for `CR-`/`NFR-` architecture) stays the single source of
 truth and the only requirements files edited by hand. **Never edit the views** — regenerate them
 (step 3a).
@@ -110,9 +114,15 @@ not stop short:
    `Satisfies:` tag citing the relevant requirement ID(s).
 3. **Update the requirements** with the traceability mapping to the new and changed functions.
 3a. **Regenerate the views** — run `python tools/traceability_sync/generate_views.py` and commit
-   `docs/requirements_views/` (see "Requirement views" above; never hand-edit them).
-4. **Run the unit tests** (`pytest`).
-5. **Iterate steps 2–4** until all unit tests pass.
+   `docs/requirements_views/` (see "Requirement views" above; never hand-edit them). The views derive
+   from the specs, code `Satisfies:` tags, **and** test `Verifies:` tags.
+4. **Add or update the tests** for the new/changed behaviour, and tag each test function's docstring
+   with a `Verifies:` line citing the requirement ID(s) it exercises (the test-suite counterpart of
+   `Satisfies:`). Then **run the unit tests** (`pytest`). Check coverage with
+   `python tools/traceability_sync/agent_toolset.py --coverage` — it lists requirements with no
+   verifying test and any stale `Verifies:` tags.
+5. **Iterate steps 2–4** until all unit tests pass and the trace is clean (no stale tags;
+   `generate_views.py --check` green).
 6. **Update the manual test plan** (`docs/manual_test_plan.md`) and increment its test plan version.
 7. **Update the manual test scorecard** (`docs/manual_test_scorecard.md`) to match the test plan and
    increment its score version.

@@ -13,7 +13,7 @@ The requirements set is split across several files; know the layout before editi
 - **`docs/cpm_fm_architecture.md`** — the Software Architecture Description (companion). Holds the architectural design constraints (CR-001–009, CR-012–014) and architectural NFRs (NFR-001, NFR-004, NFR-005), with IDs unchanged, plus the authoritative architecture narrative. Hand-edit these `CR-`/`NFR-` requirements here, not in the SRS. The behavioural constraints CR-010, CR-011, CR-015, NFR-002 and the X-Modem protocol requirements NFR-003a–NFR-003o (SRS §8.1) remain in the SRS.
 - **`docs/requirements_change_history.md`** — the §11 Change History (companion file). Add a row here for every edit; do **not** put change history back in the SRS.
 - **`docs/requirements_issue_log.md`** — the §10 Issue Resolution Log (companion file). Record resolved ambiguities/conflicts/gaps here as OI entries.
-- **`docs/requirements_views/`** — generated, **read-only** views (`requirements_index.md` for a terse one-line-per-requirement summary; `code_to_requirements.md`/`.json` mapping source files to requirement IDs). Use them for quick lookup, but **never hand-edit them** — regenerate with `python tools/traceability_sync/generate_views.py` after any requirement-ID, Source-citation, or code `Satisfies:`-tag change.
+- **`docs/requirements_views/`** — generated, **read-only** views (`requirements_index.md` for a terse one-line-per-requirement summary; `code_to_requirements.md`/`.json` mapping source files to requirement IDs from code `Satisfies:` tags; `requirements_to_tests.md`/`.json` mapping each requirement to the test(s) that verify it from test `Verifies:` tags, with untested-requirement and stale-tag lists). Use them for quick lookup, but **never hand-edit them** — regenerate with `python tools/traceability_sync/generate_views.py` after any requirement-ID, Source-citation, code `Satisfies:`-tag, or test `Verifies:`-tag change.
 
 In the SRS, §10 and §11 are now one-line stub redirects pointing to the two companion files above.
 
@@ -135,7 +135,7 @@ When editing requirements:
 - When a review resolves an ambiguity, conflict, or gap, record it as a new OI entry in the **Issue Resolution Log companion file** (`docs/requirements_issue_log.md`)
 - After editing requirement IDs, Source-column citations, or code `Satisfies:` tags, regenerate the read-only views by running `python tools/traceability_sync/generate_views.py` and commit `docs/requirements_views/` (never hand-edit the views)
 - After editing, review `AGENTS.md` and update any architecture, component, or behaviour descriptions that are no longer accurate given the changed requirements
-- After editing, review the test suite (`tests/`) and update or add tests so that every new or modified requirement has corresponding test coverage; if tests are added or changed, run the full test suite (`pytest`) and record any failures in a new plan file at `temp\fixes.md` listing the failing tests and the code changes needed to resolve them
+- After editing, review the test suite (`tests/`) and update or add tests so that every new or modified requirement has corresponding test coverage; tag each test function's docstring with a `Verifies:` line citing the requirement ID(s) it exercises (the test-suite counterpart of code `Satisfies:` tags) so the `requirements_to_tests` view picks it up. If tests are added or changed, run the full test suite (`pytest`), check `python tools/traceability_sync/agent_toolset.py --coverage` for untested requirements and stale tags, and record any failures in a new plan file at `temp\fixes.md` listing the failing tests and the code changes needed to resolve them
 
 ## Usage
 
@@ -151,7 +151,7 @@ When the user provides requirements for analysis:
 9. After editing, increment the SRS Version field and add an entry to the Change History companion file (`docs/requirements_change_history.md`); record any resolved ambiguity/conflict/gap as an OI entry in the Issue Resolution Log companion file (`docs/requirements_issue_log.md`)
 9a. After editing requirement IDs, Source citations, or code `Satisfies:` tags, regenerate the views (`python tools/traceability_sync/generate_views.py`) and commit `docs/requirements_views/`
 10. After editing, update `AGENTS.md` to reflect any changed architecture, component descriptions, or cross-cutting behaviours introduced or modified by the new/changed requirements
-11. After editing, update or add tests in `tests/` to cover every new or modified requirement; if any tests are added or changed, run `pytest` and — if there are failures — create `temp\fixes.md` as a plan listing each failing test, the root cause, and the code changes required to fix it
+11. After editing, update or add tests in `tests/` to cover every new or modified requirement, tagging each test function's docstring with a `Verifies:` line for the requirement ID(s) it exercises; if any tests are added or changed, run `pytest`, check `agent_toolset.py --coverage` for untested requirements/stale tags, and — if there are failures — create `temp\fixes.md` as a plan listing each failing test, the root cause, and the code changes required to fix it
 
 ## Output Format
 

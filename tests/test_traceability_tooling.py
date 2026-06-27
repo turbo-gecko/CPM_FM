@@ -141,6 +141,43 @@ def test_scan_codebase_reads_wrapped_suffixed_tags(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# parser_code — the configurable docstring tag (Satisfies: vs Verifies:)
+# ---------------------------------------------------------------------------
+def test_default_tag_is_satisfies_and_ignores_verifies():
+    # The default extractor reads Satisfies: only; a Verifies: clause is prose.
+    assert _ids("Satisfies: FR-001.\nVerifies: FR-002.") == ["FR-001"]
+
+
+def test_verifies_tag_parsed_with_same_rules_as_satisfies():
+    # A Verifies: clause supports the same comma lists, suffixes, ranges, and
+    # ID-only continuation wrapping as Satisfies:, and ignores Satisfies: prose.
+    extractor = RequirementExtractor("t.py", tag="Verifies:")
+    doc = "Verifies: FR-001, NFR-003a, DR-001-DR-003,\n    FR-010.\nSatisfies: FR-999."
+    ids = {req_id for req_id, _ in extractor._extract_req_ids(doc)}
+    # Comma list, suffix, range expansion, and ID-only continuation all apply;
+    # FR-999 under the Satisfies: prose line is not collected.
+    assert ids == {"FR-001", "NFR-003a", "DR-001", "DR-002", "DR-003", "FR-010"}
+
+
+def test_scan_codebase_with_verifies_tag(tmp_path):
+    (tmp_path / "test_mod.py").write_text(
+        "def test_builder_returns_none():\n"
+        '    """A test.\n'
+        "\n"
+        "    Verifies: FR-001, FR-002.\n"
+        '    """\n'
+        "    assert True\n",
+        encoding="utf-8",
+    )
+    elements = scan_codebase(str(tmp_path), tag="Verifies:")
+    by_name = {(e.name, e.requirement_id) for e in elements}
+    assert ("test_builder_returns_none", "FR-001") in by_name
+    assert ("test_builder_returns_none", "FR-002") in by_name
+    # The default Satisfies: scan finds nothing in the same file.
+    assert scan_codebase(str(tmp_path)) == []
+
+
+# ---------------------------------------------------------------------------
 # generate_views — section parsing, helpers, and multi-file aggregation
 # ---------------------------------------------------------------------------
 _TABLE = (
@@ -261,6 +298,98 @@ def test_generate_aggregates_multiple_spec_files(tmp_path, monkeypatch):
     index = generate_views.generate()[generate_views.INDEX_MD]
     # Both files' requirements must appear in the single generated index.
     assert "FR-001" in index and "CR-001" in index
+
+
+# ---------------------------------------------------------------------------
+# generate_views.build_req_to_tests — the Verifies: coverage view
+# ---------------------------------------------------------------------------
+def _write_test_file(tests_dir, name, body):
+    (tests_dir / name).write_text(body, encoding="utf-8")
+
+
+def test_build_req_to_tests_classifies_covered_untested_and_stale(tmp_path):
+    tests_dir = tmp_path / "tests"
+    tests_dir.mkdir()
+    _write_test_file(
+        tests_dir,
+        "test_x.py",
+        'def test_a():\n    """Check A.\n\n    Verifies: FR-001.\n    """\n    assert True\n\n\n'
+        'def test_b():\n    """Check B.\n\n    Verifies: FR-404.\n    """\n    assert True\n',
+    )
+    cov = generate_views.build_req_to_tests(tests_dir, {"FR-001", "FR-002"})
+    # FR-001 has a verifying test; FR-002 is defined but untested; FR-404 is a
+    # Verifies: tag citing an ID no spec defines, so it is flagged stale.
+    assert cov["covered"] == {"FR-001": ["tests/test_x.py:test_a"]}
+    assert cov["untested"] == ["FR-002"]
+    assert cov["stale"] == {"FR-404": ["tests/test_x.py:test_b"]}
+
+
+def test_build_req_to_tests_drops_range_gapfiller_but_keeps_explicit_unknown(tmp_path):
+    tests_dir = tmp_path / "tests"
+    tests_dir.mkdir()
+    # DR-002 is a range gap-filler absent from the defined set → dropped (not
+    # stale); DR-009 is explicitly cited but undefined → stale.
+    _write_test_file(
+        tests_dir,
+        "test_y.py",
+        'def test_range():\n    """Range.\n\n    Verifies: DR-001-DR-003.\n'
+        '    """\n    assert True\n\n\n'
+        'def test_explicit():\n    """Explicit.\n\n    Verifies: DR-009.\n'
+        '    """\n    assert True\n',
+    )
+    cov = generate_views.build_req_to_tests(tests_dir, {"DR-001", "DR-003"})
+    assert set(cov["covered"]) == {"DR-001", "DR-003"}
+    assert "DR-002" not in cov["stale"]  # range gap-filler dropped silently
+    assert cov["stale"] == {"DR-009": ["tests/test_y.py:test_explicit"]}
+
+
+def test_generate_includes_requirements_to_tests_view(tmp_path, monkeypatch):
+    srs = tmp_path / "srs.md"
+    _write_spec(srs, "FR-001", "A requirement.")
+    code = tmp_path / "src"
+    code.mkdir()
+    tests_dir = tmp_path / "tests"
+    tests_dir.mkdir()
+    _write_test_file(
+        tests_dir,
+        "test_z.py",
+        'def test_one():\n    """One.\n\n    Verifies: FR-001.\n    """\n    assert True\n',
+    )
+    monkeypatch.setattr(generate_views, "SPEC_FILES", [srs])
+    monkeypatch.setattr(generate_views, "CODE_ROOT", code)
+    monkeypatch.setattr(generate_views, "TESTS_ROOT", tests_dir)
+    contents = generate_views.generate()
+    assert generate_views.REQ_TESTS_MD in contents
+    view = contents[generate_views.REQ_TESTS_MD]
+    assert "FR-001" in view
+    assert "tests/test_z.py:test_one" in view
+    assert "1/1 requirements have a verifying test" in view
+
+
+def test_agent_test_coverage_reports_untested(tmp_path, monkeypatch):
+    # agent_toolset.test_coverage must agree with the view builder: one covered,
+    # one untested requirement parsed from the spec.
+    srs = tmp_path / "srs.md"
+    srs.write_text(
+        "# Spec\n\n"
+        "| ID | Requirement | Priority | Verification | Source |\n"
+        "|----|---|---|---|---|\n"
+        "| FR-001 | Covered. | Mandatory | T | — |\n"
+        "| FR-002 | Uncovered. | Mandatory | T | — |\n",
+        encoding="utf-8",
+    )
+    tests_dir = tmp_path / "tests"
+    tests_dir.mkdir()
+    _write_test_file(
+        tests_dir,
+        "test_cov.py",
+        'def test_one():\n    """One.\n\n    Verifies: FR-001.\n    """\n    assert True\n',
+    )
+    agent = agent_toolset.TraceabilityAgent("src", [str(srs)])
+    cov = agent.test_coverage(tests_root=str(tests_dir))
+    assert set(cov["covered"]) == {"FR-001"}
+    assert cov["untested"] == ["FR-002"]
+    assert cov["stale"] == {}
 
 
 # ---------------------------------------------------------------------------
