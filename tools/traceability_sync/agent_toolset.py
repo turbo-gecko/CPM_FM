@@ -1,3 +1,4 @@
+import argparse
 import logging
 import re
 
@@ -162,29 +163,92 @@ class TraceabilityAgent:
 
         return "\n".join(plan)
 
-    def apply_updates(self):
-        """
-        Actually writes the changes back to the requirements.md file.
+    def apply_updates(self, *, dry_run: bool = False) -> dict:
+        """Write the computed Source-cell updates back to the owning documents.
+
+        Each update is routed to the file that defines that requirement, so a
+        CR/NFR citation lands in the architecture doc, not the SRS. Rows whose
+        Source cell carries curated annotation are skipped (never clobbered) by
+        :func:`update_requirements_md` and surfaced in the returned ``skipped``.
+
+        Args:
+            dry_run: When True, write nothing; ``diffs`` holds a per-file
+                unified-diff preview of the rewrites that *would* be applied.
+
+        Returns:
+            ``{"applied": int, "skipped": list[str], "diffs": dict[str, str]}``.
         """
         diff = self.run_sync_analysis()
         if not diff.to_update:
             logger.info("No updates to apply.")
-            return
+            return {"applied": 0, "skipped": [], "diffs": {}}
         # Route each update to the file that defines that requirement so a CR/NFR
         # citation lands in the architecture doc, not the SRS.
         by_file: dict[str, dict[str, str]] = {}
         for req_id, new_impl in diff.to_update.items():
             target = self._id_to_file.get(req_id, self.requirements_file)
             by_file.setdefault(target, {})[req_id] = new_impl
+
+        applied = 0
+        skipped: list[str] = []
+        diffs: dict[str, str] = {}
         for target, updates in by_file.items():
-            update_requirements_md(target, updates)
-            logger.info(f"Applied {len(updates)} updates to {target}")
+            report = update_requirements_md(target, updates, dry_run=dry_run)
+            applied += report["applied"]
+            skipped.extend(report["skipped"])
+            if report["diff"]:
+                diffs[target] = report["diff"]
+            verb = "Would apply" if dry_run else "Applied"
+            logger.info(f"{verb} {report['applied']} update(s) to {target}")
+        return {"applied": applied, "skipped": skipped, "diffs": diffs}
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Requirements-traceability sync. Default: print the update plan "
+            "(report-only). Use --dry-run to preview Source-cell rewrites, then "
+            "--apply to write them. --dry-run is the recommended pre-flight."
+        )
+    )
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview the Source-cell rewrites as a unified diff; write nothing.",
+    )
+    group.add_argument(
+        "--apply",
+        action="store_true",
+        help="Write the rewrites back to the docs (run --dry-run first).",
+    )
+    args = parser.parse_args(argv)
+
+    # Paths for the current project structure (relative to CWD).
+    code_root = "src"
+    req_files = ["docs/cpm_fm_requirements.md", "docs/cpm_fm_architecture.md"]
+    agent = TraceabilityAgent(code_root, req_files)
+
+    if not (args.dry_run or args.apply):
+        print(agent.generate_update_plan())
+        return 0
+
+    report = agent.apply_updates(dry_run=args.dry_run)
+    for target, diff in report["diffs"].items():
+        if diff:
+            print(f"\n=== Proposed changes to {target} ===")
+            print(diff, end="")
+    if report["skipped"]:
+        print(
+            "\n[NEEDS MANUAL REVIEW] These rows have curated Source annotation "
+            "and were left untouched:"
+        )
+        for req_id in report["skipped"]:
+            print(f"  - {req_id}")
+    verb = "would be applied" if args.dry_run else "applied"
+    print(f"\n{report['applied']} update(s) {verb}; {len(report['skipped'])} skipped.")
+    return 0
+
 
 if __name__ == "__main__":
-    # Example execution
-    # Adjusted paths for the current project structure
-    CODE_ROOT = "src"
-    REQ_FILES = ["docs/cpm_fm_requirements.md", "docs/cpm_fm_architecture.md"]
-
-    agent = TraceabilityAgent(CODE_ROOT, REQ_FILES)
-    print(agent.generate_update_plan())
+    raise SystemExit(main())
