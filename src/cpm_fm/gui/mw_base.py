@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from cpm_fm.gui.file_list_widget import FileListWidget
     from cpm_fm.gui.window_state import WindowState
     from cpm_fm.terminal.serial_manager import SerialManager
+    from cpm_fm.utils.config_handler import ConfigHandler
 
 
 class MainWindowMixinBase:
@@ -30,6 +31,7 @@ class MainWindowMixinBase:
         # --- shared instance state (created in MainWindow.__init__) ---
         settings: dict
         serial_mgr: SerialManager
+        config_handler: ConfigHandler
         window_state: WindowState
         _rx_buffer: str
         _tx_buffer: str

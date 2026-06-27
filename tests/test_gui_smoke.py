@@ -772,7 +772,7 @@ def test_menu_load_remembers_and_reuses_config_folder(qapp, monkeypatch, state, 
             seen_dirs.append(directory)
             return str(cfg), filt
 
-        monkeypatch.setattr("cpm_fm.app.QFileDialog.getOpenFileName", fake_open)
+        monkeypatch.setattr("cpm_fm.gui.mw_config.QFileDialog.getOpenFileName", fake_open)
         win.menu_load()
 
         # First open started with no remembered folder; the chosen file's folder
@@ -828,7 +828,7 @@ def test_menu_new_prompts_for_file_when_none_remembered(qapp, monkeypatch, state
         win.settings = {"terminal_port": "COM9"}
         monkeypatch.setattr(win, "refresh_host_files", lambda: None)
         monkeypatch.setattr(
-            "cpm_fm.app.QFileDialog.getSaveFileName",
+            "cpm_fm.gui.mw_config.QFileDialog.getSaveFileName",
             lambda *a, **k: (str(target), "JSON files (*.json)"),
         )
 
@@ -869,7 +869,7 @@ def test_menu_about_opens_dialog(qapp, monkeypatch, state):
             def exec(self):
                 return 1
 
-        monkeypatch.setattr("cpm_fm.app.AboutDialog", _FakeAbout)
+        monkeypatch.setattr("cpm_fm.gui.mw_config.AboutDialog", _FakeAbout)
         win.menu_about()
         assert opened == [win]
     finally:
@@ -928,7 +928,7 @@ def test_menu_manual_opens_dialog(qapp, monkeypatch, state):
             def show(self):
                 pass
 
-        monkeypatch.setattr("cpm_fm.app.ManualDialog", _FakeManual)
+        monkeypatch.setattr("cpm_fm.gui.mw_config.ManualDialog", _FakeManual)
         win.menu_manual()
         assert opened == [win]
     finally:
@@ -960,7 +960,7 @@ def test_menu_manual_reuses_open_window(qapp, monkeypatch, state):
             def activateWindow(self):
                 pass
 
-        monkeypatch.setattr("cpm_fm.app.ManualDialog", _FakeManual)
+        monkeypatch.setattr("cpm_fm.gui.mw_config.ManualDialog", _FakeManual)
         win.menu_manual()  # opens
         win.menu_manual()  # should raise the existing one
         assert len(constructed) == 1
@@ -1038,7 +1038,7 @@ def test_menu_new_aborts_when_save_cancelled(qapp, monkeypatch, state):
         win.remote_list.addItems(["KEEP.TXT"])
         disconnected = []
         monkeypatch.setattr(win, "do_disconnect", lambda: disconnected.append(1))
-        monkeypatch.setattr("cpm_fm.app.QFileDialog.getSaveFileName", lambda *a, **k: ("", ""))
+        monkeypatch.setattr("cpm_fm.gui.mw_config.QFileDialog.getSaveFileName", lambda *a, **k: ("", ""))
 
         win.menu_new()
 
@@ -1057,7 +1057,7 @@ def test_menu_save_remembers_config_folder(qapp, monkeypatch, state, tmp_path):
     win = MainWindow(state)
     try:
         monkeypatch.setattr(
-            "cpm_fm.app.QFileDialog.getSaveFileName",
+            "cpm_fm.gui.mw_config.QFileDialog.getSaveFileName",
             lambda *a, **k: (str(target), "JSON files (*.json)"),
         )
         win.menu_save()
@@ -1696,7 +1696,7 @@ def test_general_config_save_keeps_current_host_dir(qapp, state, monkeypatch):
         def fake_dialog(parent, settings, callback, window_state):
             captured["callback"] = callback
 
-        monkeypatch.setattr(app_module, "GeneralConfigDialog", fake_dialog)
+        monkeypatch.setattr("cpm_fm.gui.mw_config.GeneralConfigDialog", fake_dialog)
         win.menu_general_config()
         callback = captured["callback"]
 
@@ -1745,12 +1745,12 @@ def test_serial_config_save_persists_only_serial_to_active_file(qapp, state, mon
         def fake_dialog(parent, settings, current_ports, callback, window_state):
             captured["callback"] = callback
 
-        monkeypatch.setattr(app_module, "SerialConfigDialog", fake_dialog)
+        monkeypatch.setattr("cpm_fm.gui.mw_config.SerialConfigDialog", fake_dialog)
         # FR-020a: no file-select dialog may be shown.
         def _no_dialog(*a, **k):
             raise AssertionError("Save dialog must not be presented")
 
-        monkeypatch.setattr("cpm_fm.app.QFileDialog.getSaveFileName", _no_dialog)
+        monkeypatch.setattr("cpm_fm.gui.mw_config.QFileDialog.getSaveFileName", _no_dialog)
 
         win.menu_serial_config()
         captured["callback"]({"terminal_port": "COM7", "speed": "115200"})
@@ -1798,12 +1798,12 @@ def test_general_config_save_persists_general_only(qapp, state, monkeypatch, tmp
         def fake_dialog(parent, settings, callback, window_state):
             captured["callback"] = callback
 
-        monkeypatch.setattr(app_module, "GeneralConfigDialog", fake_dialog)
+        monkeypatch.setattr("cpm_fm.gui.mw_config.GeneralConfigDialog", fake_dialog)
 
         def _no_dialog(*a, **k):
             raise AssertionError("Save dialog must not be presented")
 
-        monkeypatch.setattr("cpm_fm.app.QFileDialog.getSaveFileName", _no_dialog)
+        monkeypatch.setattr("cpm_fm.gui.mw_config.QFileDialog.getSaveFileName", _no_dialog)
 
         win.menu_general_config()
         captured["callback"]({"eol": "LF", "list_files_cmd": "LS"})
@@ -1842,7 +1842,7 @@ def test_dialog_save_warns_and_writes_nothing_when_no_config_loaded(qapp, state,
         def fake_dialog(parent, settings, current_ports, callback, window_state):
             captured["callback"] = callback
 
-        monkeypatch.setattr(app_module, "SerialConfigDialog", fake_dialog)
+        monkeypatch.setattr("cpm_fm.gui.mw_config.SerialConfigDialog", fake_dialog)
         win.menu_serial_config()
         captured["callback"]({"terminal_port": "COM9"})
 
