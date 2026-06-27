@@ -198,13 +198,13 @@ class TerminalWindow(QMainWindow):
         n = len(text)
         while i < n:
             char = text[i]
-            if char == '\b':
+            if char == "\b":
                 cursor.deletePreviousChar()
-            elif char == '\r':
+            elif char == "\r":
                 # Collapse a CRLF pair into a single line break.
-                if i + 1 < n and text[i + 1] == '\n':
+                if i + 1 < n and text[i + 1] == "\n":
                     i += 1
-                cursor.insertText('\n')
+                cursor.insertText("\n")
             else:
                 cursor.insertText(char)
             i += 1

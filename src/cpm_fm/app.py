@@ -840,9 +840,7 @@ class MainWindow(
         cancel_btn = QPushButton(tr("button.cancel"))
         cancel_btn.clicked.connect(dlg.reject)
         (accept_btn if default_accept else cancel_btn).setDefault(True)
-        dlg_layout.addLayout(
-            build_button_row(accept_button=accept_btn, reject_button=cancel_btn)
-        )
+        dlg_layout.addLayout(build_button_row(accept_button=accept_btn, reject_button=cancel_btn))
 
         return dlg.exec() == QDialog.DialogCode.Accepted
 
