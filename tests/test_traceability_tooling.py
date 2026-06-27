@@ -123,13 +123,13 @@ def test_explicit_mention_wins_over_range_derived():
 # ---------------------------------------------------------------------------
 def test_scan_codebase_reads_wrapped_suffixed_tags(tmp_path):
     (tmp_path / "mod.py").write_text(
-        'def builder():\n'
+        "def builder():\n"
         '    """Build a thing.\n'
-        '\n'
-        '    Satisfies: FR-001, NFR-003a,\n'
-        '        NFR-003b.\n'
+        "\n"
+        "    Satisfies: FR-001, NFR-003a,\n"
+        "        NFR-003b.\n"
         '    """\n'
-        '    return None\n',
+        "    return None\n",
         encoding="utf-8",
     )
     elements = scan_codebase(str(tmp_path))
@@ -291,12 +291,7 @@ def test_apply_updates_routes_each_change_to_its_owning_file(tmp_path):
     code = tmp_path / "src"
     code.mkdir()
     (code / "mod.py").write_text(
-        'def builder():\n'
-        '    """Build it.\n'
-        '\n'
-        '    Satisfies: CR-001.\n'
-        '    """\n'
-        '    return None\n',
+        'def builder():\n    """Build it.\n\n    Satisfies: CR-001.\n    """\n    return None\n',
         encoding="utf-8",
     )
     srs = tmp_path / "srs.md"
@@ -374,9 +369,7 @@ def test_update_skips_and_reports_curated_row_preserving_text(tmp_path):
     _spec_with_source(spec, "DR-045", curated)
     before = spec.read_text(encoding="utf-8")
 
-    report = parser_docs.update_requirements_md(
-        str(spec), {"DR-045": "impl. `new.py:h`"}
-    )
+    report = parser_docs.update_requirements_md(str(spec), {"DR-045": "impl. `new.py:h`"})
 
     assert report["applied"] == 0
     assert report["skipped"] == ["DR-045"]
@@ -389,9 +382,7 @@ def test_update_skips_and_reports_curated_row_preserving_text(tmp_path):
 def test_update_rewrites_plain_citation_row(tmp_path):
     spec = tmp_path / "spec.md"
     _spec_with_source(spec, "FR-001", "impl. `old.py:f`")
-    report = parser_docs.update_requirements_md(
-        str(spec), {"FR-001": "impl. `new.py:h`"}
-    )
+    report = parser_docs.update_requirements_md(str(spec), {"FR-001": "impl. `new.py:h`"})
     assert report["applied"] == 1
     assert report["skipped"] == []
     assert "impl. `new.py:h`" in spec.read_text(encoding="utf-8")
@@ -419,12 +410,7 @@ def test_apply_updates_dry_run_leaves_docs_untouched(tmp_path):
     code = tmp_path / "src"
     code.mkdir()
     (code / "mod.py").write_text(
-        'def builder():\n'
-        '    """Build it.\n'
-        '\n'
-        '    Satisfies: FR-001.\n'
-        '    """\n'
-        '    return None\n',
+        'def builder():\n    """Build it.\n\n    Satisfies: FR-001.\n    """\n    return None\n',
         encoding="utf-8",
     )
     spec = tmp_path / "srs.md"

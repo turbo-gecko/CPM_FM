@@ -392,7 +392,9 @@ def test_change_drive_success_refreshes_remote_list(qapp, monkeypatch, state):
     win = MainWindow(state)
     try:
         win.serial_mgr.terminal_connected = True
-        monkeypatch.setattr(win, "_capture_terminal_response", lambda cmd, cancellable=False: "B:\nB>\n")
+        monkeypatch.setattr(
+            win, "_capture_terminal_response", lambda cmd, cancellable=False: "B:\nB>\n"
+        )
         calls = []
         monkeypatch.setattr(win, "_do_refresh_remote_logic", lambda: calls.append("refresh"))
         win._do_change_drive_logic("B")
@@ -407,7 +409,9 @@ def test_change_drive_not_found_clears_list_and_warns(qapp, monkeypatch, state):
     try:
         win.remote_list.addItem("STALE.TXT")
         win.serial_mgr.terminal_connected = True
-        monkeypatch.setattr(win, "_capture_terminal_response", lambda cmd, cancellable=False: "\nnot ready\n")
+        monkeypatch.setattr(
+            win, "_capture_terminal_response", lambda cmd, cancellable=False: "\nnot ready\n"
+        )
         warned = []
         monkeypatch.setattr("cpm_fm.app.QMessageBox.warning", lambda *a, **k: warned.append(a[1:]))
         win._do_change_drive_logic("B")
@@ -478,9 +482,7 @@ def test_update_button_shows_error_dialog_when_disconnected(qapp, monkeypatch, s
         win.remote_list.addItem("STALE.TXT")
         win.serial_mgr.terminal_connected = False
         errors = []
-        monkeypatch.setattr(
-            "cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:])
-        )
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:]))
         win.do_refresh_remote_files()
         qapp.processEvents()
         assert errors == [("Error", "Terminal port not connected")]
@@ -498,9 +500,7 @@ def test_update_auto_refresh_skips_error_dialog_when_disconnected(qapp, monkeypa
     try:
         win.serial_mgr.terminal_connected = False
         errors = []
-        monkeypatch.setattr(
-            "cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:])
-        )
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:]))
         win.refresh_remote_files()
         qapp.processEvents()
         assert errors == []
@@ -1038,7 +1038,9 @@ def test_menu_new_aborts_when_save_cancelled(qapp, monkeypatch, state):
         win.remote_list.addItems(["KEEP.TXT"])
         disconnected = []
         monkeypatch.setattr(win, "do_disconnect", lambda: disconnected.append(1))
-        monkeypatch.setattr("cpm_fm.gui.mw_config.QFileDialog.getSaveFileName", lambda *a, **k: ("", ""))
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_config.QFileDialog.getSaveFileName", lambda *a, **k: ("", "")
+        )
 
         win.menu_new()
 
@@ -1115,7 +1117,9 @@ def test_host_rename_renames_file(qapp, monkeypatch, state, tmp_path):
     try:
         win.host_dir = str(tmp_path)
         (tmp_path / "OLD.TXT").write_text("x")
-        monkeypatch.setattr("cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("NEW.TXT"))
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("NEW.TXT")
+        )
         refreshed = []
         monkeypatch.setattr(win, "refresh_host_files", lambda: refreshed.append(1))
         win._host_rename("OLD.TXT")
@@ -1133,7 +1137,8 @@ def test_host_rename_cancelled_makes_no_change(qapp, monkeypatch, state, tmp_pat
         win.host_dir = str(tmp_path)
         (tmp_path / "OLD.TXT").write_text("x")
         monkeypatch.setattr(
-            "cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("NEW.TXT", accepted=False)
+            "cpm_fm.gui.mw_context_menu.FileActionDialog",
+            _fake_action_dialog("NEW.TXT", accepted=False),
         )
         win._host_rename("OLD.TXT")
         assert (tmp_path / "OLD.TXT").exists()
@@ -1148,7 +1153,9 @@ def test_host_delete_removes_file(qapp, monkeypatch, state, tmp_path):
     try:
         win.host_dir = str(tmp_path)
         (tmp_path / "F.TXT").write_text("x")
-        monkeypatch.setattr("cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("F.TXT"))
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("F.TXT")
+        )
         refreshed = []
         monkeypatch.setattr(win, "refresh_host_files", lambda: refreshed.append(1))
         win._host_delete("F.TXT")
@@ -1164,7 +1171,9 @@ def test_remote_rename_sends_command(qapp, monkeypatch, state):
     try:
         win.serial_mgr.terminal_connected = True
         win.settings = {"rename_remote_cmd": "REN $2=$1"}
-        monkeypatch.setattr("cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("NEW.TXT"))
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("NEW.TXT")
+        )
         _RecordingThread.instances = []
         monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
         win._remote_rename("OLD.TXT")
@@ -1179,7 +1188,9 @@ def test_remote_delete_sends_command(qapp, monkeypatch, state):
     try:
         win.serial_mgr.terminal_connected = True
         win.settings = {"delete_remote_cmd": "ERA $1"}
-        monkeypatch.setattr("cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("F.TXT"))
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("F.TXT")
+        )
         _RecordingThread.instances = []
         monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
         win._remote_delete("F.TXT")
@@ -1195,7 +1206,9 @@ def test_host_delete_removes_all_selected_files(qapp, monkeypatch, state, tmp_pa
         win.host_dir = str(tmp_path)
         for fn in ("A.TXT", "B.TXT", "C.TXT"):
             (tmp_path / fn).write_text("x")
-        monkeypatch.setattr("cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("A.TXT"))
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("A.TXT")
+        )
         monkeypatch.setattr(win, "refresh_host_files", lambda: None)
         win._host_delete(["A.TXT", "B.TXT", "C.TXT"])
         assert not (tmp_path / "A.TXT").exists()
@@ -1211,7 +1224,9 @@ def test_remote_delete_sends_command_per_selected_file(qapp, monkeypatch, state)
     try:
         win.serial_mgr.terminal_connected = True
         win.settings = {"delete_remote_cmd": "ERA $1"}
-        monkeypatch.setattr("cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("A.TXT"))
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_context_menu.FileActionDialog", _fake_action_dialog("A.TXT")
+        )
         _RecordingThread.instances = []
         monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
         win._remote_delete(["A.TXT", "B.TXT"])
@@ -1673,7 +1688,6 @@ def test_general_config_save_keeps_current_host_dir(qapp, state, monkeypatch):
     # directory currently selected (e.g. via Change Directory), saving the
     # General Config dialog without touching the host-directory field must not
     # revert the current selection, nor change the stored config value.
-    import cpm_fm.app as app_module
 
     win = MainWindow(state)
     try:
@@ -1721,8 +1735,6 @@ def test_serial_config_save_persists_only_serial_to_active_file(qapp, state, mon
     # untouched, and never presents a Save dialog.
     import json
 
-    import cpm_fm.app as app_module
-
     win = MainWindow(state)
     try:
         cfg = tmp_path / "active.json"
@@ -1746,6 +1758,7 @@ def test_serial_config_save_persists_only_serial_to_active_file(qapp, state, mon
             captured["callback"] = callback
 
         monkeypatch.setattr("cpm_fm.gui.mw_config.SerialConfigDialog", fake_dialog)
+
         # FR-020a: no file-select dialog may be shown.
         def _no_dialog(*a, **k):
             raise AssertionError("Save dialog must not be presented")
@@ -1773,8 +1786,6 @@ def test_general_config_save_persists_general_only(qapp, state, monkeypatch, tmp
     # FR-021a: the General dialog Save writes only the general settings to the
     # currently loaded config file, leaving the serial settings untouched.
     import json
-
-    import cpm_fm.app as app_module
 
     win = MainWindow(state)
     try:
