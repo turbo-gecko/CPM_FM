@@ -260,11 +260,10 @@ flowchart LR
 
 > **More diagrams:** the X-Modem protocol requirements (`NFR-003*`) are already
 > illustrated with sequence diagrams (128-byte and 1K transfers) in
-> [`docs/xmodem_specs.md`](docs/xmodem_specs.md) — reference that rather than duplicating
-> it here. One worth *adding* as the project grows is a `graph` of the runtime layering
-> (`gui/` → `terminal/` + `utils/`) showing the `CR-014` rule that `terminal/` and
-> `utils/` import no GUI toolkit — a quick visual for the threading/decoupling model in
-> [`docs/cpm_fm_architecture.md`](docs/cpm_fm_architecture.md).
+> [`docs/xmodem_specs.md`](docs/xmodem_specs.md), and the runtime layering
+> (`gui/` → `terminal/` + `utils/`) — showing the `CR-014` rule that `terminal/` and
+> `utils/` import no GUI toolkit, plus the signal-based threading/decoupling model — is
+> diagrammed in [`docs/cpm_fm_architecture.md`](docs/cpm_fm_architecture.md) §A2.
 
 ## Developer Workflow (AI Assisted)
 
