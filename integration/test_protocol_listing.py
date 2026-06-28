@@ -7,6 +7,9 @@ peer. Read-only: these tests do not write to the remote.
 from __future__ import annotations
 
 import pytest
+from helpers.trace import get_logger
+
+log = get_logger("listing")
 
 
 @pytest.mark.hil
@@ -18,7 +21,7 @@ def test_detect_current_drive(peer):
     """
     letter = peer.detect_drive()
     assert letter is not None and "A" <= letter <= "P"
-    print(f"[listing] current drive = {letter}:")
+    log.info("current drive = %s:", letter)
 
 
 @pytest.mark.hil
@@ -43,4 +46,4 @@ def test_dir_listing_parses(peer, scratch_drive):
     # Every parsed name is a bare 8.3-style token (no drive prefix, no padding).
     for name in listing:
         assert ":" not in name and name == name.strip()
-    print(f"[listing] {scratch_drive}: holds {len(listing)} file(s)")
+    log.info("%s: holds %d file(s)", scratch_drive, len(listing))

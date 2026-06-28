@@ -14,9 +14,12 @@ from pathlib import Path
 
 import pytest
 from helpers.config import EOL_MAP
+from helpers.trace import get_logger
 
 from cpm_fm.terminal.cpm_parser import CPMParser
 from cpm_fm.terminal.serial_manager import SerialManager
+
+log = get_logger("smoke")
 
 
 @pytest.mark.hil
@@ -44,6 +47,6 @@ def test_peer_connects_and_sees_ccp_prompt(target, settings_copy):
             if letter:
                 break
         assert letter is not None, f"no CP/M drive prompt on {port}; received: {''.join(chunks)!r}"
-        print(f"[smoke] target={target.name} port={port} CCP drive prompt = {letter}:")
+        log.info("target=%s port=%s CCP drive prompt = %s:", target.name, port, letter)
     finally:
         sm.close_ports()

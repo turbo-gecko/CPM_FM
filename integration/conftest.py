@@ -21,11 +21,49 @@ import os
 # same way tests/test_gui_smoke.py does, before any PySide6 import.
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+import logging
+import time
+
 import pytest
 from helpers.config import HilConfigError, load_hil_config, resolve_targets
 from helpers.ids import mt_info
-from helpers.results import ResultsRecorder
+from helpers.results import RecorderLogHandler, ResultsRecorder
 from helpers.settings_copy import file_sha256, make_working_copy
+from helpers.trace import ROOT as TRACE_ROOT
+
+log = logging.getLogger(f"{TRACE_ROOT}.fixture")
+
+
+def _await_port_free(settings: dict, attempts: int = 24, interval: float = 0.25) -> None:
+    """Poll until the target's serial port(s) can be reopened, then settle.
+
+    The bench rigs are commonly a single shared COM port held in turn by the
+    protocol-tier ``peer`` and the GUI-tier ``MainWindow``. Windows releases a
+    COM handle *asynchronously* after close, so the next test's connect can hit
+    ``PermissionError(13, 'Access is denied')`` if it opens before the OS frees
+    it. Opening→closing the port until it succeeds bridges that window
+    deterministically — replacing a fixed settle sleep that was occasionally too
+    short (the cross-module first-test connect flake). Bounded by
+    ``attempts × interval`` per distinct port.
+    """
+    import serial
+
+    seen: set[str] = set()
+    for key in ("terminal_port", "transport_port"):
+        port = settings.get(key)
+        if not port or port in seen:
+            continue
+        seen.add(port)
+        for _ in range(attempts):
+            try:
+                serial.Serial(port).close()
+                break
+            except (serial.SerialException, OSError):
+                time.sleep(interval)
+        else:
+            log.warning("port %s still not free after %.1fs", port, attempts * interval)
+    time.sleep(0.1)  # brief final settle before the next test reopens
+
 
 # --------------------------------------------------------------------------- #
 # Options & configuration
@@ -88,6 +126,14 @@ def pytest_configure(config):
             "run_destructive": config.getoption("--run-destructive"),
         },
     )
+
+    # Capture the ``hil.*`` step trace into each test's console.log via our own
+    # handler (clean plain-text lines), rather than the colour-coded, phase-
+    # duplicated ``report.caplog``. Attached to the ``hil`` root so child loggers
+    # (``hil.peer``/``hil.gui``) propagate up to it.
+    handler = RecorderLogHandler(config._hil_recorder)
+    logging.getLogger(TRACE_ROOT).addHandler(handler)
+    config._hil_log_handler = handler
 
 
 def pytest_generate_tests(metafunc):
@@ -171,6 +217,9 @@ def peer(target):
         pytest.skip(f"BLOCKED: could not connect to target {target.name!r}: {e}")
     yield p
     p.close()
+    # Single shared port: wait for the OS to release it before the next module
+    # (often a GUI module) reopens, or its first connect can hit Access-denied.
+    _await_port_free(target.load_settings())
 
 
 @pytest.fixture
@@ -228,8 +277,7 @@ def gui(target, qapp, settings_copy, tmp_path):
         # the daemon serial read thread cannot call into a half-destroyed
         # QObject (a hard segfault), then stop the thread and close ports before
         # the window is torn down.
-        import time as _time
-
+        #
         # Drain any in-flight app worker threads BEFORE deleting the window, so a
         # queued signal can never fire on a freed QObject (heap corruption).
         driver.quiesce()
@@ -238,8 +286,10 @@ def gui(target, qapp, settings_copy, tmp_path):
         win.close()
         win.deleteLater()
         qapp.processEvents()
-        # Let Windows fully release the (single shared) COM port before reopen.
-        _time.sleep(0.5)
+        # Let Windows fully release the (single shared) COM port before the next
+        # test reopens it (poll until free, rather than a fixed sleep that was
+        # occasionally too short).
+        _await_port_free(target.load_settings())
         i18n.set_language(i18n.DEFAULT_LANGUAGE)
 
 
@@ -307,6 +357,20 @@ def _target_name_for(item) -> str:
 
 
 @pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_protocol(item, nextitem):
+    """Point the log-capture buffer at the test about to run.
+
+    Fires before fixture setup, so logs emitted while the ``peer``/``gui``
+    fixtures connect are attributed to the right test (the ``setup``-phase
+    makereport that creates the pending record runs later).
+    """
+    recorder = getattr(item.config, "_hil_recorder", None)
+    if recorder is not None:
+        recorder.set_current(item.nodeid)
+    yield
+
+
+@pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     outcome = yield
     report = outcome.get_result()
@@ -320,6 +384,9 @@ def pytest_runtest_makereport(item, call):
 
 
 def pytest_sessionfinish(session, exitstatus):
+    handler = getattr(session.config, "_hil_log_handler", None)
+    if handler is not None:
+        logging.getLogger(TRACE_ROOT).removeHandler(handler)
     recorder = getattr(session.config, "_hil_recorder", None)
     if recorder is None:
         return
