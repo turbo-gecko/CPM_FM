@@ -1,6 +1,6 @@
 {
-    "terminal_port": "COM16",
-    "transport_port": "COM16",
+    "terminal_port": "COM17",
+    "transport_port": "COM17",
     "speed": "115200",
     "data": "8",
     "parity": "NONE",
@@ -24,5 +24,6 @@
     "echo_transfer_data": "OFF",
     "viewer_cmd": "notepad $1",
     "terminal_timeout_ms": "1000",
-    "transport_timeout_ms": "1000"
+    "transport_timeout_ms": "1000",
+    "boot_sequence": "SEND 2\nWAIT 1\nSEND 0"
 }
