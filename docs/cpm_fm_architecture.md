@@ -50,6 +50,33 @@ The application is organised into three layers, intentionally decoupled from the
 layers are unit-testable without a running Qt application. **CR-014** forbids PySide6 (or any other
 GUI-toolkit) imports in `terminal/` and `utils/`.
 
+```mermaid
+flowchart TD
+    subgraph GUI["gui/ — Qt-only (PySide6)"]
+        APP["app.py:MainWindow"]
+        WIDGETS["theme, dialogs,<br/>terminal_window, ..."]
+    end
+    subgraph TERM["terminal/ — no GUI imports (CR-014)"]
+        SM[serial_manager.py]
+        XM[xmodem.py]
+        CP[cpm_parser.py]
+    end
+    subgraph UTILS["utils/ — no GUI imports (CR-014)"]
+        CFG[config_handler.py]
+        I18N[i18n.py]
+        FF[file_filter.py]
+        TH[transfer_history.py]
+    end
+    GUI -->|imports / calls| TERM
+    GUI -->|imports / calls| UTILS
+    TERM -. "worker threads marshal<br/>UI updates via Qt signals<br/>(NFR-001 / NFR-004)" .-> GUI
+```
+
+The arrows are deliberately one-directional: `gui/` depends on `terminal/` and `utils/`, never the
+reverse. The dashed edge is not an import — it is the runtime threading path, where background daemon
+threads in `terminal/` (serial reads, X-Modem transfers) push results back to the GUI thread by
+**emitting Qt signals** rather than touching widgets directly (see A3, NFR-001/NFR-004).
+
 - **`terminal/` — serial, transfer, and parsing (no GUI):**
   - `serial_manager.py` — `SerialManager` owns two `pyserial` ports: a **terminal** port (for CP/M
     commands) and a **transport** port (for X-Modem transfers); they may map to the same physical port
