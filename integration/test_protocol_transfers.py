@@ -13,6 +13,9 @@ from __future__ import annotations
 
 import pytest
 from helpers.integrity import assert_round_trip, sample_files
+from helpers.trace import get_logger
+
+log = get_logger("transfer")
 
 
 @pytest.fixture
@@ -42,7 +45,7 @@ def test_round_trip_sample_files(peer, scratch_drive, samples, tmp_path):
     """
     for src in samples:
         _round_trip(peer, scratch_drive, src, tmp_path)
-        print(f"[transfer] round-trip OK: {src.name} ({src.stat().st_size} bytes)")
+        log.info("round-trip OK: %s (%d bytes)", src.name, src.stat().st_size)
 
 
 @pytest.mark.hil

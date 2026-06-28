@@ -12,6 +12,9 @@ testing, and are noted in the README.
 from __future__ import annotations
 
 import pytest
+from helpers.trace import get_logger
+
+log = get_logger("gui-connect")
 
 
 @pytest.mark.hil
@@ -27,9 +30,7 @@ def test_connect_opens_ports_and_probes(gui):
     assert result is not None and result[0] == "ok", f"probe did not succeed: {result}"
     drive = result[1]
     assert drive and gui.win.drive_combo.currentText() == f"{drive}:"
-    print(
-        f"[gui-connect] connected; remote drive {drive}: ({len(gui.remote_names())} file(s) listed)"
-    )
+    log.info("connected; remote drive %s: (%d file(s) listed)", drive, len(gui.remote_names()))
 
 
 @pytest.mark.hil

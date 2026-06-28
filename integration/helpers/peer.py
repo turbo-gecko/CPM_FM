@@ -27,6 +27,9 @@ from cpm_fm.terminal.serial_manager import SerialManager
 from cpm_fm.terminal.xmodem import XModem
 
 from .config import EOL_MAP
+from .trace import get_logger, step
+
+log = get_logger("peer")
 
 
 class PeerError(RuntimeError):
@@ -53,11 +56,19 @@ class CpmPeer:
     def connect(self) -> CpmPeer:
         """Open the port(s) and probe the current CP/M drive prompt."""
         self.sm.on_data_received = self._on_rx
-        if not self.sm.open_port("terminal", self.settings):
-            raise PeerError(f"could not open terminal port {self.settings.get('terminal_port')!r}")
         term = self.settings.get("terminal_port")
         trans = self.settings.get("transport_port")
-        if term != trans:
+        shared = term == trans
+        step(
+            log,
+            "connecting: terminal=%s transport=%s (%s)",
+            term,
+            trans,
+            "shared port" if shared else "two-port",
+        )
+        if not self.sm.open_port("terminal", self.settings):
+            raise PeerError(f"could not open terminal port {term!r}")
+        if not shared:
             if not self.sm.open_port("transport", self.settings):
                 self.sm.close_ports()
                 raise PeerError(f"could not open transport port {trans!r}")
@@ -66,9 +77,12 @@ class CpmPeer:
             self.sm.transport_port = self.sm.terminal_port
             self.sm.transport_connected = True
         self.connect_drive = self.detect_drive()
+        drive = f"{self.connect_drive}:" if self.connect_drive else "(none)"
+        step(log, "connected; CCP drive = %s", drive)
         return self
 
     def close(self) -> None:
+        step(log, "closing ports")
         self.sm.close_ports()
 
     def __enter__(self) -> CpmPeer:
@@ -87,6 +101,7 @@ class CpmPeer:
 
     def send_line(self, text: str) -> None:
         """Send ``text`` + the configured EOL on the terminal port (no capture)."""
+        log.debug("→ %r", text)
         self.sm.send_data("terminal", text + self.eol)
 
     def capture(
@@ -114,6 +129,9 @@ class CpmPeer:
                 waited += idle_window
                 if len(self._capture_buf) == prev:
                     break
+            log.debug(
+                "captured %d byte(s) in %.1fs for %r", len(self._capture_buf), waited, command
+            )
             return self._capture_buf
         finally:
             self._capturing = False
@@ -134,14 +152,18 @@ class CpmPeer:
     def change_drive(self, letter: str) -> bool:
         """Switch the remote to ``letter`` (FR-100/FR-101). True if it took."""
         text = self.capture(f"{letter}:")
-        return CPMParser.has_drive_prompt(text, letter)
+        ok = CPMParser.has_drive_prompt(text, letter)
+        step(log, "change drive → %s: %s", letter, "ok" if ok else "FAILED")
+        return ok
 
     def list(self, letter: str | None = None) -> dict[str, bool]:
         """Return the directory listing of ``letter`` (or the current drive)."""
         if letter is not None and not self.change_drive(letter):
             raise PeerError(f"drive {letter}: not available")
         cmd = self.settings.get("list_files_cmd", "DIR")
-        return CPMParser.parse_dir_output(self.capture(cmd))
+        listing = CPMParser.parse_dir_output(self.capture(cmd))
+        step(log, "list %s → %d file(s)", f"{letter}:" if letter else "(current)", len(listing))
+        return listing
 
     def exists(self, name: str, letter: str | None = None) -> bool:
         return name.upper() in {n.upper() for n in self.list(letter)}
@@ -154,6 +176,7 @@ class CpmPeer:
             raise PeerError(f"drive {letter}: not available")
         template = self.settings.get("delete_remote_cmd", "ERA $1")
         if template:
+            step(log, "erase %s on %s", name, f"{letter}:" if letter else "(current)")
             self.capture(template.replace("$1", name))
 
     def wipe_drive(self, letter: str) -> None:
@@ -164,11 +187,14 @@ class CpmPeer:
         """
         if not self.change_drive(letter):
             raise PeerError(f"drive {letter}: not available")
-        for name in list(self.list()):
+        names = list(self.list())
+        step(log, "WIPE %s: (%d file(s)) — DESTRUCTIVE", letter, len(names))
+        for name in names:
             self.erase(name)
 
     def seed(self, local_paths: list[str], letter: str, use_1k: bool | None = None) -> None:
         """Upload a known set of files onto ``letter``. DESTRUCTIVE (writes)."""
+        step(log, "seed %d file(s) → %s:", len(local_paths), letter)
         for path in local_paths:
             self.send_file(path, letter=letter, use_1k=use_1k)
 
@@ -213,6 +239,15 @@ class CpmPeer:
         if remote_name is None:
             remote_name = os.path.basename(local_path)
         use_1k = self._use_1k(use_1k)
+        size = os.path.getsize(local_path) if os.path.exists(local_path) else -1
+        step(
+            log,
+            "send %s → %s: [%s] (%d bytes)",
+            remote_name,
+            letter or "(current)",
+            "1K" if use_1k else "128",
+            size,
+        )
         ser = self.sm.transport_port
         if self._shared_port:
             self.sm.pause_terminal_reads()
@@ -221,7 +256,9 @@ class CpmPeer:
                 ser.reset_input_buffer()
             self._issue_remote_cmd("send", remote_name, use_1k)
             time.sleep(self._launch_delay())
-            return XModem(ser).send_file(local_path, use_1k=use_1k)
+            ok = XModem(ser).send_file(local_path, use_1k=use_1k)
+            step(log, "send %s → %s", remote_name, "OK" if ok else "FAILED")
+            return ok
         finally:
             if self._shared_port:
                 self.sm.resume_terminal_reads()
@@ -237,13 +274,22 @@ class CpmPeer:
         if letter is not None and not self.change_drive(letter):
             raise PeerError(f"drive {letter}: not available")
         use_1k = self._use_1k(use_1k)
+        step(
+            log,
+            "recv %s ← %s: [%s]",
+            remote_name,
+            letter or "(current)",
+            "1K" if use_1k else "128",
+        )
         ser = self.sm.transport_port
         if self._shared_port:
             self.sm.pause_terminal_reads()
         try:
             self._issue_remote_cmd("recv", remote_name, use_1k)
             time.sleep(self._launch_delay())
-            return XModem(ser).receive_file(save_path, use_1k=use_1k)
+            ok = XModem(ser).receive_file(save_path, use_1k=use_1k)
+            step(log, "recv %s → %s", remote_name, "OK" if ok else "FAILED")
+            return ok
         finally:
             if self._shared_port:
                 self.sm.resume_terminal_reads()

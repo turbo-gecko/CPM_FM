@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import getpass
 import json
+import logging
 import os
 import platform
 import subprocess
@@ -101,6 +102,28 @@ def _manual_test_plan_version() -> str:
     return "unknown"
 
 
+class RecorderLogHandler(logging.Handler):
+    """Routes ``hil.*`` log records into the recorder's per-test trace buffer.
+
+    Used instead of pytest's ``report.caplog`` (which, with ``log_cli`` enabled,
+    is duplicated across phases and carries ANSI colour codes). The plain
+    formatter here yields one clean line per record for ``console.log``.
+    """
+
+    def __init__(self, recorder: ResultsRecorder):
+        super().__init__()
+        self._recorder = recorder
+        self.setFormatter(
+            logging.Formatter("%(asctime)s %(levelname)-7s %(name)s: %(message)s", "%H:%M:%S")
+        )
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            self._recorder.capture_log(self.format(record))
+        except Exception:  # never let logging break a test run
+            pass
+
+
 @dataclass
 class TestRecord:
     nodeid: str
@@ -138,8 +161,25 @@ class ResultsRecorder:
         self.sha = _git("rev-parse", "--short", "HEAD") or "nogit"
         self.run_id = f"{self.start.strftime('%Y%m%dT%H%M%SZ')}_{self.sha}"
         self._pending: dict[str, _Pending] = {}
+        # Per-test step-trace lines, keyed by nodeid. Populated by a dedicated
+        # logging handler (see ``conftest._install_log_capture``) rather than
+        # ``report.caplog``, which with ``log_cli`` on is duplicated across phases
+        # and carries ANSI colour codes. Keyed independently of ``_pending`` so
+        # logs emitted during fixture *setup* (before the call report creates the
+        # pending record) are still captured.
+        self._logs: dict[str, list[str]] = {}
+        self._current: str | None = None
 
     # ----- collection-time -------------------------------------------------
+
+    def set_current(self, nodeid: str | None) -> None:
+        """Mark which test the log-capture handler should attribute lines to."""
+        self._current = nodeid
+
+    def capture_log(self, line: str) -> None:
+        """Append one formatted log line to the current test's trace."""
+        if self._current is not None:
+            self._logs.setdefault(self._current, []).append(line)
 
     def start_item(self, nodeid: str, mt_id: str | None, reqs: list[str], target: str) -> None:
         self._pending[nodeid] = _Pending(nodeid=nodeid, mt_id=mt_id, reqs=reqs, target=target)
@@ -218,7 +258,7 @@ class ResultsRecorder:
             )
             (run_dir / "junit.xml").write_bytes(self._build_junit(target_name, records))
             (run_dir / "console.log").write_text(
-                "".join(f"===== {p.nodeid} =====\n{p.capstdout}\n" for p in records),
+                "".join(self._console_block(p) for p in records),
                 encoding="utf-8",
             )
             written.append(run_dir)
@@ -226,6 +266,19 @@ class ResultsRecorder:
 
         self._append_ledger(ledger_entries)
         return written
+
+    def _console_block(self, p: _Pending) -> str:
+        """One per-test section for console.log: stdout then the step-log trace."""
+        out = [f"===== {p.nodeid} =====\n"]
+        if p.capstdout:
+            out.append(p.capstdout)
+            if not p.capstdout.endswith("\n"):
+                out.append("\n")
+        lines = self._logs.get(p.nodeid)
+        if lines:
+            out.append("----- log -----\n")
+            out.extend(line + "\n" for line in lines)
+        return "".join(out)
 
     def _build_run_json(
         self, target_name: str, records: list[_Pending]

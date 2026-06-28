@@ -60,6 +60,34 @@ pytest integration/ --run-destructive     # also run destructive backup/restore
 
 Results print labelled by target, e.g. `test_smoke.py::...[rc2014]`.
 
+### Watching a run
+
+The harness narrates each step it takes through a `logging` trace (the
+`hil.peer` and `hil.gui` loggers — connect, drive change, list, send/recv,
+button clicks, worker quiesce). **It is on by default** (`log_cli`/
+`log_cli_level = INFO` in `pytest.ini`), so a bench run streams what it is doing
+as it does it:
+
+```
+12:04:31 INFO    hil.gui: GUI connect…
+12:04:33 INFO    hil.peer: connecting: terminal=COM5 transport=COM5 (shared port)
+12:04:35 INFO    hil.peer: connected; CCP drive = A:
+12:04:35 INFO    hil.gui: probe = ok (drive A:)
+12:04:36 INFO    hil.peer: send HELLO.TXT → B: [128] (37 bytes)
+12:04:39 INFO    hil.peer: send HELLO.TXT → OK
+```
+
+- Quieter: `pytest integration/ --log-cli-level=WARNING` (only timeout/quiesce
+  warnings — the most useful lines when a run *hangs*).
+- Noisier: `--log-cli-level=DEBUG` adds raw line I/O (`→ "DIR"`) and capture
+  byte counts/timings.
+- The same trace is captured into each run's `results/<target>/<run>/console.log`
+  (under a `----- log -----` section per test), so it is reviewable after the
+  fact even if the live log was quieted.
+
+Flags pass through the launcher (the `--` separator is optional):
+`python integration/run.py --log-cli-level=DEBUG`.
+
 ## Safety
 
 - Destructive tests are **double-gated**: they need `--run-destructive` **and** a

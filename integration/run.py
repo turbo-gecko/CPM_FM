@@ -9,8 +9,10 @@ Run it as either::
     python integration/run.py
     python -m integration.run        # from the repo root
 
-Anything after ``--`` is forwarded verbatim to pytest, e.g.::
+Extra pytest arguments are forwarded verbatim. The ``--`` separator is optional,
+so both of these work the same::
 
+    python integration/run.py --run-destructive
     python integration/run.py -- -k transfers --run-destructive
 """
 
@@ -32,7 +34,15 @@ REPO_ROOT = _HERE.parent
 
 
 def _split_passthrough(argv: list[str]) -> list[str]:
-    return argv[argv.index("--") + 1 :] if "--" in argv else []
+    """Pytest args to forward: everything after an optional ``--`` separator.
+
+    When no ``--`` is present, forward *all* args, so ``run.py --run-destructive``
+    works the same as ``run.py -- --run-destructive`` (run.py has no options of
+    its own — every arg is destined for pytest).
+    """
+    if "--" in argv:
+        return argv[argv.index("--") + 1 :]
+    return list(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
