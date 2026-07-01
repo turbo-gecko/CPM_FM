@@ -950,9 +950,10 @@ def test_handle_terminal_key_sends_echoes_and_guards(qapp, state):
 
 
 def test_handle_terminal_send_append_eol_flag(qapp, monkeypatch, state):
-    """Verifies: FR-094, FR-156."""
-    # FR-094/FR-156: handle_terminal_send appends the configured EOL by default,
-    # but sends the data verbatim when append_eol is False.
+    """Verifies: FR-094."""
+    # FR-094: handle_terminal_send (used by the boot sequence and the capture
+    # reads) appends the configured EOL by default, but sends the data verbatim
+    # when append_eol is False.
     win = MainWindow(state)
     try:
         win.settings = {"eol": "CR"}

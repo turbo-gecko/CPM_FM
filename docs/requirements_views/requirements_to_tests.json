@@ -604,8 +604,18 @@
       "tests/test_backup_restore.py:test_backup_order_refresh_confirm_wipe_transfer",
       "tests/test_backup_restore.py:test_restore_order_refresh_confirm_wipe_transfer"
     ],
-    "FR-156": [
-      "tests/test_gui_smoke.py:test_handle_terminal_send_append_eol_flag"
+    "FR-157": [
+      "tests/test_vt100_engine.py:test_cursor_addressing_cup",
+      "tests/test_vt100_engine.py:test_erase_in_display_clears_screen",
+      "tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds",
+      "tests/test_vt100_engine.py:test_sgr_ansi_colours"
+    ],
+    "FR-158": [
+      "tests/test_terminal_view.py:test_encode_key_control_combinations",
+      "tests/test_terminal_view.py:test_encode_key_enter_uses_eol",
+      "tests/test_terminal_view.py:test_encode_key_navigation_and_function_keys",
+      "tests/test_terminal_view.py:test_encode_key_printable_and_utf8",
+      "tests/test_terminal_view.py:test_encode_key_returns_none_for_modifier_only"
     ],
     "IFR-004": [
       "tests/test_config_handler.py:test_load_json_malformed_returns_empty",
@@ -967,6 +977,7 @@
     "FR-153c",
     "FR-153d",
     "FR-155",
+    "FR-156",
     "IFR-001",
     "IFR-002",
     "IFR-003",

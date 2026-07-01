@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_409 requirements across 54 sections._
+_411 requirements across 54 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -167,16 +167,18 @@ _409 requirements across 54 sections._
 | ID | Summary | Impl |
 |----|---------|------|
 | FR-090 | All data received from the Terminal Port shall be accumulated in a receive data buffer… | mw_remote.py:handle_terminal_recv, _rx_buffer |
-| FR-091 | All data received from the Terminal Port shall be displayed in the receive text area… | app.py:_on_term_write, mw_remote.py:handle_terminal_recv, terminal_window.py:write_text, serial_manager.py:_read_loop; tests test_serial_manager.py |
-| FR-092 | All data transmitted to the Terminal Port (including the appended EOL, FR-094) shall be accumulated… | mw_remote.py:handle_terminal_send, _tx_buffer |
-| FR-093 | When the Local Echo checkbox is enabled, transmitted data shall be copied to the receive… | app.py:_on_term_write, mw_remote.py:_set_local_echo, mw_remote.py:handle_terminal_send |
-| FR-094 | Transmitted data shall have the configured EOL character(s) appended before being sent, except when the… | mw_remote.py:handle_terminal_send, terminal_window.py:send_text |
-| FR-095 | When the Clear button in the Terminal Window is pressed, the receive text area shall… | terminal_window.py:clear_text, mw_remote.py:clear_terminal_buffers |
-| FR-096 | When the Send button in the Terminal Window is pressed, the contents of the transmit… | terminal_window.py:send_text, serial_manager.py:send_data; tests test_serial_manager.py |
+| FR-091 | All data received from the Terminal Port shall be interpreted as a VT-100/ANSI terminal stream… | terminal/vt100_engine.py:VT100Engine, gui/terminal_view.py:TerminalView, app.py:_on_term_write, mw_remote.py:handle_terminal_recv, serial_manager.py:_read_loop; tests test_vt100_engine.py, test_terminal_view.py |
+| FR-092 | All data transmitted to the Terminal Port (including the EOL, FR-094) shall be accumulated in… | mw_remote.py:handle_terminal_send, mw_remote.py:handle_terminal_key, _tx_buffer |
+| FR-093 | When the Local Echo checkbox is enabled, transmitted data shall be copied to the receive… | app.py:_on_term_write, mw_remote.py:_set_local_echo, mw_remote.py:handle_terminal_send, mw_remote.py:handle_terminal_key |
+| FR-094 | Line-oriented data sent to the Terminal Port (boot-sequence SEND, remote command templates) shall have the… | mw_remote.py:handle_terminal_send, gui/terminal_view.py:encode_key |
+| FR-095 | When the Clear button in the Terminal Window is pressed, the terminal screen shall be… | terminal_window.py:clear_text, terminal/vt100_engine.py:VT100Engine.reset, mw_remote.py:clear_terminal_buffers |
+| FR-096 | Characters and keys typed into the Terminal Window's receive area shall be transmitted to the… | gui/terminal_view.py:keyPressEvent, gui/terminal_view.py:encode_key, mw_remote.py:handle_terminal_key, serial_manager.py:send_raw; tests test_terminal_view.py, test_gui_smoke.py |
 | FR-097 | When the Terminal button in the main window is pressed, the application shall open the… | mw_remote.py:show_terminal |
-| FR-098 | If the Terminal Port is not open when the user attempts to send data from… | mw_remote.py:handle_terminal_send |
-| FR-155 | When Send is pressed (or <Enter> is pressed in the transmit field) with the transmit… | terminal_window.py:send_text, mw_remote.py:handle_terminal_send; tests test_gui_smoke.py |
-| FR-156 | The transmit field shall interpret caret notation for control characters… | terminal_window.py:send_text, terminal_window.py:_parse_send_text; tests test_gui_smoke.py |
+| FR-098 | If the Terminal Port is not open when the user types in the Terminal Window… | mw_remote.py:handle_terminal_key |
+| FR-155 | *Removed in v2.17.* (Was… | — |
+| FR-156 | *Removed in v2.17.* (Was… | — |
+| FR-157 | The terminal shall interpret the VT-100/ANSI control and escape sequences emitted by the remote —… | terminal/vt100_engine.py:VT100Engine; tests test_vt100_engine.py |
+| FR-158 | Keys typed into the Terminal Window shall be encoded to VT-100 byte sequences and transmitted… | gui/terminal_view.py:encode_key, gui/terminal_view.py:keyPressEvent; tests test_terminal_view.py |
 
 ## 3.11 File context-menu actions
 
@@ -404,13 +406,13 @@ _409 requirements across 54 sections._
 | ID | Summary | Impl |
 |----|---------|------|
 | UIR-060 | The Terminal Window shall be a non-modal window titled "Terminal" | terminal_window.py:TerminalWindow, terminal_window.py:__init__ |
-| UIR-061 | The Terminal Window shall contain a large multi-line text area named "Receive" for displaying incoming… | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets |
-| UIR-062 | The Receive text area shall auto-scroll incoming text (subject to the Autoscroll control) | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets, terminal_window.py:write_text |
-| UIR-063 | The Receive text area shall be read-only | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets |
+| UIR-061 | The Terminal Window shall contain a character-cell terminal view named "Receive" that renders the VT-100… | gui/terminal_view.py:TerminalView, terminal_window.py:create_widgets |
+| UIR-062 | The Receive view shall maintain scrollback and shall auto-scroll to the newest output when the… | gui/terminal_view.py:TerminalView, gui/terminal_view.py:refresh, gui/terminal_view.py:set_autoscroll |
+| UIR-063 | The Receive view shall not be an editable text field — its content is rendered… | gui/terminal_view.py:TerminalView, gui/terminal_view.py:keyPressEvent |
 | UIR-064 | The Terminal Window shall provide a "Clear" button, left-aligned, below the Receive text area | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets, terminal_window.py:clear_text |
 | UIR-065 | The Terminal Window shall provide a "Local Echo" checkbox, centred, that is disabled by default | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets |
 | UIR-066 | The Terminal Window shall provide an "Autoscroll" checkbox, right-aligned, that is enabled by default | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets |
-| UIR-067 | The Terminal Window shall provide a "Transmit" group containing a single-line text field aligned left… | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets |
+| UIR-067 | The Terminal Window shall not provide a separate transmit field or Send button… | terminal_window.py:create_widgets |
 | UIR-068 | The Terminal Window shall provide a "Boot into CP/M" button, in the control row (UIR-064)… | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets, terminal_window.py:set_boot_enabled, mw_remote.py:show_terminal |
 
 ## 4.6 Visual theme and modern layout (v1.3)

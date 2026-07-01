@@ -58,7 +58,7 @@ def encode_key(
     sequences), Ctrl-letter / Ctrl-punctuation control bytes, and otherwise the
     typed character(s). Replaces the former transmit-field parsing.
 
-    Satisfies: FR-096, FR-094.
+    Satisfies: FR-096, FR-094, FR-158.
     """
     if key in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
         return eol
@@ -203,7 +203,7 @@ class TerminalView(QScrollArea):
         arrow keys are transmitted rather than scrolling the view). Anything
         unmapped falls through to the base class.
 
-        Satisfies: FR-096, FR-094.
+        Satisfies: FR-096, FR-094, FR-158.
         """
         data = encode_key(event.key(), event.modifiers(), event.text(), self._eol)
         if data and self._key_callback is not None:

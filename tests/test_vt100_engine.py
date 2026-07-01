@@ -48,7 +48,7 @@ def test_tab_advances_to_next_tab_stop():
 
 
 def test_cursor_addressing_cup():
-    """Verifies: FR-091."""
+    """Verifies: FR-091, FR-157."""
     e = VT100Engine()
     # ESC[5;10H -> row 5, col 10 (1-based) => zero-based (9, 4).
     e.feed(b"\x1b[5;10Habc")
@@ -66,7 +66,7 @@ def test_cursor_relative_moves():
 
 
 def test_erase_in_display_clears_screen():
-    """Verifies: FR-091."""
+    """Verifies: FR-091, FR-157."""
     e = VT100Engine()
     e.feed(b"line1\r\nline2\r\n")
     e.feed(b"\x1b[H\x1b[J")  # home, then erase to end of display
@@ -93,7 +93,7 @@ def test_sgr_bold_reverse_and_reset():
 
 
 def test_sgr_ansi_colours():
-    """Verifies: FR-091."""
+    """Verifies: FR-091, FR-157."""
     e = VT100Engine()
     e.feed(b"\x1b[31;42mZ\x1b[0m")
     cell = e.line(0)[0]
@@ -127,7 +127,7 @@ def test_cursor_hidden_toggle():
 def test_escape_sequence_split_across_feeds():
     """A CSI split across two feed() calls is reassembled, not shown literally.
 
-    Verifies: FR-091, NFR-001.
+    Verifies: FR-091, FR-157, NFR-001.
     """
     e = VT100Engine()
     e.feed(b"\x1b[5")  # partial CSI: parameter interrupted mid-sequence
