@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_169/409 requirements have a verifying test; 240 untested; 0 stale tag(s)._
+_171/409 requirements have a verifying test; 238 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -14,6 +14,7 @@ _169/409 requirements have a verifying test; 240 untested; 0 stale tag(s)._
 |----------------|-----------------|
 | CR-006 | `tests/test_gui_smoke.py:test_app_icon_missing_falls_back_to_empty` |
 | CR-010 | `tests/test_backup_restore.py:test_do_backup_requires_connection`, `tests/test_gui_smoke.py:test_drop_requires_both_flags`, `tests/test_gui_smoke.py:test_host_to_remote_requires_both_flags`, `tests/test_gui_smoke.py:test_remote_view_requires_both_flags` |
+| CR-014 | `tests/test_vt100_engine.py:test_engine_imports_no_gui_toolkit` |
 | DR-001 | `tests/test_cpm_parser.py:test_parse_dir_output_empty_input_yields_no_files`, `tests/test_cpm_parser.py:test_parse_dir_output_handles_crlf_line_endings` |
 | DR-004 | `tests/test_cpm_parser.py:test_parse_dir_output_accepts_lowercase_drive_letter` |
 | DR-005 | `tests/test_cpm_parser.py:test_parse_dir_output_single_file_has_no_separator` |
@@ -73,9 +74,9 @@ _169/409 requirements have a verifying test; 240 untested; 0 stale tag(s)._
 | FR-081 | `tests/test_xmodem.py:test_send_file_returns_false_when_file_missing` |
 | FR-082 | `tests/test_xmodem.py:test_send_file_returns_false_when_no_start_char` |
 | FR-086 | `tests/test_gui_smoke.py:test_transfer_byte_echo_respects_setting` |
-| FR-091 | `tests/test_gui_smoke.py:test_terminal_write_text_line_endings`, `tests/test_serial_manager.py:test_read_loop_dispatches_decoded_data` |
+| FR-091 | `tests/test_gui_smoke.py:test_terminal_write_text_line_endings`, `tests/test_serial_manager.py:test_read_loop_dispatches_decoded_data`, `tests/test_vt100_engine.py:test_backspace_moves_cursor_left`, `tests/test_vt100_engine.py:test_crlf_moves_to_next_line`, `tests/test_vt100_engine.py:test_cursor_addressing_cup`, `tests/test_vt100_engine.py:test_cursor_hidden_toggle`, `tests/test_vt100_engine.py:test_cursor_relative_moves`, `tests/test_vt100_engine.py:test_default_geometry`, `tests/test_vt100_engine.py:test_dirty_tracking_and_clear`, `tests/test_vt100_engine.py:test_erase_in_display_clears_screen`, `tests/test_vt100_engine.py:test_erase_in_line_clears_to_end`, `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_line_returns_full_width_padded`, `tests/test_vt100_engine.py:test_plain_text_and_cursor_advance`, `tests/test_vt100_engine.py:test_raw_8bit_mode_maps_bytes_directly`, `tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor`, `tests/test_vt100_engine.py:test_reset_marks_all_lines_dirty`, `tests/test_vt100_engine.py:test_resize_changes_geometry`, `tests/test_vt100_engine.py:test_sgr_ansi_colours`, `tests/test_vt100_engine.py:test_sgr_bold_reverse_and_reset`, `tests/test_vt100_engine.py:test_tab_advances_to_next_tab_stop`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
 | FR-094 | `tests/test_gui_smoke.py:test_handle_terminal_send_append_eol_flag` |
-| FR-095 | `tests/test_gui_smoke.py:test_terminal_window_write_and_clear` |
+| FR-095 | `tests/test_gui_smoke.py:test_terminal_window_write_and_clear`, `tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor` |
 | FR-096 | `tests/test_serial_manager.py:test_send_data_replaces_non_ascii`, `tests/test_serial_manager.py:test_send_data_returns_false_when_port_closed`, `tests/test_serial_manager.py:test_send_data_returns_false_when_port_none`, `tests/test_serial_manager.py:test_send_data_writes_ascii_to_open_port` |
 | FR-099 | `tests/test_gui_smoke.py:test_copy_to_remote_transfers_all_selected` |
 | FR-101 | `tests/test_cpm_parser.py:test_has_drive_prompt_ignores_blank_lines` |
@@ -130,6 +131,7 @@ _169/409 requirements have a verifying test; 240 untested; 0 stale tag(s)._
 | FR-155 | `tests/test_gui_smoke.py:test_terminal_send_bare_enter_and_control` |
 | FR-156 | `tests/test_gui_smoke.py:test_handle_terminal_send_append_eol_flag`, `tests/test_gui_smoke.py:test_parse_send_text_control_characters`, `tests/test_gui_smoke.py:test_terminal_send_bare_enter_and_control` |
 | IFR-004 | `tests/test_config_handler.py:test_load_json_malformed_returns_empty`, `tests/test_config_handler.py:test_load_json_reads_valid_object`, `tests/test_config_handler.py:test_save_json_to_unwritable_path_returns_false` |
+| NFR-001 | `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
 | NFR-002 | `tests/test_serial_manager.py:test_flow_control_nested_key`, `tests/test_serial_manager.py:test_nested_key_names_are_honoured` |
 | NFR-003a | `tests/test_xmodem.py:test_send_file_reports_progress_per_packet` |
 | NFR-003b | `tests/test_xmodem.py:test_send_file_1k_uses_stx_1024_byte_frames` |
@@ -197,7 +199,6 @@ These defined requirements have no `Verifies:` test tag:
 - CR-011
 - CR-012
 - CR-013
-- CR-014
 - CR-015
 - DR-002
 - DR-003
@@ -349,7 +350,6 @@ These defined requirements have no `Verifies:` test tag:
 - IFR-001
 - IFR-002
 - IFR-003
-- NFR-001
 - NFR-001a
 - NFR-001b
 - NFR-001c

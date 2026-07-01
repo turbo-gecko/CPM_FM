@@ -413,6 +413,11 @@
     "NFR-002",
     "UIR-028"
   ],
+  "src/cpm_fm/terminal/vt100_engine.py": [
+    "CR-014",
+    "FR-091",
+    "FR-095"
+  ],
   "src/cpm_fm/terminal/xmodem.py": [
     "FR-081",
     "FR-082",
