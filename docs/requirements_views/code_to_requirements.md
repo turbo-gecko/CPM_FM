@@ -6,7 +6,7 @@
 Maps each source file to the requirement IDs it implements, derived from `Satisfies:` docstring tags in the code.
 Use this for **targeted work**: find the file you're editing, then read just those IDs in `requirements_index.md` or the full SRS — instead of loading the whole specification.
 
-_33 source files; 406 file→requirement links._
+_34 source files; 409 file→requirement links._
 
 | Source file | Requirement IDs |
 |-------------|-----------------|
@@ -37,6 +37,7 @@ _33 source files; 406 file→requirement links._
 | src/cpm_fm/terminal/boot_sequence.py | FR-047 |
 | src/cpm_fm/terminal/cpm_parser.py | DR-001, DR-002, DR-003, DR-004, DR-005, DR-006, DR-010, DR-011, DR-012, DR-013, DR-014, DR-015, DR-020, DR-021, DR-022, DR-023, DR-024, DR-025, DR-026, DR-030, DR-031, DR-032, DR-033, DR-033a, DR-046, FR-041, FR-042, FR-077, FR-101, FR-102, FR-148, FR-149 |
 | src/cpm_fm/terminal/serial_manager.py | FR-001, FR-002, FR-015, FR-030, FR-032, FR-036, FR-037, FR-038, FR-040, FR-047, FR-050, FR-052, FR-055, FR-057, FR-083, FR-091, FR-096, IFR-001, IFR-002, NFR-001, NFR-002, UIR-028 |
+| src/cpm_fm/terminal/vt100_engine.py | CR-014, FR-091, FR-095 |
 | src/cpm_fm/terminal/xmodem.py | FR-081, FR-082, FR-083, FR-086, FR-105, FR-120, NFR-003a, NFR-003b, NFR-003c, NFR-003d, NFR-003e, NFR-003f, NFR-003g, NFR-003h, NFR-003i, NFR-003j, NFR-003k, NFR-003l, NFR-003m, NFR-003n, NFR-003o, NFR-003p, NFR-003q |
 | src/cpm_fm/utils/config_handler.py | FR-011, FR-012, FR-014, IFR-004 |
 | src/cpm_fm/utils/file_filter.py | FR-131, FR-132, FR-133 |
