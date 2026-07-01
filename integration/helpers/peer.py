@@ -49,9 +49,12 @@ class CpmPeer:
 
     # ----- lifecycle -------------------------------------------------------
 
-    def _on_rx(self, data: str) -> None:
+    def _on_rx(self, data: bytes) -> None:
+        # SerialManager delivers raw bytes (v2.17); decode with the same
+        # ASCII/replace rule the app uses (mw_remote.handle_terminal_recv) so the
+        # captured text matches what the app's DIR/prompt parsing sees.
         if self._capturing:
-            self._capture_buf += data
+            self._capture_buf += data.decode("ascii", errors="replace")
 
     def connect(self) -> CpmPeer:
         """Open the port(s) and probe the current CP/M drive prompt."""

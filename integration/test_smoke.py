@@ -32,21 +32,25 @@ def test_peer_connects_and_sees_ccp_prompt(target, settings_copy):
     settings = json.loads(Path(settings_copy).read_text())
     port = settings.get("terminal_port")
     sm = SerialManager()
-    chunks: list[str] = []
+    # SerialManager delivers raw bytes (v2.17); decode with the app's ASCII/
+    # replace rule for prompt parsing.
+    chunks: list[bytes] = []
     sm.on_data_received = chunks.append
 
     assert sm.open_port("terminal", settings), f"could not open terminal port {port!r}"
     try:
         eol = EOL_MAP.get(str(settings.get("eol", "CR")), "\r")
         letter = None
+        received = ""
         for _ in range(3):
             chunks.clear()
             sm.send_data("terminal", eol)
             time.sleep(1.5)
-            letter = CPMParser.drive_prompt_letter("".join(chunks))
+            received = b"".join(chunks).decode("ascii", errors="replace")
+            letter = CPMParser.drive_prompt_letter(received)
             if letter:
                 break
-        assert letter is not None, f"no CP/M drive prompt on {port}; received: {''.join(chunks)!r}"
+        assert letter is not None, f"no CP/M drive prompt on {port}; received: {received!r}"
         log.info("target=%s port=%s CCP drive prompt = %s:", target.name, port, letter)
     finally:
         sm.close_ports()
