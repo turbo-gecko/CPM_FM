@@ -34,7 +34,7 @@ class _RemoteMixin(MainWindowMixinBase):
         if not self.terminal_win:
             self.terminal_win = TerminalWindow(
                 self,
-                self.handle_terminal_send,
+                self.handle_terminal_key,
                 self.clear_terminal_buffers,
                 self.do_boot_sequence,
                 engine=self._term_engine,
@@ -46,12 +46,17 @@ class _RemoteMixin(MainWindowMixinBase):
             self.terminal_win.showNormal()
         # UIR-068: the boot button is enabled only when a sequence is configured.
         self._refresh_boot_button()
+        # FR-094: the Enter key transmits the configured EOL.
+        eol_char = EOL_MAP.get(self.settings.get("eol", "CR"), "\r")
+        self.terminal_win.set_eol(eol_char.encode("ascii"))
         self.terminal_win.show()
         self.terminal_win.raise_()
         self.terminal_win.activateWindow()
         # Render whatever the engine already holds (data may have arrived before
         # the window was first opened) and settle autoscroll to the bottom.
         self.terminal_win.render_screen()
+        # FR-096: focus the receive area so typing is transmitted immediately.
+        self.terminal_win.focus_input()
 
     def _refresh_boot_button(self):
         """Sync the Terminal Window boot button's enabled state to the config.
@@ -71,17 +76,41 @@ class _RemoteMixin(MainWindowMixinBase):
         """
         self._local_echo = enabled
 
+    def handle_terminal_key(self, data: bytes):
+        """Transmit raw keystroke bytes typed into the Terminal Window (FR-096).
+
+        Runs on the GUI thread (from the receive area's key handler). Sends the
+        already-encoded VT-100 bytes on the Terminal Port, records them in the
+        transmit buffer (FR-092), and — when Local Echo is on — echoes them to
+        the screen by feeding the same bytes through the engine via term_write
+        (FR-093). If the Terminal Port is not open, reports it and sends nothing
+        (FR-098).
+
+        Satisfies: FR-096, FR-092, FR-093, FR-098.
+        """
+        if not self.serial_mgr.terminal_connected:
+            self.set_status(tr("status.terminal_not_open_send"))
+            return
+        self.serial_mgr.send_raw("terminal", data)
+        # FR-092: record transmitted data in the transmit buffer (decoded to
+        # text, matching the receive-buffer convention).
+        self._tx_buffer += data.decode("ascii", errors="replace")
+        # FR-093: local echo copies transmitted data to the receive area only.
+        if self._local_echo:
+            self.term_write.emit(data)
+
     def handle_terminal_send(self, text, append_eol: bool = True):
         """
         Satisfies: FR-092, FR-093, FR-094, FR-098.
 
-        May be called from the GUI thread (Send button) or a worker thread
-        (the remote-list refresh). Sends data and buffers it directly; the
-        local-echo display is marshalled to the GUI thread via term_write.
+        Sends a line of text on the Terminal Port. Used by the boot-sequence
+        ``SEND`` directive and the remote-listing/drive-change capture reads
+        (``_capture_terminal_response``); may run on the GUI thread or a worker
+        thread. Sends and buffers the data directly; the local-echo display is
+        marshalled to the GUI thread via term_write.
 
-        ``append_eol`` is set False by the Terminal window when the transmit
-        field resolves to a bare control character (e.g. ``^C``), so that the
-        control byte is sent on its own without a trailing EOL.
+        ``append_eol`` is set False by callers that need the text sent on its
+        own without a trailing EOL.
         """
         if not self.serial_mgr.terminal_connected:
             self.set_status(tr("status.terminal_not_open_send"))

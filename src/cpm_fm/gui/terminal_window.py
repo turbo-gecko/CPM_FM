@@ -5,7 +5,7 @@ from typing import Callable
 from PySide6.QtWidgets import (
     QCheckBox,
     QHBoxLayout,
-    QLineEdit,
+    QLabel,
     QMainWindow,
     QPushButton,
     QVBoxLayout,
@@ -19,15 +19,20 @@ from cpm_fm.utils.i18n import tr
 
 class TerminalWindow(QMainWindow):
     """
-    Non-modal Terminal window (SRS docs/cpm_fm_requirements.md, UIR-060-UIR-067;
-    receive/transmit behaviour FR-090-FR-098).
+    Non-modal Terminal window (SRS docs/cpm_fm_requirements.md, UIR-060-UIR-068).
 
-    Satisfies: UIR-060-UIR-067.
+    Interactive VT-100 terminal: the receive area renders the engine's screen
+    and keystrokes typed into it are sent straight to the Terminal Port
+    (there is no separate transmit field).
+
+    Satisfies: UIR-060-UIR-068.
     """
 
-    def __init__(self, parent, send_callback, clear_callback=None, boot_callback=None, engine=None):
+    def __init__(
+        self, parent, key_callback=None, clear_callback=None, boot_callback=None, engine=None
+    ):
         """
-        Satisfies: UIR-060, UIR-068, FR-091.
+        Satisfies: UIR-060, UIR-068, FR-091, FR-096.
 
         No Qt parent, so this is an independent non-modal top-level window.
         The owning MainWindow keeps a reference to it.
@@ -35,6 +40,8 @@ class TerminalWindow(QMainWindow):
         ``engine`` is the shared :class:`VT100Engine` the owner feeds received
         bytes into (FR-091); the receive area renders from it. A standalone
         window (no owner) gets its own engine so it is usable on its own.
+        ``key_callback`` receives the raw bytes for each keystroke typed into the
+        receive area, to be transmitted on the Terminal Port (FR-096).
         """
         super().__init__()
         # FR-091: the VT-100 screen model this window renders.
@@ -44,7 +51,9 @@ class TerminalWindow(QMainWindow):
         self._i18n_registry: list[tuple[Callable[[str], None], str]] = []
         self._register_text(self.setWindowTitle, "terminal.title")
         self.resize(600, 400)
-        self.send_callback = send_callback
+        # FR-096: invoked with the bytes for each keystroke typed in the receive
+        # area, so the owner can transmit them on the Terminal Port.
+        self.key_callback = key_callback
         # Invoked when the Clear button is pressed, so the owner can clear the
         # receive/transmit data buffers alongside the display (FR-090/FR-092).
         self.clear_callback = clear_callback
@@ -70,15 +79,17 @@ class TerminalWindow(QMainWindow):
             setter(tr(key))
 
     def create_widgets(self):
-        """Satisfies: UIR-061-UIR-067."""
+        """Satisfies: UIR-061, UIR-062, UIR-064, UIR-065, UIR-066, UIR-067, FR-096."""
         central = QWidget()
         self.setCentralWidget(central)
         layout = QVBoxLayout(central)
 
         # Receive Area — a VT-100 character-grid view rendering the engine's
-        # screen and scrollback (UIR-061/UIR-062). Output-only: it is driven by
-        # the engine, never typed into directly.
+        # screen and scrollback (UIR-061/UIR-062). It is also the keyboard-input
+        # surface: keystrokes typed here are encoded to VT-100 byte sequences and
+        # sent to the Terminal Port via key_callback (UIR-067/FR-096).
         self.receive_area = TerminalView(self.engine)
+        self.receive_area.set_key_callback(self.key_callback)
         layout.addWidget(self.receive_area)
 
         # Control Frame: Clear (left), Local Echo (centre), Autoscroll (right).
@@ -110,15 +121,11 @@ class TerminalWindow(QMainWindow):
         ctrl_layout.addWidget(self.chk_scroll)
         layout.addLayout(ctrl_layout)
 
-        # Transmit Frame: text field (left) + Send button (right) (UIR-067).
-        tx_layout = QHBoxLayout()
-        self.tx_entry = QLineEdit()
-        self.tx_entry.returnPressed.connect(self.send_text)
-        tx_layout.addWidget(self.tx_entry)
-        self.btn_send = QPushButton(clicked=self.send_text)
-        self._register_text(self.btn_send.setText, "terminal.send")
-        tx_layout.addWidget(self.btn_send)
-        layout.addLayout(tx_layout)
+        # UIR-067: input hint. There is no transmit field — the operator types
+        # directly into the receive area and each keystroke is sent live.
+        self.lbl_hint = QLabel()
+        self._register_text(self.lbl_hint.setText, "terminal.input_hint")
+        layout.addWidget(self.lbl_hint)
 
     def clear_text(self):
         """Reset the screen and clear the owner's data buffers (FR-095).
@@ -156,76 +163,19 @@ class TerminalWindow(QMainWindow):
         """
         self.btn_boot.setEnabled(enabled)
 
-    def send_text(self):
-        """Satisfies: FR-096.
+    def set_eol(self, eol: bytes):
+        """Set the bytes the Enter key transmits (the configured EOL, FR-094).
 
-        Sends the contents of the transmit field. Two behaviours beyond a plain
-        text send:
-
-        * An empty field sends a bare end-of-line (the owner appends the
-          configured EOL), so the user can transmit a lone <Enter>.
-        * Caret notation (``^A``..``^Z``, ``^@``, ``^[``, ``^\\``, ``^]``,
-          ``^_``, ``^?``) is interpreted as the corresponding control byte;
-          ``^^`` is an escape for a literal caret. When the field resolves to
-          control bytes only, no EOL is appended so the control character is
-          sent exactly on its own.
+        Satisfies: FR-094.
         """
-        text, is_pure_control = self._parse_send_text(self.tx_entry.text())
-        self.send_callback(text, not is_pure_control)
-        self.tx_entry.clear()
+        self.receive_area.set_eol(eol)
 
-    @staticmethod
-    def _parse_send_text(raw: str) -> tuple[str, bool]:
-        """Interpret caret control-character notation in the transmit field.
+    def focus_input(self):
+        """Give keyboard focus to the receive area so typing is sent (FR-096).
 
-        Returns ``(text, is_pure_control)`` where ``text`` is the field with
-        recognised ``^X`` escapes replaced by their control bytes, and
-        ``is_pure_control`` is True when the result is non-empty and contains
-        only control characters (so the caller can suppress the trailing EOL).
+        Satisfies: FR-096.
         """
-        out: list[str] = []
-        has_printable = False
-        has_control = False
-        i = 0
-        n = len(raw)
-        while i < n:
-            ch = raw[i]
-            if ch == "^" and i + 1 < n:
-                nxt = raw[i + 1]
-                if nxt == "^":
-                    # ^^ is the escape for a literal caret.
-                    out.append("^")
-                    has_printable = True
-                    i += 2
-                    continue
-                code = ord(nxt.upper())
-                if 0x40 <= code <= 0x5F:
-                    # ^@ -> 0x00, ^A -> 0x01, ... ^Z -> 0x1A, ^[ -> 0x1B (ESC),
-                    # ^\ -> 0x1C, ^] -> 0x1D, ^_ -> 0x1F. (^^ handled above.)
-                    out.append(chr(code - 0x40))
-                    has_control = True
-                    i += 2
-                    continue
-                if nxt == "?":
-                    # ^? -> DEL (0x7F).
-                    out.append("\x7f")
-                    has_control = True
-                    i += 2
-                    continue
-                # Unrecognised escape: keep the caret as a literal character.
-                out.append(ch)
-                has_printable = True
-                i += 1
-                continue
-            out.append(ch)
-            if ord(ch) < 0x20 or ord(ch) == 0x7F:
-                has_control = True
-            else:
-                has_printable = True
-            i += 1
-        text = "".join(out)
-        is_pure_control = bool(text) and has_control and not has_printable
-        return text, is_pure_control
+        self.receive_area.setFocus()
 
     def closeEvent(self, event):
         """

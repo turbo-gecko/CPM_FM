@@ -160,7 +160,7 @@ terminal.title = 터미널
 terminal.clear = 지우기
 terminal.local_echo = 로컬 에코
 terminal.autoscroll = 자동 스크롤
-terminal.send = 전송
+terminal.input_hint = 여기에 입력하세요 - 키 입력이 즉시 전송됩니다
 terminal.boot = CP/M으로 부팅
 
 # --- Serial Configuration dialog ----------------------------------------------

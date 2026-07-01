@@ -160,7 +160,7 @@ terminal.title = Terminal
 terminal.clear = Löschen
 terminal.local_echo = Lokales Echo
 terminal.autoscroll = Automatisch scrollen
-terminal.send = Senden
+terminal.input_hint = Hier tippen - Tastenanschläge werden sofort gesendet
 terminal.boot = In CP/M starten
 
 # --- Serial Configuration dialog -----------------------------------------------

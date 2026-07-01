@@ -842,7 +842,6 @@ def test_terminal_window_render_and_clear(qapp):
     cleared = []
     term = TerminalWindow(
         None,
-        send_callback=lambda t, eol: None,
         clear_callback=lambda: cleared.append(1),
         engine=engine,
     )
@@ -866,7 +865,7 @@ def test_terminal_window_renders_engine_screen(qapp):
     from cpm_fm.terminal.vt100_engine import VT100Engine
 
     engine = VT100Engine()
-    term = TerminalWindow(None, send_callback=lambda t, eol: None, engine=engine)
+    term = TerminalWindow(None, engine=engine)
     try:
         engine.feed(b"L1\r\nL2\r\n\x1b[1;1Hedited")  # home, then overwrite row 0
         term.render_screen()
@@ -877,46 +876,77 @@ def test_terminal_window_renders_engine_screen(qapp):
         term.deleteLater()
 
 
-def test_parse_send_text_control_characters(qapp):
-    """Verifies: FR-156."""
-    # FR-156: caret notation maps to control bytes; ^^ is a literal caret; an
-    # unrecognised escape is left literal. is_pure_control is True only when the
-    # result is non-empty and contains no printable characters.
-    parse = TerminalWindow._parse_send_text
-    assert parse("^C") == ("\x03", True)  # Ctrl-C, pure control
-    assert parse("^c") == ("\x03", True)  # case-insensitive
-    assert parse("^@") == ("\x00", True)  # NUL
-    assert parse("^[") == ("\x1b", True)  # ESC
-    assert parse("^?") == ("\x7f", True)  # DEL
-    assert parse("^^") == ("^", False)  # literal caret (printable)
-    assert parse("DIR") == ("DIR", False)  # plain text
-    assert parse("AT^C") == ("AT\x03", False)  # mixed -> not pure control
-    assert parse("") == ("", False)  # empty -> not pure control
-    assert parse("^") == ("^", False)  # trailing lone caret kept literal
-    assert parse("^9") == ("^9", False)  # unrecognised escape kept literal
+def test_terminal_window_keystroke_transmits(qapp):
+    """Verifies: FR-096, FR-094."""
+    # Typing into the receive area encodes the key and hands the bytes to the
+    # key callback (there is no transmit field); Enter sends the configured EOL.
+    from PySide6.QtCore import QEvent, Qt
+    from PySide6.QtGui import QKeyEvent
 
-
-def test_terminal_send_bare_enter_and_control(qapp):
-    """Verifies: FR-155, FR-156."""
-    # FR-155/FR-156: send_text forwards the (parsed) text and an append_eol flag.
     sent = []
-    term = TerminalWindow(None, send_callback=lambda t, eol: sent.append((t, eol)))
+    term = TerminalWindow(None, key_callback=sent.append)
     try:
-        # Empty field -> bare EOL (text empty, append_eol True so the owner adds EOL).
-        term.tx_entry.setText("")
-        term.send_text()
-        assert sent[-1] == ("", True)
-        # Pure control -> sent verbatim, no EOL appended.
-        term.tx_entry.setText("^C")
-        term.send_text()
-        assert sent[-1] == ("\x03", False)
-        # Plain text -> EOL appended.
-        term.tx_entry.setText("DIR")
-        term.send_text()
-        assert sent[-1] == ("DIR", True)
-        assert term.tx_entry.text() == ""  # field cleared after each send
+        term.set_eol(b"\r\n")
+
+        def press(key, text):
+            term.receive_area.keyPressEvent(
+                QKeyEvent(QEvent.Type.KeyPress, key, Qt.KeyboardModifier.NoModifier, text)
+            )
+
+        press(Qt.Key.Key_A, "A")
+        press(Qt.Key.Key_Return, "\r")
+        assert sent == [b"A", b"\r\n"]  # printable key, then the EOL for Enter
     finally:
         term.deleteLater()
+
+
+def test_handle_terminal_key_sends_echoes_and_guards(qapp, state):
+    """Verifies: FR-096, FR-092, FR-093, FR-098."""
+    win = MainWindow(state)
+    try:
+        # FR-098: with no open Terminal Port, nothing is sent and the status
+        # bar reports it.
+        win.serial_mgr.terminal_connected = False
+        win.handle_terminal_key(b"A")
+        qapp.processEvents()
+        assert win.statusBar().currentMessage() == i18n.tr("status.terminal_not_open_send")
+
+        class _Port:
+            is_open = True
+
+            def __init__(self):
+                self.written = bytearray()
+
+            def write(self, data):
+                self.written += data
+
+            def close(self):
+                self.is_open = False
+
+        port = _Port()
+        win.serial_mgr.terminal_port = port
+        win.serial_mgr.terminal_connected = True
+        win._tx_buffer = ""
+        win._local_echo = False
+        emitted = []
+        win.term_write.connect(emitted.append)
+
+        # FR-096/FR-092: raw bytes are transmitted and recorded in the tx buffer;
+        # FR-093: with echo off, nothing is echoed to the screen.
+        win.handle_terminal_key(b"\x03")  # Ctrl-C
+        qapp.processEvents()
+        assert bytes(port.written) == b"\x03"
+        assert win._tx_buffer == "\x03"
+        assert emitted == []
+
+        # FR-093: with echo on, the same bytes are emitted to the engine/display.
+        win._local_echo = True
+        win.handle_terminal_key(b"X")
+        qapp.processEvents()
+        assert bytes(port.written) == b"\x03X"
+        assert emitted == [b"X"]
+    finally:
+        win.close()
 
 
 def test_handle_terminal_send_append_eol_flag(qapp, monkeypatch, state):

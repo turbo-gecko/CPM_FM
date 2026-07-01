@@ -160,7 +160,7 @@ terminal.title = Terminal
 terminal.clear = Effacer
 terminal.local_echo = Écho local
 terminal.autoscroll = Défilement automatique
-terminal.send = Envoyer
+terminal.input_hint = Tapez ici - les touches sont envoyées en direct
 terminal.boot = Démarrer dans CP/M
 
 # --- Serial Configuration dialog -----------------------------------------------

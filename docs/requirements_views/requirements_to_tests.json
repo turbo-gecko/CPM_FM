@@ -302,18 +302,36 @@
       "tests/test_vt100_engine.py:test_tab_advances_to_next_tab_stop",
       "tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds"
     ],
+    "FR-092": [
+      "tests/test_gui_smoke.py:test_handle_terminal_key_sends_echoes_and_guards"
+    ],
+    "FR-093": [
+      "tests/test_gui_smoke.py:test_handle_terminal_key_sends_echoes_and_guards"
+    ],
     "FR-094": [
-      "tests/test_gui_smoke.py:test_handle_terminal_send_append_eol_flag"
+      "tests/test_gui_smoke.py:test_handle_terminal_send_append_eol_flag",
+      "tests/test_gui_smoke.py:test_terminal_window_keystroke_transmits",
+      "tests/test_terminal_view.py:test_encode_key_enter_uses_eol"
     ],
     "FR-095": [
       "tests/test_gui_smoke.py:test_terminal_window_render_and_clear",
       "tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor"
     ],
     "FR-096": [
+      "tests/test_gui_smoke.py:test_handle_terminal_key_sends_echoes_and_guards",
+      "tests/test_gui_smoke.py:test_terminal_window_keystroke_transmits",
       "tests/test_serial_manager.py:test_send_data_replaces_non_ascii",
       "tests/test_serial_manager.py:test_send_data_returns_false_when_port_closed",
       "tests/test_serial_manager.py:test_send_data_returns_false_when_port_none",
-      "tests/test_serial_manager.py:test_send_data_writes_ascii_to_open_port"
+      "tests/test_serial_manager.py:test_send_data_writes_ascii_to_open_port",
+      "tests/test_terminal_view.py:test_encode_key_control_combinations",
+      "tests/test_terminal_view.py:test_encode_key_enter_uses_eol",
+      "tests/test_terminal_view.py:test_encode_key_navigation_and_function_keys",
+      "tests/test_terminal_view.py:test_encode_key_printable_and_utf8",
+      "tests/test_terminal_view.py:test_encode_key_returns_none_for_modifier_only"
+    ],
+    "FR-098": [
+      "tests/test_gui_smoke.py:test_handle_terminal_key_sends_echoes_and_guards"
     ],
     "FR-099": [
       "tests/test_gui_smoke.py:test_copy_to_remote_transfers_all_selected"
@@ -586,13 +604,8 @@
       "tests/test_backup_restore.py:test_backup_order_refresh_confirm_wipe_transfer",
       "tests/test_backup_restore.py:test_restore_order_refresh_confirm_wipe_transfer"
     ],
-    "FR-155": [
-      "tests/test_gui_smoke.py:test_terminal_send_bare_enter_and_control"
-    ],
     "FR-156": [
-      "tests/test_gui_smoke.py:test_handle_terminal_send_append_eol_flag",
-      "tests/test_gui_smoke.py:test_parse_send_text_control_characters",
-      "tests/test_gui_smoke.py:test_terminal_send_bare_enter_and_control"
+      "tests/test_gui_smoke.py:test_handle_terminal_send_append_eol_flag"
     ],
     "IFR-004": [
       "tests/test_config_handler.py:test_load_json_malformed_returns_empty",
@@ -869,10 +882,7 @@
     "FR-087",
     "FR-088",
     "FR-089",
-    "FR-092",
-    "FR-093",
     "FR-097",
-    "FR-098",
     "FR-099a",
     "FR-099b",
     "FR-100",
@@ -956,6 +966,7 @@
     "FR-153b",
     "FR-153c",
     "FR-153d",
+    "FR-155",
     "IFR-001",
     "IFR-002",
     "IFR-003",

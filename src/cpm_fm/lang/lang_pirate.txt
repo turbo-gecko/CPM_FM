@@ -165,7 +165,7 @@ terminal.title = Captain's Log
 terminal.clear = Scour the Deck
 terminal.local_echo = Echo the Shout
 terminal.autoscroll = Auto-drift
-terminal.send = Launch Cargo
+terminal.input_hint = Type here, matey - every keystroke sails at once
 terminal.boot = Hoist into CP/M
 
 # --- Serial Configuration dialog -----------------------------------------------

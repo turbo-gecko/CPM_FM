@@ -160,7 +160,7 @@ terminal.title = Terminale
 terminal.clear = Cancella
 terminal.local_echo = Eco locale
 terminal.autoscroll = Scorrimento automatico
-terminal.send = Invia
+terminal.input_hint = Digita qui - i tasti vengono inviati in tempo reale
 terminal.boot = Avvia in CP/M
 
 # --- Serial Configuration dialog ----------------------------------------------
