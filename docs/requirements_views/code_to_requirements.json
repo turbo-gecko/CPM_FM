@@ -308,6 +308,7 @@
   ],
   "src/cpm_fm/gui/terminal_view.py": [
     "FR-091",
+    "FR-091a",
     "FR-094",
     "FR-096",
     "FR-158",
@@ -427,8 +428,17 @@
   "src/cpm_fm/terminal/vt100_engine.py": [
     "CR-014",
     "FR-091",
+    "FR-091a",
     "FR-095",
     "FR-157",
+    "FR-157a",
+    "FR-157b",
+    "FR-157c",
+    "FR-157d",
+    "FR-157e",
+    "FR-157f",
+    "FR-157g",
+    "FR-157h",
     "UIR-062"
   ],
   "src/cpm_fm/terminal/xmodem.py": [

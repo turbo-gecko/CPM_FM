@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.23 |
-| Scorecard for plan version | 1.23 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.24 |
+| Scorecard for plan version | 1.24 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -242,6 +242,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-W09 | Full-screen VT-100 program renders correctly | FR-091/157 | | | |
 | MT-W10 | Boot button disabled when sequence empty; live enable on Save | UIR-068 | | | |
 | MT-W11 | Manual "Boot into CP/M" runs sequence + re-probes | FR-049 | | | |
+| MT-W12 | Terminal grid reflows to the window size | FR-091a | | | |
 
 ### §13 File context-menu actions
 | ID | Title | Req | Result | Env | Notes |

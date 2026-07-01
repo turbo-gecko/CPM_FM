@@ -288,7 +288,7 @@ def test_remote_batch_skips_existing_file(qapp, monkeypatch, state, tmp_path):
 
 
 def test_remote_batch_overwrite_erases_then_sends(qapp, monkeypatch, state, tmp_path):
-    """Verifies: FR-146."""
+    """Verifies: FR-146, FR-146b."""
     # FR-146: choosing Overwrite on an upload conflict erases the existing remote
     # file first (so a receiver that won't silently overwrite cannot stall the
     # handshake) and then sends the file.

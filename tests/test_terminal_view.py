@@ -17,7 +17,7 @@ from PySide6.QtCore import Qt  # noqa: E402
 from PySide6.QtGui import QColor  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
-from cpm_fm.gui.terminal_view import TerminalView, encode_key  # noqa: E402
+from cpm_fm.gui.terminal_view import TerminalView, encode_key, grid_size_for  # noqa: E402
 from cpm_fm.terminal.vt100_engine import VT100Engine  # noqa: E402
 
 _NONE = Qt.KeyboardModifier.NoModifier
@@ -132,6 +132,34 @@ def test_autoscroll_toggle_moves_to_bottom(qapp):
         engine.feed(b"more\r\n")
         view.refresh()
         assert vbar.value() == 0
+    finally:
+        view.deleteLater()
+
+
+def test_grid_size_for_fits_cells_and_clamps_minimum():
+    """Reflow geometry: whole cells that fit, clamped to a usable minimum.
+
+    Verifies: FR-091a.
+    """
+    # 800x260 viewport at 10x13 cells -> 80 cols x 20 rows.
+    assert grid_size_for(800, 260, 10, 13) == (80, 20)
+    # A tiny viewport clamps to the 20x5 minimum rather than collapsing.
+    assert grid_size_for(30, 20, 10, 13) == (20, 5)
+
+
+def test_reflow_resizes_engine_to_viewport(qapp):
+    """_reflow_to_viewport resizes the engine to the columns/rows that fit.
+
+    Verifies: FR-091a.
+    """
+    engine = VT100Engine()
+    view = TerminalView(engine)
+    try:
+        view.resize(400, 300)
+        view._reflow_to_viewport()
+        vp = view.viewport().size()
+        exp = grid_size_for(vp.width(), vp.height(), view._cell_w, view._cell_h)
+        assert (engine.cols, engine.rows) == exp
     finally:
         view.deleteLater()
 

@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.23 |
+| Version | 1.24 |
 | Status | Draft |
-| Date | 2026-06-27 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.16.0) |
+| Date | 2026-07-01 |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.18.0) |
 
 ---
 
@@ -397,6 +397,7 @@ files** — these tests delete data by design.
 | MT-W09 [CP/M] | FR-091, FR-157 | Connected: run a full-screen CP/M program that uses cursor addressing/attributes (e.g. a screen editor or `VT` demo). | The screen renders correctly — cursor positioning, screen/line erase, and colour/attributes are applied — rather than showing raw escape codes. |
 | MT-W10 | UIR-068 | Open the Terminal Window with the Boot Sequence (MT-G10) **empty**, then set a non-empty Boot Sequence in General Config (window left open) and Save. | With an empty Boot Sequence the **"Boot into CP/M"** button (to the right of Clear) is disabled (greyed); after saving a non-empty sequence it becomes enabled without reopening the window. |
 | MT-W11 [CP/M] | FR-049 | Connected with a valid Boot Sequence configured, in the Terminal Window press **Boot into CP/M**. | The status bar shows the boot sequence running; the keystrokes are transmitted; on reaching CP/M the drive drop-down and Remote Files list update. If CP/M is not reached the status bar reports the failure and **no** modal "file system unavailable" dialog appears. |
+| MT-W12 | FR-091a | Resize the Terminal Window larger and smaller (and maximise). | The character-cell grid reflows to fit the window — more/fewer columns and rows become visible — down to a usable minimum; it does not stay clamped to a fixed 80×24 box. (Note: the remote is not told the new size, so a full-screen CP/M app that assumes 80×24 keeps addressing that page.) |
 
 ---
 

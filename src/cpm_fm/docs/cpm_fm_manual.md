@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.17.0**
+**Version 2.18.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -450,7 +450,7 @@ The Terminal is a **functional VT-100 terminal**: it interprets the VT-100/ANSI 
 
 ### Layout
 
-- **Receive area** (top) — A monospaced character-cell screen (80 × 24 by default) rendering the live terminal display, with scrollback. It shows everything received from CP/M, plus optional local echo and transfer byte hex. This is also where you type (see below).
+- **Receive area** (top) — A monospaced character-cell screen (80 × 24 initially) rendering the live terminal display, with at least 1000 lines of scrollback. It shows everything received from CP/M, plus optional local echo and transfer byte hex. This is also where you type (see below). The screen **reflows to the window size** — make the window larger or smaller and the number of visible columns and rows follows it. (Note: the remote is not told the new size, so a full-screen CP/M program that assumes an 80 × 24 screen still draws to that 80 × 24 area.)
 - **Controls** — **Clear** (resets the screen and empties the buffers), **Boot into CP/M** (runs the configured boot sequence — see [Section 9](#9-booting-the-remote-into-cpm)), **Local Echo** (echoes what you type into the screen; off by default), and **Autoscroll** (keeps the newest output in view; on by default).
 - **Input hint** (bottom) — A reminder that there is no separate text field: you type directly into the terminal.
 
