@@ -160,7 +160,7 @@ terminal.title = 终端
 terminal.clear = 清除
 terminal.local_echo = 本地回显
 terminal.autoscroll = 自动滚动
-terminal.send = 发送
+terminal.input_hint = 在此输入 - 按键即时发送
 terminal.boot = 启动进入 CP/M
 
 # --- Serial Configuration dialog -----------------------------------------------

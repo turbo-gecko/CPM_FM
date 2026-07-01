@@ -160,7 +160,7 @@ terminal.title = Τερματικός
 terminal.clear = Καθαρισμός
 terminal.local_echo = Τοπική αντήχηση
 terminal.autoscroll = Αυτόματη κύλιση
-terminal.send = Αποστολή
+terminal.input_hint = Πληκτρολογήστε εδώ - τα πλήκτρα αποστέλλονται ζωντανά
 terminal.boot = Εκκίνηση σε CP/M
 
 # --- Serial Configuration dialog ------------------------------------------------

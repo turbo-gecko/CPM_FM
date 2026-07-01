@@ -13,16 +13,61 @@ import pytest
 
 pytest.importorskip("PySide6")
 
+from PySide6.QtCore import Qt  # noqa: E402
 from PySide6.QtGui import QColor  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
-from cpm_fm.gui.terminal_view import TerminalView  # noqa: E402
+from cpm_fm.gui.terminal_view import TerminalView, encode_key  # noqa: E402
 from cpm_fm.terminal.vt100_engine import VT100Engine  # noqa: E402
+
+_NONE = Qt.KeyboardModifier.NoModifier
+_CTRL = Qt.KeyboardModifier.ControlModifier
 
 
 @pytest.fixture(scope="module")
 def qapp():
     return QApplication.instance() or QApplication([])
+
+
+def test_encode_key_enter_uses_eol():
+    """Verifies: FR-094, FR-096."""
+    assert encode_key(Qt.Key.Key_Return, _NONE, "\r", eol=b"\r\n") == b"\r\n"
+    assert encode_key(Qt.Key.Key_Enter, _NONE, "", eol=b"\r") == b"\r"
+
+
+def test_encode_key_printable_and_utf8():
+    """Verifies: FR-096."""
+    assert encode_key(Qt.Key.Key_A, _NONE, "a") == b"a"
+    assert encode_key(Qt.Key.Key_Space, _NONE, " ") == b" "
+    assert encode_key(Qt.Key.Key_unknown, _NONE, "★") == "★".encode()
+
+
+def test_encode_key_navigation_and_function_keys():
+    """Verifies: FR-096."""
+    assert encode_key(Qt.Key.Key_Up, _NONE, "") == b"\x1b[A"
+    assert encode_key(Qt.Key.Key_Down, _NONE, "") == b"\x1b[B"
+    assert encode_key(Qt.Key.Key_Right, _NONE, "") == b"\x1b[C"
+    assert encode_key(Qt.Key.Key_Left, _NONE, "") == b"\x1b[D"
+    assert encode_key(Qt.Key.Key_Home, _NONE, "") == b"\x1b[H"
+    assert encode_key(Qt.Key.Key_Delete, _NONE, "") == b"\x1b[3~"
+    assert encode_key(Qt.Key.Key_F1, _NONE, "") == b"\x1bOP"
+    assert encode_key(Qt.Key.Key_Escape, _NONE, "\x1b") == b"\x1b"
+    assert encode_key(Qt.Key.Key_Tab, _NONE, "\t") == b"\t"
+    assert encode_key(Qt.Key.Key_Backspace, _NONE, "\x08") == b"\x08"
+
+
+def test_encode_key_control_combinations():
+    """Verifies: FR-096."""
+    assert encode_key(Qt.Key.Key_C, _CTRL, "") == b"\x03"  # Ctrl-C
+    assert encode_key(Qt.Key.Key_A, _CTRL, "") == b"\x01"  # Ctrl-A
+    assert encode_key(Qt.Key.Key_BracketLeft, _CTRL, "") == b"\x1b"  # Ctrl-[ = ESC
+    assert encode_key(Qt.Key.Key_Space, _CTRL, "") == b"\x00"  # Ctrl-Space = NUL
+
+
+def test_encode_key_returns_none_for_modifier_only():
+    """Verifies: FR-096."""
+    # A bare modifier press (no text, not a mapped key) transmits nothing.
+    assert encode_key(Qt.Key.Key_Shift, _NONE, "") is None
 
 
 def test_colour_default_and_named_and_hex():

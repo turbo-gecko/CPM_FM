@@ -1,9 +1,93 @@
 from __future__ import annotations
 
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPalette
+from typing import Callable
+
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QKeyEvent, QPainter, QPalette
 from PySide6.QtWidgets import QScrollArea, QWidget
 
 from cpm_fm.terminal.vt100_engine import Cell, VT100Engine
+
+# Navigation / editing / function keys -> VT-100 byte sequences. Arrow keys use
+# the normal-mode CSI form (ESC[A..D); the engine does not track application-
+# cursor-key mode (DECCKM), so the normal form is always sent.
+_SPECIAL_KEYS: dict[Qt.Key, bytes] = {
+    Qt.Key.Key_Up: b"\x1b[A",
+    Qt.Key.Key_Down: b"\x1b[B",
+    Qt.Key.Key_Right: b"\x1b[C",
+    Qt.Key.Key_Left: b"\x1b[D",
+    Qt.Key.Key_Home: b"\x1b[H",
+    Qt.Key.Key_End: b"\x1b[F",
+    Qt.Key.Key_PageUp: b"\x1b[5~",
+    Qt.Key.Key_PageDown: b"\x1b[6~",
+    Qt.Key.Key_Insert: b"\x1b[2~",
+    Qt.Key.Key_Delete: b"\x1b[3~",
+    Qt.Key.Key_Escape: b"\x1b",
+    Qt.Key.Key_Tab: b"\t",
+    Qt.Key.Key_Backtab: b"\x1b[Z",
+    Qt.Key.Key_Backspace: b"\x08",
+    Qt.Key.Key_F1: b"\x1bOP",
+    Qt.Key.Key_F2: b"\x1bOQ",
+    Qt.Key.Key_F3: b"\x1bOR",
+    Qt.Key.Key_F4: b"\x1bOS",
+    Qt.Key.Key_F5: b"\x1b[15~",
+    Qt.Key.Key_F6: b"\x1b[17~",
+    Qt.Key.Key_F7: b"\x1b[18~",
+    Qt.Key.Key_F8: b"\x1b[19~",
+    Qt.Key.Key_F9: b"\x1b[20~",
+    Qt.Key.Key_F10: b"\x1b[21~",
+    Qt.Key.Key_F11: b"\x1b[23~",
+    Qt.Key.Key_F12: b"\x1b[24~",
+}
+
+# Ctrl + these punctuation keys -> the C0 control byte they name.
+_CTRL_PUNCT: dict[Qt.Key, int] = {
+    Qt.Key.Key_BracketLeft: 0x1B,  # Ctrl-[  = ESC
+    Qt.Key.Key_Backslash: 0x1C,  # Ctrl-\
+    Qt.Key.Key_BracketRight: 0x1D,  # Ctrl-]
+    Qt.Key.Key_Space: 0x00,  # Ctrl-Space = NUL
+}
+
+
+def encode_key(
+    key: int, modifiers: Qt.KeyboardModifier, text: str, eol: bytes = b"\r"
+) -> bytes | None:
+    """Translate a key press to the bytes to transmit, or None if nothing.
+
+    Handles Enter (the configured ``eol``), navigation/function keys (VT-100
+    sequences), Ctrl-letter / Ctrl-punctuation control bytes, and otherwise the
+    typed character(s). Replaces the former transmit-field parsing.
+
+    Satisfies: FR-096, FR-094.
+    """
+    if key in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+        return eol
+    special = _SPECIAL_KEYS.get(Qt.Key(key)) if _is_key(key) else None
+    if special is not None:
+        return special
+    ctrl = bool(modifiers & Qt.KeyboardModifier.ControlModifier)
+    if ctrl and Qt.Key.Key_A <= key <= Qt.Key.Key_Z:
+        return bytes([key - Qt.Key.Key_A + 1])
+    if ctrl and _is_key(key):
+        punct = _CTRL_PUNCT.get(Qt.Key(key))
+        if punct is not None:
+            return bytes([punct])
+    if text:
+        if len(text) == 1 and ord(text) < 0x20:
+            # A control character Qt already resolved (e.g. some Ctrl combos).
+            return text.encode("latin-1")
+        return text.encode("utf-8")
+    return None
+
+
+def _is_key(key: int) -> bool:
+    """True if ``key`` is a defined Qt.Key value (guards Qt.Key() conversion)."""
+    try:
+        Qt.Key(key)
+        return True
+    except ValueError:
+        return False
+
 
 # Map pyte's ANSI colour names to concrete RGB. Names not found here (notably
 # "default", and 256-/true-colour hex strings) are resolved in _colour().
@@ -65,6 +149,12 @@ class TerminalView(QScrollArea):
         super().__init__(parent)
         self._engine = engine
         self._autoscroll = True
+        # FR-096: keystrokes typed here are encoded and passed to this callback
+        # for transmission on the Terminal Port. FR-094: Enter transmits the EOL.
+        self._key_callback: Callable[[bytes], None] | None = None
+        self._eol = b"\r"
+        # Accept keyboard focus so the operator can type into the terminal.
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         font = QFont("Courier New")
         font.setStyleHint(QFont.StyleHint.Monospace)
@@ -91,6 +181,36 @@ class TerminalView(QScrollArea):
         """
         self._engine = engine
         self.refresh()
+
+    def set_key_callback(self, callback: Callable[[bytes], None] | None) -> None:
+        """Set the sink for encoded keystroke bytes (FR-096).
+
+        Satisfies: FR-096.
+        """
+        self._key_callback = callback
+
+    def set_eol(self, eol: bytes) -> None:
+        """Set the bytes the Enter key transmits (the configured EOL, FR-094).
+
+        Satisfies: FR-094.
+        """
+        self._eol = eol
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802 (Qt override)
+        """Encode the key press and send it to the Terminal Port (FR-096).
+
+        Keys that map to bytes are sent and the event is accepted (so, e.g.,
+        arrow keys are transmitted rather than scrolling the view). Anything
+        unmapped falls through to the base class.
+
+        Satisfies: FR-096, FR-094.
+        """
+        data = encode_key(event.key(), event.modifiers(), event.text(), self._eol)
+        if data and self._key_callback is not None:
+            self._key_callback(data)
+            event.accept()
+            return
+        super().keyPressEvent(event)
 
     def set_autoscroll(self, enabled: bool) -> None:
         """Enable/disable following new output to the bottom (UIR-066).

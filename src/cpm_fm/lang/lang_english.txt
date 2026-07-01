@@ -189,7 +189,7 @@ terminal.title = Terminal
 terminal.clear = Clear
 terminal.local_echo = Local Echo
 terminal.autoscroll = Autoscroll
-terminal.send = Send
+terminal.input_hint = Type here - keystrokes are sent live
 terminal.boot = Boot into CP/M
 
 # --- Serial Configuration dialog -----------------------------------------------

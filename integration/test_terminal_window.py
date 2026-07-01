@@ -42,6 +42,31 @@ def test_terminal_window_shows_live_response(gui):
 
 
 @pytest.mark.hil
+@pytest.mark.mt("MT-W06", "FR-096", "FR-094")
+def test_terminal_window_keyboard_input(gui):
+    """Typing into the receive area transmits to the port and shows the prompt.
+
+    Exercises the interactive keyboard path (handle_terminal_key) rather than a
+    programmatic send: pressing Enter transmits the configured EOL, and the
+    remote echoes its drive prompt back onto the screen.
+
+    Verifies: FR-096, FR-094.
+    """
+    assert gui.connect()[0] == "ok"
+    gui.win.show_terminal()
+    term = gui.win.terminal_win
+    assert term is not None, "terminal window was not created"
+
+    gui.win.handle_terminal_key(b"\r")  # Enter -> configured EOL on the wire
+    gui.process_until(
+        lambda: CPMParser.drive_prompt_letter(_screen_text(term)) is not None,
+        timeout=8.0,
+    )
+    text = _screen_text(term)
+    assert CPMParser.drive_prompt_letter(text) is not None, f"no prompt rendered: {text!r}"
+
+
+@pytest.mark.hil
 @pytest.mark.mt("MT-W05", "FR-095")
 def test_terminal_window_clear(gui):
     """The Terminal Window Clear empties the receive area.

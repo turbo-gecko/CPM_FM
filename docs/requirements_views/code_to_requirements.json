@@ -245,6 +245,7 @@
     "FR-093",
     "FR-094",
     "FR-095",
+    "FR-096",
     "FR-097",
     "FR-098",
     "FR-100",
@@ -307,6 +308,8 @@
   ],
   "src/cpm_fm/gui/terminal_view.py": [
     "FR-091",
+    "FR-094",
+    "FR-096",
     "UIR-061",
     "UIR-062",
     "UIR-066"
@@ -314,6 +317,7 @@
   "src/cpm_fm/gui/terminal_window.py": [
     "FR-049",
     "FR-091",
+    "FR-094",
     "FR-095",
     "FR-096",
     "FR-097",

@@ -160,7 +160,7 @@ terminal.title = 終端
 terminal.clear = 清除
 terminal.local_echo = 本地回顯
 terminal.autoscroll = 自動滾動
-terminal.send = 發送
+terminal.input_hint = 喺度打字 - 按鍵即時傳送
 terminal.boot = 啟動進入 CP/M
 
 # --- Serial Configuration dialog -----------------------------------------------
