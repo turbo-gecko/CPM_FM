@@ -2,18 +2,18 @@ from __future__ import annotations
 
 from typing import Callable
 
-from PySide6.QtGui import QFont, QTextCursor
 from PySide6.QtWidgets import (
     QCheckBox,
     QHBoxLayout,
     QLineEdit,
     QMainWindow,
-    QPlainTextEdit,
     QPushButton,
     QVBoxLayout,
     QWidget,
 )
 
+from cpm_fm.gui.terminal_view import TerminalView
+from cpm_fm.terminal.vt100_engine import VT100Engine
 from cpm_fm.utils.i18n import tr
 
 
@@ -25,14 +25,20 @@ class TerminalWindow(QMainWindow):
     Satisfies: UIR-060-UIR-067.
     """
 
-    def __init__(self, parent, send_callback, clear_callback=None, boot_callback=None):
+    def __init__(self, parent, send_callback, clear_callback=None, boot_callback=None, engine=None):
         """
-        Satisfies: UIR-060, UIR-068.
+        Satisfies: UIR-060, UIR-068, FR-091.
 
         No Qt parent, so this is an independent non-modal top-level window.
         The owning MainWindow keeps a reference to it.
+
+        ``engine`` is the shared :class:`VT100Engine` the owner feeds received
+        bytes into (FR-091); the receive area renders from it. A standalone
+        window (no owner) gets its own engine so it is usable on its own.
         """
         super().__init__()
+        # FR-091: the VT-100 screen model this window renders.
+        self.engine = engine if engine is not None else VT100Engine()
         # FR-121/FR-123: maps a widget text-setter to its translation key so the
         # window can be re-translated live when the language changes.
         self._i18n_registry: list[tuple[Callable[[str], None], str]] = []
@@ -69,12 +75,10 @@ class TerminalWindow(QMainWindow):
         self.setCentralWidget(central)
         layout = QVBoxLayout(central)
 
-        # Receive Area — read-only, monospaced (UIR-061/UIR-063).
-        self.receive_area = QPlainTextEdit()
-        self.receive_area.setReadOnly(True)
-        mono = QFont("Courier New")
-        mono.setStyleHint(QFont.StyleHint.Monospace)
-        self.receive_area.setFont(mono)
+        # Receive Area — a VT-100 character-grid view rendering the engine's
+        # screen and scrollback (UIR-061/UIR-062). Output-only: it is driven by
+        # the engine, never typed into directly.
+        self.receive_area = TerminalView(self.engine)
         layout.addWidget(self.receive_area)
 
         # Control Frame: Clear (left), Local Echo (centre), Autoscroll (right).
@@ -101,6 +105,8 @@ class TerminalWindow(QMainWindow):
         self.chk_scroll = QCheckBox()  # UIR-066: enabled by default.
         self._register_text(self.chk_scroll.setText, "terminal.autoscroll")
         self.chk_scroll.setChecked(True)
+        # UIR-062: the checkbox governs the receive view's autoscroll.
+        self.chk_scroll.toggled.connect(self.receive_area.set_autoscroll)
         ctrl_layout.addWidget(self.chk_scroll)
         layout.addLayout(ctrl_layout)
 
@@ -115,10 +121,25 @@ class TerminalWindow(QMainWindow):
         layout.addLayout(tx_layout)
 
     def clear_text(self):
-        """Satisfies: FR-095, UIR-064."""
-        self.receive_area.clear()
+        """Reset the screen and clear the owner's data buffers (FR-095).
+
+        Resets the VT-100 engine (blanking the screen and scrollback) and
+        repaints, then invokes the owner's callback to clear the receive/
+        transmit data buffers.
+
+        Satisfies: FR-095, UIR-064.
+        """
+        self.engine.reset()
+        self.receive_area.refresh()
         if self.clear_callback:
             self.clear_callback()
+
+    def render_screen(self):
+        """Repaint the receive view from the engine (call after feeding it).
+
+        Satisfies: FR-091, UIR-062.
+        """
+        self.receive_area.refresh()
 
     def _on_boot(self):
         """Run the configured boot sequence (FR-049).
@@ -205,41 +226,6 @@ class TerminalWindow(QMainWindow):
         text = "".join(out)
         is_pure_control = bool(text) and has_control and not has_printable
         return text, is_pure_control
-
-    def write_text(self, text):
-        """
-        Appends text to the receive area, processing backspaces (\b).
-
-        Satisfies: FR-091, UIR-062.
-        """
-        cursor = self.receive_area.textCursor()
-        cursor.movePosition(QTextCursor.MoveOperation.End)
-
-        # Insert character by character so backspaces (\b) can erase the
-        # preceding character. Line endings are normalised so that CR, LF, and
-        # the CRLF pair each produce exactly one new line — inserting '\r' and
-        # '\n' separately would otherwise yield a blank line between every line.
-        i = 0
-        n = len(text)
-        while i < n:
-            char = text[i]
-            if char == "\b":
-                cursor.deletePreviousChar()
-            elif char == "\r":
-                # Collapse a CRLF pair into a single line break.
-                if i + 1 < n and text[i + 1] == "\n":
-                    i += 1
-                cursor.insertText("\n")
-            else:
-                cursor.insertText(char)
-            i += 1
-
-        # Ensure the cursor is updated in the widget
-        self.receive_area.setTextCursor(cursor)
-
-        if self.chk_scroll.isChecked():  # UIR-062: autoscroll when enabled.
-            self.receive_area.moveCursor(QTextCursor.MoveOperation.End)
-            self.receive_area.ensureCursorVisible()
 
     def closeEvent(self, event):
         """

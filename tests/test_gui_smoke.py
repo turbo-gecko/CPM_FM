@@ -832,39 +832,47 @@ def test_main_window_constructs(qapp, state):
         win.close()
 
 
-def test_terminal_window_write_and_clear(qapp):
-    """Verifies: FR-095."""
+def test_terminal_window_render_and_clear(qapp):
+    """Verifies: FR-091, FR-095."""
+    # The receive area renders the VT-100 engine's screen; Clear resets the
+    # engine (blanking the screen) and invokes the buffer-clear callback.
+    from cpm_fm.terminal.vt100_engine import VT100Engine
+
+    engine = VT100Engine()
     cleared = []
     term = TerminalWindow(
-        None, send_callback=lambda t: None, clear_callback=lambda: cleared.append(1)
+        None,
+        send_callback=lambda t, eol: None,
+        clear_callback=lambda: cleared.append(1),
+        engine=engine,
     )
     try:
-        term.write_text("HELLO")
-        assert "HELLO" in term.receive_area.toPlainText()
+        engine.feed(b"HELLO")
+        term.render_screen()
+        assert engine.display[0].rstrip() == "HELLO"
+        term.receive_area._grid.grab()  # offscreen paint must not raise
+
         term.clear_text()
-        assert term.receive_area.toPlainText() == ""
+        assert engine.display[0].rstrip() == ""  # FR-095: screen reset
         assert cleared == [1]  # FR-095: Clear invokes the buffer-clear callback.
     finally:
         term.deleteLater()
 
 
-def test_terminal_write_text_line_endings(qapp):
+def test_terminal_window_renders_engine_screen(qapp):
     """Verifies: FR-091."""
-    # FR-091: CR, LF, and the CRLF pair each produce exactly one new line in the
-    # receive area — no blank line between lines. Backspaces erase a character.
-    term = TerminalWindow(None, send_callback=lambda t, eol: None)
+    # Escape sequences drive the on-screen result: cursor addressing overwrites
+    # an existing line and the grid paints without error.
+    from cpm_fm.terminal.vt100_engine import VT100Engine
+
+    engine = VT100Engine()
+    term = TerminalWindow(None, send_callback=lambda t, eol: None, engine=engine)
     try:
-        term.write_text("L1\r\nL2\r\nL3")
-        assert term.receive_area.toPlainText() == "L1\nL2\nL3"
-        assert term.receive_area.document().blockCount() == 3
-
-        term.clear_text()
-        term.write_text("A\rB\rC")  # lone CR also a single break
-        assert term.receive_area.toPlainText() == "A\nB\nC"
-
-        term.clear_text()
-        term.write_text("AB\bC")  # backspace erases the B
-        assert term.receive_area.toPlainText() == "AC"
+        engine.feed(b"L1\r\nL2\r\n\x1b[1;1Hedited")  # home, then overwrite row 0
+        term.render_screen()
+        assert engine.display[0].rstrip() == "edited"
+        assert engine.display[1].rstrip() == "L2"
+        term.receive_area._grid.grab()  # offscreen paint must not raise
     finally:
         term.deleteLater()
 
@@ -2180,7 +2188,7 @@ def test_transfer_byte_echo_respects_setting(qapp, state):
         win.settings = {"echo_transfer_data": "ON"}
         win._on_transfer_bytes("remote", b"\xb5\x06")
         qapp.processEvents()
-        assert emitted == ["<B5><06>"]
+        assert emitted == [b"<B5><06>"]
     finally:
         win.close()
 
@@ -2197,10 +2205,10 @@ def test_handle_terminal_recv_tees_bytes_to_engine_and_buffers(qapp, state):
         win.term_write.connect(emitted.append)
         win.handle_terminal_recv(b"A>\r\n")
         qapp.processEvents()
-        # Decoded text reaches the receive buffer and the display signal...
+        # Decoded text reaches the receive buffer; raw bytes go out on term_write.
         assert win._rx_buffer == "A>\r\n"
-        assert emitted == ["A>\r\n"]
-        # ...and the raw bytes reach the engine, which renders the prompt.
+        assert emitted == [b"A>\r\n"]
+        # The GUI-thread sink feeds those bytes to the engine, which renders it.
         assert win._term_engine.display[0].rstrip() == "A>"
     finally:
         win.close()

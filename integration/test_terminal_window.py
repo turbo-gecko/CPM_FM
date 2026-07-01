@@ -11,6 +11,15 @@ import pytest
 from cpm_fm.terminal.cpm_parser import CPMParser
 
 
+def _screen_text(term) -> str:
+    """The Terminal Window's rendered screen as plain text.
+
+    The receive area is now a VT-100 grid backed by the engine, so read the
+    screen from the engine's display rather than a text widget.
+    """
+    return "\n".join(term.engine.display)
+
+
 @pytest.mark.hil
 @pytest.mark.mt("MT-W01", "FR-097", "FR-091", "FR-094")
 def test_terminal_window_shows_live_response(gui):
@@ -25,10 +34,10 @@ def test_terminal_window_shows_live_response(gui):
 
     gui.win.handle_terminal_send("")  # bare EOL -> remote echoes its prompt
     gui.process_until(
-        lambda: CPMParser.drive_prompt_letter(term.receive_area.toPlainText()) is not None,
+        lambda: CPMParser.drive_prompt_letter(_screen_text(term)) is not None,
         timeout=8.0,
     )
-    text = term.receive_area.toPlainText()
+    text = _screen_text(term)
     assert CPMParser.drive_prompt_letter(text) is not None, f"no prompt rendered: {text!r}"
 
 
@@ -42,7 +51,8 @@ def test_terminal_window_clear(gui):
     assert gui.connect()[0] == "ok"
     gui.win.show_terminal()
     term = gui.win.terminal_win
-    term.write_text("SOME OUTPUT")
-    assert term.receive_area.toPlainText() != ""
+    term.engine.feed(b"SOME OUTPUT")
+    term.render_screen()
+    assert _screen_text(term).strip() != ""
     term.clear_text()
-    assert term.receive_area.toPlainText() == ""
+    assert _screen_text(term).strip() == ""
