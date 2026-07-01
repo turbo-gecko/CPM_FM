@@ -43,6 +43,7 @@ from cpm_fm.gui.theme import app_icon, apply_theme
 from cpm_fm.gui.transfer_dialog import TransferProgressDialog
 from cpm_fm.gui.window_state import APP, ORG, WindowState
 from cpm_fm.terminal.serial_manager import SerialManager
+from cpm_fm.terminal.vt100_engine import VT100Engine
 from cpm_fm.utils.config_handler import ConfigHandler
 from cpm_fm.utils.i18n import (
     available_languages,
@@ -249,6 +250,12 @@ class MainWindow(
         # explicitly cleared via the Terminal Window Clear button (FR-095).
         self._rx_buffer = ""
         self._tx_buffer = ""
+
+        # FR-091: VT-100/ANSI screen model fed the raw received byte stream. The
+        # tee in handle_terminal_recv drives it; the Terminal Window renders from
+        # it (wired in a later stage). Created up front so bytes are interpreted
+        # from the first connect, whether or not the window has been opened.
+        self._term_engine = VT100Engine()
 
         self.setup_menu()
         self.setup_toolbar()

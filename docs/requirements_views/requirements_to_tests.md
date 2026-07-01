@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_171/409 requirements have a verifying test; 238 untested; 0 stale tag(s)._
+_172/409 requirements have a verifying test; 237 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -48,7 +48,7 @@ _171/409 requirements have a verifying test; 238 untested; 0 stale tag(s)._
 | FR-022 | `tests/test_gui_smoke.py:test_menu_about_opens_dialog` |
 | FR-023 | `tests/test_gui_smoke.py:test_help_menu_contains_manual_action`, `tests/test_gui_smoke.py:test_menu_manual_opens_dialog`, `tests/test_gui_smoke.py:test_menu_manual_reuses_open_window` |
 | FR-030 | `tests/test_serial_manager.py:test_numeric_defaults_applied_when_absent`, `tests/test_serial_manager.py:test_numeric_fields_are_coerced_to_int`, `tests/test_serial_manager.py:test_open_port_returns_false_on_serial_error`, `tests/test_serial_manager.py:test_parity_maps_to_pyserial_constant` |
-| FR-036 | `tests/test_serial_manager.py:test_read_loop_dispatches_decoded_data` |
+| FR-036 | `tests/test_serial_manager.py:test_read_loop_dispatches_raw_bytes` |
 | FR-037 | `tests/test_gui_smoke.py:test_connect_shared_port_assigns_transport_port`, `tests/test_serial_manager.py:test_read_loop_suspends_dispatch_while_paused` |
 | FR-041 | `tests/test_gui_smoke.py:test_connect_probes_when_both_ports_connected` |
 | FR-042 | `tests/test_cpm_parser.py:test_drive_prompt_letter_extracts_plain_prompt`, `tests/test_gui_smoke.py:test_connect_probe_ok_sets_drive_and_refreshes` |
@@ -74,7 +74,8 @@ _171/409 requirements have a verifying test; 238 untested; 0 stale tag(s)._
 | FR-081 | `tests/test_xmodem.py:test_send_file_returns_false_when_file_missing` |
 | FR-082 | `tests/test_xmodem.py:test_send_file_returns_false_when_no_start_char` |
 | FR-086 | `tests/test_gui_smoke.py:test_transfer_byte_echo_respects_setting` |
-| FR-091 | `tests/test_gui_smoke.py:test_terminal_write_text_line_endings`, `tests/test_serial_manager.py:test_read_loop_dispatches_decoded_data`, `tests/test_vt100_engine.py:test_backspace_moves_cursor_left`, `tests/test_vt100_engine.py:test_crlf_moves_to_next_line`, `tests/test_vt100_engine.py:test_cursor_addressing_cup`, `tests/test_vt100_engine.py:test_cursor_hidden_toggle`, `tests/test_vt100_engine.py:test_cursor_relative_moves`, `tests/test_vt100_engine.py:test_default_geometry`, `tests/test_vt100_engine.py:test_dirty_tracking_and_clear`, `tests/test_vt100_engine.py:test_erase_in_display_clears_screen`, `tests/test_vt100_engine.py:test_erase_in_line_clears_to_end`, `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_line_returns_full_width_padded`, `tests/test_vt100_engine.py:test_plain_text_and_cursor_advance`, `tests/test_vt100_engine.py:test_raw_8bit_mode_maps_bytes_directly`, `tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor`, `tests/test_vt100_engine.py:test_reset_marks_all_lines_dirty`, `tests/test_vt100_engine.py:test_resize_changes_geometry`, `tests/test_vt100_engine.py:test_sgr_ansi_colours`, `tests/test_vt100_engine.py:test_sgr_bold_reverse_and_reset`, `tests/test_vt100_engine.py:test_tab_advances_to_next_tab_stop`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
+| FR-090 | `tests/test_gui_smoke.py:test_handle_terminal_recv_capture_buffer_byte_identical`, `tests/test_gui_smoke.py:test_handle_terminal_recv_tees_bytes_to_engine_and_buffers` |
+| FR-091 | `tests/test_gui_smoke.py:test_handle_terminal_recv_capture_buffer_byte_identical`, `tests/test_gui_smoke.py:test_handle_terminal_recv_tees_bytes_to_engine_and_buffers`, `tests/test_gui_smoke.py:test_terminal_write_text_line_endings`, `tests/test_serial_manager.py:test_read_loop_dispatches_raw_bytes`, `tests/test_vt100_engine.py:test_backspace_moves_cursor_left`, `tests/test_vt100_engine.py:test_crlf_moves_to_next_line`, `tests/test_vt100_engine.py:test_cursor_addressing_cup`, `tests/test_vt100_engine.py:test_cursor_hidden_toggle`, `tests/test_vt100_engine.py:test_cursor_relative_moves`, `tests/test_vt100_engine.py:test_default_geometry`, `tests/test_vt100_engine.py:test_dirty_tracking_and_clear`, `tests/test_vt100_engine.py:test_erase_in_display_clears_screen`, `tests/test_vt100_engine.py:test_erase_in_line_clears_to_end`, `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_line_returns_full_width_padded`, `tests/test_vt100_engine.py:test_plain_text_and_cursor_advance`, `tests/test_vt100_engine.py:test_raw_8bit_mode_maps_bytes_directly`, `tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor`, `tests/test_vt100_engine.py:test_reset_marks_all_lines_dirty`, `tests/test_vt100_engine.py:test_resize_changes_geometry`, `tests/test_vt100_engine.py:test_sgr_ansi_colours`, `tests/test_vt100_engine.py:test_sgr_bold_reverse_and_reset`, `tests/test_vt100_engine.py:test_tab_advances_to_next_tab_stop`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
 | FR-094 | `tests/test_gui_smoke.py:test_handle_terminal_send_append_eol_flag` |
 | FR-095 | `tests/test_gui_smoke.py:test_terminal_window_write_and_clear`, `tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor` |
 | FR-096 | `tests/test_serial_manager.py:test_send_data_replaces_non_ascii`, `tests/test_serial_manager.py:test_send_data_returns_false_when_port_closed`, `tests/test_serial_manager.py:test_send_data_returns_false_when_port_none`, `tests/test_serial_manager.py:test_send_data_writes_ascii_to_open_port` |
@@ -259,7 +260,6 @@ These defined requirements have no `Verifies:` test tag:
 - FR-087
 - FR-088
 - FR-089
-- FR-090
 - FR-092
 - FR-093
 - FR-097

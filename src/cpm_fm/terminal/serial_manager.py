@@ -32,7 +32,11 @@ class SerialManager:
         # physical port (FR-037): otherwise the read loop and X-Modem race for
         # the same incoming bytes.
         self._read_paused = threading.Event()
-        self.on_data_received: Optional[Callable[[str], None]] = None
+        # Delivers raw bytes read from the Terminal Port. Decoding is deferred to
+        # the consumer (mw_remote.handle_terminal_recv), which tees the bytes to
+        # the VT-100 engine (which needs raw bytes) and, decoded, to the receive/
+        # capture buffers. Keeping bytes here avoids lossy early ASCII decoding.
+        self.on_data_received: Optional[Callable[[bytes], None]] = None
 
     def open_port(self, port_type: str, settings: dict) -> bool:
         """
@@ -233,15 +237,17 @@ class SerialManager:
         """
         Background thread to read data from the terminal port.
 
+        Delivers the bytes read verbatim to ``on_data_received`` (no decoding).
+        The consumer decodes for the receive/capture buffers and feeds the raw
+        bytes to the VT-100 engine, which relies on byte-accurate input.
+
         Satisfies: FR-036, FR-091, NFR-001.
         """
         while not self._stop_event.is_set():
             if not self._read_paused.is_set() and self.terminal_port and self.terminal_port.is_open:
                 try:
                     if self.terminal_port.in_waiting > 0:
-                        data = self.terminal_port.read(self.terminal_port.in_waiting).decode(
-                            "ascii", errors="replace"
-                        )
+                        data = self.terminal_port.read(self.terminal_port.in_waiting)
                         if self.on_data_received:
                             self.on_data_received(data)
                 except Exception as e:

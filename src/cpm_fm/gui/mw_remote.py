@@ -98,15 +98,26 @@ class _RemoteMixin(MainWindowMixinBase):
         if self._local_echo:
             self.term_write.emit(text)
 
-    def handle_terminal_recv(self, text):
+    def handle_terminal_recv(self, data: bytes):
         """
         Satisfies: FR-090, FR-091.
 
-        Runs on the serial read daemon thread. Buffer bookkeeping happens here
-        (plain strings, not widgets); the display write is marshalled via the
-        term_write signal (NFR-004).
-        FR-090: store all received data in the receive buffer.
+        Runs on the serial read daemon thread. Receives the raw bytes read from
+        the Terminal Port and tees them two ways:
+
+        * to the VT-100 engine as raw bytes (``feed``), which needs byte-accurate
+          input to interpret escape sequences (FR-091); and
+        * decoded to text for the receive buffer and, when a capture is active,
+          the remote-capture buffer (FR-090). The decode uses the same
+          ASCII/replace rule the read loop used previously, so the DIR-listing,
+          drive-probe, and boot-sequence capture logic sees byte-identical text.
+
+        The display write is marshalled to the GUI thread via the term_write
+        signal (NFR-004); only plain strings/bytes are touched here, never a
+        widget.
         """
+        self._term_engine.feed(data)
+        text = data.decode("ascii", errors="replace")
         self._rx_buffer += text
         if self._capture_active:
             self._remote_capture_buffer += text
