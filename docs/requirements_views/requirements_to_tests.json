@@ -286,6 +286,7 @@
       "tests/test_vt100_engine.py:test_cursor_addressing_cup",
       "tests/test_vt100_engine.py:test_cursor_hidden_toggle",
       "tests/test_vt100_engine.py:test_cursor_relative_moves",
+      "tests/test_vt100_engine.py:test_dec_line_drawing_charset",
       "tests/test_vt100_engine.py:test_default_geometry",
       "tests/test_vt100_engine.py:test_dirty_tracking_and_clear",
       "tests/test_vt100_engine.py:test_erase_in_display_clears_screen",
@@ -297,10 +298,18 @@
       "tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor",
       "tests/test_vt100_engine.py:test_reset_marks_all_lines_dirty",
       "tests/test_vt100_engine.py:test_resize_changes_geometry",
+      "tests/test_vt100_engine.py:test_scrolling_region_confines_scroll",
       "tests/test_vt100_engine.py:test_sgr_ansi_colours",
       "tests/test_vt100_engine.py:test_sgr_bold_reverse_and_reset",
       "tests/test_vt100_engine.py:test_tab_advances_to_next_tab_stop",
+      "tests/test_vt100_engine.py:test_unknown_escape_ignored_without_desync",
+      "tests/test_vt100_engine.py:test_utf8_invalid_bytes_replaced_with_fffd",
       "tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds"
+    ],
+    "FR-091a": [
+      "tests/test_terminal_view.py:test_grid_size_for_fits_cells_and_clamps_minimum",
+      "tests/test_terminal_view.py:test_reflow_resizes_engine_to_viewport",
+      "tests/test_vt100_engine.py:test_resize_changes_geometry"
     ],
     "FR-092": [
       "tests/test_gui_smoke.py:test_handle_terminal_key_sends_echoes_and_guards"
@@ -376,6 +385,12 @@
     "FR-108": [
       "tests/test_gui_smoke.py:test_batch_aborts_on_failure"
     ],
+    "FR-108a": [
+      "tests/test_gui_smoke.py:test_batch_aborts_on_failure"
+    ],
+    "FR-108b": [
+      "tests/test_gui_smoke.py:test_batch_aborts_on_failure"
+    ],
     "FR-109": [
       "tests/test_gui_smoke.py:test_batch_waits_for_prompt_between_files",
       "tests/test_gui_smoke.py:test_wait_for_terminal_idle_returns_early_on_cancel"
@@ -396,6 +411,12 @@
     ],
     "FR-113": [
       "tests/test_gui_smoke.py:test_remote_view_downloads_then_opens",
+      "tests/test_gui_smoke.py:test_remote_view_requires_both_flags"
+    ],
+    "FR-113a": [
+      "tests/test_gui_smoke.py:test_remote_view_downloads_then_opens"
+    ],
+    "FR-113b": [
       "tests/test_gui_smoke.py:test_remote_view_requires_both_flags"
     ],
     "FR-114": [
@@ -509,6 +530,13 @@
       "tests/test_gui_smoke.py:test_drop_requires_both_flags",
       "tests/test_gui_smoke.py:test_file_lists_are_drag_drop_capable"
     ],
+    "FR-137c": [
+      "tests/test_gui_smoke.py:test_drop_requires_both_flags"
+    ],
+    "FR-137e": [
+      "tests/test_gui_smoke.py:test_drop_host_to_remote_starts_copy_to_remote",
+      "tests/test_gui_smoke.py:test_drop_remote_to_host_starts_copy_to_host"
+    ],
     "FR-138": [
       "tests/test_gui_smoke.py:test_decode_drop_external_files_remote_only",
       "tests/test_gui_smoke.py:test_drop_external_files_use_absolute_paths"
@@ -560,6 +588,9 @@
       "tests/test_conflict_resolution.py:test_resolve_conflict_without_apply_to_all_prompts_each_time",
       "tests/test_transfer_history.py:test_skipped_is_a_recognised_status"
     ],
+    "FR-146b": [
+      "tests/test_conflict_resolution.py:test_remote_batch_overwrite_erases_then_sends"
+    ],
     "FR-147": [
       "tests/test_conflict_resolution.py:test_apply_to_all_skip_prompts_once_for_many_conflicts",
       "tests/test_conflict_resolution.py:test_resolve_conflict_apply_to_all_sets_policy",
@@ -609,6 +640,36 @@
       "tests/test_vt100_engine.py:test_erase_in_display_clears_screen",
       "tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds",
       "tests/test_vt100_engine.py:test_sgr_ansi_colours"
+    ],
+    "FR-157a": [
+      "tests/test_vt100_engine.py:test_cursor_addressing_cup",
+      "tests/test_vt100_engine.py:test_cursor_hidden_toggle",
+      "tests/test_vt100_engine.py:test_cursor_relative_moves"
+    ],
+    "FR-157b": [
+      "tests/test_vt100_engine.py:test_erase_in_display_clears_screen",
+      "tests/test_vt100_engine.py:test_erase_in_line_clears_to_end"
+    ],
+    "FR-157c": [
+      "tests/test_vt100_engine.py:test_sgr_ansi_colours",
+      "tests/test_vt100_engine.py:test_sgr_bold_reverse_and_reset"
+    ],
+    "FR-157d": [
+      "tests/test_vt100_engine.py:test_scrolling_region_confines_scroll"
+    ],
+    "FR-157e": [
+      "tests/test_vt100_engine.py:test_tab_advances_to_next_tab_stop"
+    ],
+    "FR-157f": [
+      "tests/test_vt100_engine.py:test_dec_line_drawing_charset"
+    ],
+    "FR-157g": [
+      "tests/test_vt100_engine.py:test_dec_line_drawing_charset",
+      "tests/test_vt100_engine.py:test_raw_8bit_mode_maps_bytes_directly",
+      "tests/test_vt100_engine.py:test_utf8_invalid_bytes_replaced_with_fffd"
+    ],
+    "FR-157h": [
+      "tests/test_vt100_engine.py:test_unknown_escape_ignored_without_desync"
     ],
     "FR-158": [
       "tests/test_terminal_view.py:test_encode_key_control_combinations",
@@ -901,10 +962,6 @@
     "FR-105c",
     "FR-105d",
     "FR-105e",
-    "FR-108a",
-    "FR-108b",
-    "FR-113a",
-    "FR-113b",
     "FR-116a",
     "FR-116b",
     "FR-116c",
@@ -931,9 +988,7 @@
     "FR-135",
     "FR-137a",
     "FR-137b",
-    "FR-137c",
     "FR-137d",
-    "FR-137e",
     "FR-139",
     "FR-139a",
     "FR-139b",
@@ -948,7 +1003,6 @@
     "FR-145c",
     "FR-145d",
     "FR-146a",
-    "FR-146b",
     "FR-146c",
     "FR-146d",
     "FR-148a",

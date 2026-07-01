@@ -325,7 +325,7 @@ def test_copy_to_host_transfers_all_selected(qapp, monkeypatch, state):
 
 
 def test_batch_aborts_on_failure(qapp, monkeypatch, state):
-    """Verifies: FR-108."""
+    """Verifies: FR-108, FR-108a, FR-108b."""
     # FR-108: when a file fails mid-batch, the remaining files are skipped, an
     # error names the failed file, and the destination refreshes once because an
     # earlier file succeeded.
@@ -1566,7 +1566,7 @@ def test_do_remote_file_cmd_refreshes_remote_list(qapp, monkeypatch, state):
 
 
 def test_remote_view_requires_both_flags(qapp, monkeypatch, state):
-    """Verifies: FR-113, CR-010."""
+    """Verifies: FR-113, FR-113b, CR-010."""
     # FR-113/CR-010: remote View needs both status flags; otherwise it errors and
     # starts no download.
     win = MainWindow(state)
@@ -1585,7 +1585,7 @@ def test_remote_view_requires_both_flags(qapp, monkeypatch, state):
 
 
 def test_remote_view_downloads_then_opens(qapp, monkeypatch, state):
-    """Verifies: FR-113, FR-112."""
+    """Verifies: FR-113, FR-113a, FR-112."""
     # FR-113/FR-112: a successful download opens the temp file in the viewer.
     win = MainWindow(state)
     try:
@@ -2765,7 +2765,7 @@ def test_decode_drop_external_files_remote_only(qapp, state, tmp_path):
 
 
 def test_drop_host_to_remote_starts_copy_to_remote(qapp, monkeypatch, state):
-    """Verifies: FR-137."""
+    """Verifies: FR-137, FR-137e."""
     # FR-137: dropping host files onto the Remote pane (confirmed) starts the
     # Copy to Remote batch worker with host-dir-joined paths.
     win = MainWindow(state)
@@ -2787,7 +2787,7 @@ def test_drop_host_to_remote_starts_copy_to_remote(qapp, monkeypatch, state):
 
 
 def test_drop_remote_to_host_starts_copy_to_host(qapp, monkeypatch, state):
-    """Verifies: FR-137."""
+    """Verifies: FR-137, FR-137e."""
     # FR-137: dropping remote files onto the Host pane (confirmed) starts the
     # Copy to Host batch worker.
     win = MainWindow(state)
@@ -2828,7 +2828,7 @@ def test_drop_external_files_use_absolute_paths(qapp, monkeypatch, state):
 
 
 def test_drop_requires_both_flags(qapp, monkeypatch, state):
-    """Verifies: FR-137, CR-010."""
+    """Verifies: FR-137, FR-137c, CR-010."""
     # FR-137/CR-010: a drop with the transport disconnected errors and starts no
     # transfer (and never even prompts for confirmation).
     win = MainWindow(state)

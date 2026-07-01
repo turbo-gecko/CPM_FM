@@ -89,6 +89,25 @@ def _is_key(key: int) -> bool:
         return False
 
 
+# Minimum usable grid the reflow will not shrink below (FR-091a).
+_MIN_COLS = 20
+_MIN_ROWS = 5
+
+
+def grid_size_for(width: int, height: int, cell_w: int, cell_h: int) -> tuple[int, int]:
+    """Columns and rows that fit a ``width`` x ``height`` viewport in pixels.
+
+    Pure geometry for the terminal reflow: the visible cell counts are the
+    whole cells that fit the viewport, clamped to a minimum usable grid so a
+    very small window never collapses the emulator to a degenerate size.
+
+    Satisfies: FR-091a.
+    """
+    cols = max(_MIN_COLS, width // max(1, cell_w))
+    rows = max(_MIN_ROWS, height // max(1, cell_h))
+    return cols, rows
+
+
 # Map pyte's ANSI colour names to concrete RGB. Names not found here (notably
 # "default", and 256-/true-colour hex strings) are resolved in _colour().
 _ANSI_COLOURS: dict[str, QColor] = {
@@ -236,6 +255,32 @@ class TerminalView(QScrollArea):
         if self._autoscroll:
             self._scroll_to_bottom()
         self._grid.update()
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 (Qt override)
+        """Reflow the emulator grid to the new window size (FR-091a).
+
+        Only a visible view reflows; a hidden view (e.g. under test, before the
+        Terminal Window is shown) keeps its engine geometry untouched.
+
+        Satisfies: FR-091a.
+        """
+        super().resizeEvent(event)
+        if self.isVisible():
+            self._reflow_to_viewport()
+
+    def _reflow_to_viewport(self) -> None:
+        """Resize the engine to the columns/rows that fit the viewport.
+
+        The remote is not notified — the serial link has no terminal-size
+        negotiation channel (FR-091a).
+
+        Satisfies: FR-091a.
+        """
+        vp = self.viewport().size()
+        cols, rows = grid_size_for(vp.width(), vp.height(), self._cell_w, self._cell_h)
+        if (cols, rows) != (self._engine.cols, self._engine.rows):
+            self._engine.resize(cols, rows)
+        self.refresh()
 
     # ---------------------------------------------------------------- internals
 

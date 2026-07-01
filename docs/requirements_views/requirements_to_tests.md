@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_177/411 requirements have a verifying test; 234 untested; 0 stale tag(s)._
+_193/420 requirements have a verifying test; 227 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -75,7 +75,8 @@ _177/411 requirements have a verifying test; 234 untested; 0 stale tag(s)._
 | FR-082 | `tests/test_xmodem.py:test_send_file_returns_false_when_no_start_char` |
 | FR-086 | `tests/test_gui_smoke.py:test_transfer_byte_echo_respects_setting` |
 | FR-090 | `tests/test_gui_smoke.py:test_handle_terminal_recv_capture_buffer_byte_identical`, `tests/test_gui_smoke.py:test_handle_terminal_recv_tees_bytes_to_engine_and_buffers` |
-| FR-091 | `tests/test_gui_smoke.py:test_handle_terminal_recv_capture_buffer_byte_identical`, `tests/test_gui_smoke.py:test_handle_terminal_recv_tees_bytes_to_engine_and_buffers`, `tests/test_gui_smoke.py:test_terminal_window_render_and_clear`, `tests/test_gui_smoke.py:test_terminal_window_renders_engine_screen`, `tests/test_serial_manager.py:test_read_loop_dispatches_raw_bytes`, `tests/test_terminal_view.py:test_colour_default_and_named_and_hex`, `tests/test_terminal_view.py:test_grid_grows_with_scrollback`, `tests/test_terminal_view.py:test_paint_does_not_raise`, `tests/test_terminal_view.py:test_row_cells_spans_scrollback_then_live_screen`, `tests/test_vt100_engine.py:test_backspace_moves_cursor_left`, `tests/test_vt100_engine.py:test_crlf_moves_to_next_line`, `tests/test_vt100_engine.py:test_cursor_addressing_cup`, `tests/test_vt100_engine.py:test_cursor_hidden_toggle`, `tests/test_vt100_engine.py:test_cursor_relative_moves`, `tests/test_vt100_engine.py:test_default_geometry`, `tests/test_vt100_engine.py:test_dirty_tracking_and_clear`, `tests/test_vt100_engine.py:test_erase_in_display_clears_screen`, `tests/test_vt100_engine.py:test_erase_in_line_clears_to_end`, `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_line_returns_full_width_padded`, `tests/test_vt100_engine.py:test_plain_text_and_cursor_advance`, `tests/test_vt100_engine.py:test_raw_8bit_mode_maps_bytes_directly`, `tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor`, `tests/test_vt100_engine.py:test_reset_marks_all_lines_dirty`, `tests/test_vt100_engine.py:test_resize_changes_geometry`, `tests/test_vt100_engine.py:test_sgr_ansi_colours`, `tests/test_vt100_engine.py:test_sgr_bold_reverse_and_reset`, `tests/test_vt100_engine.py:test_tab_advances_to_next_tab_stop`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
+| FR-091 | `tests/test_gui_smoke.py:test_handle_terminal_recv_capture_buffer_byte_identical`, `tests/test_gui_smoke.py:test_handle_terminal_recv_tees_bytes_to_engine_and_buffers`, `tests/test_gui_smoke.py:test_terminal_window_render_and_clear`, `tests/test_gui_smoke.py:test_terminal_window_renders_engine_screen`, `tests/test_serial_manager.py:test_read_loop_dispatches_raw_bytes`, `tests/test_terminal_view.py:test_colour_default_and_named_and_hex`, `tests/test_terminal_view.py:test_grid_grows_with_scrollback`, `tests/test_terminal_view.py:test_paint_does_not_raise`, `tests/test_terminal_view.py:test_row_cells_spans_scrollback_then_live_screen`, `tests/test_vt100_engine.py:test_backspace_moves_cursor_left`, `tests/test_vt100_engine.py:test_crlf_moves_to_next_line`, `tests/test_vt100_engine.py:test_cursor_addressing_cup`, `tests/test_vt100_engine.py:test_cursor_hidden_toggle`, `tests/test_vt100_engine.py:test_cursor_relative_moves`, `tests/test_vt100_engine.py:test_dec_line_drawing_charset`, `tests/test_vt100_engine.py:test_default_geometry`, `tests/test_vt100_engine.py:test_dirty_tracking_and_clear`, `tests/test_vt100_engine.py:test_erase_in_display_clears_screen`, `tests/test_vt100_engine.py:test_erase_in_line_clears_to_end`, `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_line_returns_full_width_padded`, `tests/test_vt100_engine.py:test_plain_text_and_cursor_advance`, `tests/test_vt100_engine.py:test_raw_8bit_mode_maps_bytes_directly`, `tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor`, `tests/test_vt100_engine.py:test_reset_marks_all_lines_dirty`, `tests/test_vt100_engine.py:test_resize_changes_geometry`, `tests/test_vt100_engine.py:test_scrolling_region_confines_scroll`, `tests/test_vt100_engine.py:test_sgr_ansi_colours`, `tests/test_vt100_engine.py:test_sgr_bold_reverse_and_reset`, `tests/test_vt100_engine.py:test_tab_advances_to_next_tab_stop`, `tests/test_vt100_engine.py:test_unknown_escape_ignored_without_desync`, `tests/test_vt100_engine.py:test_utf8_invalid_bytes_replaced_with_fffd`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
+| FR-091a | `tests/test_terminal_view.py:test_grid_size_for_fits_cells_and_clamps_minimum`, `tests/test_terminal_view.py:test_reflow_resizes_engine_to_viewport`, `tests/test_vt100_engine.py:test_resize_changes_geometry` |
 | FR-092 | `tests/test_gui_smoke.py:test_handle_terminal_key_sends_echoes_and_guards` |
 | FR-093 | `tests/test_gui_smoke.py:test_handle_terminal_key_sends_echoes_and_guards` |
 | FR-094 | `tests/test_gui_smoke.py:test_handle_terminal_send_append_eol_flag`, `tests/test_gui_smoke.py:test_terminal_window_keystroke_transmits`, `tests/test_terminal_view.py:test_encode_key_enter_uses_eol` |
@@ -91,11 +92,15 @@ _177/411 requirements have a verifying test; 234 untested; 0 stale tag(s)._
 | FR-106 | `tests/test_gui_smoke.py:test_copy_to_host_transfers_all_selected`, `tests/test_gui_smoke.py:test_copy_to_remote_transfers_all_selected`, `tests/test_gui_smoke.py:test_host_to_remote_transfers_all_selected_files`, `tests/test_gui_smoke.py:test_remote_to_host_transfers_all_selected_files`, `tests/test_gui_smoke.py:test_selected_filenames_returns_display_order` |
 | FR-107 | `tests/test_gui_smoke.py:test_copy_to_host_transfers_all_selected`, `tests/test_gui_smoke.py:test_copy_to_remote_transfers_all_selected`, `tests/test_gui_smoke.py:test_host_to_remote_transfers_all_selected_files`, `tests/test_gui_smoke.py:test_remote_to_host_transfers_all_selected_files`, `tests/test_gui_smoke.py:test_selected_filenames_returns_display_order` |
 | FR-108 | `tests/test_gui_smoke.py:test_batch_aborts_on_failure` |
+| FR-108a | `tests/test_gui_smoke.py:test_batch_aborts_on_failure` |
+| FR-108b | `tests/test_gui_smoke.py:test_batch_aborts_on_failure` |
 | FR-109 | `tests/test_gui_smoke.py:test_batch_waits_for_prompt_between_files`, `tests/test_gui_smoke.py:test_wait_for_terminal_idle_returns_early_on_cancel` |
 | FR-110 | `tests/test_gui_smoke.py:test_context_menu_targets_uses_clicked_item_when_outside_selection`, `tests/test_gui_smoke.py:test_context_menu_targets_uses_full_selection_when_clicked_item_selected`, `tests/test_gui_smoke.py:test_host_delete_removes_all_selected_files`, `tests/test_gui_smoke.py:test_host_view_launches_viewer` |
 | FR-111 | `tests/test_gui_smoke.py:test_remote_delete_sends_command_per_selected_file` |
 | FR-112 | `tests/test_gui_smoke.py:test_build_viewer_args_substitutes_token`, `tests/test_gui_smoke.py:test_host_view_launches_viewer`, `tests/test_gui_smoke.py:test_remote_view_downloads_then_opens` |
 | FR-113 | `tests/test_gui_smoke.py:test_remote_view_downloads_then_opens`, `tests/test_gui_smoke.py:test_remote_view_requires_both_flags` |
+| FR-113a | `tests/test_gui_smoke.py:test_remote_view_downloads_then_opens` |
+| FR-113b | `tests/test_gui_smoke.py:test_remote_view_requires_both_flags` |
 | FR-114 | `tests/test_gui_smoke.py:test_host_rename_cancelled_makes_no_change`, `tests/test_gui_smoke.py:test_host_rename_renames_file` |
 | FR-115 | `tests/test_gui_smoke.py:test_file_action_dialog_multi_file_shows_readonly_list`, `tests/test_gui_smoke.py:test_host_delete_removes_file` |
 | FR-116 | `tests/test_gui_smoke.py:test_host_delete_removes_all_selected_files`, `tests/test_gui_smoke.py:test_host_delete_removes_file`, `tests/test_gui_smoke.py:test_host_rename_renames_file` |
@@ -116,6 +121,8 @@ _177/411 requirements have a verifying test; 234 untested; 0 stale tag(s)._
 | FR-134 | `tests/test_gui_smoke.py:test_filter_sort_settings_persist_across_sessions` |
 | FR-136 | `tests/test_gui_smoke.py:test_file_lists_are_drag_drop_capable` |
 | FR-137 | `tests/test_gui_smoke.py:test_decode_drop_internal_cross_pane`, `tests/test_gui_smoke.py:test_decode_drop_same_pane_rejected`, `tests/test_gui_smoke.py:test_drop_cancelled_confirmation_starts_no_transfer`, `tests/test_gui_smoke.py:test_drop_host_to_remote_starts_copy_to_remote`, `tests/test_gui_smoke.py:test_drop_remote_to_host_starts_copy_to_host`, `tests/test_gui_smoke.py:test_drop_requires_both_flags`, `tests/test_gui_smoke.py:test_file_lists_are_drag_drop_capable` |
+| FR-137c | `tests/test_gui_smoke.py:test_drop_requires_both_flags` |
+| FR-137e | `tests/test_gui_smoke.py:test_drop_host_to_remote_starts_copy_to_remote`, `tests/test_gui_smoke.py:test_drop_remote_to_host_starts_copy_to_host` |
 | FR-138 | `tests/test_gui_smoke.py:test_decode_drop_external_files_remote_only`, `tests/test_gui_smoke.py:test_drop_external_files_use_absolute_paths` |
 | FR-140 | `tests/test_transfer_history.py:test_add_entry_records_all_fields`, `tests/test_transfer_history.py:test_get_entries_returns_copy` |
 | FR-141 | `tests/test_transfer_history.py:test_malformed_file_degrades_to_empty`, `tests/test_transfer_history.py:test_missing_file_starts_empty`, `tests/test_transfer_history.py:test_persistence_round_trip`, `tests/test_transfer_history.py:test_prune_keeps_unparseable_timestamps`, `tests/test_transfer_history.py:test_retention_prunes_old_entries`, `tests/test_transfer_history.py:test_retention_trims_to_max_entries` |
@@ -124,6 +131,7 @@ _177/411 requirements have a verifying test; 234 untested; 0 stale tag(s)._
 | FR-144 | `tests/test_gui_smoke.py:test_history_dialog_retransfer_sets_entry_and_accepts`, `tests/test_gui_smoke.py:test_retransfer_blocked_when_not_connected`, `tests/test_gui_smoke.py:test_retransfer_missing_file_reports_and_starts_nothing`, `tests/test_gui_smoke.py:test_retransfer_reuses_batch_with_retry_flag` |
 | FR-145 | `tests/test_conflict_resolution.py:test_destination_conflict_host_checks_filesystem`, `tests/test_conflict_resolution.py:test_destination_conflict_remote_checks_listing_case_insensitive`, `tests/test_conflict_resolution.py:test_fresh_remote_names_empty_on_capture_failure`, `tests/test_conflict_resolution.py:test_fresh_remote_names_uppercases_and_emits`, `tests/test_conflict_resolution.py:test_remote_batch_skips_existing_file`, `tests/test_filename_validation.py:test_renamed_name_then_subject_to_conflict`, `tests/test_gui_smoke.py:test_capture_terminal_response_cancellable_bails_early` |
 | FR-146 | `tests/test_conflict_resolution.py:test_batch_cancel_aborts_whole_transfer`, `tests/test_conflict_resolution.py:test_host_batch_skips_existing_file`, `tests/test_conflict_resolution.py:test_on_conflict_detected_records_choice_and_releases_worker`, `tests/test_conflict_resolution.py:test_remote_batch_overwrite_erases_then_sends`, `tests/test_conflict_resolution.py:test_remote_batch_skips_existing_file`, `tests/test_conflict_resolution.py:test_resolve_conflict_without_apply_to_all_prompts_each_time`, `tests/test_transfer_history.py:test_skipped_is_a_recognised_status` |
+| FR-146b | `tests/test_conflict_resolution.py:test_remote_batch_overwrite_erases_then_sends` |
 | FR-147 | `tests/test_conflict_resolution.py:test_apply_to_all_skip_prompts_once_for_many_conflicts`, `tests/test_conflict_resolution.py:test_resolve_conflict_apply_to_all_sets_policy`, `tests/test_conflict_resolution.py:test_resolve_conflict_cancel_never_becomes_policy`, `tests/test_conflict_resolution.py:test_resolve_conflict_uses_policy_without_prompting`, `tests/test_conflict_resolution.py:test_resolve_conflict_without_apply_to_all_prompts_each_time` |
 | FR-148 | `tests/test_filename_validation.py:test_remote_batch_valid_name_never_prompts` |
 | FR-149 | `tests/test_filename_validation.py:test_dialog_rename_with_invalid_name_stays_open`, `tests/test_filename_validation.py:test_on_invalid_name_detected_records_choice_and_releases_worker`, `tests/test_filename_validation.py:test_remote_batch_cancel_on_invalid_name`, `tests/test_filename_validation.py:test_remote_batch_renames_invalid_name`, `tests/test_filename_validation.py:test_remote_batch_skips_invalid_name`, `tests/test_filename_validation.py:test_renamed_name_then_subject_to_conflict` |
@@ -133,6 +141,14 @@ _177/411 requirements have a verifying test; 234 untested; 0 stale tag(s)._
 | FR-153 | `tests/test_backup_restore.py:test_backup_order_refresh_confirm_wipe_transfer`, `tests/test_backup_restore.py:test_restore_order_refresh_confirm_wipe_transfer`, `tests/test_backup_restore.py:test_wipe_host_dir_preserves_subdirectories`, `tests/test_backup_restore.py:test_wipe_host_dir_removes_all_files`, `tests/test_backup_restore.py:test_wipe_remote_drive_issues_delete_per_file` |
 | FR-154 | `tests/test_backup_restore.py:test_backup_empty_source_wipes_but_skips_transfer`, `tests/test_backup_restore.py:test_backup_order_refresh_confirm_wipe_transfer`, `tests/test_backup_restore.py:test_restore_order_refresh_confirm_wipe_transfer` |
 | FR-157 | `tests/test_vt100_engine.py:test_cursor_addressing_cup`, `tests/test_vt100_engine.py:test_erase_in_display_clears_screen`, `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_sgr_ansi_colours` |
+| FR-157a | `tests/test_vt100_engine.py:test_cursor_addressing_cup`, `tests/test_vt100_engine.py:test_cursor_hidden_toggle`, `tests/test_vt100_engine.py:test_cursor_relative_moves` |
+| FR-157b | `tests/test_vt100_engine.py:test_erase_in_display_clears_screen`, `tests/test_vt100_engine.py:test_erase_in_line_clears_to_end` |
+| FR-157c | `tests/test_vt100_engine.py:test_sgr_ansi_colours`, `tests/test_vt100_engine.py:test_sgr_bold_reverse_and_reset` |
+| FR-157d | `tests/test_vt100_engine.py:test_scrolling_region_confines_scroll` |
+| FR-157e | `tests/test_vt100_engine.py:test_tab_advances_to_next_tab_stop` |
+| FR-157f | `tests/test_vt100_engine.py:test_dec_line_drawing_charset` |
+| FR-157g | `tests/test_vt100_engine.py:test_dec_line_drawing_charset`, `tests/test_vt100_engine.py:test_raw_8bit_mode_maps_bytes_directly`, `tests/test_vt100_engine.py:test_utf8_invalid_bytes_replaced_with_fffd` |
+| FR-157h | `tests/test_vt100_engine.py:test_unknown_escape_ignored_without_desync` |
 | FR-158 | `tests/test_terminal_view.py:test_encode_key_control_combinations`, `tests/test_terminal_view.py:test_encode_key_enter_uses_eol`, `tests/test_terminal_view.py:test_encode_key_navigation_and_function_keys`, `tests/test_terminal_view.py:test_encode_key_printable_and_utf8`, `tests/test_terminal_view.py:test_encode_key_returns_none_for_modifier_only` |
 | IFR-004 | `tests/test_config_handler.py:test_load_json_malformed_returns_empty`, `tests/test_config_handler.py:test_load_json_reads_valid_object`, `tests/test_config_handler.py:test_save_json_to_unwritable_path_returns_false` |
 | NFR-001 | `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
@@ -274,10 +290,6 @@ These defined requirements have no `Verifies:` test tag:
 - FR-105c
 - FR-105d
 - FR-105e
-- FR-108a
-- FR-108b
-- FR-113a
-- FR-113b
 - FR-116a
 - FR-116b
 - FR-116c
@@ -304,9 +316,7 @@ These defined requirements have no `Verifies:` test tag:
 - FR-135
 - FR-137a
 - FR-137b
-- FR-137c
 - FR-137d
-- FR-137e
 - FR-139
 - FR-139a
 - FR-139b
@@ -321,7 +331,6 @@ These defined requirements have no `Verifies:` test tag:
 - FR-145c
 - FR-145d
 - FR-146a
-- FR-146b
 - FR-146c
 - FR-146d
 - FR-148a

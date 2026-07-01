@@ -5,9 +5,10 @@ from dataclasses import dataclass
 from pyte import ByteStream, HistoryScreen
 
 # Default terminal geometry and scrollback depth. 80x24 is the classic VT-100
-# page; the scrollback depth backs the Terminal Window's history/autoscroll
-# (UIR-062/UIR-066). Both are overridable via the constructor so a later
-# settings surface can drive them (plan open item, temp/vt100_terminal_plan.md).
+# page (the initial geometry of FR-091; the view then reflows it to the window
+# per FR-091a). DEFAULT_HISTORY is the >=1000-line scrollback depth backing the
+# Terminal Window's history/autoscroll (FR-091/UIR-062). Geometry is overridable
+# via the constructor (used by tests and the reflow path).
 DEFAULT_COLS = 80
 DEFAULT_ROWS = 24
 DEFAULT_HISTORY = 1000
@@ -67,12 +68,12 @@ class VT100Engine:
         """Create an engine with the given geometry and scrollback depth.
 
         ``use_utf8`` selects the byte→character decoding: UTF-8 (default, with
-        graceful replacement of invalid bytes) or raw 8-bit (each byte maps to
-        the code point of the same value, i.e. Latin-1 semantics) for legacy
-        8-bit CP/M output. It can also be switched at runtime by the remote via
-        the standard ``ESC % G`` / ``ESC % @`` sequences.
+        graceful replacement of invalid bytes by U+FFFD) or raw 8-bit (each byte
+        maps to the code point of the same value, i.e. Latin-1 semantics) for
+        legacy 8-bit CP/M output. It can also be switched at runtime by the
+        remote via the standard ``ESC % G`` / ``ESC % @`` sequences (FR-157g).
 
-        Satisfies: FR-091.
+        Satisfies: FR-091, FR-157g.
         """
         self._screen = HistoryScreen(cols, rows, history=history)
         self._stream = ByteStream(self._screen)
@@ -83,9 +84,15 @@ class VT100Engine:
     def feed(self, data: bytes) -> None:
         """Advance the emulator with raw bytes received from the Terminal Port.
 
-        Interprets the VT-100/ANSI control and escape sequences in the stream.
+        Interprets the VT-100/ANSI control and escape sequences in the stream:
+        cursor positioning/movement (FR-157a), erase (FR-157b), SGR attributes
+        and colour (FR-157c), the scrolling region (FR-157d), tab stops
+        (FR-157e), and the DEC line-drawing charset (FR-157f). ``pyte`` ignores
+        unsupported or malformed sequences without raising or desynchronising
+        the stream (FR-157h).
 
-        Satisfies: FR-091, FR-157.
+        Satisfies: FR-091, FR-157, FR-157a, FR-157b, FR-157c, FR-157d, FR-157e,
+        FR-157f, FR-157h.
         """
         self._stream.feed(data)
 
@@ -103,7 +110,9 @@ class VT100Engine:
     def resize(self, cols: int, rows: int) -> None:
         """Resize the screen to ``cols`` x ``rows`` character cells.
 
-        Satisfies: FR-091.
+        Backs the Terminal Window's reflow-to-window behaviour (FR-091a).
+
+        Satisfies: FR-091, FR-091a.
         """
         # pyte's resize takes (lines, columns); expose the conventional
         # (cols, rows) order to callers.
