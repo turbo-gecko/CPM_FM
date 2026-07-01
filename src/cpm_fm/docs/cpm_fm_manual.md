@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.16.0**
+**Version 2.17.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -446,24 +446,26 @@ The rename and delete dialogs follow a consistent layout: **Cancel** on the left
 
 Open the Terminal from the toolbar **Terminal** button. It is a non-modal window — it stays available in the background and reopens in the same state when you click the button again.
 
+The Terminal is a **functional VT-100 terminal**: it interprets the VT-100/ANSI escape sequences CP/M software emits (cursor positioning, screen and line erase, colour and text attributes, scrolling), so full-screen programs such as editors display correctly rather than as raw escape codes.
+
 ### Layout
 
-- **Receive area** (top) — A read-only, monospaced display of everything received from CP/M, plus optional local echo and transfer byte hex. Line endings are normalized and backspaces are handled.
-- **Controls** — **Clear** (empties the buffers and display), **Boot into CP/M** (runs the configured boot sequence — see [Section 9](#9-booting-the-remote-into-cpm)), **Local Echo** (echoes what you type into the receive area; off by default), and **Autoscroll** (keeps the newest text in view; on by default).
-- **Transmit field** (bottom) — Type a command and press **Enter** or click **Send**.
+- **Receive area** (top) — A monospaced character-cell screen (80 × 24 by default) rendering the live terminal display, with scrollback. It shows everything received from CP/M, plus optional local echo and transfer byte hex. This is also where you type (see below).
+- **Controls** — **Clear** (resets the screen and empties the buffers), **Boot into CP/M** (runs the configured boot sequence — see [Section 9](#9-booting-the-remote-into-cpm)), **Local Echo** (echoes what you type into the screen; off by default), and **Autoscroll** (keeps the newest output in view; on by default).
+- **Input hint** (bottom) — A reminder that there is no separate text field: you type directly into the terminal.
 
 > The **Boot into CP/M** button is disabled until you configure a boot sequence in Config → General; once a sequence is saved it becomes available without reopening the window.
 
-### Sending Control Characters
+### Typing to the Remote
 
-The transmit field understands **caret notation** for control characters:
+Click into the receive area to give it focus, then type — **each keystroke is sent to the CP/M system immediately**, exactly like a real terminal. There is no separate transmit field or Send button.
 
-- `^C` sends Ctrl+C, `^A` sends Ctrl+A, and so on.
-- `^^` sends a literal caret character.
-- An empty field sends just the configured end-of-line character (default CR).
-- Typing plain text such as `DIR` sends `DIR` followed by the EOL — equivalent to typing `DIR` and pressing Enter on the CP/M console.
+- **Printable characters** are sent as you type them.
+- **Enter** sends the configured end-of-line character(s) (default CR).
+- **Backspace, Tab, and Escape** send their control codes; the **arrow, Home/End, Page Up/Down, Insert, Delete, and function keys** send their VT-100 sequences.
+- **Ctrl-key combinations** send control characters — e.g. **Ctrl+C** sends Ctrl+C, **Ctrl+[** sends Escape.
 
-A lone control character is sent exactly on its own, without a trailing EOL.
+> Because keystrokes go straight to the port, there is no line editing on the host side; editing (e.g. rubout) is handled by the CP/M program you are talking to.
 
 ---
 

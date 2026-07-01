@@ -50,9 +50,11 @@ class VT100Engine:
     :class:`Stream` state machine reassembles escape sequences, so bytes and
     even multi-byte / split escape sequences that straddle two :meth:`feed`
     calls are handled correctly — important because the serial read loop
-    delivers arbitrarily chunked data (NFR-001).
+    delivers arbitrarily chunked data (NFR-001). Interpreting the VT-100/ANSI
+    control and escape sequences (cursor, erase, SGR/colour, scrolling region,
+    tabs, line-drawing charset) is FR-157.
 
-    Satisfies: FR-091, CR-014.
+    Satisfies: FR-091, FR-157, CR-014.
     """
 
     def __init__(
@@ -81,7 +83,9 @@ class VT100Engine:
     def feed(self, data: bytes) -> None:
         """Advance the emulator with raw bytes received from the Terminal Port.
 
-        Satisfies: FR-091.
+        Interprets the VT-100/ANSI control and escape sequences in the stream.
+
+        Satisfies: FR-091, FR-157.
         """
         self._stream.feed(data)
 

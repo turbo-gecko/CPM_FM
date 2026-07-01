@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.22 |
-| Scorecard for plan version | 1.22 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.23 |
+| Scorecard for plan version | 1.23 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -232,14 +232,14 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | ID | Title | Req | Result | Env | Notes |
 |----|-------|-----|:------:|:---:|-------|
 | MT-W01 | Terminal button opens/restores window | FR-097, UIR-060 | | | |
-| MT-W02 | Receive read-only; Transmit group layout | UIR-061/063/067 | | | |
-| MT-W03 | Send appends EOL; remote responds | FR-091/094/096 | | | |
+| MT-W02 | Character-cell screen; no transmit field/Send; input hint | UIR-061/063/067 | | | |
+| MT-W03 | Type + Enter sent live; remote responds | FR-091/096 | | | |
 | MT-W04 | Local Echo behaviour | UIR-065, FR-093 | | | |
-| MT-W05 | Autoscroll behaviour | UIR-066/062 | | | |
-| MT-W06 | Clear empties area + buffers | FR-095 | | | |
-| MT-W07 | Send with port closed → status msg | FR-098 | | | |
-| MT-W08 | Empty field Send transmits bare EOL | FR-155 | | | |
-| MT-W09 | Caret notation sends control chars (no EOL) | FR-156 | | | |
+| MT-W05 | Autoscroll + scrollback behaviour | UIR-066/062 | | | |
+| MT-W06 | Clear resets screen + buffers | FR-095 | | | |
+| MT-W07 | Type with port closed → status msg | FR-098 | | | |
+| MT-W08 | Ctrl+C / arrows / Backspace / Esc keys encoded live | FR-158 | | | |
+| MT-W09 | Full-screen VT-100 program renders correctly | FR-091/157 | | | |
 | MT-W10 | Boot button disabled when sequence empty; live enable on Save | UIR-068 | | | |
 | MT-W11 | Manual "Boot into CP/M" runs sequence + re-probes | FR-049 | | | |
 

@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_176/409 requirements have a verifying test; 233 untested; 0 stale tag(s)._
+_177/411 requirements have a verifying test; 234 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -132,7 +132,8 @@ _176/409 requirements have a verifying test; 233 untested; 0 stale tag(s)._
 | FR-152 | `tests/test_backup_restore.py:test_backup_cancel_stops_before_wipe`, `tests/test_backup_restore.py:test_backup_order_refresh_confirm_wipe_transfer`, `tests/test_backup_restore.py:test_backup_refreshes_host_pane_after_wipe`, `tests/test_backup_restore.py:test_on_backup_restore_confirm_records_choice`, `tests/test_backup_restore.py:test_restore_cancel_stops_before_wipe`, `tests/test_backup_restore.py:test_restore_order_refresh_confirm_wipe_transfer` |
 | FR-153 | `tests/test_backup_restore.py:test_backup_order_refresh_confirm_wipe_transfer`, `tests/test_backup_restore.py:test_restore_order_refresh_confirm_wipe_transfer`, `tests/test_backup_restore.py:test_wipe_host_dir_preserves_subdirectories`, `tests/test_backup_restore.py:test_wipe_host_dir_removes_all_files`, `tests/test_backup_restore.py:test_wipe_remote_drive_issues_delete_per_file` |
 | FR-154 | `tests/test_backup_restore.py:test_backup_empty_source_wipes_but_skips_transfer`, `tests/test_backup_restore.py:test_backup_order_refresh_confirm_wipe_transfer`, `tests/test_backup_restore.py:test_restore_order_refresh_confirm_wipe_transfer` |
-| FR-156 | `tests/test_gui_smoke.py:test_handle_terminal_send_append_eol_flag` |
+| FR-157 | `tests/test_vt100_engine.py:test_cursor_addressing_cup`, `tests/test_vt100_engine.py:test_erase_in_display_clears_screen`, `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_sgr_ansi_colours` |
+| FR-158 | `tests/test_terminal_view.py:test_encode_key_control_combinations`, `tests/test_terminal_view.py:test_encode_key_enter_uses_eol`, `tests/test_terminal_view.py:test_encode_key_navigation_and_function_keys`, `tests/test_terminal_view.py:test_encode_key_printable_and_utf8`, `tests/test_terminal_view.py:test_encode_key_returns_none_for_modifier_only` |
 | IFR-004 | `tests/test_config_handler.py:test_load_json_malformed_returns_empty`, `tests/test_config_handler.py:test_load_json_reads_valid_object`, `tests/test_config_handler.py:test_save_json_to_unwritable_path_returns_false` |
 | NFR-001 | `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
 | NFR-002 | `tests/test_serial_manager.py:test_flow_control_nested_key`, `tests/test_serial_manager.py:test_nested_key_names_are_honoured` |
@@ -349,6 +350,7 @@ These defined requirements have no `Verifies:` test tag:
 - FR-153c
 - FR-153d
 - FR-155
+- FR-156
 - IFR-001
 - IFR-002
 - IFR-003

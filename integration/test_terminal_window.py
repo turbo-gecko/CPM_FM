@@ -42,7 +42,7 @@ def test_terminal_window_shows_live_response(gui):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-W06", "FR-096", "FR-094")
+@pytest.mark.mt("MT-W03", "FR-096", "FR-094")
 def test_terminal_window_keyboard_input(gui):
     """Typing into the receive area transmits to the port and shows the prompt.
 

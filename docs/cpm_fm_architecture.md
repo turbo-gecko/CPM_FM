@@ -60,6 +60,7 @@ flowchart TD
         SM[serial_manager.py]
         XM[xmodem.py]
         CP[cpm_parser.py]
+        VT[vt100_engine.py]
     end
     subgraph UTILS["utils/ — no GUI imports (CR-014)"]
         CFG[config_handler.py]
@@ -88,6 +89,12 @@ threads in `terminal/` (serial reads, X-Modem transfers) push results back to th
     and run on worker threads.
   - `cpm_parser.py` — `CPMParser.parse_dir_output` is a pure static method that scrapes filenames from
     CP/M 2.2 four-column `DIR` output (DR-001–DR-033); the most-tested logic in the codebase.
+  - `vt100_engine.py` — `VT100Engine` is a thin, GUI-free wrapper over the `pyte` VT-100/ANSI screen
+    emulator (a pure-Python runtime dependency, no GUI imports, so CR-014 holds). It is fed raw received
+    bytes and exposes the screen grid, cursor, per-cell attributes, dirty lines, and scrollback for the
+    `gui/terminal_view.py` renderer (FR-091/FR-157). The receive path decodes bytes for the receive/
+    capture buffers on the daemon thread but feeds the engine only on the GUI thread (via `term_write`),
+    keeping the emulator single-threaded (NFR-001/NFR-004).
 - **`utils/` — GUI-free support (no GUI):**
   - `config_handler.py` — `ConfigHandler` loads/saves settings as JSON (IFR-004) and normalises the two
     config shapes (NFR-002).

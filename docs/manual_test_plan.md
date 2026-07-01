@@ -4,7 +4,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.22 |
+| Version | 1.23 |
 | Status | Draft |
 | Date | 2026-06-27 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.16.0) |
@@ -44,7 +44,7 @@ What remains for **manual** verification, and is the subject of this plan:
    Cancel/affirmative button placement across dialogs (`UIR-*`, `UIR-075`, `CR-012`/`CR-013`).
 5. **OS integration** — File dialogs, geometry persistence across real sessions, viewer/editor launch
    and OS-default fallback, and `python -m cpm_fm` debug output (`FR-004`–`FR-006`, `FR-088`, `FR-112`).
-6. **Terminal Window** interactive behaviour over a live link (`FR-090`–`FR-098`, `UIR-060`–`UIR-067`).
+6. **Terminal Window** interactive VT-100 behaviour over a live link (`FR-090`–`FR-098`, `FR-157`, `FR-158`, `UIR-060`–`UIR-068`).
 
 Each test case lists the requirement IDs it verifies so coverage can be traced back to the SRS.
 
@@ -387,14 +387,14 @@ files** — these tests delete data by design.
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
 | MT-W01 | FR-097, UIR-060 | Press the **Terminal** toolbar button (port may be closed). | A non-modal window titled "Terminal" opens; pressing the button again when minimised restores it. |
-| MT-W02 | UIR-061, UIR-063, UIR-067 | Inspect the window. | Large multi-line read-only "Receive" area; a "Transmit" group with a single-line field (left) and "Send" button (right). |
-| MT-W03 | FR-091, FR-094, FR-096 | Connected: type a CP/M command (e.g. `DIR`) and press Send. | Configured EOL is appended; command is sent; the remote's response appears in the Receive area. |
-| MT-W04 | UIR-065, FR-093 | Local Echo checkbox (off by default): enable it, send text. | With Local Echo on, transmitted text is copied into the Receive area; with it off, only the remote echo appears. |
-| MT-W05 | UIR-066, UIR-062 | Autoscroll (on by default): send enough to overflow; then toggle Autoscroll off. | With Autoscroll on, the view follows new text to the bottom; with it off, the view stays put. |
-| MT-W06 | FR-095 | After traffic, press **Clear**. | Receive area clears; the retained RX/TX buffers are also cleared (subsequent behaviour reflects an empty buffer). |
-| MT-W07 | FR-098 | With the Terminal Port **closed**, type text and press Send. | Status bar: "Terminal port not open - cannot send"; nothing transmitted. |
-| MT-W08 | FR-155 | Connected: with the transmit field **empty**, press Send (or <Enter> in the field). | A bare end-of-line (the configured EOL) is transmitted on its own; on a CP/M remote this advances to a fresh CCP prompt. |
-| MT-W09 [CP/M] | FR-156 | Connected to a program that responds to Ctrl-C (e.g. during a running command): type `^C` in the transmit field and press Send. | The single control byte 0x03 is sent with **no** trailing EOL; the remote receives an interrupt. Also verify `^^` sends a literal caret (with EOL) and `^[` sends ESC (0x1B). |
+| MT-W02 | UIR-061, UIR-063, UIR-067 | Inspect the window. | A monospaced character-cell "Receive" screen (not an editable text field); **no** transmit field or Send button; a hint label indicating you type directly into the screen. |
+| MT-W03 | FR-091, FR-096 | Connected: click into the Receive area and type a CP/M command (e.g. `DIR`) then press **Enter**. | Each keystroke is transmitted live; Enter sends the configured EOL; the remote's response is rendered in the screen. |
+| MT-W04 | UIR-065, FR-093 | Local Echo checkbox (off by default): enable it, type. | With Local Echo on, what you type is copied into the Receive screen; with it off, only the remote echo appears. |
+| MT-W05 | UIR-066, UIR-062 | Autoscroll (on by default): produce enough output to overflow; then toggle Autoscroll off and scroll up. | With Autoscroll on, the view follows new output to the bottom; with it off, the view stays put in the scrollback. |
+| MT-W06 | FR-095 | After traffic, press **Clear**. | The screen (and scrollback) is reset and the retained RX/TX buffers are also cleared (subsequent behaviour reflects an empty buffer). |
+| MT-W07 | FR-098 | With the Terminal Port **closed**, click into the Receive area and type. | Status bar: "Terminal port not open - cannot send"; nothing transmitted. |
+| MT-W08 [CP/M] | FR-158 | Connected: press **Ctrl+C** during a running command; also press the **arrow keys**, **Backspace**, and **Esc**. | Ctrl+C sends the single control byte 0x03 (remote interrupts); arrows send `ESC[A/B/C/D`, Backspace sends 0x08, Esc sends 0x1B — each transmitted on its own keystroke. |
+| MT-W09 [CP/M] | FR-091, FR-157 | Connected: run a full-screen CP/M program that uses cursor addressing/attributes (e.g. a screen editor or `VT` demo). | The screen renders correctly — cursor positioning, screen/line erase, and colour/attributes are applied — rather than showing raw escape codes. |
 | MT-W10 | UIR-068 | Open the Terminal Window with the Boot Sequence (MT-G10) **empty**, then set a non-empty Boot Sequence in General Config (window left open) and Save. | With an empty Boot Sequence the **"Boot into CP/M"** button (to the right of Clear) is disabled (greyed); after saving a non-empty sequence it becomes enabled without reopening the window. |
 | MT-W11 [CP/M] | FR-049 | Connected with a valid Boot Sequence configured, in the Terminal Window press **Boot into CP/M**. | The status bar shows the boot sequence running; the keystrokes are transmitted; on reaching CP/M the drive drop-down and Remote Files list update. If CP/M is not reached the status bar reports the failure and **no** modal "file system unavailable" dialog appears. |
 
@@ -477,7 +477,7 @@ or real cross-session persistence:
 - Connect/disconnect (real ports & error paths): `FR-030`–`FR-040`, `FR-050`–`FR-058`.
 - Remote listing & drive selection (live capture/timing): `FR-074`–`FR-079`, `FR-100`–`FR-104`.
 - Transfers (live X-Modem, CP/M launch, timing, byte echo, live cancel): `FR-080`–`FR-089`, `FR-099`, `FR-105`–`FR-109`, `FR-119`, `FR-120`, `NFR-003a`–`NFR-003q` (interop + CAN abort).
-- Terminal Window (interactive over a link): `FR-090`–`FR-098`, `UIR-060`–`UIR-067`.
+- Terminal Window (interactive VT-100 over a link): `FR-090`–`FR-098`, `FR-157`, `FR-158`, `UIR-060`–`UIR-068`.
 - File actions (real dialog/filesystem/viewer/remote cmd): `FR-112`, `FR-113`, `FR-114`–`FR-118`, `UIR-057`.
 - Interfaces (real): `IFR-001`–`IFR-004`.
 - Config dialogs (on-screen layout, field values/limits): `UIR-020`–`UIR-056`.

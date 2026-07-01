@@ -30,20 +30,20 @@ def qapp():
 
 
 def test_encode_key_enter_uses_eol():
-    """Verifies: FR-094, FR-096."""
+    """Verifies: FR-094, FR-096, FR-158."""
     assert encode_key(Qt.Key.Key_Return, _NONE, "\r", eol=b"\r\n") == b"\r\n"
     assert encode_key(Qt.Key.Key_Enter, _NONE, "", eol=b"\r") == b"\r"
 
 
 def test_encode_key_printable_and_utf8():
-    """Verifies: FR-096."""
+    """Verifies: FR-096, FR-158."""
     assert encode_key(Qt.Key.Key_A, _NONE, "a") == b"a"
     assert encode_key(Qt.Key.Key_Space, _NONE, " ") == b" "
     assert encode_key(Qt.Key.Key_unknown, _NONE, "★") == "★".encode()
 
 
 def test_encode_key_navigation_and_function_keys():
-    """Verifies: FR-096."""
+    """Verifies: FR-096, FR-158."""
     assert encode_key(Qt.Key.Key_Up, _NONE, "") == b"\x1b[A"
     assert encode_key(Qt.Key.Key_Down, _NONE, "") == b"\x1b[B"
     assert encode_key(Qt.Key.Key_Right, _NONE, "") == b"\x1b[C"
@@ -57,7 +57,7 @@ def test_encode_key_navigation_and_function_keys():
 
 
 def test_encode_key_control_combinations():
-    """Verifies: FR-096."""
+    """Verifies: FR-096, FR-158."""
     assert encode_key(Qt.Key.Key_C, _CTRL, "") == b"\x03"  # Ctrl-C
     assert encode_key(Qt.Key.Key_A, _CTRL, "") == b"\x01"  # Ctrl-A
     assert encode_key(Qt.Key.Key_BracketLeft, _CTRL, "") == b"\x1b"  # Ctrl-[ = ESC
@@ -65,7 +65,7 @@ def test_encode_key_control_combinations():
 
 
 def test_encode_key_returns_none_for_modifier_only():
-    """Verifies: FR-096."""
+    """Verifies: FR-096, FR-158."""
     # A bare modifier press (no text, not a mapped key) transmits nothing.
     assert encode_key(Qt.Key.Key_Shift, _NONE, "") is None
 
