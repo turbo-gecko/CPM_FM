@@ -274,8 +274,13 @@
     "FR-091": [
       "tests/test_gui_smoke.py:test_handle_terminal_recv_capture_buffer_byte_identical",
       "tests/test_gui_smoke.py:test_handle_terminal_recv_tees_bytes_to_engine_and_buffers",
-      "tests/test_gui_smoke.py:test_terminal_write_text_line_endings",
+      "tests/test_gui_smoke.py:test_terminal_window_render_and_clear",
+      "tests/test_gui_smoke.py:test_terminal_window_renders_engine_screen",
       "tests/test_serial_manager.py:test_read_loop_dispatches_raw_bytes",
+      "tests/test_terminal_view.py:test_colour_default_and_named_and_hex",
+      "tests/test_terminal_view.py:test_grid_grows_with_scrollback",
+      "tests/test_terminal_view.py:test_paint_does_not_raise",
+      "tests/test_terminal_view.py:test_row_cells_spans_scrollback_then_live_screen",
       "tests/test_vt100_engine.py:test_backspace_moves_cursor_left",
       "tests/test_vt100_engine.py:test_crlf_moves_to_next_line",
       "tests/test_vt100_engine.py:test_cursor_addressing_cup",
@@ -301,7 +306,7 @@
       "tests/test_gui_smoke.py:test_handle_terminal_send_append_eol_flag"
     ],
     "FR-095": [
-      "tests/test_gui_smoke.py:test_terminal_window_write_and_clear",
+      "tests/test_gui_smoke.py:test_terminal_window_render_and_clear",
       "tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor"
     ],
     "FR-096": [
@@ -717,6 +722,14 @@
     "UIR-059": [
       "tests/test_gui_smoke.py:test_general_config_boot_sequence_multiline_round_trips"
     ],
+    "UIR-062": [
+      "tests/test_terminal_view.py:test_autoscroll_toggle_moves_to_bottom",
+      "tests/test_terminal_view.py:test_grid_grows_with_scrollback",
+      "tests/test_terminal_view.py:test_row_cells_spans_scrollback_then_live_screen"
+    ],
+    "UIR-066": [
+      "tests/test_terminal_view.py:test_autoscroll_toggle_moves_to_bottom"
+    ],
     "UIR-068": [
       "tests/test_gui_smoke.py:test_boot_button_reflects_config"
     ],
@@ -997,11 +1010,9 @@
     "UIR-057c",
     "UIR-060",
     "UIR-061",
-    "UIR-062",
     "UIR-063",
     "UIR-064",
     "UIR-065",
-    "UIR-066",
     "UIR-067",
     "UIR-070",
     "UIR-071",

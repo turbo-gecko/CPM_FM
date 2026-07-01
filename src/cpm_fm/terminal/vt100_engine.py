@@ -150,18 +150,17 @@ class VT100Engine:
         """
         return list(self._screen.display)
 
-    def line(self, row: int) -> list[Cell]:
-        """Return row ``row`` as a list of attributed :class:`Cell` objects.
+    def _cells_from_row(self, row) -> list[Cell]:
+        """Convert a ``pyte`` buffer/history row (col->Char map) to Cells.
 
         Always returns exactly :attr:`cols` cells; positions the emulator has
         not written are returned as blank default cells.
 
         Satisfies: FR-091.
         """
-        buffer_row = self._screen.buffer[row]
         cells: list[Cell] = []
         for col in range(self._screen.columns):
-            ch = buffer_row[col]
+            ch = row[col]
             cells.append(
                 Cell(
                     char=ch.data,
@@ -175,6 +174,30 @@ class VT100Engine:
                 )
             )
         return cells
+
+    def line(self, row: int) -> list[Cell]:
+        """Return active-screen row ``row`` as attributed :class:`Cell` objects.
+
+        Satisfies: FR-091.
+        """
+        return self._cells_from_row(self._screen.buffer[row])
+
+    @property
+    def history_len(self) -> int:
+        """Number of lines scrolled off the top into scrollback (UIR-062).
+
+        Satisfies: FR-091, UIR-062.
+        """
+        return len(self._screen.history.top)
+
+    def history_line(self, index: int) -> list[Cell]:
+        """Return scrollback line ``index`` (0 = oldest) as attributed Cells.
+
+        Backs the Terminal Window's scrollback rendering above the live screen.
+
+        Satisfies: FR-091, UIR-062.
+        """
+        return self._cells_from_row(self._screen.history.top[index])
 
     # ------------------------------------------------------ dirty-line tracking
 

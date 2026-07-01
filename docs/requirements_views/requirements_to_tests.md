@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_172/409 requirements have a verifying test; 237 untested; 0 stale tag(s)._
+_174/409 requirements have a verifying test; 235 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -75,9 +75,9 @@ _172/409 requirements have a verifying test; 237 untested; 0 stale tag(s)._
 | FR-082 | `tests/test_xmodem.py:test_send_file_returns_false_when_no_start_char` |
 | FR-086 | `tests/test_gui_smoke.py:test_transfer_byte_echo_respects_setting` |
 | FR-090 | `tests/test_gui_smoke.py:test_handle_terminal_recv_capture_buffer_byte_identical`, `tests/test_gui_smoke.py:test_handle_terminal_recv_tees_bytes_to_engine_and_buffers` |
-| FR-091 | `tests/test_gui_smoke.py:test_handle_terminal_recv_capture_buffer_byte_identical`, `tests/test_gui_smoke.py:test_handle_terminal_recv_tees_bytes_to_engine_and_buffers`, `tests/test_gui_smoke.py:test_terminal_write_text_line_endings`, `tests/test_serial_manager.py:test_read_loop_dispatches_raw_bytes`, `tests/test_vt100_engine.py:test_backspace_moves_cursor_left`, `tests/test_vt100_engine.py:test_crlf_moves_to_next_line`, `tests/test_vt100_engine.py:test_cursor_addressing_cup`, `tests/test_vt100_engine.py:test_cursor_hidden_toggle`, `tests/test_vt100_engine.py:test_cursor_relative_moves`, `tests/test_vt100_engine.py:test_default_geometry`, `tests/test_vt100_engine.py:test_dirty_tracking_and_clear`, `tests/test_vt100_engine.py:test_erase_in_display_clears_screen`, `tests/test_vt100_engine.py:test_erase_in_line_clears_to_end`, `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_line_returns_full_width_padded`, `tests/test_vt100_engine.py:test_plain_text_and_cursor_advance`, `tests/test_vt100_engine.py:test_raw_8bit_mode_maps_bytes_directly`, `tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor`, `tests/test_vt100_engine.py:test_reset_marks_all_lines_dirty`, `tests/test_vt100_engine.py:test_resize_changes_geometry`, `tests/test_vt100_engine.py:test_sgr_ansi_colours`, `tests/test_vt100_engine.py:test_sgr_bold_reverse_and_reset`, `tests/test_vt100_engine.py:test_tab_advances_to_next_tab_stop`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
+| FR-091 | `tests/test_gui_smoke.py:test_handle_terminal_recv_capture_buffer_byte_identical`, `tests/test_gui_smoke.py:test_handle_terminal_recv_tees_bytes_to_engine_and_buffers`, `tests/test_gui_smoke.py:test_terminal_window_render_and_clear`, `tests/test_gui_smoke.py:test_terminal_window_renders_engine_screen`, `tests/test_serial_manager.py:test_read_loop_dispatches_raw_bytes`, `tests/test_terminal_view.py:test_colour_default_and_named_and_hex`, `tests/test_terminal_view.py:test_grid_grows_with_scrollback`, `tests/test_terminal_view.py:test_paint_does_not_raise`, `tests/test_terminal_view.py:test_row_cells_spans_scrollback_then_live_screen`, `tests/test_vt100_engine.py:test_backspace_moves_cursor_left`, `tests/test_vt100_engine.py:test_crlf_moves_to_next_line`, `tests/test_vt100_engine.py:test_cursor_addressing_cup`, `tests/test_vt100_engine.py:test_cursor_hidden_toggle`, `tests/test_vt100_engine.py:test_cursor_relative_moves`, `tests/test_vt100_engine.py:test_default_geometry`, `tests/test_vt100_engine.py:test_dirty_tracking_and_clear`, `tests/test_vt100_engine.py:test_erase_in_display_clears_screen`, `tests/test_vt100_engine.py:test_erase_in_line_clears_to_end`, `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_line_returns_full_width_padded`, `tests/test_vt100_engine.py:test_plain_text_and_cursor_advance`, `tests/test_vt100_engine.py:test_raw_8bit_mode_maps_bytes_directly`, `tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor`, `tests/test_vt100_engine.py:test_reset_marks_all_lines_dirty`, `tests/test_vt100_engine.py:test_resize_changes_geometry`, `tests/test_vt100_engine.py:test_sgr_ansi_colours`, `tests/test_vt100_engine.py:test_sgr_bold_reverse_and_reset`, `tests/test_vt100_engine.py:test_tab_advances_to_next_tab_stop`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
 | FR-094 | `tests/test_gui_smoke.py:test_handle_terminal_send_append_eol_flag` |
-| FR-095 | `tests/test_gui_smoke.py:test_terminal_window_write_and_clear`, `tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor` |
+| FR-095 | `tests/test_gui_smoke.py:test_terminal_window_render_and_clear`, `tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor` |
 | FR-096 | `tests/test_serial_manager.py:test_send_data_replaces_non_ascii`, `tests/test_serial_manager.py:test_send_data_returns_false_when_port_closed`, `tests/test_serial_manager.py:test_send_data_returns_false_when_port_none`, `tests/test_serial_manager.py:test_send_data_writes_ascii_to_open_port` |
 | FR-099 | `tests/test_gui_smoke.py:test_copy_to_remote_transfers_all_selected` |
 | FR-101 | `tests/test_cpm_parser.py:test_has_drive_prompt_ignores_blank_lines` |
@@ -168,6 +168,8 @@ _172/409 requirements have a verifying test; 237 untested; 0 stale tag(s)._
 | UIR-057 | `tests/test_gui_smoke.py:test_file_action_dialog_button_layout` |
 | UIR-058 | `tests/test_gui_smoke.py:test_general_config_has_echo_transfer_field`, `tests/test_gui_smoke.py:test_transfer_byte_echo_respects_setting` |
 | UIR-059 | `tests/test_gui_smoke.py:test_general_config_boot_sequence_multiline_round_trips` |
+| UIR-062 | `tests/test_terminal_view.py:test_autoscroll_toggle_moves_to_bottom`, `tests/test_terminal_view.py:test_grid_grows_with_scrollback`, `tests/test_terminal_view.py:test_row_cells_spans_scrollback_then_live_screen` |
+| UIR-066 | `tests/test_terminal_view.py:test_autoscroll_toggle_moves_to_bottom` |
 | UIR-068 | `tests/test_gui_smoke.py:test_boot_button_reflects_config` |
 | UIR-075 | `tests/test_backup_restore.py:test_on_backup_restore_confirm_button_order`, `tests/test_gui_smoke.py:test_button_row_both_cancel_left_apply_right`, `tests/test_gui_smoke.py:test_button_row_single_button_is_centered`, `tests/test_gui_smoke.py:test_dnd_confirm_dialog_button_order_and_labels`, `tests/test_gui_smoke.py:test_file_action_dialog_button_layout` |
 | UIR-076 | `tests/test_gui_smoke.py:test_about_dialog_contents`, `tests/test_version.py:test_identity_constants` |
@@ -401,11 +403,9 @@ These defined requirements have no `Verifies:` test tag:
 - UIR-057c
 - UIR-060
 - UIR-061
-- UIR-062
 - UIR-063
 - UIR-064
 - UIR-065
-- UIR-066
 - UIR-067
 - UIR-070
 - UIR-071

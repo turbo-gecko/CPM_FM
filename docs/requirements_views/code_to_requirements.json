@@ -305,6 +305,12 @@
     "FR-045",
     "UIR-092"
   ],
+  "src/cpm_fm/gui/terminal_view.py": [
+    "FR-091",
+    "UIR-061",
+    "UIR-062",
+    "UIR-066"
+  ],
   "src/cpm_fm/gui/terminal_window.py": [
     "FR-049",
     "FR-091",
@@ -416,7 +422,8 @@
   "src/cpm_fm/terminal/vt100_engine.py": [
     "CR-014",
     "FR-091",
-    "FR-095"
+    "FR-095",
+    "UIR-062"
   ],
   "src/cpm_fm/terminal/xmodem.py": [
     "FR-081",

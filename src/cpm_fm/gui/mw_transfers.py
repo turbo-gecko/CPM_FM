@@ -122,7 +122,9 @@ class _TransfersMixin(MainWindowMixinBase):
         if not self._echo_transfer_enabled():
             return
         hex_text = "".join(f"<{b:02X}>" for b in data)
-        self.term_write.emit(hex_text)
+        # term_write carries bytes (fed to the VT-100 engine); the hex tokens are
+        # ASCII, so render as-is on the terminal screen.
+        self.term_write.emit(hex_text.encode("ascii"))
 
     def _echo_transfer_enabled(self) -> bool:
         """

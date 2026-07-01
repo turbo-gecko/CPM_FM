@@ -37,6 +37,7 @@ class _RemoteMixin(MainWindowMixinBase):
                 self.handle_terminal_send,
                 self.clear_terminal_buffers,
                 self.do_boot_sequence,
+                engine=self._term_engine,
             )
             self.terminal_win.chk_echo.toggled.connect(self._set_local_echo)
             # FR-004: restore the Terminal Window's saved geometry on first open.
@@ -48,6 +49,9 @@ class _RemoteMixin(MainWindowMixinBase):
         self.terminal_win.show()
         self.terminal_win.raise_()
         self.terminal_win.activateWindow()
+        # Render whatever the engine already holds (data may have arrived before
+        # the window was first opened) and settle autoscroll to the bottom.
+        self.terminal_win.render_screen()
 
     def _refresh_boot_button(self):
         """Sync the Terminal Window boot button's enabled state to the config.
@@ -94,34 +98,35 @@ class _RemoteMixin(MainWindowMixinBase):
         # FR-092: store transmitted data (with EOL) in the transmit buffer.
         self._tx_buffer += text
         # FR-093: local echo copies transmitted data (a byte-for-byte copy,
-        # including its EOL) to the receive area only.
+        # including its EOL) to the receive area only. Encoded the same way
+        # send_data transmits it (ASCII/replace) so the echo matches the bytes
+        # on the wire, then fed through the engine via term_write (bytes).
         if self._local_echo:
-            self.term_write.emit(text)
+            self.term_write.emit(text.encode("ascii", errors="replace"))
 
     def handle_terminal_recv(self, data: bytes):
         """
         Satisfies: FR-090, FR-091.
 
         Runs on the serial read daemon thread. Receives the raw bytes read from
-        the Terminal Port and tees them two ways:
+        the Terminal Port and:
 
-        * to the VT-100 engine as raw bytes (``feed``), which needs byte-accurate
-          input to interpret escape sequences (FR-091); and
-        * decoded to text for the receive buffer and, when a capture is active,
-          the remote-capture buffer (FR-090). The decode uses the same
+        * decodes them to text for the receive buffer and, when a capture is
+          active, the remote-capture buffer (FR-090). The decode uses the same
           ASCII/replace rule the read loop used previously, so the DIR-listing,
-          drive-probe, and boot-sequence capture logic sees byte-identical text.
+          drive-probe, and boot-sequence capture logic sees byte-identical text;
+          and
+        * marshals the raw bytes to the GUI thread via term_write (NFR-004),
+          where they are fed into the VT-100 engine and rendered (FR-091).
 
-        The display write is marshalled to the GUI thread via the term_write
-        signal (NFR-004); only plain strings/bytes are touched here, never a
-        widget.
+        Only plain strings/bytes are touched here, never a widget or the engine
+        (the engine is fed on the GUI thread, keeping it single-threaded).
         """
-        self._term_engine.feed(data)
         text = data.decode("ascii", errors="replace")
         self._rx_buffer += text
         if self._capture_active:
             self._remote_capture_buffer += text
-        self.term_write.emit(text)
+        self.term_write.emit(data)
 
     def clear_terminal_buffers(self):
         """

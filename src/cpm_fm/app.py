@@ -114,7 +114,11 @@ class MainWindow(
     """
 
     status_changed = Signal(str)
-    term_write = Signal(str)
+    # Carries raw bytes destined for the terminal screen (received serial data,
+    # local echo, transfer-byte echo). Feeding the VT-100 engine and repainting
+    # happen in the GUI-thread slot so the engine is only ever touched from one
+    # thread (NFR-001/NFR-004).
+    term_write = Signal(bytes)
     remote_files_ready = Signal(dict)
     error_raised = Signal(str, str)
     # Emitted from a transfer worker thread on success so the destination file
@@ -668,16 +672,20 @@ class MainWindow(
         """
         self.statusBar().showMessage(text)
 
-    def _on_term_write(self, text: str):
+    def _on_term_write(self, data: bytes):
         """
         Satisfies: FR-086, FR-091, FR-093.
 
-        Single GUI-thread sink for all receive-area writes: incoming serial
-        data, local echo (FR-093), and transfer byte echo (FR-086). It never
-        touches the data buffers, so local-echo/hex text stays out of them.
+        Single GUI-thread sink for all terminal-screen writes: incoming serial
+        data, local echo (FR-093), and transfer byte echo (FR-086). Feeds the
+        raw bytes into the VT-100 engine here (on the GUI thread, so the engine
+        is single-threaded) and repaints the receive view when the Terminal
+        Window is open. It never touches the receive/transmit data buffers, so
+        local-echo/hex text stays out of them (FR-090).
         """
+        self._term_engine.feed(data)
         if self.terminal_win:
-            self.terminal_win.write_text(text)
+            self.terminal_win.render_screen()
 
     def _on_error_raised(self, title: str, message: str):
         """
