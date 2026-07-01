@@ -154,7 +154,7 @@
       "tests/test_serial_manager.py:test_parity_maps_to_pyserial_constant"
     ],
     "FR-036": [
-      "tests/test_serial_manager.py:test_read_loop_dispatches_decoded_data"
+      "tests/test_serial_manager.py:test_read_loop_dispatches_raw_bytes"
     ],
     "FR-037": [
       "tests/test_gui_smoke.py:test_connect_shared_port_assigns_transport_port",
@@ -267,9 +267,15 @@
     "FR-086": [
       "tests/test_gui_smoke.py:test_transfer_byte_echo_respects_setting"
     ],
+    "FR-090": [
+      "tests/test_gui_smoke.py:test_handle_terminal_recv_capture_buffer_byte_identical",
+      "tests/test_gui_smoke.py:test_handle_terminal_recv_tees_bytes_to_engine_and_buffers"
+    ],
     "FR-091": [
+      "tests/test_gui_smoke.py:test_handle_terminal_recv_capture_buffer_byte_identical",
+      "tests/test_gui_smoke.py:test_handle_terminal_recv_tees_bytes_to_engine_and_buffers",
       "tests/test_gui_smoke.py:test_terminal_write_text_line_endings",
-      "tests/test_serial_manager.py:test_read_loop_dispatches_decoded_data",
+      "tests/test_serial_manager.py:test_read_loop_dispatches_raw_bytes",
       "tests/test_vt100_engine.py:test_backspace_moves_cursor_left",
       "tests/test_vt100_engine.py:test_crlf_moves_to_next_line",
       "tests/test_vt100_engine.py:test_cursor_addressing_cup",
@@ -850,7 +856,6 @@
     "FR-087",
     "FR-088",
     "FR-089",
-    "FR-090",
     "FR-092",
     "FR-093",
     "FR-097",

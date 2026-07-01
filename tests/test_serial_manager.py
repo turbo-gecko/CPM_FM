@@ -371,18 +371,18 @@ def _run_read_loop_briefly(mgr, stop_when, max_ms=500):
     t.join(timeout=1.0)
 
 
-def test_read_loop_dispatches_decoded_data():
-    """FR-036/FR-091: bytes from the terminal port are decoded and pushed to the
-    on_data_received callback.
+def test_read_loop_dispatches_raw_bytes():
+    """FR-036/FR-091: bytes from the terminal port are pushed verbatim (no early
+    decode) to the on_data_received callback; the consumer decodes/feeds them.
 
     Verifies: FR-036, FR-091.
     """
     mgr = SerialManager()
-    received: list[str] = []
+    received: list[bytes] = []
     mgr.on_data_received = received.append
     mgr.terminal_port = _ReadOncePort(b"A>\r\n")
     _run_read_loop_briefly(mgr, stop_when=lambda: bool(received))
-    assert received == ["A>\r\n"]
+    assert received == [b"A>\r\n"]
 
 
 def test_read_loop_suspends_dispatch_while_paused():
@@ -392,7 +392,7 @@ def test_read_loop_suspends_dispatch_while_paused():
     Verifies: FR-037.
     """
     mgr = SerialManager()
-    received: list[str] = []
+    received: list[bytes] = []
     mgr.on_data_received = received.append
     mgr.terminal_port = _ReadOncePort(b"DATA")
     mgr._read_paused.set()  # paused before the loop starts
@@ -404,4 +404,4 @@ def test_read_loop_suspends_dispatch_while_paused():
     mgr._stop_event.clear()
     mgr._read_paused.clear()
     _run_read_loop_briefly(mgr, stop_when=lambda: bool(received))
-    assert received == ["DATA"]
+    assert received == [b"DATA"]

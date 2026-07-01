@@ -2185,6 +2185,45 @@ def test_transfer_byte_echo_respects_setting(qapp, state):
         win.close()
 
 
+def test_handle_terminal_recv_tees_bytes_to_engine_and_buffers(qapp, state):
+    """Received bytes feed the VT-100 engine and, decoded, the receive buffer
+    and the term_write display signal.
+
+    Verifies: FR-090, FR-091.
+    """
+    win = MainWindow(state)
+    try:
+        emitted = []
+        win.term_write.connect(emitted.append)
+        win.handle_terminal_recv(b"A>\r\n")
+        qapp.processEvents()
+        # Decoded text reaches the receive buffer and the display signal...
+        assert win._rx_buffer == "A>\r\n"
+        assert emitted == ["A>\r\n"]
+        # ...and the raw bytes reach the engine, which renders the prompt.
+        assert win._term_engine.display[0].rstrip() == "A>"
+    finally:
+        win.close()
+
+
+def test_handle_terminal_recv_capture_buffer_byte_identical(qapp, state):
+    """While a capture is active the decoded text is byte-identical to the old
+    ASCII/replace behaviour, so DIR/probe/boot parsing is unaffected.
+
+    Verifies: FR-090, FR-091.
+    """
+    win = MainWindow(state)
+    try:
+        win._capture_active = True
+        win._remote_capture_buffer = ""
+        # A non-ASCII byte decodes to U+FFFD, exactly as the read loop's
+        # ASCII/replace decode produced before the raw-bytes migration.
+        win.handle_terminal_recv(b"DIR\r\n\xb5")
+        assert win._remote_capture_buffer == "DIR\r\n�"
+    finally:
+        win.close()
+
+
 def test_general_config_has_echo_transfer_field(qapp, monkeypatch):
     """Verifies: UIR-058."""
     # UIR-058: the General Config dialog exposes an "Echo Transfer Data"
