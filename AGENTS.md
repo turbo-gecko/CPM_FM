@@ -10,30 +10,41 @@ single/multi-file transfers it offers drag-and-drop, file-conflict resolution, C
 validation, a persistent transfer history, whole-drive backup/restore, and a 12-language UI. The GUI
 applies a Material Design theme via the `qt-material` package (set centrally at start-up in
 `gui/theme.py`; the light/dark variant follows the host OS — UIR-070/UIR-073). As of v1.3 the UI was
-migrated from Tkinter to PySide6; there is no remaining `tkinter` code, and the stray `wxPython` in
-`.venv` is unused (ignore it). The current version is in `src/version.txt`.
+migrated from Tkinter to PySide6; there is no remaining `tkinter` code. The project's Python
+interpreter lives in **`.venv/`** — every `python`/`pip`/`pytest`/`mypy`/`ruff` command MUST run
+through it (see Commands below; a PreToolUse hook blocks bare invocations). The stray `wxPython`
+*package* inside `.venv` is unused (ignore it). The current version is in `src/version.txt`.
 
 ## Commands
 
-Install (editable, with dev tools): `python -m pip install -e .[dev]`
+> **MANDATORY: use the `.venv` interpreter for everything Python.** Run every `python`, `pip`,
+> `pytest`, `mypy`, and `ruff` command as `.venv/Scripts/python.exe -m <tool> …` — never the bare
+> command, which may resolve to the wrong interpreter. A PreToolUse hook
+> (`.claude/hooks/require-venv.sh`, wired in `.claude/settings.json`) **blocks** bare
+> `python`/`pip`/`pytest`/`mypy`/`ruff` and tells you the correct form. The commands below already use
+> the required form; keep it when copying them. (The block matches the command's leading token, so
+> also avoid hiding a bare tool behind a `cd … &&` prefix — invoke the `.venv` interpreter directly.)
+
+Install (editable, with dev tools): `.venv/Scripts/python.exe -m pip install -e .[dev]`
 
 Run:
 - `cpm-fm` — installed GUI launcher (bound to `pythonw.exe`, no console window on Windows)
-- `python -m cpm_fm` — equivalent, keeps a console for `print()` debug output (serial errors are
-  printed to stdout, not surfaced in the UI)
+- `.venv/Scripts/python.exe -m cpm_fm` — equivalent, keeps a console for `print()` debug output
+  (serial errors are printed to stdout, not surfaced in the UI)
 
 Test / lint / type-check (CI runs all of these on Python 3.12, see `.github/workflows/ci.yml`):
-- `pytest` — full unit suite (`-q` is set in `pyproject.toml`; `testpaths = ["tests"]`, so it never
-  descends into `integration/`)
-- `pytest tests/test_cpm_parser.py::test_parse_dir_output_extracts_filenames` — single test
-- `ruff check src tests` and `ruff format --check src tests` (CI uses `--check`; drop it to apply)
-- `mypy src`
+- `.venv/Scripts/python.exe -m pytest` — full unit suite (`-q` is set in `pyproject.toml`;
+  `testpaths = ["tests"]`, so it never descends into `integration/`)
+- `.venv/Scripts/python.exe -m pytest tests/test_cpm_parser.py::test_parse_dir_output_extracts_filenames` — single test
+- `.venv/Scripts/python.exe -m ruff check src tests` and `.venv/Scripts/python.exe -m ruff format --check src tests`
+  (CI uses `--check`; drop it to apply)
+- `.venv/Scripts/python.exe -m mypy src`
 
 Integration (hardware-in-the-loop) suite — **separate, bench-only, not run by CI or the default
 `pytest`** because it drives the real app against a real CP/M machine over serial:
-- `pytest integration/` — the HIL suite (its own `integration/pytest.ini`); `--target`/`--all-targets`
-  select the rig, `--run-destructive` enables the backup/restore (whole-drive-wipe) cases
-- `python integration/run.py` — interactive target picker
+- `.venv/Scripts/python.exe -m pytest integration/` — the HIL suite (its own `integration/pytest.ini`);
+  `--target`/`--all-targets` select the rig, `--run-destructive` enables the backup/restore (whole-drive-wipe) cases
+- `.venv/Scripts/python.exe integration/run.py` — interactive target picker
 - See `integration/README.md` for wiring, target setup (`hil_config.json`), and the manual-vs-automated
   split. It is additive test infrastructure and does not itself define requirements.
 
