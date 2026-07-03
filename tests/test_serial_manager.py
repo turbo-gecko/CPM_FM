@@ -220,6 +220,23 @@ def test_open_port_returns_false_on_serial_error(monkeypatch):
     assert mgr.transport_port is None
 
 
+def test_open_terminal_port_clears_flag_on_failure(monkeypatch):
+    """FR-033: when the terminal port cannot be opened, the connected status flag
+    is explicitly cleared (no half-open state).
+
+    Verifies: FR-033.
+    """
+
+    def _boom(**kwargs):
+        raise serial.SerialException("port busy")
+
+    monkeypatch.setattr(sm_mod.serial, "Serial", _boom)
+    mgr = SerialManager()
+    assert mgr.open_port("terminal", {"terminal_port": "COM1"}) is False
+    assert mgr.terminal_connected is False
+    assert mgr.terminal_port is None
+
+
 # --------------------------------------------------------------------------- #
 # send_data and the port-close lifecycle.
 # --------------------------------------------------------------------------- #

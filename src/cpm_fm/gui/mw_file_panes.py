@@ -190,7 +190,7 @@ class _FilePanesMixin(MainWindowMixinBase):
 
     def refresh_host_files(self):
         """
-        Satisfies: FR-060, FR-126, FR-133.
+        Satisfies: FR-060, FR-063, FR-126, FR-133.
         """
         # FR-126: the host directory may have changed; reflect it in the group
         # title. This is the single point through which every host-directory

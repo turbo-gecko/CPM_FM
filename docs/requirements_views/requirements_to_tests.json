@@ -153,6 +153,9 @@
       "tests/test_serial_manager.py:test_open_port_returns_false_on_serial_error",
       "tests/test_serial_manager.py:test_parity_maps_to_pyserial_constant"
     ],
+    "FR-033": [
+      "tests/test_serial_manager.py:test_open_terminal_port_clears_flag_on_failure"
+    ],
     "FR-036": [
       "tests/test_serial_manager.py:test_read_loop_dispatches_raw_bytes"
     ],
@@ -929,7 +932,6 @@
     "FR-021",
     "FR-031",
     "FR-032",
-    "FR-033",
     "FR-034",
     "FR-035",
     "FR-038",
