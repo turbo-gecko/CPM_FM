@@ -17,3 +17,4 @@ dist/
 .ruff_cache/
 docs/bug_list.md
 /temp
+.test_*.txt
