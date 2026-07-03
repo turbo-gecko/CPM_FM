@@ -103,7 +103,7 @@ _420 requirements across 54 sections._
 | ID | Summary | Impl |
 |----|---------|------|
 | FR-060 | On startup, the application shall populate the Host Files list with the files in the… | mw_file_panes.py:refresh_host_files, mw_config.py:load_config |
-| FR-061 | The Change Directory button shall be enabled at startup | — |
+| FR-061 | The Change Directory button shall be enabled at startup | app.py:setup_toolbar |
 | FR-062 | When the Change Directory button is pressed, the application shall present a folder-select dialog for… | mw_file_panes.py:change_host_dir |
 | FR-063 | When the Host Files group's "Update" button (beside the "Change Directory" button — UIR-011) is… | mw_file_panes.py:refresh_host_files, setup_layout |
 

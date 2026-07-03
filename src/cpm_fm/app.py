@@ -176,7 +176,7 @@ class MainWindow(
         transfer_history: TransferHistory | None = None,
     ):
         """
-        Satisfies: FR-003, FR-004, FR-005, FR-124, FR-141.
+        Satisfies: FR-003, FR-004, FR-005, FR-070, FR-124, FR-141.
         """
         super().__init__()
 
@@ -477,9 +477,10 @@ class MainWindow(
 
     def setup_toolbar(self):
         """
-        Satisfies: UIR-013, UIR-071, UIR-082, UIR-086, UIR-087.
+        Satisfies: UIR-013, UIR-015, UIR-016, UIR-071, UIR-082, UIR-086, UIR-087.
 
-        The main-window actions are presented as a top toolbar.
+        The main-window actions are presented as a top toolbar. All toolbar
+        buttons are enabled by default (Connect/Disconnect at startup).
         """
         toolbar = QToolBar("Actions")
         toolbar.setToolButtonStyle(toolbar.toolButtonStyle().ToolButtonTextBesideIcon)
@@ -508,9 +509,12 @@ class MainWindow(
 
     def setup_layout(self):
         """
-        Satisfies: UIR-011, UIR-012, UIR-017, UIR-072.
+        Satisfies: FR-061, FR-070, FR-071, FR-072, UIR-011, UIR-012, UIR-017, UIR-072.
 
         Host and Remote panes separated by a user-draggable splitter.
+        The Host "Change Directory" and both "Update" buttons are enabled at
+        startup (FR-061, FR-072); the Remote Files list is empty at startup
+        (FR-070); the Remote "Update" button is enabled at startup (FR-071).
         """
         splitter = QSplitter()
 

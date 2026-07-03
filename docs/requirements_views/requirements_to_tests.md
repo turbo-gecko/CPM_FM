@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_193/420 requirements have a verifying test; 227 untested; 0 stale tag(s)._
+_194/420 requirements have a verifying test; 226 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -48,6 +48,7 @@ _193/420 requirements have a verifying test; 227 untested; 0 stale tag(s)._
 | FR-022 | `tests/test_gui_smoke.py:test_menu_about_opens_dialog` |
 | FR-023 | `tests/test_gui_smoke.py:test_help_menu_contains_manual_action`, `tests/test_gui_smoke.py:test_menu_manual_opens_dialog`, `tests/test_gui_smoke.py:test_menu_manual_reuses_open_window` |
 | FR-030 | `tests/test_serial_manager.py:test_numeric_defaults_applied_when_absent`, `tests/test_serial_manager.py:test_numeric_fields_are_coerced_to_int`, `tests/test_serial_manager.py:test_open_port_returns_false_on_serial_error`, `tests/test_serial_manager.py:test_parity_maps_to_pyserial_constant` |
+| FR-033 | `tests/test_serial_manager.py:test_open_terminal_port_clears_flag_on_failure` |
 | FR-036 | `tests/test_serial_manager.py:test_read_loop_dispatches_raw_bytes` |
 | FR-037 | `tests/test_gui_smoke.py:test_connect_shared_port_assigns_transport_port`, `tests/test_serial_manager.py:test_read_loop_suspends_dispatch_while_paused` |
 | FR-041 | `tests/test_gui_smoke.py:test_connect_probes_when_both_ports_connected` |
@@ -257,7 +258,6 @@ These defined requirements have no `Verifies:` test tag:
 - FR-021
 - FR-031
 - FR-032
-- FR-033
 - FR-034
 - FR-035
 - FR-038
