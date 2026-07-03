@@ -379,6 +379,12 @@ class MainWindow(
     def _connect_signals(self):
         """
         Satisfies: NFR-004.
+
+        All ``Signal()`` declarations are class-level, so every ``MainWindow``
+        instance shares the underlying signal object.  Without this precaution,
+        test sessions that create multiple ``MainWindow`` instances accumulate
+        orphaned handlers — old ``self`` still receives emits from new ones.
+        The _clean_signals() helper runs first in __init__ to prevent this leak.
         """
         self.status_changed.connect(self._on_status_changed)
         self.term_write.connect(self._on_term_write)

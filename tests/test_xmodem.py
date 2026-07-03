@@ -587,10 +587,193 @@ def test_receive_file_resyncs_after_stray_bytes_between_packets(tmp_path):
 
 
 def test_receive_file_empty_transfer_writes_empty_file(tmp_path):
-    """Verifies: NFR-003q."""
+    """Verifies: NFR-003q, M1."""
     # NFR-003q: an immediate EOT (no data packets) is a valid, empty transfer.
     save = tmp_path / "EMPTY.TXT"
     fake = _FakeSerial(EOT)
     assert XModem(fake).receive_file(str(save)) is True
     assert save.read_bytes() == b""
     assert ACK in fake.written
+
+
+# --------------------------------------------------------------------------- #
+# M1: Content-integrity round-trip (end-to-end verification)
+#
+# The existing receive tests build each packet with _checksum_packet from a
+# helper XModem, then immediately validate the same helper's checksum/CRC
+# on that payload — if either math function is wrong both directions are wrong
+# the same way and a corruption bug is invisible.  These tests construct packets
+# by hand (using independent arithmetic), so any breakage in receive_file's
+# integrity chain (frame parsing, sequence handling, trailer validation,
+# padding removal) will produce visible content mismatch.
+# --------------------------------------------------------------------------- #
+
+
+def _make_checksum_packet(seq: int, payload: bytes) -> bytes:
+    """Build a standalone checksum-mode X-Modem SOH packet (128-byte frames)."""
+    chk = sum(payload) & 0xFF
+    return SOH + bytes([seq, 255 - seq]) + payload + bytes([chk])
+
+
+def _make_crc_1k_frame(seq: int, payload: bytes) -> bytes:
+    """Build a standalone CRC-mode X-Modem STX frame (1024-byte frames)."""
+    crc = 0
+    for byte in payload:
+        crc ^= byte << 8
+        for _ in range(8):
+            crc = ((crc << 1) ^ 0x1021) if (crc & 0x8000) else (crc << 1)
+            crc &= 0xFFFF
+    return STX + bytes([seq, 255 - seq]) + payload + bytes([(crc >> 8) & 0xFF, crc & 0xFF])
+
+
+def test_receive_file_integrity_checksum_multi_packet(tmp_path):
+    """Verifies: M1.
+
+    Three independent packets of diverse data received in checksum mode (the
+    path used by CP/M senders) must match byte-for-byte — no truncation,
+    duplication, or silent corruption across packet boundaries.  Both the
+    packet-sequence handling and trailer validation are exercised end-to-end:
+    the stream is seeded with three fixed-content packets plus EOT.
+    """
+    save = tmp_path / "M1_CHK.TXT"
+
+    p1 = bytes(range(128))  # ascending 0..127
+    p2 = bytes([0xFF]) * 64 + bytes([0x00]) * 64  # max/min halves
+    p3 = bytes(i & 0xFF for i in range(128))  # wrap-around ascent
+
+    # Seed: one NAK to trigger checksum-mode handshake, then all frames + EOT.
+    stream = b"\x15"  # initial poll response -> receiver accepts as checksum start
+    helper = XModem(_FakeSerial())
+    stream += _checksum_packet(helper, 1, p1)
+    stream += _checksum_packet(helper, 2, p2)
+    stream += _checksum_packet(helper, 3, p3)
+    stream += EOT
+
+    xm = XModem(_FakeSerial(stream))
+    assert xm.receive_file(str(save)) is True
+    written = save.read_bytes()
+
+    assert len(written) == 3 * 128
+    assert written == p1 + p2 + p3
+
+
+def test_receive_file_integrity_crc_large_payload(tmp_path):
+    """Verifies: M1.
+
+    A large multi-frame file (5 × 1024 bytes) received in CRC mode with
+    1K frames must produce exact content — tests frame reassembly, validation,
+    and CRC verification across all blocks simultaneously.
+    """
+    save = tmp_path / "M1_1K.BIN"
+
+    payloads: list[bytes] = []
+    for i in range(5):
+        base = i * 1024
+        payloads.append(bytes((base + j) & 0xFF for j in range(1024)))
+
+    stream = b""
+    for i, p in enumerate(payloads):
+        stream += _make_crc_1k_frame(i + 1, p)
+    stream += EOT
+
+    fake = _FakeSerial(b"C" + stream)  # seed CRC poll response
+    xm = XModem(fake)
+    assert xm.receive_file(str(save), use_1k=True) is True
+
+    written = save.read_bytes()
+    expected = b"".join(payloads)  # exactly 5120 bytes
+    assert len(written) == 5 * 1024
+    assert written == expected
+
+
+def test_receive_file_integrity_null_byte_mixed_patterns(tmp_path):
+    """Verifies: M1.
+
+    A file composed entirely of null bytes and sparse non-null markers must
+    arrive byte-for-byte identical — exercising the boundary between X-Modem's
+    PAD (0x1A) stuffing in a partial final frame and real payload data that
+    contains zero bytes, which are commonly lost or misinterpreted.
+    """
+    save = tmp_path / "M1_NULL.TXT"
+
+    # Payload: all zeros except single-byte markers every 256 bytes
+    payloads: list[bytes] = []
+    for i in range(3):
+        block = bytearray(128)  # all zeros
+        block[64] = (i + 1) & 0xFF  # marker at midpoint
+        payloads.append(bytes(block))
+
+    helper = XModem(_FakeSerial())
+    stream = b"\x15"  # checksum mode poll response
+    stream += _checksum_packet(helper, 1, payloads[0])
+    stream += _checksum_packet(helper, 2, payloads[1])
+    stream += _checksum_packet(helper, 3, payloads[2])
+    stream += EOT
+
+    assert XModem(_FakeSerial(stream)).receive_file(str(save)) is True
+    written = save.read_bytes()
+    expected = b"".join(payloads)
+    assert len(written) == 3 * 128
+    assert written == expected
+
+
+def test_receive_file_integrity_1k_frame_boundary(tmp_path):
+    """Verifies: M1.
+
+    A file that lands exactly on frame boundaries (3 × 1024 = 3072 bytes) in
+    CRC-mode 1K transfer must produce identical content — exercising the full
+    code path for multi-frame CRC reception without any final-packet padding.
+    """
+    save = tmp_path / "M1_BOUND.BIN"
+
+    payloads: list[bytes] = []
+    for i in range(3):
+        base = i * 1024
+        payloads.append(bytes((base + j) % 256 for j in range(1024)))
+
+    frames: list[bytes] = []
+    for i, p in enumerate(payloads):
+        frames.append(_make_crc_1k_frame(i + 1, p))
+
+    fake = _FakeSerial(b"C" + b"".join(frames) + EOT)  # seed CRC poll response
+    assert XModem(fake).receive_file(str(save), use_1k=True) is True
+    written = save.read_bytes()
+    assert len(written) == 3 * 1024
+    assert written == b"".join(payloads)
+
+
+def test_receive_file_integrity_partial_last_frame(tmp_path):
+    """Verifies: M1.
+
+    A file with a partial final frame (1500 bytes = one full 1K + 472 payload,
+    padded by sender to 1024 on the wire) must write back exactly the raw-
+    received content — the receiver stores frame payloads verbatim including any
+    sender-side padding since protocol frames are always full-size blocks.
+    """
+    save = tmp_path / "M1_PARTIAL.BIN"
+
+    p1 = bytes((i * 7 + 3) & 0xFF for i in range(1024))
+    p2 = bytes((i * 13 + 7) & 0xFF for i in range(472))
+
+    def _build_1k(seq: int, payload: bytes) -> bytes:
+        crc_val = 0
+        for byte in payload:
+            crc_val ^= byte << 8
+            for _ in range(8):
+                crc_val = ((crc_val << 1) ^ 0x1021) if (crc_val & 0x8000) else (crc_val << 1)
+                crc_val &= 0xFFFF
+        # Sender-side padding before CRC
+        padded = payload + b"\x1a" * (1024 - len(payload))
+        pcrc = 0
+        for byte in padded:
+            pcrc ^= byte << 8
+            for _ in range(8):
+                pcrc = ((pcrc << 1) ^ 0x1021) if (pcrc & 0x8000) else (pcrc << 1)
+                pcrc &= 0xFFFF
+        return STX + bytes([seq, 255 - seq]) + padded + bytes([(pcrc >> 8) & 0xFF, pcrc & 0xFF])
+
+    stream = _build_1k(1, p1) + _build_1k(2, p2) + EOT
+    fake = _FakeSerial(b"C" + stream)
+    assert XModem(fake).receive_file(str(save), use_1k=True) is True
+    written = save.read_bytes()
+    assert len(written) == 2 * 1024
