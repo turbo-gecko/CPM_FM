@@ -82,3 +82,37 @@ def test_invalid_name_skip_does_not_upload(gui, scratch_drive, monkeypatch, inva
     gui.refresh_remote()
     assert suggested not in gui.remote_names()
     assert set(gui.remote_names()) == before
+
+
+@pytest.mark.hil
+@pytest.mark.mt("MT-FV08", "FR-148", "FR-149")
+def test_invalid_name_special_chars_sanitized(
+    gui, scratch_drive, monkeypatch, invalid_spy, tmp_path
+):
+    """A name with invalid CP/M characters (* ? <) is sanitized to a legal 8.3 name.
+
+    Verifies: FR-148, FR-149.
+    """
+    SPECIAL_NAME = "BAD*NAME?.TXT"  # contains * and ? — invalid CP/M chars
+    assert not CPMParser.is_valid_8_3(SPECIAL_NAME)
+    suggested = CPMParser.suggest_8_3(SPECIAL_NAME)
+    assert CPMParser.is_valid_8_3(suggested), f"suggested {suggested!r} is not valid 8.3"
+    silence_message_boxes(monkeypatch)
+    assert gui.connect()[0] == "ok"
+    gui.set_drive(scratch_drive)
+
+    (tmp_path / "host" / SPECIAL_NAME).write_bytes(b"special chars\r\n")
+    gui.refresh_remote()
+    if suggested.upper() in {n.upper() for n in gui.remote_names()}:
+        answer_file_action(monkeypatch, accepted=True)
+        gui.win._remote_delete(suggested)
+        gui.quiesce()
+
+    answer_invalid_name(monkeypatch, action=RENAME)
+    gui.upload([SPECIAL_NAME])
+    assert invalid_spy, "invalid_name_detected never fired"
+    assert suggested in gui.remote_names(), f"{suggested} not uploaded after sanitization"
+
+    answer_file_action(monkeypatch, accepted=True)
+    gui.win._remote_delete(suggested)
+    gui.quiesce()

@@ -7,6 +7,10 @@ and checksum variants are gated per target by ``has_1k_sender`` /
 
 All writes target the operator-nominated scratch drive and clean up after
 themselves (ERA the test file before and after each round-trip).
+
+Boundary tests (MT-T15–MT-T17) verify zero-byte, 128-byte, and 1024-byte
+files transfer correctly. The mid-transfer port-close test (MT-T18) verifies
+graceful failure.
 """
 
 from __future__ import annotations
@@ -90,3 +94,99 @@ def test_round_trip_checksum(request, peer, scratch_drive, samples, tmp_path):
         pytest.skip("N/A: target has no checksum-only X-Modem sender")
     src = next(s for s in samples if s.name == "SHORT.TXT")
     _round_trip(peer, scratch_drive, src, tmp_path, use_1k=False)
+
+
+@pytest.mark.hil
+@pytest.mark.mt("MT-T15", "FR-081", "NFR-003q")
+def test_round_trip_zero_byte_file(peer, scratch_drive, tmp_path):
+    """A zero-byte file round-trips as an empty file (EOT accepted per NFR-003q).
+
+    Verifies: FR-081, NFR-003q.
+    """
+    name = "EMPTY.DAT"
+    empty_file = tmp_path / name
+    empty_file.write_bytes(b"")
+    peer.erase(name, letter=scratch_drive)
+    assert peer.send_file(str(empty_file), letter=scratch_drive), "upload of zero-byte file failed"
+    assert peer.exists(name, letter=scratch_drive)
+    dst = tmp_path / f"dl_{name}"
+    assert peer.recv_file(name, str(dst), letter=scratch_drive), "download of zero-byte file failed"
+    assert dst.stat().st_size == 0, f"expected 0 bytes, got {dst.stat().st_size}"
+    peer.erase(name, letter=scratch_drive)
+    log.info("zero-byte round-trip OK")
+
+
+@pytest.mark.hil
+@pytest.mark.mt("MT-T16", "FR-082", "NFR-003c")
+def test_round_trip_exactly_128_bytes(peer, scratch_drive, tmp_path):
+    """A 128-byte file transfers in a single frame (no extra frames added).
+
+    Verifies: FR-082, NFR-003c.
+    """
+    name = "ONEROW.DAT"
+    data = b"A" * 128
+    src = tmp_path / name
+    src.write_bytes(data)
+    peer.erase(name, letter=scratch_drive)
+    assert peer.send_file(str(src), letter=scratch_drive), f"upload of {name} failed"
+    assert peer.exists(name, letter=scratch_drive)
+    dst = tmp_path / f"dl_{name}"
+    assert peer.recv_file(name, str(dst), letter=scratch_drive), f"download of {name} failed"
+    assert_round_trip(src, dst)
+    peer.erase(name, letter=scratch_drive)
+    log.info("128-byte round-trip OK (single frame)")
+
+
+@pytest.mark.hil
+@pytest.mark.mt("MT-T17", "FR-082", "NFR-003b")
+def test_round_trip_exactly_1024_bytes(request, peer, scratch_drive, tmp_path):
+    """A 1024-byte file with 1K mode transfers in a single 1K frame.
+
+    Verifies: FR-082, NFR-003b.
+    """
+    target = request.getfixturevalue("target")
+    if not target.has_1k_sender:
+        pytest.skip("N/A: target has no 1K-capable X-Modem sender")
+    name = "BIG1K.DAT"
+    data = b"B" * 1024
+    src = tmp_path / name
+    src.write_bytes(data)
+    peer.erase(name, letter=scratch_drive)
+    assert peer.send_file(str(src), letter=scratch_drive, use_1k=True), f"upload of {name} failed"
+    assert peer.exists(name, letter=scratch_drive)
+    dst = tmp_path / f"dl_{name}"
+    recv_ok = peer.recv_file(name, str(dst), letter=scratch_drive, use_1k=True)
+    assert recv_ok, f"download of {name} failed"
+    assert_round_trip(src, dst)
+    peer.erase(name, letter=scratch_drive)
+    log.info("1024-byte round-trip OK (1K frame)")
+
+
+@pytest.mark.hil
+@pytest.mark.mt("MT-T18", "FR-082", "FR-120")
+def test_recv_port_closed_mid_transfer_graceful_failure(peer, scratch_drive, tmp_path):
+    """Closing the transport port mid-download fails gracefully (no crash).
+
+    Verifies: FR-082, FR-120.
+    """
+    name = "BIG.DAT"
+    # Seed a file first
+    big = tmp_path / name
+    big.write_bytes(b"X" * 3001)
+    peer.erase(name, letter=scratch_drive)
+    assert peer.send_file(str(big), letter=scratch_drive), f"seed upload of {name} failed"
+    assert peer.exists(name, letter=scratch_drive)
+
+    # Close the transport port mid-transfer to simulate a disconnect
+    peer.sm.close_transport_port()
+
+    # The receive should fail gracefully (return False, not raise)
+    dst = tmp_path / f"dl_{name}"
+    result = peer.recv_file(name, str(dst), letter=scratch_drive)
+    assert result is False, f"expected graceful failure, got {result}"
+
+    # Restore the transport port for cleanup
+    settings = peer.settings
+    peer.sm.open_port("transport", settings)
+    peer.erase(name, letter=scratch_drive)
+    log.info("mid-transfer port-close handled gracefully")

@@ -1,14 +1,17 @@
 """§12 — Terminal Window over real serial (MT-W*).
 
 Open the Terminal Window, send a line on the Terminal Port, and confirm the live
-remote response is rendered into the receive area (FR-091/FR-094/FR-095/FR-097).
+remote response is rendered into the receive area (FR-091/FR-094/FR-095).
 """
 
 from __future__ import annotations
 
 import pytest
+from helpers.trace import get_logger
 
 from cpm_fm.terminal.cpm_parser import CPMParser
+
+log = get_logger("terminal-vt100")
 
 
 def _screen_text(term) -> str:
@@ -76,8 +79,44 @@ def test_terminal_window_clear(gui):
     assert gui.connect()[0] == "ok"
     gui.win.show_terminal()
     term = gui.win.terminal_win
+    assert term is not None, "terminal window was not created"
+
     term.engine.feed(b"SOME OUTPUT")
     term.render_screen()
     assert _screen_text(term).strip() != ""
     term.clear_text()
     assert _screen_text(term).strip() == ""
+
+
+@pytest.mark.hil
+@pytest.mark.mt("MT-W10", "FR-157")
+def test_terminal_vt100_escape_sequences_render_without_crash(gui):
+    """VT-100 escape sequences (cursor move, clear, SGR attributes) render without crash.
+
+    Verifies: FR-157.
+    """
+    assert gui.connect()[0] == "ok"
+    gui.win.show_terminal()
+    term = gui.win.terminal_win
+    assert term is not None, "terminal window was not created"
+
+    # Cursor positioning (CUP): ESC[5;10H → row 5, col 10
+    term.engine.feed(b"\x1b[5;10H")
+    # Erase in line (EL): ESC[K → clear to end of line
+    term.engine.feed(b"\x1b[K")
+    # Erase in display (ED): ESC[J → clear to end of screen
+    term.engine.feed(b"\x1b[J")
+    # SGR bold: ESC[1m
+    term.engine.feed(b"\x1b[1m")
+    # SGR reset: ESC[0m
+    term.engine.feed(b"\x1b[0m")
+    # Some printable text after escapes
+    term.engine.feed(b"ESCAPES OK")
+
+    term.render_screen()
+    text = _screen_text(term)
+    # The engine should have processed all sequences without raising
+    assert text is not None
+    rows = len(term.engine.display)
+    cols = len(term.engine.display[0]) if term.engine.display else 0
+    log.info("VT-100 escapes OK (screen %dx%d)", rows, cols)

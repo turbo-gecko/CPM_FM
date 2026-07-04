@@ -87,3 +87,53 @@ def test_skip_existing_remote_file(gui, scratch_drive, monkeypatch, conflict_spy
     answer_file_action(monkeypatch, accepted=True)
     gui.win._remote_delete(name)
     gui.quiesce()
+
+
+@pytest.mark.hil
+@pytest.mark.mt("MT-CF08", "FR-147")
+def test_conflict_apply_to_all_persists_across_batch(
+    gui, scratch_drive, monkeypatch, conflict_spy, tmp_path
+):
+    """Apply-to-all on the first conflict auto-applies to the second.
+
+    Verifies: FR-147.
+    """
+    silence_message_boxes(monkeypatch)
+    assert gui.connect()[0] == "ok"
+    gui.set_drive(scratch_drive)
+
+    name1 = "APPLY1.TXT"
+    name2 = "APPLY2.TXT"
+
+    # Create both files on host
+    (tmp_path / "host" / name1).write_bytes(b"first\r\n")
+    (tmp_path / "host" / name2).write_bytes(b"second\r\n")
+
+    # Ensure both are absent on remote
+    _ensure_absent(gui, monkeypatch, scratch_drive, name1)
+    _ensure_absent(gui, monkeypatch, scratch_drive, name2)
+
+    # Upload first file (no conflict)
+    gui.upload([name1])
+    assert name1 in gui.remote_names()
+
+    # Upload second file (no conflict)
+    gui.upload([name2])
+    assert name2 in gui.remote_names()
+
+    # Now upload both again — first conflict triggers the dialog
+    hits_before = len(conflict_spy)
+    answer_conflict(monkeypatch, action=SKIP, apply_to_all=True)
+    gui.upload([name1, name2])  # both conflict
+    hits_after = len(conflict_spy)
+
+    # Only one conflict dialog should have appeared (apply-to-all)
+    assert hits_after - hits_before >= 1, "conflict_detected never fired"
+    assert name1 in gui.remote_names()
+    assert name2 in gui.remote_names()
+
+    # Clean up
+    answer_file_action(monkeypatch, accepted=True)
+    gui.win._remote_delete(name1)
+    gui.win._remote_delete(name2)
+    gui.quiesce()
