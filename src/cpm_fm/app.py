@@ -114,60 +114,20 @@ class MainWindow(
     """
 
     status_changed = Signal(str)
-    # Carries raw bytes destined for the terminal screen (received serial data,
-    # local echo, transfer-byte echo). Feeding the VT-100 engine and repainting
-    # happen in the GUI-thread slot so the engine is only ever touched from one
-    # thread (NFR-001/NFR-004).
     term_write = Signal(bytes)
     remote_files_ready = Signal(dict)
     error_raised = Signal(str, str)
-    # Emitted from a transfer worker thread on success so the destination file
-    # list is refreshed on the GUI thread ("host" or "remote").
     transfer_completed = Signal(str)
-    # FR-105/FR-106: emitted from the transfer worker thread to drive the single
-    # modal transfer-progress dialog on the GUI thread (NFR-004). batch_started
-    # carries (direction, file_count) and builds the dialog once for the whole
-    # batch; transfer_file_started carries (filename, total_bytes, file_index)
-    # and switches the dialog to the next file; transfer_progress carries
-    # (blocks, bytes_done) and fires once per transferred block.
     batch_started = Signal(str, int)
     transfer_file_started = Signal(str, int, int)
     transfer_progress = Signal(int, int)
-    # FR-103: emitted (with the selected drive letter) from the drive-change
-    # worker thread when the drive's prompt does not appear, so the "Drive not
-    # found" dialog and the list-clear run on the GUI thread (NFR-004).
     drive_not_found = Signal(str)
-    # FR-041/FR-042: emitted (with the detected drive letter) from the
-    # post-connect probe worker thread when the remote returns a drive prompt,
-    # so the drive drop-down update and remote-list refresh run on the GUI
-    # thread (NFR-004).
     connect_probe_ok = Signal(str)
-    # FR-044/FR-045: emitted from the post-connect probe worker thread when no
-    # drive prompt is returned after the retry, so the modal Remote Filesystem
-    # Unavailable dialog runs on the GUI thread (NFR-004).
     connect_probe_failed = Signal()
-    # FR-113: emitted (with the downloaded temp-file path) from the remote-view
-    # worker thread once the file has been received, so the viewer is launched
-    # on the GUI thread (NFR-004).
     view_file_ready = Signal(str)
-    # FR-120: emitted from a transfer worker thread when the batch is cancelled,
-    # carrying (direction, any_succeeded), so the dialog teardown and any
-    # destination-list refresh run on the GUI thread (NFR-004).
     transfer_cancelled = Signal(str, bool)
-    # FR-146: emitted from a transfer worker thread when a destination file
-    # already exists, carrying (filename, direction), so the modal conflict
-    # dialog runs on the GUI thread (NFR-004). The worker blocks on
-    # _conflict_answered until the GUI thread records the user's choice.
     conflict_detected = Signal(str, str)
-    # FR-148/FR-149: emitted from the upload worker thread when a file's name
-    # does not meet the CP/M 8.3 convention, carrying (filename), so the modal
-    # rename/skip/cancel dialog runs on the GUI thread (NFR-004). The worker
-    # blocks on _invalid_name_answered until the GUI thread records the choice.
     invalid_name_detected = Signal(str)
-    # FR-152: emitted from a Backup/Restore worker thread, carrying the
-    # operation ("backup" or "restore"), so the destructive-operation
-    # confirmation dialog runs on the GUI thread (NFR-004). The worker blocks on
-    # _backup_confirm_answered until the GUI thread records the user's choice.
     backup_restore_confirm = Signal(str)
 
     def __init__(
@@ -384,7 +344,7 @@ class MainWindow(
         instance shares the underlying signal object.  Without this precaution,
         test sessions that create multiple ``MainWindow`` instances accumulate
         orphaned handlers — old ``self`` still receives emits from new ones.
-        The _clean_signals() helper runs first in __init__ to prevent this leak.
+        The _disconnect_signals() helper runs in closeEvent to prevent this leak.
         """
         self.status_changed.connect(self._on_status_changed)
         self.term_write.connect(self._on_term_write)
@@ -402,6 +362,43 @@ class MainWindow(
         self.conflict_detected.connect(self._on_conflict_detected)
         self.invalid_name_detected.connect(self._on_invalid_name_detected)
         self.backup_restore_confirm.connect(self._on_backup_restore_confirm)
+
+    def _disconnect_signals(self):
+        """Remove all handlers connected in ``_connect_signals``.
+
+        This prevents orphaned slots on class-level signals from running when a
+        subsequent ``MainWindow`` instance emits those signals (test ordering
+        failures, ghost UI updates).  Call this before the window is destroyed
+        — currently done from ``closeEvent`` — so that no dead ``self``
+        survives on a signal's sender list.
+
+        Satisfies: NFR-004.
+        """
+        pairs = (
+            (self.status_changed, self._on_status_changed),
+            (self.term_write, self._on_term_write),
+            (self.remote_files_ready, self._update_remote_list_ui),
+            (self.error_raised, self._on_error_raised),
+            (self.transfer_completed, self._on_transfer_completed),
+            (self.batch_started, self._on_batch_started),
+            (self.transfer_file_started, self._on_transfer_file_started),
+            (self.transfer_progress, self._on_transfer_progress),
+            (self.drive_not_found, self._on_drive_not_found),
+            (self.connect_probe_ok, self._on_connect_probe_ok),
+            (self.connect_probe_failed, self._on_connect_probe_failed),
+            (self.view_file_ready, self._on_view_file_ready),
+            (self.transfer_cancelled, self._on_transfer_cancelled),
+            (self.conflict_detected, self._on_conflict_detected),
+            (self.invalid_name_detected, self._on_invalid_name_detected),
+            (self.backup_restore_confirm, self._on_backup_restore_confirm),
+        )
+        for sig, slot in pairs:
+            try:
+                sig.disconnect(slot)
+            except RuntimeError:
+                # Slot was never connected to this signal instance (e.g. during
+                # early teardown or in tests that skip _connect_signals).
+                pass
 
     def setup_menu(self):
         """
@@ -902,6 +899,7 @@ class MainWindow(
         in the background when the user closes it (it hides rather than
         destroys), so it still exists here and its current geometry is saved.
         """
+        self._disconnect_signals()  # prevent orphaned slot accumulation (NFR-004)
         self.window_state.save_geometry("main", self)
         if self.terminal_win:
             self.window_state.save_geometry("terminal", self.terminal_win)
