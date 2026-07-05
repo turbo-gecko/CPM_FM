@@ -7,13 +7,25 @@
 #
 # These use `repo: local` and the tools already installed via `.[dev]`, so
 # the hook versions always match what CI and the project pin — no second,
-# separately-pinned ruff to drift out of step.
+# separately-pinned ruff to drift out of step. Entries invoke the project's
+# `.venv\Scripts\python.exe` directly (see AGENTS.md > Commands) rather than a
+# bare `ruff`/`python`, which may not be on PATH or may resolve to the wrong
+# interpreter on a dev machine — unlike CI, which installs into its own
+# throwaway global Python and can use bare commands safely.
+#
+# The executable itself needs a backslash-separated path on Windows: native
+# process creation (unlike a shell) will not resolve a relative forward-slash
+# path for the *program being launched* (only for arguments passed to it).
+# The `entry` string is doubled (`.venv\\Scripts\\python.exe`) because
+# pre-commit tokenizes `entry` with `shlex.split()`, whose POSIX escaping
+# rules treat a lone backslash as an escape character and drop it — doubling
+# it is what survives that pass as one literal backslash.
 repos:
   - repo: local
     hooks:
       - id: ruff-check
         name: ruff check (src tests)
-        entry: ruff check
+        entry: .venv\\Scripts\\python.exe -m ruff check
         language: system
         types: [python]
         files: ^(src|tests)/
@@ -22,7 +34,7 @@ repos:
 
       - id: ruff-format
         name: ruff format --check (src tests)
-        entry: ruff format --check
+        entry: .venv\\Scripts\\python.exe -m ruff format --check
         language: system
         types: [python]
         files: ^(src|tests)/
@@ -33,7 +45,7 @@ repos:
         name: requirement views in sync
         # Fails if docs/requirements_views/ is stale vs the SRS / architecture
         # doc / code Satisfies: tags. Also runs the table-structure validator.
-        entry: python tools/traceability_sync/generate_views.py --check
+        entry: .venv\\Scripts\\python.exe tools/traceability_sync/generate_views.py --check
         language: system
         pass_filenames: false
         files: ^(src/.*\.py|docs/.*\.md|tools/traceability_sync/.*\.py)$
