@@ -86,7 +86,7 @@ def test_connect_port_open_failure_shows_unavailable_dialog(gui, monkeypatch, tm
         dialog_shown.append(True)
         return app_mod.QDialog.DialogCode.Rejected
 
-    # Patch open_port to raise SerialException
+    # Patch open_port to raise SerialException for the transport port only.
     import serial
 
     def raise_serial(*a, **k):
@@ -94,7 +94,7 @@ def test_connect_port_open_failure_shows_unavailable_dialog(gui, monkeypatch, tm
 
     monkeypatch.setattr(
         "cpm_fm.terminal.serial_manager.SerialManager.open_port",
-        lambda self, *args, **kwargs: args[0] == "transport" or raise_serial(),
+        lambda self, *args, **kwargs: True if args[0] != "transport" else raise_serial(),
     )
 
     # Also patch the unavailable dialog so we can observe it

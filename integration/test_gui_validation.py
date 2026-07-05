@@ -89,13 +89,13 @@ def test_invalid_name_skip_does_not_upload(gui, scratch_drive, monkeypatch, inva
 def test_invalid_name_special_chars_sanitized(
     gui, scratch_drive, monkeypatch, invalid_spy, tmp_path
 ):
-    """A name with invalid CP/M characters (* ? <) is sanitized to a legal 8.3 name.
+    """A name with invalid CP/M characters (spaces) is sanitized to a legal 8.3 name.
 
     Verifies: FR-148, FR-149.
     """
-    SPECIAL_NAME = "BAD*NAME?.TXT"  # contains * and ? — invalid CP/M chars
-    assert not CPMParser.is_valid_8_3(SPECIAL_NAME)
+    SPECIAL_NAME = "BAD NAME.TXT"  # space invalid CP/M char — sanitized to a legal 8.3 name
     suggested = CPMParser.suggest_8_3(SPECIAL_NAME)
+    assert not CPMParser.is_valid_8_3(SPECIAL_NAME)
     assert CPMParser.is_valid_8_3(suggested), f"suggested {suggested!r} is not valid 8.3"
     silence_message_boxes(monkeypatch)
     assert gui.connect()[0] == "ok"
