@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import time
 from typing import TYPE_CHECKING, Any
 
+from PySide6.QtCore import QTimer
 from PySide6.QtGui import QIntValidator
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -12,6 +14,7 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLineEdit,
+    QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QVBoxLayout,
@@ -19,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from cpm_fm.gui.dialog_buttons import build_button_row
+from cpm_fm.terminal.xmodem import XModem
 from cpm_fm.utils.i18n import tr
 
 if TYPE_CHECKING:
@@ -31,17 +35,22 @@ class ConfigDialog(QDialog):
     Builds a two-column form (UIR-021) from a declarative field list. Each
     field is a dict with keys: ``key``, ``label_key`` (an i18n key resolved via
     :func:`tr` at build time — FR-121), ``type`` ("dropdown", "text",
-    "directory", "checkbox" or "multiline"), ``default``, and optionally ``options`` (dropdown),
-    ``maxlength`` (text), ``int_range`` (text, an inclusive ``(lo, hi)`` tuple)
-    and ``group`` (an i18n key for a titled :class:`QGroupBox` the field is
-    placed in). Fields that share a ``group`` value are gathered into one boxed,
-    two-column sub-form; fields with no ``group`` render in a plain form. Groups
-    and the ungrouped form appear in order of first appearance in the field
-    list, so reordering the list reorders the dialog (UIR-041). Option *values*
-    and stored keys are technical/semantic and are not translated (CR-015) —
-    only the row label and group title are.
+    "directory", "checkbox", "multiline" or "button"), ``default``, and
+    optionally ``options`` (dropdown), ``maxlength`` (text), ``int_range``
+    (text, an inclusive ``(lo, hi)`` tuple) and ``group`` (an i18n key for a
+    titled :class:`QGroupBox` the field is placed in). A "button" field
+    (FR-161) carries no settings value — it uses ``button_key`` (an i18n key
+    for the button text) and ``on_click`` (the name of a method on the
+    subclass) instead of ``label_key``/``default``, and is never added to
+    ``self.entries``, so it is invisible to ``save()``. Fields that share a
+    ``group`` value are gathered into one boxed, two-column sub-form; fields
+    with no ``group`` render in a plain form. Groups and the ungrouped form
+    appear in order of first appearance in the field list, so reordering the
+    list reorders the dialog (UIR-041). Option *values* and stored keys are
+    technical/semantic and are not translated (CR-015) — only the row label
+    and group title are.
 
-    Satisfies: UIR-021, UIR-041, FR-121, CR-015.
+    Satisfies: UIR-021, UIR-041, FR-121, FR-161, CR-015.
     """
 
     def __init__(
@@ -132,14 +141,24 @@ class ConfigDialog(QDialog):
         Returns the resolved row label (translated — FR-121) and the widget to
         place in the form. For a "directory" field the returned widget is the
         path+browse container, while the value-bearing line edit is what gets
-        registered in ``self.entries`` for save-time retrieval (UIR-053).
+        registered in ``self.entries`` for save-time retrieval (UIR-053). A
+        "button" field (UIR-094/UIR-095) is a bare action trigger — it carries
+        no settings value, so it is never added to ``self.entries`` and is
+        skipped entirely by ``save()``.
 
-        Satisfies: UIR-021, UIR-053.
+        Satisfies: UIR-021, UIR-053, FR-161.
         """
         key = field["key"]
-        current = str(self.settings.get(key, field["default"]))
+        current = str(self.settings.get(key, field.get("default", "")))
         widget: QWidget
 
+        if field["type"] == "button":
+            # FR-161: a standalone action button (e.g. "Test"), not a
+            # settings-bearing field. ``on_click`` names a method on this
+            # dialog, resolved here so field definitions stay plain data.
+            button = QPushButton(tr(field["button_key"]))
+            button.clicked.connect(getattr(self, field["on_click"]))
+            return "", button
         if field["type"] == "dropdown":
             combo = QComboBox()
             combo.addItems([str(o) for o in field["options"]])
@@ -349,20 +368,33 @@ class GeneralConfigDialog(ConfigDialog):
     Specialized dialog for General Configuration
     (SRS docs/cpm_fm_requirements.md, UIR-040 through UIR-048).
 
-    Satisfies: UIR-040-UIR-059, UIR-089, UIR-090.
+    Satisfies: UIR-040-UIR-059, UIR-089, UIR-090, UIR-093, UIR-094, UIR-095, FR-161.
     """
 
     def __init__(self, parent, settings, callback, window_state=None):
         """
         Satisfies: UIR-041, UIR-042, UIR-045, UIR-046, UIR-047, UIR-048,
         UIR-049, UIR-050, UIR-052, UIR-053, UIR-054, UIR-055, UIR-056,
-        UIR-058, UIR-059, UIR-089, UIR-090.
+        UIR-058, UIR-059, UIR-089, UIR-090, UIR-093, UIR-094, UIR-095.
 
         Command text fields limited to 79 characters. UIR-041: the remote
         command fields (List Files, Receive from Remote, Send to Remote, Rename,
         Delete) are gathered into a "Remote" group placed first; the remaining
         general settings follow ungrouped.
         """
+        # FR-161: the Test buttons need the MainWindow's serial_mgr/settings.
+        # ``parent`` already *is* the MainWindow at every call site; stored
+        # under its own name (rather than read back via self.parent()) so the
+        # test handlers below don't depend on Qt's widget-parent bookkeeping.
+        # Must be set before super().__init__() — it calls exec() internally,
+        # and a button field's on_click is resolved during create_widgets().
+        self._main_window = parent
+        self._test_timer: QTimer | None = None
+        self._test_ser = None
+        self._test_shared = False
+        self._test_no_response_key = ""
+        self._test_deadline = 0.0
+
         # UIR-041: i18n key for the "Remote" group box title. The five remote
         # command fields below carry this so the base dialog boxes them together
         # and, being first in the list, renders the group before everything else.
@@ -384,12 +416,30 @@ class GeneralConfigDialog(ConfigDialog):
                 "maxlength": 79,
                 "group": REMOTE,
             },
+            # UIR-094: pre-flight test for the Receive from Remote command
+            # (FR-161) — not a persisted setting, so it carries no "default"
+            # value and is never added to self.entries.
+            {
+                "key": "_test_recv_remote_cmd",
+                "type": "button",
+                "button_key": "button.test",
+                "on_click": "_test_recv_remote_cmd",
+                "group": REMOTE,
+            },
             {
                 "key": "send_remote_cmd",
                 "label_key": "config.general.send_remote",
                 "type": "text",
                 "default": "PCGET $1",
                 "maxlength": 79,
+                "group": REMOTE,
+            },
+            # UIR-095: pre-flight test for the Send to Remote command (FR-161).
+            {
+                "key": "_test_send_remote_cmd",
+                "type": "button",
+                "button_key": "button.test",
+                "on_click": "_test_send_remote_cmd",
                 "group": REMOTE,
             },
             # XMODEM-1K mode: when checked, host->remote sends use 1024-byte STX
@@ -449,6 +499,16 @@ class GeneralConfigDialog(ConfigDialog):
                 "type": "text",
                 "default": "3",
                 "int_range": (0, 60),
+            },
+            # UIR-093: seconds to wait for the remote's first X-Modem response
+            # byte before treating the transfer as a misconfigured launch
+            # command (FR-159/FR-160). Integer 1..60 inclusive.
+            {
+                "key": "xfer_handshake_timeout",
+                "label_key": "config.general.xfer_handshake_timeout",
+                "type": "text",
+                "default": "10",
+                "int_range": (1, 60),
             },
             # UIR-052: seconds to settle, after the terminal output goes idle,
             # between files in a multi-file batch before the next launch command
@@ -518,3 +578,126 @@ class GeneralConfigDialog(ConfigDialog):
             window_state,
             "general_config",
         )
+
+    def _test_recv_remote_cmd(self):
+        """
+        Satisfies: FR-161, UIR-094.
+
+        Pre-flight test for the Receive from Remote field.
+        """
+        self._start_command_test(
+            "recv_remote_cmd", "PCPUT $1", "dialog.test_remote_cmd.no_response_recv"
+        )
+
+    def _test_send_remote_cmd(self):
+        """
+        Satisfies: FR-161, UIR-095.
+
+        Pre-flight test for the Send to Remote field.
+        """
+        self._start_command_test(
+            "send_remote_cmd", "PCGET $1", "dialog.test_remote_cmd.no_response_send"
+        )
+
+    def _start_command_test(self, cmd_key: str, default: str, no_response_key: str) -> None:
+        """
+        Satisfies: FR-161.
+
+        Launches the CP/M side of the command exactly as a real transfer
+        would (FR-087), using the field's *currently typed* value (which need
+        not yet be saved), then waits up to the handshake timeout (FR-160)
+        for any response byte — without ever performing a real transfer.
+        Requires an active connection (FR-080/CR-010). Runs entirely on the
+        GUI thread via a bounded QTimer poll rather than a worker thread plus
+        signal, since the wait is short, cancellable by construction, and this
+        avoids the cross-instance signal-connection bookkeeping a repeatedly
+        created/destroyed dialog would otherwise need.
+        """
+        win = self._main_window
+        if not (win.serial_mgr.terminal_connected and win.serial_mgr.transport_connected):
+            QMessageBox.critical(
+                self, tr("dialog.error.title"), tr("error.transport_not_connected")
+            )
+            return
+        if self._test_timer is not None:
+            return  # a test is already running
+        template = self.entries[cmd_key].text() or default
+        if not template.strip():
+            return
+
+        ser = win.serial_mgr.transport_port
+        self._test_ser = ser
+        # FR-037: when the Transport and Terminal Ports are the same physical
+        # port, suspend the terminal read loop so it does not steal the
+        # response byte this test is waiting for.
+        self._test_shared = ser is not None and ser is win.serial_mgr.terminal_port
+        self._test_no_response_key = no_response_key
+        self._set_test_buttons_enabled(False)
+        if self._test_shared:
+            win.serial_mgr.pause_terminal_reads()
+        if ser:
+            ser.reset_input_buffer()
+        win.handle_terminal_send(template.replace("$1", "CPMTEST.TXT"))
+        QTimer.singleShot(int(win._launch_delay() * 1000), self._test_begin_listen)
+
+    def _test_begin_listen(self) -> None:
+        """
+        Satisfies: FR-160, FR-161.
+
+        Starts polling for the remote's first response byte once the launch
+        delay (FR-089) has elapsed, bounded by the configured handshake
+        timeout (FR-160).
+        """
+        win = self._main_window
+        self._test_deadline = time.monotonic() + win._handshake_timeout()
+        self._test_timer = QTimer(self)
+        self._test_timer.timeout.connect(self._test_poll)
+        self._test_timer.start(50)
+
+    def _test_poll(self) -> None:
+        """
+        Satisfies: FR-161.
+        """
+        if self._test_ser is not None and self._test_ser.in_waiting > 0:
+            self._finish_command_test(True)
+            return
+        if time.monotonic() >= self._test_deadline:
+            self._finish_command_test(False)
+
+    def _finish_command_test(self, got_response: bool) -> None:
+        """
+        Satisfies: FR-159, FR-161.
+
+        Reports the outcome and cancels (X-Modem CAN, via the same bounded
+        abort used by a real transfer) whatever the launched command may
+        have started, so it is not left waiting for a real transfer that
+        will never come.
+        """
+        if self._test_timer is not None:
+            self._test_timer.stop()
+            self._test_timer = None
+        if self._test_ser is not None:
+            XModem(self._test_ser)._abort()
+        if self._test_shared:
+            self._main_window.serial_mgr.resume_terminal_reads()
+        self._set_test_buttons_enabled(True)
+        if got_response:
+            QMessageBox.information(
+                self, tr("dialog.test_remote_cmd.title"), tr("dialog.test_remote_cmd.success")
+            )
+        else:
+            QMessageBox.warning(
+                self, tr("dialog.test_remote_cmd.title"), tr(self._test_no_response_key)
+            )
+
+    def _set_test_buttons_enabled(self, enabled: bool) -> None:
+        """
+        Satisfies: FR-161.
+
+        Disables every button in the dialog (Save, Cancel, both Test buttons,
+        the host-directory Browse button) while a test is in flight, so the
+        dialog cannot be closed out from under it and a second test cannot
+        overlap the first.
+        """
+        for widget in self.findChildren(QPushButton):
+            widget.setEnabled(enabled)

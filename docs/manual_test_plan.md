@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.25 |
+| Version | 1.26 |
 | Status | Draft |
 | Date | 2026-07-05 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.18.1) |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.19.0) |
 
 ---
 
@@ -174,7 +174,8 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 | MT-G01 [visual] | FR-021, UIR-040, UIR-041, UIR-044 | Open Config > General. | Modal dialog titled "General Config". A **"Remote"** group is the **first** section, containing (in order) List Files, Receive from Remote, Send to Remote, Rename, Delete. The remaining settings (Xfer Launch Delay, Xfer Inter-file Delay, End of Line, Debug Logging, Echo Transfer Data, Viewer/Editor, Default Host Directory) appear below it, ungrouped. Two-column layout throughout. |
 | MT-G02 | UIR-042, UIR-045, UIR-046 | Inspect defaults / length limits of List Files, Receive from Remote, Send to Remote (in the Remote group). | List Files default "DIR"; Receive default "PCPUT $1"; Send default "PCGET $1"; each limited to 79 characters. |
 | MT-G03 | UIR-047, UIR-048 | Inspect the End of Line drop-down. | Drop-down offering the mutually exclusive values CR / LF / CRLF; **CR** selected by default. |
-| MT-G04 | UIR-049, UIR-052 | Inspect Xfer Launch Delay and Xfer Inter-file Delay fields. | Launch Delay integer 0–60 default 3; Inter-file Delay integer 0–60 default 2. |
+| MT-G04 | UIR-049, UIR-052, UIR-093 | Inspect Xfer Launch Delay, Xfer Handshake Timeout, and Xfer Inter-file Delay fields. | Launch Delay integer 0–60 default 3; Handshake Timeout integer 1–60 default 10; Inter-file Delay integer 0–60 default 2. |
+| MT-G11 | UIR-094, UIR-095, FR-161 | Connected, with a deliberately wrong Send to Remote command (e.g. "NOSUCHCMD $1") typed but **not yet saved**. Click the **Test** button beside it. Repeat with the correct default command. | Wrong command: after the handshake timeout, a dialog reports no response from the remote. Correct command: a dialog reports the remote responded. Neither run actually transfers a file (no new file appears on either side). Repeat both for the **Receive from Remote** Test button. |
 | MT-G05 | UIR-050 | Inspect Debug Logging control. | Dropdown OFF/ON, default OFF. |
 | MT-G09 | UIR-058 | Inspect Echo Transfer Data control. | Dropdown OFF/ON, default OFF. |
 | MT-G06 | UIR-053 | Click the Default Host Directory browse button, pick a folder. | A folder-select dialog appears; the chosen path populates the field. |
@@ -276,6 +277,7 @@ CP/M side. Use the multi-block (≥1 KB) file plus small files from §2.3.
 | MT-T12 | FR-119 | Right-click a single host file → **To Remote**; right-click a single remote file → **To Host**. | Each transfers just that one file exactly as the corresponding Copy button (progress dialog, refresh on success); with Transport disconnected, "Transport port not connected" and no transfer. |
 | MT-T13 | FR-120, NFR-003m | Start a transfer of the multi-block (≥1 KB) file (either direction); while the progress dialog shows blocks incrementing, press **Cancel**. (Open the Terminal Window first to watch the byte echo.) | The Cancel button disables and shows "Cancelling…"; the transfer aborts promptly; the CAN sequence is sent (visible as `<18>` tokens in the Terminal Window — MT-T09) and the CP/M program reports an abort; the progress dialog closes; the status bar shows a "Transfer cancelled" message; **no** error dialog appears. |
 | MT-T14 | FR-120 | Multi-select three files; start the batch; press **Cancel** during the **second** file (so file 1 already completed). | Remaining files are skipped (third never launched); the dialog closes with a cancellation status; because file 1 completed, the destination list refreshes once; on a cancelled **Copy to Host**, no partially-received file is left in the host folder. |
+| MT-T15 | FR-159, FR-160 | Connected. Temporarily set Send to Remote (Config > General) to a wrong command (e.g. "NOSUCHCMD $1"); Copy to Remote. Repeat with Receive from Remote set wrong; Copy to Host. | Well under the old 60s, an error dialog reports "No response from remote for `<name>` - check the Send to Remote / Receive from Remote command in Config > General" — distinct from the generic "Transfer failed" wording. Restoring the correct command and retrying succeeds normally. |
 
 ---
 

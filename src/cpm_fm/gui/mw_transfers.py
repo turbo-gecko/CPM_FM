@@ -203,6 +203,21 @@ class _TransfersMixin(MainWindowMixinBase):
         except (TypeError, ValueError):
             return 3.0
 
+    def _handshake_timeout(self) -> float:
+        """
+        Satisfies: FR-160.
+
+        Seconds to wait for the remote's very first X-Modem response byte
+        before treating the transfer as a misconfigured-command failure
+        (FR-159), independent of the bounded per-packet retransmission
+        timeouts used once the transfer is underway (NFR-003p). Tunable via
+        the `xfer_handshake_timeout` setting (UIR-093); default 10s.
+        """
+        try:
+            return max(0.1, float(self.settings.get("xfer_handshake_timeout", 10.0)))
+        except (TypeError, ValueError):
+            return 10.0
+
     def _interfile_delay(self) -> float:
         """
         Satisfies: FR-109.

@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_207/420 requirements have a verifying test; 213 untested; 0 stale tag(s)._
+_212/426 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -58,7 +58,7 @@ _207/420 requirements have a verifying test; 213 untested; 0 stale tag(s)._
 | FR-021a | `tests/test_gui_smoke.py:test_dialog_save_warns_and_writes_nothing_when_no_config_loaded`, `tests/test_gui_smoke.py:test_general_config_save_keeps_current_host_dir`, `tests/test_gui_smoke.py:test_general_config_save_persists_general_only` |
 | FR-022 | `tests/test_gui_smoke.py:test_menu_about_opens_dialog` |
 | FR-023 | `tests/test_gui_smoke.py:test_help_menu_contains_manual_action`, `tests/test_gui_smoke.py:test_menu_manual_opens_dialog`, `tests/test_gui_smoke.py:test_menu_manual_reuses_open_window` |
-| FR-030 | `tests/test_serial_manager.py:test_numeric_defaults_applied_when_absent`, `tests/test_serial_manager.py:test_numeric_fields_are_coerced_to_int`, `tests/test_serial_manager.py:test_open_port_returns_false_on_serial_error`, `tests/test_serial_manager.py:test_parity_maps_to_pyserial_constant` |
+| FR-030 | `tests/test_gui_smoke.py:test_connect_when_terminal_already_open_notifies_and_takes_no_action`, `tests/test_serial_manager.py:test_numeric_defaults_applied_when_absent`, `tests/test_serial_manager.py:test_numeric_fields_are_coerced_to_int`, `tests/test_serial_manager.py:test_open_port_returns_false_on_serial_error`, `tests/test_serial_manager.py:test_parity_maps_to_pyserial_constant` |
 | FR-033 | `tests/test_serial_manager.py:test_open_terminal_port_clears_flag_on_failure` |
 | FR-036 | `tests/test_serial_manager.py:test_read_loop_dispatches_raw_bytes` |
 | FR-037 | `tests/test_gui_smoke.py:test_connect_shared_port_assigns_transport_port`, `tests/test_serial_manager.py:test_read_loop_suspends_dispatch_while_paused` |
@@ -164,6 +164,9 @@ _207/420 requirements have a verifying test; 213 untested; 0 stale tag(s)._
 | FR-157g | `tests/test_vt100_engine.py:test_dec_line_drawing_charset`, `tests/test_vt100_engine.py:test_raw_8bit_mode_maps_bytes_directly`, `tests/test_vt100_engine.py:test_utf8_invalid_bytes_replaced_with_fffd` |
 | FR-157h | `tests/test_vt100_engine.py:test_unknown_escape_ignored_without_desync` |
 | FR-158 | `tests/test_terminal_view.py:test_encode_key_control_combinations`, `tests/test_terminal_view.py:test_encode_key_enter_uses_eol`, `tests/test_terminal_view.py:test_encode_key_navigation_and_function_keys`, `tests/test_terminal_view.py:test_encode_key_printable_and_utf8`, `tests/test_terminal_view.py:test_encode_key_returns_none_for_modifier_only` |
+| FR-159 | `tests/test_gui_smoke.py:test_config_test_button_reports_no_response`, `tests/test_gui_smoke.py:test_download_no_response_reports_misconfigured_command_error`, `tests/test_gui_smoke.py:test_upload_no_response_reports_misconfigured_command_error`, `tests/test_xmodem.py:test_receive_file_no_response_stays_false_on_success`, `tests/test_xmodem.py:test_receive_file_sets_no_response_on_genuine_handshake_timeout`, `tests/test_xmodem.py:test_send_file_cancel_during_handshake_does_not_set_no_response`, `tests/test_xmodem.py:test_send_file_sets_no_response_on_genuine_handshake_timeout` |
+| FR-160 | `tests/test_gui_smoke.py:test_config_test_button_reports_no_response`, `tests/test_gui_smoke.py:test_config_test_button_reports_success_when_remote_responds`, `tests/test_xmodem.py:test_handshake_timeout_defaults_to_ten_seconds`, `tests/test_xmodem.py:test_receive_file_sets_no_response_on_genuine_handshake_timeout`, `tests/test_xmodem.py:test_send_file_sets_no_response_on_genuine_handshake_timeout` |
+| FR-161 | `tests/test_gui_smoke.py:test_config_test_button_reports_no_response`, `tests/test_gui_smoke.py:test_config_test_button_reports_success_when_remote_responds`, `tests/test_gui_smoke.py:test_config_test_button_requires_connection` |
 | IFR-004 | `tests/test_config_handler.py:test_load_json_malformed_returns_empty`, `tests/test_config_handler.py:test_load_json_reads_valid_object`, `tests/test_config_handler.py:test_save_json_to_unwritable_path_returns_false` |
 | NFR-001 | `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
 | NFR-002 | `tests/test_serial_manager.py:test_flow_control_nested_key`, `tests/test_serial_manager.py:test_nested_key_names_are_honoured` |
@@ -219,6 +222,8 @@ _207/420 requirements have a verifying test; 213 untested; 0 stale tag(s)._
 | UIR-090 | `tests/test_config_handler.py:test_default_settings_include_xmodem_1k_keys`, `tests/test_gui_smoke.py:test_general_config_remote_group_first`, `tests/test_gui_smoke.py:test_general_config_xmodem_1k_checkbox_round_trips`, `tests/test_gui_smoke.py:test_issue_remote_cmd_uses_1k_command_when_enabled` |
 | UIR-091 | `tests/test_gui_smoke.py:test_manual_dialog_contents`, `tests/test_gui_smoke.py:test_render_manual_html_anchors_match_toc_links` |
 | UIR-092 | `tests/test_i18n.py:test_remote_unavailable_keys_resolve` |
+| UIR-094 | `tests/test_gui_smoke.py:test_general_config_remote_group_first` |
+| UIR-095 | `tests/test_gui_smoke.py:test_general_config_remote_group_first` |
 
 ## Untested requirements
 
@@ -437,6 +442,7 @@ These defined requirements have no `Verifies:` test tag:
 - UIR-091b
 - UIR-091c
 - UIR-091d
+- UIR-093
 
 ## Stale `Verifies:` tags
 

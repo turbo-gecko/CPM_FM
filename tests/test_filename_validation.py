@@ -117,8 +117,10 @@ class _FakeSerial:
 
 def _fake_xmodem_cls(calls):
     class _FakeXModem:
-        def __init__(self, ser, monitor=None, progress=None, cancel_check=None):
-            pass
+        def __init__(
+            self, ser, monitor=None, progress=None, cancel_check=None, handshake_timeout=None
+        ):
+            self.no_response = False
 
         def send_file(self, path, use_1k=False):
             calls.append(path)

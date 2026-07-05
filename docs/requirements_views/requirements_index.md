@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_420 requirements across 54 sections._
+_426 requirements across 54 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -146,6 +146,9 @@ _420 requirements across 54 sections._
 | FR-087 | Before starting the X-Modem transfer, the application shall launch the CP/M side of the transfer… | mw_transfers.py:_issue_remote_cmd, _transfer_to_remote, _transfer_to_host; UIR-045/UIR-046 |
 | FR-088 | The application shall emit verbose transfer debug output (per-byte X-Modem trace and transfer flow messages)… | mw_transfers.py:_debug, mw_transfers.py:_debug_enabled, mw_transfers.py:_on_transfer_bytes; UIR-050 |
 | FR-089 | After launching the CP/M side of a transfer (FR-087), the application shall wait xfer_launch_delay seconds… | mw_transfers.py:_launch_delay; UIR-049 |
+| FR-159 | If the initial X-Modem handshake (the wait for the remote's start character, immediately following FR-087/FR-089)… | xmodem.py:send_file, xmodem.py:receive_file (no_response flag); mw_transfer_batches.py:_transfer_to_remote_batch, _transfer_to_host_batch; tests test_xmodem.py, test_gui_smoke.py |
+| FR-160 | The initial X-Modem handshake wait — the time spent waiting for the very first response… | xmodem.py:XModem.__init__, send_file, receive_file; mw_transfers.py:_handshake_timeout; UIR-093; tests test_xmodem.py |
+| FR-161 | The General Configuration dialog shall provide a "Test" button beside each of the Receive from… | config_dialogs.py:GeneralConfigDialog; UIR-094, UIR-095; tests test_gui_smoke.py |
 | FR-099 | On a **successful** file transfer the application shall automatically refresh the destination file list so… | app.py:_on_transfer_completed, transfer_completed signal, _transfer_to_remote, _transfer_to_host |
 | FR-099a | After a successful Copy to Host the application shall refresh the Host Files list (per… | — |
 | FR-099b | A failed transfer shall not trigger a refresh | — |
@@ -399,10 +402,13 @@ _420 requirements across 54 sections._
 | UIR-043 | *Withdrawn.* Formerly a "Change Disk" text field persisted as change_disk_cmd… | config_dialogs.py:GeneralConfigDialog |
 | UIR-044 | The remaining general settings — "Xfer Launch Delay (s)" (UIR-049), "Xfer Inter-file Delay (s)" (UIR-052)… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:create_widgets |
 | UIR-045 | The dialog shall provide a "Receive from Remote" text field limited to 79 characters with… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:__init__ |
+| UIR-094 | The dialog shall provide a "Test" button beside the Receive from Remote field (UIR-045), behaving… | config_dialogs.py:GeneralConfigDialog; FR-161 |
 | UIR-046 | The dialog shall provide a "Send to Remote" text field limited to 79 characters with… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:__init__ |
+| UIR-095 | The dialog shall provide a "Test" button beside the Send to Remote field (UIR-046), behaving… | config_dialogs.py:GeneralConfigDialog; FR-161 |
 | UIR-047 | The dialog shall provide an "End of Line" drop-down offering the mutually exclusive values Carriage… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:create_widgets |
 | UIR-048 | The Carriage Return (CR) value shall be the default selection… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:__init__ |
 | UIR-049 | The dialog shall provide an "Xfer Launch Delay (s)" integer field (0..60 inclusive) with a… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:__init__ |
+| UIR-093 | The dialog shall provide an "Xfer Handshake Timeout (s)" integer field (1..60 inclusive) with a… | config_dialogs.py:GeneralConfigDialog, mw_transfers.py:_handshake_timeout |
 | UIR-050 | The dialog shall provide a "Debug Logging" dropdown (OFF/ON, default OFF) controlling the verbose transfer… | config_dialogs.py:GeneralConfigDialog |
 | UIR-052 | The dialog shall provide an "Xfer Inter-file Delay (s)" integer field (0..60 inclusive) with a… | config_dialogs.py:GeneralConfigDialog |
 | UIR-053 | The dialog shall provide a "Default Host Directory" text field and an associated browse button… | config_dialogs.py:create_widgets, config_dialogs.py:on_browse, config_dialogs.py:GeneralConfigDialog, mw_config.py:menu_general_config |

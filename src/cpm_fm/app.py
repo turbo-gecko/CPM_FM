@@ -183,6 +183,9 @@ class MainWindow(
         self._conflict_answered = threading.Event()
         self._conflict_result: tuple[str, bool] = (CANCEL, False)
         self._conflict_policy: str | None = None
+        # FR-159: whether the most recent XModem handshake got no response at
+        # all (a misconfigured launch command), reset per batch.
+        self._last_xmodem_no_response = False
         # FR-148/FR-149: CP/M 8.3 name-validation prompt. The upload worker emits
         # invalid_name_detected and blocks on _invalid_name_answered; the GUI
         # thread shows the dialog (NFR-004) and stores (action, new_name) in

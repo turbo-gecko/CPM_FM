@@ -293,6 +293,42 @@ def test_send_file_returns_false_when_no_start_char(tmp_path, monkeypatch):
     assert CAN not in fake.written
 
 
+def test_send_file_sets_no_response_on_genuine_handshake_timeout(tmp_path):
+    """Verifies: FR-159, FR-160."""
+    # FR-159: a handshake that never sees a single response byte sets
+    # no_response, distinguishing a misconfigured remote command from a
+    # mid-transfer failure. FR-160: the wait is bounded by the configurable
+    # handshake_timeout (a tiny value here so the test runs fast for real).
+    path = tmp_path / "UP.TXT"
+    path.write_bytes(b"x" * 10)
+    fake = _FakeSerial(b"")
+    xm = XModem(fake, handshake_timeout=0.05)
+    assert xm.send_file(str(path)) is False
+    assert xm.no_response is True
+    assert CAN not in fake.written
+
+
+def test_send_file_cancel_during_handshake_does_not_set_no_response(tmp_path):
+    """Verifies: FR-159."""
+    # FR-159: a cancellation during the handshake is not a misconfigured
+    # command, so no_response stays False even though the send also failed.
+    path = tmp_path / "UP.TXT"
+    path.write_bytes(b"x" * 10)
+    fake = _FakeSerial(b"")
+    xm = XModem(fake, handshake_timeout=0.05, cancel_check=lambda: True)
+    assert xm.send_file(str(path)) is False
+    assert xm.no_response is False
+
+
+def test_handshake_timeout_defaults_to_ten_seconds(tmp_path):
+    """Verifies: FR-160."""
+    # FR-160: default handshake_timeout is 10s, independent of a caller
+    # supplying its own value.
+    fake = _FakeSerial(b"")
+    assert XModem(fake).handshake_timeout == 10.0
+    assert XModem(fake, handshake_timeout=5.0).handshake_timeout == 5.0
+
+
 def test_send_file_aborts_after_nak_exhaustion(tmp_path):
     """Verifies: NFR-003p."""
     # NFR-003p: a packet that is NAK'd on all 10 retransmit attempts gives up and
@@ -372,6 +408,31 @@ class _CrcReceiveSerial:
 
     def flush(self) -> None:
         pass
+
+
+def test_receive_file_sets_no_response_on_genuine_handshake_timeout(tmp_path):
+    """Verifies: FR-159, FR-160."""
+    # FR-159/FR-160: a sender that never answers either poll (NAK or 'C')
+    # within the configurable handshake timeout sets no_response, distinct
+    # from a mid-transfer failure. A tiny timeout keeps the test fast.
+    save = tmp_path / "DOWN.TXT"
+    fake = _FakeSerial(b"")
+    xm = XModem(fake, handshake_timeout=0.3)
+    assert xm.receive_file(str(save)) is False
+    assert xm.no_response is True
+
+
+def test_receive_file_no_response_stays_false_on_success(tmp_path):
+    """Verifies: FR-159."""
+    # FR-159: no_response is only set on a genuine handshake timeout, never on
+    # a successful receive.
+    save = tmp_path / "DOWN.TXT"
+    helper = XModem(_FakeSerial())
+    payload = bytes(range(128))
+    fake = _CrcReceiveSerial(_crc_packet(helper, 1, payload) + EOT)
+    xm = XModem(fake)
+    assert xm.receive_file(str(save)) is True
+    assert xm.no_response is False
 
 
 def test_receive_file_falls_through_to_crc_mode(tmp_path):

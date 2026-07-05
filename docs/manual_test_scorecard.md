@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.25 |
-| Scorecard for plan version | 1.25 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.26 |
+| Scorecard for plan version | 1.26 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -106,6 +106,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-G07 | Viewer; Rename/Delete (in Remote group) defaults | UIR-054/055/056 | | | |
 | MT-G08 | No "Change Disk" field | UIR-043 | | | |
 | MT-G10 | Boot Sequence multi-line field round-trips | UIR-059 | | | |
+| MT-G11 | Test button (Send/Receive): reports no-response vs. success, no real transfer | UIR-094/095, FR-161 | | | |
 
 ### §8 Config load / save
 | ID | Title | Req | Result | Env | Notes |
@@ -172,6 +173,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-T12 | Context-menu To Remote / To Host | FR-119 | | | |
 | MT-T13 | Cancel single live transfer; CAN abort; no error | FR-120, NFR-003m | | | |
 | MT-T14 | Cancel mid-batch; skip rest; refresh; no partial file | FR-120 | | | |
+| MT-T15 | Misconfigured remote command reports "No response" diagnosis, not generic failure | FR-159, FR-160 | | | |
 
 ### §11.1 Drag-and-drop file transfer
 | ID | Title | Req | Result | Env | Notes |

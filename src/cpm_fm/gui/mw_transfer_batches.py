@@ -49,7 +49,7 @@ class _TransferBatchesMixin(MainWindowMixinBase):
 
     def _transfer_to_remote_batch(self, filepaths, retry: bool = False):
         """
-        Satisfies: FR-099, FR-105, FR-106, FR-107, FR-108, FR-109, FR-142.
+        Satisfies: FR-099, FR-105, FR-106, FR-107, FR-108, FR-109, FR-142, FR-159.
 
         Transfer each selected file sequentially over the
         single Transport Port. Runs on a worker thread. One progress
@@ -63,6 +63,7 @@ class _TransferBatchesMixin(MainWindowMixinBase):
         count = len(filepaths)
         self._transfer_cancel.clear()  # FR-120: start each batch un-cancelled.
         self._conflict_policy = None  # FR-147: no carry-over between batches.
+        self._last_xmodem_no_response = False  # FR-159: no carry-over between batches.
         self.batch_started.emit("remote", count)
         # FR-145: refresh the remote listing once so conflict detection checks
         # the live remote contents (empty set => no conflicts detected).
@@ -131,6 +132,14 @@ class _TransferBatchesMixin(MainWindowMixinBase):
                     self._record_history(remote_name, filepath, "remote", "cancelled", 0, "", retry)
                     self._finish_cancelled_batch("remote", succeeded)
                     return
+                # FR-159: a handshake that got no response at all points at a
+                # misconfigured Send to Remote command, distinct from a
+                # generic mid-transfer failure.
+                fail_key = (
+                    "error.transfer_no_response_send"
+                    if self._last_xmodem_no_response
+                    else "error.transfer_failed"
+                )
                 # FR-142: record the failed file.
                 self._record_history(
                     remote_name,
@@ -138,14 +147,14 @@ class _TransferBatchesMixin(MainWindowMixinBase):
                     "remote",
                     "failure",
                     0,
-                    tr("error.transfer_failed", name=remote_name),
+                    tr(fail_key, name=remote_name),
                     retry,
                 )
                 # FR-108: abort the batch and refresh if anything got through.
                 if succeeded:
                     self.transfer_completed.emit("remote")
                 self.error_raised.emit(
-                    tr("dialog.xmodem_error.title"), tr("error.transfer_failed", name=remote_name)
+                    tr("dialog.xmodem_error.title"), tr(fail_key, name=remote_name)
                 )
                 return
             # FR-142: record the successful upload with its size.
@@ -157,7 +166,7 @@ class _TransferBatchesMixin(MainWindowMixinBase):
 
     def _send_one_to_remote(self, filepath, remote_name: str | None = None) -> bool:
         """
-        Satisfies: FR-081, FR-082, FR-083, FR-087, FR-149.
+        Satisfies: FR-081, FR-082, FR-083, FR-087, FR-149, FR-159, FR-160.
 
         Launch the CP/M receiver (PCGET) and send one file over X-Modem.
         Returns True on success. Runs on the batch worker thread; it does not
@@ -200,8 +209,11 @@ class _TransferBatchesMixin(MainWindowMixinBase):
                 monitor=self._on_transfer_bytes,
                 progress=self._on_transfer_progress_cb,
                 cancel_check=self._transfer_cancel.is_set,
+                handshake_timeout=self._handshake_timeout(),
             )
-            return xm.send_file(filepath, use_1k=self._xmodem_1k_enabled())
+            ok = xm.send_file(filepath, use_1k=self._xmodem_1k_enabled())
+            self._last_xmodem_no_response = xm.no_response
+            return ok
         finally:
             if shared:
                 self.serial_mgr.resume_terminal_reads()
@@ -232,7 +244,7 @@ class _TransferBatchesMixin(MainWindowMixinBase):
 
     def _transfer_to_host_batch(self, save_paths, retry: bool = False):
         """
-        Satisfies: FR-099, FR-105, FR-106, FR-107, FR-108, FR-109, FR-142.
+        Satisfies: FR-099, FR-105, FR-106, FR-107, FR-108, FR-109, FR-142, FR-159.
 
         Receive each selected file sequentially over the single
         Transport Port. Runs on a worker thread. One progress dialog
@@ -245,6 +257,7 @@ class _TransferBatchesMixin(MainWindowMixinBase):
         count = len(save_paths)
         self._transfer_cancel.clear()  # FR-120: start each batch un-cancelled.
         self._conflict_policy = None  # FR-147: no carry-over between batches.
+        self._last_xmodem_no_response = False  # FR-159: no carry-over between batches.
         self.batch_started.emit("host", count)
         succeeded = 0
         for index, save_path in enumerate(save_paths, start=1):
@@ -285,6 +298,14 @@ class _TransferBatchesMixin(MainWindowMixinBase):
                     self._record_history(name, save_path, "host", "cancelled", 0, "", retry)
                     self._finish_cancelled_batch("host", succeeded)
                     return
+                # FR-159: a handshake that got no response at all points at a
+                # misconfigured Receive from Remote command, distinct from a
+                # generic mid-transfer failure.
+                fail_key = (
+                    "error.transfer_no_response_recv"
+                    if self._last_xmodem_no_response
+                    else "error.transfer_failed"
+                )
                 # FR-142: record the failed file.
                 self._record_history(
                     name,
@@ -292,15 +313,13 @@ class _TransferBatchesMixin(MainWindowMixinBase):
                     "host",
                     "failure",
                     0,
-                    tr("error.transfer_failed", name=name),
+                    tr(fail_key, name=name),
                     retry,
                 )
                 # FR-108: abort the batch and refresh if anything got through.
                 if succeeded:
                     self.transfer_completed.emit("host")
-                self.error_raised.emit(
-                    tr("dialog.xmodem_error.title"), tr("error.transfer_failed", name=name)
-                )
+                self.error_raised.emit(tr("dialog.xmodem_error.title"), tr(fail_key, name=name))
                 return
             # FR-142: record the successful download with the received file size
             # (the X-Modem stream carries no length, so read it from disk).
@@ -314,7 +333,7 @@ class _TransferBatchesMixin(MainWindowMixinBase):
 
     def _recv_one_to_host(self, save_path) -> bool:
         """
-        Satisfies: FR-081, FR-082, FR-083, FR-087.
+        Satisfies: FR-081, FR-082, FR-083, FR-087, FR-159, FR-160.
 
         Launch the CP/M sender (PCPUT) and receive one file over X-Modem.
         Returns True on success. Runs on the batch worker thread; it does not
@@ -353,8 +372,11 @@ class _TransferBatchesMixin(MainWindowMixinBase):
                 monitor=self._on_transfer_bytes,
                 progress=self._on_transfer_progress_cb,
                 cancel_check=self._transfer_cancel.is_set,
+                handshake_timeout=self._handshake_timeout(),
             )
-            return xm.receive_file(save_path, use_1k=self._xmodem_1k_enabled())
+            ok = xm.receive_file(save_path, use_1k=self._xmodem_1k_enabled())
+            self._last_xmodem_no_response = xm.no_response
+            return ok
         finally:
             if shared:
                 self.serial_mgr.resume_terminal_reads()

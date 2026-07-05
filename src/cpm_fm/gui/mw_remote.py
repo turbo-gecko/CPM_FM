@@ -172,6 +172,13 @@ class _RemoteMixin(MainWindowMixinBase):
         Satisfies: FR-030, FR-031, FR-032, FR-034, FR-037, FR-038, FR-039,
         FR-040, FR-041, FR-046.
         """
+        # FR-030: do not attempt to reopen an already-open Terminal Port —
+        # reopening fails (the OS won't grant a second handle), which used to
+        # desync the connected flag from the real port state and lock the
+        # user out of ever reconnecting. Notify and take no further action.
+        if self.serial_mgr.terminal_connected:
+            self.set_status(tr("status.terminal_already_open"))
+            return
         if self.serial_mgr.open_port("terminal", self.settings):
             self.set_status(tr("status.terminal_port_open"))
             term_port = self.settings.get("terminal_port")

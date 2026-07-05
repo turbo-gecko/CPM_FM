@@ -7,6 +7,7 @@ Run headless via the ``QT_QPA_PLATFORM=offscreen`` environment variable (set in 
 
 import os
 import tempfile
+import time
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -70,8 +71,11 @@ def _fake_xmodem_cls(success=True, calls=None):
     seq = iter(success) if isinstance(success, (list, tuple)) else None
 
     class _FakeXModem:
-        def __init__(self, ser, monitor=None, progress=None, cancel_check=None):
+        def __init__(
+            self, ser, monitor=None, progress=None, cancel_check=None, handshake_timeout=None
+        ):
             self.progress = progress
+            self.no_response = False
 
         def _report(self):
             # FR-105: exercise the progress hook so the transfer_progress signal
@@ -462,6 +466,38 @@ def test_connect_probes_when_both_ports_connected(qapp, monkeypatch, state):
         monkeypatch.setattr("cpm_fm.app.threading.Thread", _RecordingThread)
         win.do_connect()
         assert win._do_connect_probe_logic in targets
+    finally:
+        win.close()
+
+
+def test_connect_when_terminal_already_open_notifies_and_takes_no_action(qapp, monkeypatch, state):
+    """Verifies: FR-030."""
+    # FR-030: Connect shall open the Terminal Port only if it is not already
+    # open. Defect: pressing Connect while already connected re-attempted the
+    # open, which fails (the port is held open) and desyncs the connected
+    # flag from the real port state, locking the user out of reconnecting.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+
+        opened = []
+        monkeypatch.setattr(win.serial_mgr, "open_port", lambda *a, **k: opened.append(a) or True)
+        statuses = []
+        monkeypatch.setattr(win, "set_status", lambda t: statuses.append(t))
+        errors = []
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_remote.QMessageBox.critical",
+            lambda *a, **k: errors.append(a) or None,
+        )
+
+        win.do_connect()
+
+        assert opened == []  # no re-open attempt on either port
+        assert errors == []  # not treated as an error
+        assert statuses == [i18n.tr("status.terminal_already_open")]
+        assert win.serial_mgr.terminal_connected is True
+        assert win.serial_mgr.transport_connected is True
     finally:
         win.close()
 
@@ -1830,8 +1866,10 @@ def test_cancelled_transfer_is_not_reported_as_error(qapp, monkeypatch, state):
         monkeypatch.setattr(win, "refresh_remote_files", lambda: refreshed.append(1))
 
         class _CancellingXModem:
-            def __init__(self, ser, monitor=None, progress=None, cancel_check=None):
-                pass
+            def __init__(
+                self, ser, monitor=None, progress=None, cancel_check=None, handshake_timeout=None
+            ):
+                self.no_response = False
 
             def send_file(self, path, use_1k=False):
                 win._transfer_cancel.set()  # user cancels during the transfer
@@ -1848,6 +1886,71 @@ def test_cancelled_transfer_is_not_reported_as_error(qapp, monkeypatch, state):
         win.close()
 
 
+def test_upload_no_response_reports_misconfigured_command_error(qapp, monkeypatch, state):
+    """Verifies: FR-159."""
+    # FR-159: a handshake that got no response at all (a misconfigured Send to
+    # Remote command) reports a distinct error, not the generic transfer-failed
+    # message.
+    win = MainWindow(state)
+    try:
+        errors = []
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:]))
+
+        class _NoResponseXModem:
+            def __init__(
+                self, ser, monitor=None, progress=None, cancel_check=None, handshake_timeout=None
+            ):
+                self.no_response = True
+
+            def send_file(self, path, use_1k=False):
+                return False
+
+        _arm_transfer_with_xmodem(win, monkeypatch, _NoResponseXModem)
+        win._transfer_to_remote_batch([os.path.join(win.host_dir, "A.TXT")])
+        qapp.processEvents()
+        assert errors == [
+            (
+                i18n.tr("dialog.xmodem_error.title"),
+                i18n.tr("error.transfer_no_response_send", name="A.TXT"),
+            )
+        ]
+        entries = win.transfer_history.get_entries()
+        assert entries[0]["error"] == i18n.tr("error.transfer_no_response_send", name="A.TXT")
+    finally:
+        win.close()
+
+
+def test_download_no_response_reports_misconfigured_command_error(qapp, monkeypatch, state):
+    """Verifies: FR-159."""
+    # FR-159: same diagnosis on the download side, naming the Receive from
+    # Remote command instead.
+    win = MainWindow(state)
+    try:
+        errors = []
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:]))
+
+        class _NoResponseXModem:
+            def __init__(
+                self, ser, monitor=None, progress=None, cancel_check=None, handshake_timeout=None
+            ):
+                self.no_response = True
+
+            def receive_file(self, path, use_1k=False):
+                return False
+
+        _arm_transfer_with_xmodem(win, monkeypatch, _NoResponseXModem)
+        win._transfer_to_host_batch([os.path.join(win.host_dir, "B.TXT")])
+        qapp.processEvents()
+        assert errors == [
+            (
+                i18n.tr("dialog.xmodem_error.title"),
+                i18n.tr("error.transfer_no_response_recv", name="B.TXT"),
+            )
+        ]
+    finally:
+        win.close()
+
+
 def test_cancel_after_partial_batch_refreshes_and_skips_rest(qapp, monkeypatch, state):
     """Verifies: FR-120."""
     # FR-120: when a multi-file batch is cancelled after some files completed,
@@ -1860,8 +1963,10 @@ def test_cancel_after_partial_batch_refreshes_and_skips_rest(qapp, monkeypatch, 
         calls = []
 
         class _XModem:
-            def __init__(self, ser, monitor=None, progress=None, cancel_check=None):
-                pass
+            def __init__(
+                self, ser, monitor=None, progress=None, cancel_check=None, handshake_timeout=None
+            ):
+                self.no_response = False
 
             def send_file(self, path, use_1k=False):
                 calls.append(os.path.basename(path))
@@ -1962,12 +2067,13 @@ def test_file_action_dialog_multi_file_shows_readonly_list(qapp):
 
 
 def test_general_config_remote_group_first(qapp, monkeypatch):
-    """Verifies: UIR-041, UIR-089, UIR-090."""
+    """Verifies: UIR-041, UIR-089, UIR-090, UIR-094, UIR-095."""
     # UIR-041: the General Config dialog gathers the remote command fields
     # (List Files, Receive/Send, the XMODEM-1K toggle + 1K commands, Rename,
     # Delete) into a "Remote" group placed first, with Rename/Delete labelled
     # without the "Remote" suffix. UIR-089/UIR-090: the 1K toggle and its two
-    # command fields sit directly below Send to Remote.
+    # command fields sit directly below Send to Remote. UIR-094/UIR-095: a
+    # label-less Test button row sits directly below each of Receive/Send.
     from PySide6.QtWidgets import QFormLayout, QGroupBox
 
     from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
@@ -1983,16 +2089,20 @@ def test_general_config_remote_group_first(qapp, monkeypatch):
         assert isinstance(first, QGroupBox)
         assert first.title() == "Remote"
         # Its rows hold the remote command fields, in order, with the XMODEM-1K
-        # toggle and its 1K command fields directly below Send to Remote.
+        # toggle and its 1K command fields directly below Send to Remote. A
+        # Test button row has no label item at all (empty label), not an
+        # empty-text QLabel.
         form = first.layout()
-        labels = [
-            form.itemAt(i, QFormLayout.ItemRole.LabelRole).widget().text()
-            for i in range(form.rowCount())
-        ]
+        labels = []
+        for i in range(form.rowCount()):
+            item = form.itemAt(i, QFormLayout.ItemRole.LabelRole)
+            labels.append(item.widget().text() if item is not None else "")
         assert labels == [
             "List Files",
             "Receive from Remote",
+            "",  # UIR-094: Test button for Receive from Remote
             "Send to Remote",
+            "",  # UIR-095: Test button for Send to Remote
             "Use XMODEM-1K",
             "Receive from Remote (1K)",
             "Send to Remote (1K)",
@@ -2003,6 +2113,134 @@ def test_general_config_remote_group_first(qapp, monkeypatch):
         assert "eol" in dlg.entries and "host_directory" in dlg.entries
     finally:
         dlg.deleteLater()
+
+
+class _RespondingSerial:
+    in_waiting = 1
+    is_open = False
+
+    def reset_input_buffer(self):
+        pass
+
+
+class _SilentSerial:
+    in_waiting = 0
+    is_open = False
+
+    def reset_input_buffer(self):
+        pass
+
+
+def _open_general_config_for_test(win, monkeypatch):
+    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+
+    monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
+    return GeneralConfigDialog(win, win.settings, lambda s: None)
+
+
+def test_config_test_button_requires_connection(qapp, monkeypatch, state):
+    """Verifies: FR-161."""
+    # FR-161/FR-080/CR-010: the Test button requires an active connection,
+    # exactly like a real transfer, and launches nothing when not connected.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = False
+        sent = []
+        monkeypatch.setattr(win, "handle_terminal_send", lambda text, **k: sent.append(text))
+        criticals = []
+        monkeypatch.setattr(
+            "cpm_fm.gui.config_dialogs.QMessageBox.critical",
+            lambda *a, **k: criticals.append(a[1:]),
+        )
+        dlg = _open_general_config_for_test(win, monkeypatch)
+        try:
+            dlg._test_send_remote_cmd()
+            assert sent == []
+            assert criticals == [
+                (i18n.tr("dialog.error.title"), i18n.tr("error.transport_not_connected"))
+            ]
+        finally:
+            dlg.deleteLater()
+    finally:
+        win.close()
+
+
+def test_config_test_button_reports_success_when_remote_responds(qapp, monkeypatch, state):
+    """Verifies: FR-161, FR-160."""
+    # FR-161: pressing Test launches the currently-typed command (FR-087
+    # style, $1 replaced by a fixed placeholder) and reports success once the
+    # remote answers with any byte, without transferring a real file.
+    win = MainWindow(state)
+    try:
+        win.settings["xfer_launch_delay"] = 0
+        win.settings["xfer_handshake_timeout"] = 0.05
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+        win.serial_mgr.transport_port = _RespondingSerial()
+        sent = []
+        monkeypatch.setattr(win, "handle_terminal_send", lambda text, **k: sent.append(text))
+        infos = []
+        monkeypatch.setattr(
+            "cpm_fm.gui.config_dialogs.QMessageBox.information",
+            lambda *a, **k: infos.append(a[1:]),
+        )
+        dlg = _open_general_config_for_test(win, monkeypatch)
+        try:
+            dlg.entries["send_remote_cmd"].setText("PCGET $1")
+            dlg._test_send_remote_cmd()
+            deadline = time.monotonic() + 2.0
+            while not infos and time.monotonic() < deadline:
+                qapp.processEvents()
+                time.sleep(0.01)
+            assert sent == ["PCGET CPMTEST.TXT"]
+            assert infos == [
+                (
+                    i18n.tr("dialog.test_remote_cmd.title"),
+                    i18n.tr("dialog.test_remote_cmd.success"),
+                )
+            ]
+        finally:
+            dlg.deleteLater()
+    finally:
+        win.close()
+
+
+def test_config_test_button_reports_no_response(qapp, monkeypatch, state):
+    """Verifies: FR-161, FR-159, FR-160."""
+    # FR-159/FR-160: no byte ever arrives within the handshake timeout -> the
+    # same no-response diagnosis is reported, naming the Receive from Remote
+    # command this time.
+    win = MainWindow(state)
+    try:
+        win.settings["xfer_launch_delay"] = 0
+        win.settings["xfer_handshake_timeout"] = 0.05
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+        win.serial_mgr.transport_port = _SilentSerial()
+        monkeypatch.setattr(win, "handle_terminal_send", lambda text, **k: None)
+        warnings = []
+        monkeypatch.setattr(
+            "cpm_fm.gui.config_dialogs.QMessageBox.warning",
+            lambda *a, **k: warnings.append(a[1:]),
+        )
+        dlg = _open_general_config_for_test(win, monkeypatch)
+        try:
+            dlg.entries["recv_remote_cmd"].setText("PCPUT $1")
+            dlg._test_recv_remote_cmd()
+            deadline = time.monotonic() + 2.0
+            while not warnings and time.monotonic() < deadline:
+                qapp.processEvents()
+                time.sleep(0.01)
+            assert warnings == [
+                (
+                    i18n.tr("dialog.test_remote_cmd.title"),
+                    i18n.tr("dialog.test_remote_cmd.no_response_recv"),
+                )
+            ]
+        finally:
+            dlg.deleteLater()
+    finally:
+        win.close()
 
 
 def test_general_config_save_keeps_current_host_dir(qapp, state, monkeypatch):
@@ -3012,8 +3250,10 @@ def test_cancelled_transfer_records_cancelled_history(qapp, monkeypatch, state):
         monkeypatch.setattr(win, "refresh_remote_files", lambda: None)
 
         class _CancellingXModem:
-            def __init__(self, ser, monitor=None, progress=None, cancel_check=None):
-                pass
+            def __init__(
+                self, ser, monitor=None, progress=None, cancel_check=None, handshake_timeout=None
+            ):
+                self.no_response = False
 
             def send_file(self, path, use_1k=False):
                 win._transfer_cancel.set()

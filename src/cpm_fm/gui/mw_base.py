@@ -48,6 +48,7 @@ class MainWindowMixinBase:
         _invalid_name_result: tuple[str, str]
         _backup_confirm_answered: threading.Event
         _backup_confirm_result: bool
+        _last_xmodem_no_response: bool
         host_dir: str
 
         # --- file-pane widgets and their canonical (unfiltered) name lists ---
@@ -113,6 +114,7 @@ class MainWindowMixinBase:
         # --- transfer methods provided by sibling mixins (cross-mixin calls) ---
         def _debug(self, msg: str) -> None: ...
         def _launch_delay(self) -> float: ...
+        def _handshake_timeout(self) -> float: ...
         def _issue_remote_cmd(
             self,
             cmd_key: str,

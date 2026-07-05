@@ -10,9 +10,9 @@ class XModem:
     Implements the X-Modem protocol for file transfer.
     Supports both sending (Host -> Remote) and receiving (Remote -> Host).
 
-    Satisfies: FR-082, NFR-003a, NFR-003b, NFR-003c, NFR-003d, NFR-003e, NFR-003f,
-        NFR-003g, NFR-003h, NFR-003i, NFR-003j, NFR-003k, NFR-003l, NFR-003m, NFR-003n,
-        NFR-003o, NFR-003p, NFR-003q.
+    Satisfies: FR-082, FR-159, FR-160, NFR-003a, NFR-003b, NFR-003c, NFR-003d, NFR-003e,
+        NFR-003f, NFR-003g, NFR-003h, NFR-003i, NFR-003j, NFR-003k, NFR-003l, NFR-003m,
+        NFR-003n, NFR-003o, NFR-003p, NFR-003q.
     """
 
     SOH = b"\x01"  # Start of Header
@@ -30,6 +30,7 @@ class XModem:
         monitor: Optional[Callable[[str, bytes], None]] = None,
         progress: Optional[Callable[[int, int, Optional[int]], None]] = None,
         cancel_check: Optional[Callable[[], bool]] = None,
+        handshake_timeout: float = 10.0,
     ):
         self.ser = serial_conn
         self.timeout = timeout
@@ -46,6 +47,17 @@ class XModem:
         # send/receive call returns False. Set from a thread-safe flag by the
         # caller so a GUI Cancel button can interrupt the worker thread.
         self.cancel_check = cancel_check
+        # FR-160: bound on the initial handshake wait (the time spent waiting
+        # for the remote's very first response byte, before any packet has
+        # been exchanged), independent of and shorter than the bounded
+        # per-packet retransmission timeouts used once the transfer is
+        # underway (NFR-003p).
+        self.handshake_timeout = handshake_timeout
+        # FR-159: set True when the initial handshake times out having seen no
+        # response byte at all from the remote — the tell-tale sign of a
+        # misconfigured launch command, as opposed to a failure once the
+        # transfer was already underway. Left False for every other outcome.
+        self.no_response = False
 
     def _cancelled(self) -> bool:
         """Whether cancellation has been requested (FR-120).
@@ -258,8 +270,8 @@ class XModem:
         data field is 1024 bytes framed with STX (XMODEM-1K); otherwise it is 128
         bytes framed with SOH. The frame size is independent of the CRC/checksum mode.
 
-        Satisfies: FR-081, FR-082, FR-083, FR-086, FR-105, FR-120, NFR-003a, NFR-003b,
-            NFR-003c, NFR-003p.
+        Satisfies: FR-081, FR-082, FR-083, FR-086, FR-105, FR-120, FR-159, FR-160,
+            NFR-003a, NFR-003b, NFR-003c, NFR-003p.
         """
         if not os.path.exists(filepath):
             return False
@@ -277,12 +289,17 @@ class XModem:
         # any stale bytes before launching the remote receiver instead.
 
         # 1. Wait for the receiver's start character and choose the mode from
-        #    it. Receivers retransmit it periodically, so allow generous time.
-        start = self._wait_for_one_of((b"C", self.NAK), timeout=60.0)
+        #    it. Receivers retransmit it periodically, so allow generous time
+        #    (FR-160: the dedicated, configurable handshake timeout).
+        start = self._wait_for_one_of((b"C", self.NAK), timeout=self.handshake_timeout)
         if start == b"":
             # FR-120: a cancellation during the handshake aborts the transfer.
             if self._cancelled():
                 self._abort()
+            else:
+                # FR-159: no response at all — the tell-tale of a
+                # misconfigured launch command, not a mid-transfer failure.
+                self.no_response = True
             return False
         crc_mode = start == b"C"
 
@@ -360,8 +377,8 @@ class XModem:
         is what coaxes the sender into 1K blocks. Either way SOH frames carry
         128 data bytes and STX frames carry 1024, so both sizes are accepted.
 
-        Satisfies: FR-081, FR-082, FR-083, FR-105, FR-120, NFR-003f, NFR-003g,
-            NFR-003h, NFR-003j, NFR-003k, NFR-003l, NFR-003q.
+        Satisfies: FR-081, FR-082, FR-083, FR-105, FR-120, FR-159, FR-160, NFR-003f,
+            NFR-003g, NFR-003h, NFR-003j, NFR-003k, NFR-003l, NFR-003q.
         """
         received_data = bytearray()
         expected_packet = 1
@@ -379,6 +396,9 @@ class XModem:
         char = b""
         crc_mode = False
         prompts = ((b"C", True), (self.NAK, False)) if use_1k else ((self.NAK, False), (b"C", True))
+        # FR-160: the handshake timeout is the total budget for this initial
+        # wait; each prompt kind gets its own share, spread across 6 tries.
+        per_attempt = max(0.1, self.handshake_timeout / 6)
         for prompt, is_crc in prompts:
             for _ in range(6):
                 # FR-120: a cancellation during the handshake aborts the receive.
@@ -386,13 +406,16 @@ class XModem:
                     self._abort()
                     return False
                 self._write(prompt)
-                char = self._read_byte(timeout=3.0)
+                char = self._read_byte(timeout=per_attempt)
                 if char in (self.SOH, self.STX, self.EOT):
                     crc_mode = is_crc
                     break
             if char in (self.SOH, self.STX, self.EOT):
                 break
         else:
+            # FR-159: no response at all from either prompt kind — the
+            # tell-tale of a misconfigured launch command.
+            self.no_response = True
             return False
 
         # A sender that goes SILENT after the last packet — e.g. its EOT was

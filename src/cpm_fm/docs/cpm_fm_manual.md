@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.18.1**
+**Version 2.19.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -183,11 +183,14 @@ Configure CP/M command templates and behavior. The remote-command fields are gat
 
 > **XMODEM-1K.** When **Use XMODEM-1K** is ON, host→remote transfers use 1024-byte STX frames instead of the standard 128-byte frames, which is faster over a reliable link. If your CP/M helper needs a different command for 1K mode, set it in the **(1K)** fields; a blank 1K field falls back to its standard counterpart. When enabling 1K mode, also raise the **Transfer Timeout** (see Config → Serial) — 1000 ms is a good starting point.
 
+> **Test button.** A **Test** button sits beside the Recv from Remote and Send to Remote fields. It requires an active connection, and sends the field's currently entered command (even if not yet saved) exactly as a real transfer would, then reports whether the remote answered within the Transfer Handshake Timeout — without transferring any file. Use it while working out a command's exact syntax, before running a real transfer.
+
 **Other settings:**
 
 | Setting | Purpose | Default |
 |---------|---------|---------|
 | **Transfer Launch Delay** | Seconds to wait after issuing the CP/M command before starting the X-Modem handshake, giving the CP/M program time to start. | 3 |
+| **Transfer Handshake Timeout** | Seconds to wait for the remote's first response after the launch delay before treating the transfer as a misconfigured command (see [Section 17](#17-tips-and-troubleshooting)). | 10 |
 | **Inter-File Delay** | Seconds to pause between files in a batch, so the CP/M prompt returns before the next command. | 2 |
 | **EOL** | Line terminator used when sending text from the Terminal and the boot sequence: CR, LF, or CRLF. | CR |
 | **Debug Logging** | Writes verbose transfer tracing to standard output. | OFF |
@@ -213,6 +216,7 @@ Click **Connect** on the toolbar to open the serial port(s):
 
 - The program opens the **Terminal Port** first. On success, the Terminal indicator turns green and the status bar reads "Terminal port open." On failure, an error dialog explains the problem.
 - If the **Transport Port** is different from the Terminal Port, it is opened separately. If it is the same physical port, the program simply shares the already-open connection.
+- If the Terminal Port is already open, pressing **Connect** again does nothing further — the status bar reads "Terminal port is already open."
 
 ### Checking the remote file system
 
@@ -515,7 +519,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 
 ## 17. Tips and Troubleshooting
 
-- **A transfer never starts / times out.** Make sure the CP/M side launched its X-Modem helper. Increase the **Transfer Launch Delay** if your CP/M program is slow to start.
+- **A transfer never starts / times out.** Make sure the CP/M side launched its X-Modem helper. Increase the **Transfer Launch Delay** if your CP/M program is slow to start. If the remote never responds at all, the program now reports "No response from remote… check the Send to Remote / Receive from Remote command" instead of a generic failure — use the **Test** button beside those fields (Config → General) to check a command without running a real transfer.
 - **The machine doesn't reach CP/M when you connect.** If it sits at a ROM monitor or boot menu, set up a **Boot Sequence** (see [Section 9](#9-booting-the-remote-into-cpm)); the program will run it automatically when the connect check finds no CP/M prompt, or you can run it on demand with the Terminal window's **Boot into CP/M** button.
 - **Characters get dropped during terminal use or transfers.** Increase **Msec per Char** and/or **Msec per Line**, or lower the baud rate.
 - **XMODEM-1K transfers are unreliable.** Raise the **Transfer Timeout** (try 1000 ms) so each larger 1024-byte block has time to arrive.
@@ -546,6 +550,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 | Rename | `REN $2=$1` |
 | Delete | `ERA $1` |
 | Transfer Launch Delay | 3 seconds |
+| Transfer Handshake Timeout | 10 seconds |
 | Inter-File Delay | 2 seconds |
 | EOL | CR |
 | Debug Logging | OFF |
