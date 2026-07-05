@@ -501,5 +501,31 @@
       "Skipped": 1
     },
     "artifacts": "integration/results/elite_mini/20260705T054712Z_482d8e9"
+  },
+  {
+    "run_id": "20260705T085259Z_61b7331",
+    "timestamp": "2026-07-05T08:52:59.590584+00:00",
+    "target": "_local",
+    "app_version": "2.19.0",
+    "git_commit": "61b73314cdc1ee5f6d32313609125dd603762b18",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 10
+    },
+    "artifacts": "integration/results/_local/20260705T085259Z_61b7331"
+  },
+  {
+    "run_id": "20260705T085259Z_61b7331",
+    "timestamp": "2026-07-05T08:52:59.590584+00:00",
+    "target": "elite_mini",
+    "app_version": "2.19.0",
+    "git_commit": "61b73314cdc1ee5f6d32313609125dd603762b18",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 34,
+      "N-A": 1,
+      "Skipped": 1
+    },
+    "artifacts": "integration/results/elite_mini/20260705T085259Z_61b7331"
   }
 ]
