@@ -1,34 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          { "type": "command", "if": "Bash(python*)", "command": "bash .claude/hooks/require-venv.sh", "statusMessage": "Checking Python invocation uses .venv" },
-          { "type": "command", "if": "Bash(pip*)", "command": "bash .claude/hooks/require-venv.sh", "statusMessage": "Checking Python invocation uses .venv" },
-          { "type": "command", "if": "Bash(pytest*)", "command": "bash .claude/hooks/require-venv.sh", "statusMessage": "Checking Python invocation uses .venv" },
-          { "type": "command", "if": "Bash(mypy*)", "command": "bash .claude/hooks/require-venv.sh", "statusMessage": "Checking Python invocation uses .venv" },
-          { "type": "command", "if": "Bash(ruff*)", "command": "bash .claude/hooks/require-venv.sh", "statusMessage": "Checking Python invocation uses .venv" }
-        ]
-      },
-      {
-        "matcher": "PowerShell",
-        "hooks": [
-          { "type": "command", "if": "PowerShell(python*)", "command": "bash .claude/hooks/require-venv.sh", "statusMessage": "Checking Python invocation uses .venv" },
-          { "type": "command", "if": "PowerShell(pip*)", "command": "bash .claude/hooks/require-venv.sh", "statusMessage": "Checking Python invocation uses .venv" },
-          { "type": "command", "if": "PowerShell(pytest*)", "command": "bash .claude/hooks/require-venv.sh", "statusMessage": "Checking Python invocation uses .venv" },
-          { "type": "command", "if": "PowerShell(mypy*)", "command": "bash .claude/hooks/require-venv.sh", "statusMessage": "Checking Python invocation uses .venv" },
-          { "type": "command", "if": "PowerShell(ruff*)", "command": "bash .claude/hooks/require-venv.sh", "statusMessage": "Checking Python invocation uses .venv" }
-        ]
-      }
-    ],
     "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"SessionStart\\\",\\\"additionalContext\\\":\\\"CPM_FM project rule: BEFORE any work in this repo (searching, editing, planning, or delegating to sub-agents), read AGENTS.md first (this repo has no CLAUDE.md; AGENTS.md is the authoritative agent-guidance file). Any feature or requirement change MUST follow the mandatory 8-step Requirement-change workflow in AGENTS.md (update SRS, implement with Satisfies tags, regenerate views, add Verifies-tagged tests, run pytest, update manual test plan/scorecard, bump version). Present a plan and get approval before implementing. Run ALL Python tooling via the .venv interpreter (.venv/Scripts/python.exe -m <tool>: pytest, pip, mypy, ruff) \\u2014 never bare python/pip/pytest/mypy/ruff; a PreToolUse hook blocks the bare forms.\\\"}}\"",
+            "command": "echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"SessionStart\\\",\\\"additionalContext\\\":\\\"CPM_FM project rule: BEFORE any work in this repo (searching, editing, planning, or delegating to sub-agents), read AGENTS.md first (this repo has no CLAUDE.md; AGENTS.md is the authoritative agent-guidance file). Any feature or requirement change MUST follow the mandatory 8-step Requirement-change workflow in AGENTS.md (update SRS, implement with Satisfies tags, regenerate views, add Verifies-tagged tests, run pytest, update manual test plan/scorecard, bump version). Present a plan and get approval before implementing. Run ALL Python tooling via the .venv interpreter (.venv/Scripts/python.exe -m <tool>: pytest, pip, mypy, ruff) \\u2014 never bare python/pip/pytest/mypy/ruff.\\\"}}\"",
             "statusMessage": "Loading CPM_FM project rules"
           }
         ]

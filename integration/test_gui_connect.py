@@ -8,15 +8,14 @@ unresponsive/uncloseable peer that a healthy bench rig can't produce on demand;
 those stay covered by the unit suite (``tests/test_gui_smoke.py``) and manual
 testing, and are noted in the README.
 
-The port-open-failure path (MT-C16) is tested by mocking ``SerialManager.open_port``
-to raise ``SerialException`` — the unavailable dialog appears with the correct message.
-The rapid-connect/disconnect race (MT-C17) exercises the probe-while-disconnect path
-to verify no crash from a queued signal to a deleted QObject.
+The Transport-Port-open-failure path (MT-C16, two-port only) is tested by mocking
+``SerialManager.open_port`` to return ``False`` for the Transport Port — the app
+shows the FR-039 error dialog and skips the probe (FR-046). The rapid-connect/
+disconnect race (MT-C17) exercises the probe-while-disconnect path to verify no
+crash from a queued signal to a deleted QObject.
 """
 
 from __future__ import annotations
-
-import time
 
 import pytest
 from helpers.trace import get_logger
@@ -74,54 +73,58 @@ def test_reconnect_after_disconnect(gui):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-C16", "FR-044")
-def test_connect_port_open_failure_shows_unavailable_dialog(gui, monkeypatch, tmp_path):
-    """A port-open failure triggers the "remote unavailable" dialog.
+@pytest.mark.two_port
+@pytest.mark.mt("MT-C16", "FR-039", "FR-046")
+def test_connect_transport_open_failure_reports_error_and_skips_probe(gui, monkeypatch):
+    """A Transport Port open failure reports the FR-039 error and skips the probe.
 
-    Verifies: FR-044.
+    Two-port targets only: when the Transport Port cannot be opened, the app
+    shows the "Transport port is unable to be opened" error dialog (FR-039) and
+    performs no remote-file-system probe (FR-046) — it must not present the
+    Remote Filesystem Unavailable dialog, which is the probe's own outcome.
+
+    The failure is injected by mocking ``open_port`` to return ``False`` for the
+    Transport Port only (the real ``open_port`` catches its errors and returns
+    ``False``; it never raises). ``QMessageBox.critical`` is a blocking modal, so
+    it is stubbed non-blocking — otherwise the headless run would hang waiting
+    for an OK the offscreen harness can never deliver.
+
+    Verifies: FR-039, FR-046.
     """
-    from PySide6.QtCore import QTimer
-
-    import cpm_fm.app as app_mod
-
-    dialog_shown = []
-
-    def fake_exec(self):
-        dialog_shown.append(True)
-        return app_mod.QDialog.DialogCode.Rejected
-
-    # Patch open_port to raise SerialException for the transport port only.
-    import serial
-
-    def raise_serial(*a, **k):
-        raise serial.SerialException("port open failed")
-
+    errors: list[tuple] = []
     monkeypatch.setattr(
-        "cpm_fm.terminal.serial_manager.SerialManager.open_port",
-        lambda self, *args, **kwargs: True if args[0] != "transport" else raise_serial(),
+        "cpm_fm.gui.mw_remote.QMessageBox.critical",
+        lambda *a, **k: errors.append(a[1:]),
     )
 
-    # Also patch the unavailable dialog so we can observe it
+    # Mock open_port: succeed for the Terminal Port, fail (False) for Transport.
+    monkeypatch.setattr(
+        "cpm_fm.terminal.serial_manager.SerialManager.open_port",
+        lambda self, *args, **kwargs: args[0] != "transport",
+    )
+
+    # Guard: if the probe were (wrongly) run, the Remote Filesystem Unavailable
+    # dialog would block the offscreen loop — fail loudly instead of hanging.
     from cpm_fm.gui.remote_unavailable_dialog import RemoteUnavailableDialog
 
+    probe_dialog_shown = []
     monkeypatch.setattr(
         RemoteUnavailableDialog,
         "exec",
-        lambda self: setattr(self, "choice", RemoteUnavailableDialog.ABORT) or None,
+        lambda self: (
+            probe_dialog_shown.append(True)
+            or setattr(self, "choice", RemoteUnavailableDialog.CONTINUE)
+        ),
     )
 
     result = gui.connect(timeout=5.0)
 
-    # The connect should fail (port couldn't open)
-    assert result is None or result[0] == "failed"
-
-    # Give the dialog time to appear (it's on a worker thread)
-    gui.pump(10)
-    QTimer.processEvents() if hasattr(QTimer, "processEvents") else None
-    time.sleep(0.5)
-    gui.pump(10)
-
-    log.info("connect failed as expected; dialog shown = %s", bool(dialog_shown))
+    # FR-046: no probe is performed, so no probe result is produced.
+    assert result is None, f"expected no probe result, got {result}"
+    assert not probe_dialog_shown, "probe ran despite Transport open failure (FR-046 violated)"
+    # FR-039: the transport-open error dialog was shown.
+    assert errors, "expected the FR-039 transport-open error dialog to be shown"
+    log.info("transport-open failure reported (FR-039); probe skipped (FR-046)")
 
 
 @pytest.mark.hil

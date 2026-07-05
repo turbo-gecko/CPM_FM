@@ -185,6 +185,10 @@ class _RemoteMixin(MainWindowMixinBase):
             trans_port = self.settings.get("transport_port")
             if term_port != trans_port:
                 if not self.serial_mgr.open_port("transport", self.settings):
+                    # FR-039: report the failed Transport Port open. FR-046: with
+                    # the Transport flag left unset, the probe below is skipped —
+                    # do NOT emit connect_probe_failed here (that is the probe's
+                    # own outcome, and no probe is performed when a port failed).
                     QMessageBox.critical(
                         self, tr("dialog.error.title"), tr("error.transport_unable_open")
                     )

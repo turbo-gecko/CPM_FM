@@ -15,6 +15,8 @@ graceful failure.
 
 from __future__ import annotations
 
+import time
+
 import pytest
 from helpers.integrity import assert_round_trip, sample_files
 from helpers.trace import get_logger
@@ -192,8 +194,11 @@ def test_recv_port_closed_mid_transfer_graceful_failure(peer, scratch_drive, tmp
     result = peer.recv_file(name, str(dst), letter=scratch_drive)
     assert result is False, f"expected graceful failure, got {result}"
 
-    # Restore the transport port for cleanup
+    # Restore the transport port for cleanup.
+    # Dual-port devices need a settle delay after close→reopen so RTS/CTS
+    # hardware state (DCD/carrier-detect) stabilises before the next operation.
     settings = peer.settings
     peer.sm.open_port("transport", settings)
+    time.sleep(0.5)
     peer.erase(name, letter=scratch_drive)
     log.info("mid-transfer port-close handled gracefully")

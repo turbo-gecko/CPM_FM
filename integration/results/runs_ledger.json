@@ -527,5 +527,149 @@
       "Skipped": 1
     },
     "artifacts": "integration/results/elite_mini/20260705T085259Z_61b7331"
+  },
+  {
+    "run_id": "20260705T092433Z_eee2f16",
+    "timestamp": "2026-07-05T09:24:33.824698+00:00",
+    "target": "eZT-RCB",
+    "app_version": "2.19.0",
+    "git_commit": "eee2f167f57d3b8df65a6dd4b743c1571fb3c119",
+    "git_dirty": true,
+    "summary": {
+      "Fail": 1,
+      "Skipped": 1
+    },
+    "artifacts": "integration/results/eZT-RCB/20260705T092433Z_eee2f16"
+  },
+  {
+    "run_id": "20260705T095033Z_68329fe",
+    "timestamp": "2026-07-05T09:50:33.172751+00:00",
+    "target": "_local",
+    "app_version": "2.19.0",
+    "git_commit": "68329fe385961327ef43f092e4c003e958cf1955",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 10
+    },
+    "artifacts": "integration/results/_local/20260705T095033Z_68329fe"
+  },
+  {
+    "run_id": "20260705T095033Z_68329fe",
+    "timestamp": "2026-07-05T09:50:33.172751+00:00",
+    "target": "elite_mini",
+    "app_version": "2.19.0",
+    "git_commit": "68329fe385961327ef43f092e4c003e958cf1955",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 34,
+      "N-A": 1,
+      "Skipped": 1
+    },
+    "artifacts": "integration/results/elite_mini/20260705T095033Z_68329fe"
+  },
+  {
+    "run_id": "20260705T104128Z_68329fe",
+    "timestamp": "2026-07-05T10:41:28.717725+00:00",
+    "target": "_local",
+    "app_version": "2.19.0",
+    "git_commit": "68329fe385961327ef43f092e4c003e958cf1955",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 10
+    },
+    "artifacts": "integration/results/_local/20260705T104128Z_68329fe"
+  },
+  {
+    "run_id": "20260705T104128Z_68329fe",
+    "timestamp": "2026-07-05T10:41:28.717725+00:00",
+    "target": "eZT-RCB",
+    "app_version": "2.19.0",
+    "git_commit": "68329fe385961327ef43f092e4c003e958cf1955",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 32,
+      "Skipped": 2,
+      "Fail": 1,
+      "N-A": 1
+    },
+    "artifacts": "integration/results/eZT-RCB/20260705T104128Z_68329fe"
+  },
+  {
+    "run_id": "20260705T191132Z_68329fe",
+    "timestamp": "2026-07-05T19:11:32.634734+00:00",
+    "target": "eZT-RCB",
+    "app_version": "2.19.0",
+    "git_commit": "68329fe385961327ef43f092e4c003e958cf1955",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 1
+    },
+    "artifacts": "integration/results/eZT-RCB/20260705T191132Z_68329fe"
+  },
+  {
+    "run_id": "20260705T192116Z_68329fe",
+    "timestamp": "2026-07-05T19:21:16.224022+00:00",
+    "target": "_local",
+    "app_version": "2.19.0",
+    "git_commit": "68329fe385961327ef43f092e4c003e958cf1955",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 10
+    },
+    "artifacts": "integration/results/_local/20260705T192116Z_68329fe"
+  },
+  {
+    "run_id": "20260705T192116Z_68329fe",
+    "timestamp": "2026-07-05T19:21:16.224022+00:00",
+    "target": "eZT-RCB",
+    "app_version": "2.19.0",
+    "git_commit": "68329fe385961327ef43f092e4c003e958cf1955",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 33,
+      "Skipped": 2,
+      "N-A": 1
+    },
+    "artifacts": "integration/results/eZT-RCB/20260705T192116Z_68329fe"
+  },
+  {
+    "run_id": "20260705T193305Z_68329fe",
+    "timestamp": "2026-07-05T19:33:05.368108+00:00",
+    "target": "_local",
+    "app_version": "2.19.0",
+    "git_commit": "68329fe385961327ef43f092e4c003e958cf1955",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 10
+    },
+    "artifacts": "integration/results/_local/20260705T193305Z_68329fe"
+  },
+  {
+    "run_id": "20260705T193305Z_68329fe",
+    "timestamp": "2026-07-05T19:33:05.368108+00:00",
+    "target": "elite_mini",
+    "app_version": "2.19.0",
+    "git_commit": "68329fe385961327ef43f092e4c003e958cf1955",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 31,
+      "Skipped": 4,
+      "N-A": 1
+    },
+    "artifacts": "integration/results/elite_mini/20260705T193305Z_68329fe"
+  },
+  {
+    "run_id": "20260705T193305Z_68329fe",
+    "timestamp": "2026-07-05T19:33:05.368108+00:00",
+    "target": "rc2014",
+    "app_version": "2.19.0",
+    "git_commit": "68329fe385961327ef43f092e4c003e958cf1955",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 31,
+      "Skipped": 4,
+      "N-A": 1
+    },
+    "artifacts": "integration/results/rc2014/20260705T193305Z_68329fe"
   }
 ]

@@ -252,6 +252,11 @@ class CpmPeer:
             size,
         )
         ser = self.sm.transport_port
+        # Guard: if the transport port has been closed (e.g. mid-transfer disconnect),
+        # return False gracefully so callers like HIL tests don't get unhandled exceptions.
+        if ser is not None and not ser.is_open:
+            log.warning("send %s → %s: transport port closed", remote_name, letter or "(current)")
+            return False
         if self._shared_port:
             self.sm.pause_terminal_reads()
         try:
@@ -285,6 +290,12 @@ class CpmPeer:
             "1K" if use_1k else "128",
         )
         ser = self.sm.transport_port
+        # Guard: if the transport port has been closed (e.g. mid-transfer disconnect),
+        # return False gracefully so callers like HIL tests don't get unhandled exceptions
+        # from pyserial operations on a closed serial port.
+        if ser is not None and not ser.is_open:
+            log.warning("recv %s ← %s: transport port closed", remote_name, letter or "(current)")
+            return False
         if self._shared_port:
             self.sm.pause_terminal_reads()
         try:
