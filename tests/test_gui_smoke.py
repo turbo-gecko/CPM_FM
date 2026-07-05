@@ -729,6 +729,43 @@ def test_disconnect_keeps_remote_list_when_close_fails(qapp, monkeypatch, state)
         win.close()
 
 
+def test_disconnect_shared_port_also_clears_transport_flag(qapp, monkeypatch, state):
+    """Verifies: FR-054."""
+    # FR-054: when Transport and Terminal are the same physical port, closing
+    # the Terminal Port on disconnect must also clear the Transport flag.
+    win = MainWindow(state)
+    try:
+        win.settings = {"terminal_port": "COM3", "transport_port": "COM3"}
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+        monkeypatch.setattr(win.serial_mgr, "close_terminal_port", lambda: True)
+        win.do_disconnect()
+        qapp.processEvents()
+        assert win.serial_mgr.transport_connected is False
+    finally:
+        win.close()
+
+
+def test_disconnect_transport_close_failure_shows_error_dialog(qapp, monkeypatch, state):
+    """Verifies: FR-056."""
+    # FR-056: when the Transport Port cannot be closed, an error dialog with
+    # the exact specified text is shown.
+    win = MainWindow(state)
+    try:
+        win.settings = {"terminal_port": "COM3", "transport_port": "COM4"}
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+        monkeypatch.setattr(win.serial_mgr, "close_terminal_port", lambda: True)
+        monkeypatch.setattr(win.serial_mgr, "close_transport_port", lambda: False)
+        errors = []
+        monkeypatch.setattr("cpm_fm.app.QMessageBox.critical", lambda *a, **k: errors.append(a[1:]))
+        win.do_disconnect()
+        qapp.processEvents()
+        assert errors == [("Error", "Transport port is unable to be closed")]
+    finally:
+        win.close()
+
+
 def test_host_update_button_refreshes_host_only(qapp, monkeypatch, state):
     """Verifies: FR-063."""
     # FR-063 (OI-14, v2.12): the Host Files group's Update button refreshes the

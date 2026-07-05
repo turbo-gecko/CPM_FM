@@ -21,8 +21,71 @@ def test_parse_dir_output_extracts_filenames():
 
 
 def test_parse_dir_output_ignores_prompts_and_empty():
+    """Verifies: DR-002, DR-003, DR-025."""
     # Drive prompts ("C>"), "NO FILE" responses, and blank lines yield no entries.
     assert CPMParser.parse_dir_output("\nC>\nA: NO FILE FOUND\n\n") == {}
+
+
+def test_parse_dir_output_ignores_prompt_for_any_drive_letter():
+    """Verifies: DR-002."""
+    # DR-002: the ignored shell prompt is not tied to one drive letter.
+    assert CPMParser.parse_dir_output("B>\nP>\n") == {}
+
+
+def test_parse_dir_output_ignores_no_file_case_insensitively():
+    """Verifies: DR-003."""
+    # DR-003: the "NO FILE" substring match is not case-sensitive (the parser
+    # upper-cases the line before checking).
+    assert CPMParser.parse_dir_output("a: no file found\n") == {}
+
+
+def test_parse_dir_output_strips_leading_drive_prefix():
+    """Verifies: DR-010."""
+    # DR-010: only the content after the drive prefix ("C:") is processed —
+    # the prefix itself must not leak into the constructed filename.
+    result = CPMParser.parse_dir_output("C: FOO      BAR\n")
+    assert result == {"FOO.BAR": True}
+    assert not any(name.startswith("C") and ":" in name for name in result)
+
+
+def test_parse_dir_output_collapses_internal_whitespace():
+    """Verifies: DR-012."""
+    # DR-012: runs of internal spaces collapse to one before the entry is
+    # split into base/extension tokens.
+    assert CPMParser.parse_dir_output("C:   FOO         BAR   \n") == {"FOO.BAR": True}
+
+
+def test_parse_dir_output_duplicate_filenames_overwrite():
+    """Verifies: DR-020."""
+    # DR-020: a filename repeated across lines is one dict key, not duplicated.
+    result = CPMParser.parse_dir_output("C: DUPE     TXT\nC: DUPE     TXT\n")
+    assert result == {"DUPE.TXT": True}
+    assert len(result) == 1
+
+
+def test_parse_dir_output_preserves_filename_case():
+    """Verifies: DR-022."""
+    # DR-022: case is passed through as-is, neither upper- nor lower-cased.
+    assert CPMParser.parse_dir_output("C: MixedCase lower\n") == {"MixedCase.lower": True}
+
+
+def test_parse_dir_output_never_raises_on_malformed_input():
+    """Verifies: DR-024."""
+    # DR-024: garbage/unexpected input (stray delimiters, no drive prefix,
+    # binary-looking noise) must be tolerated, not raise.
+    garbage = ":::\n|||\n\x00\x01garbled\n>>>\nC:\n:C\n"
+    result = CPMParser.parse_dir_output(garbage)
+    assert isinstance(result, dict)
+
+
+def test_parse_dir_output_tolerates_irregular_spacing_and_mixed_line_endings():
+    """Verifies: DR-026."""
+    # DR-026: extra internal colons within an entry and mixed \n / \r\n line
+    # endings must not break parsing of the surrounding valid entries.
+    text = "C:   ODD:NAME   TXT  \r\nC: PLAIN    DAT\n"
+    result = CPMParser.parse_dir_output(text)
+    assert result["PLAIN.DAT"] is True
+    assert "ODD:NAME.TXT" in result
 
 
 def test_parse_dir_output_includes_extensionless_files():

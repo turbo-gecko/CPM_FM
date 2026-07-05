@@ -144,6 +144,20 @@ class RequirementExtractor(ast.NodeVisitor):
                 )
             )
 
+    def visit_Module(self, node: ast.Module) -> None:
+        """
+        Visit the module docstring itself.
+
+        ``ast.NodeVisitor`` never calls a visitor for the root ``Module`` node
+        unless one is defined, so a tag clause placed in the file's top-of-file
+        docstring (rather than on any function/class) was previously invisible
+        to the scan. Recorded under the synthetic name ``"<module>"`` (mirrors
+        Python's own traceback convention for top-level code) so it cannot
+        collide with a real function/class name.
+        """
+        self._record("<module>", ast.get_docstring(node))
+        self.generic_visit(node)
+
     def visit_FunctionDef(self, node: ast.FunctionDef):
         """
         Visit function definitions.

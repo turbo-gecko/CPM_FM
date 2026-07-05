@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.24 |
+| Version | 1.25 |
 | Status | Draft |
-| Date | 2026-07-01 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.18.0) |
+| Date | 2026-07-05 |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.18.1) |
 
 ---
 
@@ -159,7 +159,7 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
 | MT-P01 | IFR-003, UIR-022, UIR-023 | Plug in a known adapter. Open Config > Serial. Inspect the Terminal Port and Transfer Port drop-downs. | Both drop-downs list the host's installed serial ports, including the just-plugged adapter. |
-| MT-P02 [visual] | UIR-020, UIR-021, UIR-029 | Open Config > Serial. | Modal dialog titled "Serial Config"; "Port Settings" and "Transmit Delay" groups laid out as two columns (name left, field right). |
+| MT-P02 [visual] | FR-020, UIR-020, UIR-021, UIR-029 | Open Config > Serial. | Modal dialog titled "Serial Config"; "Port Settings" and "Transmit Delay" groups laid out as two columns (name left, field right). |
 | MT-P03 | UIR-024..028 | Inspect each drop-down's values and defaults. | Speed list = 300…921600, default 115200; Data = 7,8 default 8; Parity = NONE,ODD,EVEN,MARK,SPACE default NONE; Stop Bits = 1,2 default 1; Flow = NONE,XON/XOFF,RTS/CTS,DSR/DTR default NONE. |
 | MT-P04 | UIR-030, UIR-031 | Try to type out-of-range / non-integer values into msec/char and msec/line. | Each field accepts only integers 0–255; default 0. |
 | MT-P05 | UIR-028 | Set Flow = RTS/CTS, save, Connect to a port whose peer requires/asserts hardware flow control. | Handshake applied at open (transfer proceeds where a NONE setting would stall, or verify via a serial line monitor). *(Best-effort; mark N/A if no flow-control-sensitive peer.)* |
@@ -171,7 +171,7 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
-| MT-G01 [visual] | UIR-040, UIR-041, UIR-044 | Open Config > General. | Modal dialog titled "General Config". A **"Remote"** group is the **first** section, containing (in order) List Files, Receive from Remote, Send to Remote, Rename, Delete. The remaining settings (Xfer Launch Delay, Xfer Inter-file Delay, End of Line, Debug Logging, Echo Transfer Data, Viewer/Editor, Default Host Directory) appear below it, ungrouped. Two-column layout throughout. |
+| MT-G01 [visual] | FR-021, UIR-040, UIR-041, UIR-044 | Open Config > General. | Modal dialog titled "General Config". A **"Remote"** group is the **first** section, containing (in order) List Files, Receive from Remote, Send to Remote, Rename, Delete. The remaining settings (Xfer Launch Delay, Xfer Inter-file Delay, End of Line, Debug Logging, Echo Transfer Data, Viewer/Editor, Default Host Directory) appear below it, ungrouped. Two-column layout throughout. |
 | MT-G02 | UIR-042, UIR-045, UIR-046 | Inspect defaults / length limits of List Files, Receive from Remote, Send to Remote (in the Remote group). | List Files default "DIR"; Receive default "PCPUT $1"; Send default "PCGET $1"; each limited to 79 characters. |
 | MT-G03 | UIR-047, UIR-048 | Inspect the End of Line drop-down. | Drop-down offering the mutually exclusive values CR / LF / CRLF; **CR** selected by default. |
 | MT-G04 | UIR-049, UIR-052 | Inspect Xfer Launch Delay and Xfer Inter-file Delay fields. | Launch Delay integer 0–60 default 3; Inter-file Delay integer 0–60 default 2. |
@@ -246,7 +246,7 @@ Preconditions: connected to a CP/M peer with files on at least drive `A:`.
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
 | MT-R01 | FR-073, FR-075..079 | Select the current drive in the drop-down and press **Update** (or just press Update). | List command sent over Terminal Port; after the capture wait the Remote Files list fills with filenames **sorted ascending**; status bar shows "Remote file list updated". |
-| MT-R02 | FR-074, FR-104 | With the Terminal Port **closed**, press Update / select a drive. | Status bar: "Terminal port not open - cannot read file list"; Remote list cleared; no hang. |
+| MT-R02 | FR-074, FR-104 | With the Terminal Port **closed**, press Update / select a drive. | Status bar: "Terminal port not connected - cannot read file list"; Remote list cleared; no hang. |
 | MT-R03 | FR-076 | Time a list refresh against a directory that prints slowly / in bursts. | The app waits ≥1 s, keeps waiting until output is idle ~0.5 s, and caps at ~10 s — no truncated listing for a slow directory. |
 | MT-R04 | FR-077, FR-078, DR-013 | List a drive containing an **extensionless** file and a **single-file** directory (if available). | Extensionless names appear without a trailing dot; a lone file still shows. (Parsing logic itself is unit-tested; this confirms the live capture feeds it correctly.) |
 | MT-R05 | FR-100, FR-102 | Select a different existing drive (e.g. `B:`) from the drop-down. | App sends `B:`; on seeing the `B>` prompt it lists that drive exactly as Update does. |
@@ -392,7 +392,7 @@ files** — these tests delete data by design.
 | MT-W04 | UIR-065, FR-093 | Local Echo checkbox (off by default): enable it, type. | With Local Echo on, what you type is copied into the Receive screen; with it off, only the remote echo appears. |
 | MT-W05 | UIR-066, UIR-062 | Autoscroll (on by default): produce enough output to overflow; then toggle Autoscroll off and scroll up. | With Autoscroll on, the view follows new output to the bottom; with it off, the view stays put in the scrollback. |
 | MT-W06 | FR-095 | After traffic, press **Clear**. | The screen (and scrollback) is reset and the retained RX/TX buffers are also cleared (subsequent behaviour reflects an empty buffer). |
-| MT-W07 | FR-098 | With the Terminal Port **closed**, click into the Receive area and type. | Status bar: "Terminal port not open - cannot send"; nothing transmitted. |
+| MT-W07 | FR-098 | With the Terminal Port **closed**, click into the Receive area and type. | Status bar: "Terminal port not connected - cannot send"; nothing transmitted. |
 | MT-W08 [CP/M] | FR-158 | Connected: press **Ctrl+C** during a running command; also press the **arrow keys**, **Backspace**, and **Esc**. | Ctrl+C sends the single control byte 0x03 (remote interrupts); arrows send `ESC[A/B/C/D`, Backspace sends 0x08, Esc sends 0x1B — each transmitted on its own keystroke. |
 | MT-W09 [CP/M] | FR-091, FR-157 | Connected: run a full-screen CP/M program that uses cursor addressing/attributes (e.g. a screen editor or `VT` demo). | The screen renders correctly — cursor positioning, screen/line erase, and colour/attributes are applied — rather than showing raw escape codes. |
 | MT-W10 | UIR-068 | Open the Terminal Window with the Boot Sequence (MT-G10) **empty**, then set a non-empty Boot Sequence in General Config (window left open) and Save. | With an empty Boot Sequence the **"Boot into CP/M"** button (to the right of Clear) is disabled (greyed); after saving a non-empty sequence it becomes enabled without reopening the window. |
@@ -417,7 +417,7 @@ dialog, real filesystem effect, and real viewer launch. Remote actions need a li
 | MT-F05a | FR-110, FR-115, FR-116, FR-118 | Select **several** host files, right-click → **Delete**: the dialog lists **all** selected names (read-only) and asks "Delete these N files?"; Apply. | **Every** selected file is deleted from disk; Host list refreshes once. Cancel makes no change. |
 | MT-F06 [CP/M] | FR-117, FR-118 | Remote file → Rename / Delete with the Terminal Port open. | `REN new=old` / `ERA name` sent on the Terminal Port; Remote list refreshes; the change is visible on the CP/M side. |
 | MT-F06a [CP/M] | FR-111, FR-115, FR-117, FR-118 | Select **several** remote files, right-click → **Delete**: the dialog lists all selected names; Apply. | `ERA name` is sent **once per selected file** (in list order) on the Terminal Port; Remote list refreshes once; all files are gone on the CP/M side. |
-| MT-F07 [CP/M] | FR-117 | Remote Rename/Delete with the Terminal Port **closed**. | No command sent; status bar "Terminal port not open - cannot rename"/"…cannot delete". |
+| MT-F07 [CP/M] | FR-117 | Remote Rename/Delete with the Terminal Port **closed**. | No command sent; status bar "Terminal port not connected - cannot rename"/"…cannot delete". |
 | MT-F08 [CP/M] | FR-113, FR-112 | Remote file → **View** while both flags connected. | File is first downloaded over X-Modem to a temp folder (progress dialog shows), then opened in the viewer. With Transport disconnected: "Transport port not connected", no download. |
 | MT-F09 [CP/M] | FR-119, FR-106, FR-107 | Select **several** host files, right-click → **To Remote** (and likewise several remote files → **To Host**), with both flags connected. | **Every** selected file is transferred sequentially via the normal batch process (progress dialog shows each file); the destination list refreshes once on success. With a flag disconnected: "Transport port not connected", no transfer. |
 

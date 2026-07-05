@@ -6,13 +6,13 @@
 Maps each source file to the requirement IDs it implements, derived from `Satisfies:` docstring tags in the code.
 Use this for **targeted work**: find the file you're editing, then read just those IDs in `requirements_index.md` or the full SRS — instead of loading the whole specification.
 
-_35 source files; 437 file→requirement links._
+_35 source files; 453 file→requirement links._
 
 | Source file | Requirement IDs |
 |-------------|-----------------|
-| src/cpm_fm/app.py | CR-002, CR-013, FR-003, FR-004, FR-005, FR-015, FR-016, FR-018, FR-019, FR-022, FR-061, FR-070, FR-071, FR-072, FR-086, FR-091, FR-093, FR-099, FR-105, FR-106, FR-107, FR-112, FR-120, FR-121, FR-122, FR-123, FR-124, FR-125, FR-126, FR-141, NFR-004, STR-002, UIR-001, UIR-002, UIR-003, UIR-004, UIR-005, UIR-010, UIR-011, UIR-012, UIR-013, UIR-014, UIR-015, UIR-016, UIR-017, UIR-071, UIR-072, UIR-074, UIR-075, UIR-077, UIR-078, UIR-082, UIR-086, UIR-087 |
+| src/cpm_fm/app.py | CR-002, CR-012, CR-013, FR-003, FR-004, FR-005, FR-015, FR-016, FR-018, FR-019, FR-022, FR-061, FR-070, FR-071, FR-072, FR-086, FR-091, FR-093, FR-099, FR-105, FR-106, FR-107, FR-112, FR-120, FR-121, FR-122, FR-123, FR-124, FR-125, FR-126, FR-141, NFR-004, STR-002, UIR-001, UIR-002, UIR-003, UIR-004, UIR-005, UIR-010, UIR-011, UIR-012, UIR-013, UIR-014, UIR-015, UIR-016, UIR-017, UIR-071, UIR-072, UIR-074, UIR-075, UIR-077, UIR-078, UIR-082, UIR-086, UIR-087 |
 | src/cpm_fm/gui/about_dialog.py | FR-022, UIR-075, UIR-076 |
-| src/cpm_fm/gui/config_dialogs.py | CR-015, FR-004, FR-020, FR-021, FR-121, IFR-002, UIR-020, UIR-021, UIR-022, UIR-023, UIR-024, UIR-025, UIR-026, UIR-027, UIR-028, UIR-029, UIR-030, UIR-031, UIR-040, UIR-041, UIR-042, UIR-043, UIR-044, UIR-045, UIR-046, UIR-047, UIR-048, UIR-049, UIR-050, UIR-051, UIR-052, UIR-053, UIR-054, UIR-055, UIR-056, UIR-057, UIR-058, UIR-059, UIR-075 |
+| src/cpm_fm/gui/config_dialogs.py | CR-015, FR-004, FR-020, FR-021, FR-121, IFR-002, UIR-020, UIR-021, UIR-022, UIR-023, UIR-024, UIR-025, UIR-026, UIR-027, UIR-028, UIR-029, UIR-030, UIR-031, UIR-032, UIR-033, UIR-040, UIR-041, UIR-042, UIR-043, UIR-044, UIR-045, UIR-046, UIR-047, UIR-048, UIR-049, UIR-050, UIR-051, UIR-052, UIR-053, UIR-054, UIR-055, UIR-056, UIR-057, UIR-058, UIR-059, UIR-075, UIR-089, UIR-090 |
 | src/cpm_fm/gui/conflict_dialog.py | FR-146, FR-147, UIR-084 |
 | src/cpm_fm/gui/dialog_buttons.py | UIR-075 |
 | src/cpm_fm/gui/file_action_dialog.py | FR-114, FR-115, UIR-057, UIR-075 |
@@ -27,9 +27,9 @@ _35 source files; 437 file→requirement links._
 | src/cpm_fm/gui/mw_remote.py | FR-030, FR-031, FR-032, FR-034, FR-037, FR-038, FR-039, FR-040, FR-041, FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-073, FR-074, FR-075, FR-076, FR-077, FR-078, FR-079, FR-090, FR-091, FR-092, FR-093, FR-094, FR-095, FR-096, FR-097, FR-098, FR-100, FR-101, FR-102, FR-103, FR-104, FR-120, FR-133, FR-145, NFR-004, UIR-068 |
 | src/cpm_fm/gui/mw_transfer_batches.py | CR-010, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-087, FR-099, FR-105, FR-106, FR-107, FR-108, FR-109, FR-142, FR-149 |
 | src/cpm_fm/gui/mw_transfer_guards.py | FR-145, FR-146, FR-147, FR-148, FR-149, UIR-084, UIR-085 |
-| src/cpm_fm/gui/mw_transfers.py | CR-010, FR-080, FR-086, FR-087, FR-088, FR-089, FR-105, FR-106, FR-107, FR-109, FR-120, FR-137, FR-138 |
+| src/cpm_fm/gui/mw_transfers.py | CR-010, FR-080, FR-086, FR-087, FR-088, FR-089, FR-105, FR-106, FR-107, FR-109, FR-120, FR-137, FR-138, UIR-089, UIR-090 |
 | src/cpm_fm/gui/remote_unavailable_dialog.py | FR-044, FR-045, UIR-092 |
-| src/cpm_fm/gui/terminal_view.py | FR-091, FR-091a, FR-094, FR-096, FR-158, UIR-061, UIR-062, UIR-066 |
+| src/cpm_fm/gui/terminal_view.py | FR-091, FR-091a, FR-094, FR-096, FR-157c, FR-158, UIR-061, UIR-062, UIR-063, UIR-066 |
 | src/cpm_fm/gui/terminal_window.py | FR-049, FR-091, FR-094, FR-095, FR-096, FR-097, FR-121, FR-123, UIR-060, UIR-061, UIR-062, UIR-063, UIR-064, UIR-065, UIR-066, UIR-067, UIR-068 |
 | src/cpm_fm/gui/theme.py | CR-013, DR-044, UIR-070, UIR-073, UIR-078 |
 | src/cpm_fm/gui/transfer_dialog.py | FR-105, FR-107, FR-120, UIR-051 |
@@ -37,11 +37,11 @@ _35 source files; 437 file→requirement links._
 | src/cpm_fm/gui/window_state.py | FR-004, FR-005, FR-006, FR-122, FR-124, FR-134 |
 | src/cpm_fm/terminal/boot_sequence.py | FR-047 |
 | src/cpm_fm/terminal/cpm_parser.py | DR-001, DR-002, DR-003, DR-004, DR-005, DR-006, DR-010, DR-011, DR-012, DR-013, DR-014, DR-015, DR-020, DR-021, DR-022, DR-023, DR-024, DR-025, DR-026, DR-030, DR-031, DR-032, DR-033, DR-033a, DR-046, FR-041, FR-042, FR-077, FR-101, FR-102, FR-148, FR-149 |
-| src/cpm_fm/terminal/serial_manager.py | FR-001, FR-002, FR-015, FR-030, FR-032, FR-036, FR-037, FR-038, FR-040, FR-047, FR-050, FR-052, FR-055, FR-057, FR-083, FR-091, FR-096, IFR-001, IFR-002, NFR-001, NFR-002, UIR-028 |
+| src/cpm_fm/terminal/serial_manager.py | FR-001, FR-002, FR-015, FR-030, FR-032, FR-033, FR-036, FR-037, FR-038, FR-040, FR-047, FR-050, FR-052, FR-055, FR-057, FR-083, FR-091, FR-096, IFR-001, IFR-002, NFR-001, NFR-002, UIR-028, UIR-032, UIR-033 |
 | src/cpm_fm/terminal/vt100_engine.py | CR-014, FR-091, FR-091a, FR-095, FR-157, FR-157a, FR-157b, FR-157c, FR-157d, FR-157e, FR-157f, FR-157g, FR-157h, UIR-062 |
 | src/cpm_fm/terminal/xmodem.py | FR-081, FR-082, FR-083, FR-086, FR-105, FR-120, NFR-003a, NFR-003b, NFR-003c, NFR-003d, NFR-003e, NFR-003f, NFR-003g, NFR-003h, NFR-003i, NFR-003j, NFR-003k, NFR-003l, NFR-003m, NFR-003n, NFR-003o, NFR-003p, NFR-003q |
 | src/cpm_fm/utils/config_handler.py | FR-011, FR-012, FR-014, IFR-004 |
-| src/cpm_fm/utils/file_filter.py | FR-131, FR-132, FR-133 |
-| src/cpm_fm/utils/i18n.py | DR-042, DR-043, FR-121, FR-122, FR-123, FR-124, NFR-005, UIR-077 |
-| src/cpm_fm/utils/transfer_history.py | DR-045, FR-140, FR-141, FR-142, FR-143, FR-144 |
+| src/cpm_fm/utils/file_filter.py | CR-014, FR-130, FR-131, FR-132, FR-133 |
+| src/cpm_fm/utils/i18n.py | CR-014, DR-042, DR-043, FR-121, FR-122, FR-123, FR-124, NFR-005, UIR-077 |
+| src/cpm_fm/utils/transfer_history.py | CR-014, DR-045, FR-140, FR-141, FR-142, FR-143, FR-144 |
 | src/cpm_fm/version.py | DR-040, DR-041 |

@@ -42,6 +42,15 @@ def capture(monkeypatch):
     return _CaptureSerial
 
 
+def test_status_flags_default_false_at_startup():
+    """Verifies: FR-001, FR-002."""
+    # FR-001/FR-002: the Terminal and Transport status flags default to
+    # "not set" (false) before any port is opened.
+    mgr = SerialManager()
+    assert mgr.terminal_connected is False
+    assert mgr.transport_connected is False
+
+
 @pytest.mark.parametrize(
     ("flow", "expected"),
     [

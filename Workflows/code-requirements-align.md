@@ -82,10 +82,11 @@ the candidate list you will verify, not the verdict:
   and any **stale `Verifies:` tags** (citing an undefined ID).
 
 **Limits of the tool — what it cannot see (so Steps 3–6 still matter):** it only
-sees `Satisfies:`/`Verifies:`-*tagged* elements. It cannot judge whether tagged
-code actually *satisfies* the wording (divergence), whether an implementation is
-*partial*, or whether *untagged* behaviour is a genuine orphan capability. Those
-require reading the code.
+sees `Satisfies:`/`Verifies:`-*tagged* elements, and only inside `src/` and
+`tests/` — **it never reads `integration/` at all** (see Step 6's HIL bullet).
+It cannot judge whether tagged code actually *satisfies* the wording
+(divergence), whether an implementation is *partial*, or whether *untagged*
+behaviour is a genuine orphan capability. Those require reading the code.
 
 ## Step 3: Trace Requirements → Code (find unimplemented / partial)
 
@@ -139,6 +140,22 @@ Using `requirements_to_tests.md` and the `--coverage` output from Step 2:
   covered-by-HIL, not an untested defect. The HIL suite is bench-only (a real CP/M
   peer; not in CI or the default `pytest`), so its coverage is established by
   reading the `mt`/`Verifies:` tags, not by the `--coverage` tool.
+- **`integration/` is invisible to the mechanical tooling.** `generate_views.py`
+  and `agent_toolset.py` only scan `src/` (`Satisfies:`) and `tests/`
+  (`Verifies:`) — they never read `integration/`, so a stale or missing
+  `@pytest.mark.mt(...)` tag there will never surface as a tool-reported lead,
+  no matter how many times Step 2 is re-run. Before finalizing findings, `grep`
+  `integration/*.py` for **every** requirement ID touched by a Step 3–5 fix
+  (a corrected Source citation, a newly-added `Satisfies:` tag, a reworded
+  requirement) — not just the ones already in the untested-requirements list.
+  Two things to look for: (a) a citation/wording drift analogous to what was
+  just fixed in `src/`/the spec (e.g. an HIL test asserting text the spec no
+  longer says); (b) a tagging opportunity — an existing HIL case that already
+  exercises the fixed behaviour (e.g. every bench target configured as
+  single-shared-port also exercises a same-port requirement on every run) but
+  whose `mt`/`Verifies:` tags don't yet cite it. Report both as findings; only
+  apply the HIL edit once the user approves it (Step 10), same as any other
+  change.
 - This workflow checks *coverage/traceability* of tests to requirements. For a
   deep, adversarial audit of test *quality* (weak assertions, missing boundaries),
   defer to the `test-quality-checker` workflow; for chasing a real code fault a

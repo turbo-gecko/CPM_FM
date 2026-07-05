@@ -162,14 +162,14 @@ threads in `terminal/` (serial reads, X-Modem transfers) push results back to th
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| CR-012 | The graphical user interface shall be implemented with **PySide6 (Qt for Python)**. Tkinter shall not be used for any GUI component. PySide6 shall be declared as a runtime dependency in `pyproject.toml`. | Mandatory | I | v1.3 UI migration |
+| CR-012 | The graphical user interface shall be implemented with **PySide6 (Qt for Python)**. Tkinter shall not be used for any GUI component. PySide6 shall be declared as a runtime dependency in `pyproject.toml`. | Mandatory | I | v1.3 UI migration; impl. `app.py:main`, `pyproject.toml` |
 | CR-013 | The Material Design visual theme (UIR-070) shall be supplied by the `qt-material` package, declared as a runtime dependency in `pyproject.toml`. The theme shall be applied centrally at application start-up (not per-widget), so that all current and future windows inherit it. | Mandatory | I | v1.3 UI migration; impl. `app.py:main`, `theme.py:apply_theme` |
 
 ## A6. Layer decoupling
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| CR-014 | The GUI, serial/terminal (`terminal/`), and configuration (`utils/`) layers shall remain decoupled such that the `terminal/` and `utils/` modules contain no PySide6 (or other GUI-toolkit) imports and remain unit-testable without a running Qt application. The runtime translator (`utils/i18n.py`, FR-121) shall observe this constraint. | Mandatory | T | CLAUDE.md §Architecture; v1.3 UI migration; impl. `utils/i18n.py` |
+| CR-014 | The GUI, serial/terminal (`terminal/`), and configuration (`utils/`) layers shall remain decoupled such that the `terminal/` and `utils/` modules contain no PySide6 (or other GUI-toolkit) imports and remain unit-testable without a running Qt application. The runtime translator (`utils/i18n.py`, FR-121) shall observe this constraint. | Mandatory | T | AGENTS.md §Architecture; v1.3 UI migration; impl. `utils/i18n.py`, `utils/file_filter.py`, `utils/transfer_history.py`, `terminal/vt100_engine.py:Cell`, `terminal/vt100_engine.py:VT100Engine` |
 
 ## A7. Concurrency and extensibility
 

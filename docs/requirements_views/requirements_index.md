@@ -66,7 +66,7 @@ _420 requirements across 54 sections._
 | FR-030 | When the Connect button is pressed, the application shall open the Terminal Port serial port… | mw_remote.py:do_connect, serial_manager.py:open_port; tests test_serial_manager.py (parity map, numeric coercion, nested-key fallbacks, open-failure) |
 | FR-031 | If the Terminal Port cannot be opened, the application shall display an error dialog containing… | mw_remote.py:do_connect |
 | FR-032 | If the Terminal Port is successfully opened, the application shall set the Terminal status flag… | mw_remote.py:do_connect, serial_manager.py:open_port |
-| FR-033 | If the Terminal Port cannot be opened, the application shall set the Terminal status flag… | — |
+| FR-033 | If the Terminal Port cannot be opened, the application shall set the Terminal status flag… | serial_manager.py:open_port |
 | FR-034 | When the Terminal Port is opened, the application shall display the text "Terminal port open"… | mw_remote.py:do_connect |
 | FR-035 | *Removed in v1.2.* (Was… | — |
 | FR-036 | The application shall render data received from the Terminal Port on the Receive view of… | serial_manager.py:_read_loop, app.py:_on_term_write; tests test_serial_manager.py, test_vt100_engine.py |
@@ -103,7 +103,7 @@ _420 requirements across 54 sections._
 | ID | Summary | Impl |
 |----|---------|------|
 | FR-060 | On startup, the application shall populate the Host Files list with the files in the… | mw_file_panes.py:refresh_host_files, mw_config.py:load_config |
-| FR-061 | The Change Directory button shall be enabled at startup | app.py:setup_toolbar |
+| FR-061 | The Change Directory button shall be enabled at startup | app.py:setup_layout |
 | FR-062 | When the Change Directory button is pressed, the application shall present a folder-select dialog for… | mw_file_panes.py:change_host_dir |
 | FR-063 | When the Host Files group's "Update" button (beside the "Change Directory" button — UIR-011) is… | mw_file_panes.py:refresh_host_files, setup_layout |
 
@@ -111,9 +111,9 @@ _420 requirements across 54 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-070 | The Remote Files list shall be empty (unpopulated) at startup | — |
-| FR-071 | The Update button shall be enabled at startup | — |
-| FR-072 | The Update button (Host Files group — UIR-011) shall be enabled at startup | — |
+| FR-070 | The Remote Files list shall be empty (unpopulated) at startup | app.py:__init__, app.py:setup_layout |
+| FR-071 | The Update button shall be enabled at startup | app.py:setup_layout |
+| FR-072 | The Update button (Host Files group — UIR-011) shall be enabled at startup | app.py:setup_layout |
 | FR-073 | When the Update button (in the Remote Files group) is pressed, the application shall switch… | mw_remote.py:refresh_remote_files, mw_remote.py:_do_change_drive_logic |
 | FR-074 | If the Terminal Port is not open when populating the remote file list, the application… | mw_remote.py:refresh_remote_files |
 | FR-075 | If the Terminal status flag is true, the application shall send the configured List Files… | mw_remote.py:_capture_terminal_response |
@@ -179,14 +179,14 @@ _420 requirements across 54 sections._
 | FR-155 | *Removed in v2.17.* (Was… | — |
 | FR-156 | *Removed in v2.17.* (Was… | — |
 | FR-157 | The terminal shall interpret the VT-100/ANSI control and escape sequences emitted by the remote and… | terminal/vt100_engine.py:VT100Engine (over the pyte>=0.8.2 runtime dependency); tests test_vt100_engine.py |
-| FR-157a | The terminal shall interpret cursor positioning and movement sequences — absolute addressing (CUP, ESC[row;colH) and… | terminal/vt100_engine.py:VT100Engine; tests test_vt100_engine.py |
-| FR-157b | The terminal shall interpret erase-in-line (EL, ESC[K) and erase-in-display (ED, ESC[J) sequences | terminal/vt100_engine.py:VT100Engine; tests test_vt100_engine.py |
-| FR-157c | The terminal shall interpret SGR character attributes (ESC[…m) — at least bold, underline, reverse-video, and… | terminal/vt100_engine.py:VT100Engine, gui/terminal_view.py:TerminalView._colour; tests test_vt100_engine.py, test_terminal_view.py |
-| FR-157d | The terminal shall interpret the scrolling-region sequence (DECSTBM, ESC[top;bottomr) and confine scrolling to the defined… | terminal/vt100_engine.py:VT100Engine; tests test_vt100_engine.py |
-| FR-157e | The terminal shall honour horizontal tab stops (default every 8 columns), advancing the cursor to… | terminal/vt100_engine.py:VT100Engine; tests test_vt100_engine.py |
-| FR-157f | The terminal shall recognise the DEC special-graphics (line-drawing) charset designation (ESC(0 to select G0, ESC(B… | terminal/vt100_engine.py:VT100Engine; tests test_vt100_engine.py |
-| FR-157g | Received bytes shall be decoded as UTF-8 by default, with invalid byte sequences replaced by… | terminal/vt100_engine.py:VT100Engine; tests test_vt100_engine.py |
-| FR-157h | The terminal shall be robust to arbitrary remote output… | terminal/vt100_engine.py:VT100Engine; tests test_vt100_engine.py |
+| FR-157a | The terminal shall interpret cursor positioning and movement sequences — absolute addressing (CUP, ESC[row;colH) and… | terminal/vt100_engine.py:feed; tests test_vt100_engine.py |
+| FR-157b | The terminal shall interpret erase-in-line (EL, ESC[K) and erase-in-display (ED, ESC[J) sequences | terminal/vt100_engine.py:feed; tests test_vt100_engine.py |
+| FR-157c | The terminal shall interpret SGR character attributes (ESC[…m) — at least bold, underline, reverse-video, and… | terminal/vt100_engine.py:feed, gui/terminal_view.py:_colour; tests test_vt100_engine.py, test_terminal_view.py |
+| FR-157d | The terminal shall interpret the scrolling-region sequence (DECSTBM, ESC[top;bottomr) and confine scrolling to the defined… | terminal/vt100_engine.py:feed; tests test_vt100_engine.py |
+| FR-157e | The terminal shall honour horizontal tab stops (default every 8 columns), advancing the cursor to… | terminal/vt100_engine.py:feed; tests test_vt100_engine.py |
+| FR-157f | The terminal shall recognise the DEC special-graphics (line-drawing) charset designation (ESC(0 to select G0, ESC(B… | terminal/vt100_engine.py:feed; tests test_vt100_engine.py |
+| FR-157g | Received bytes shall be decoded as UTF-8 by default, with invalid byte sequences replaced by… | terminal/vt100_engine.py:__init__; tests test_vt100_engine.py |
+| FR-157h | The terminal shall be robust to arbitrary remote output… | terminal/vt100_engine.py:feed; tests test_vt100_engine.py |
 | FR-158 | Keys typed into the Terminal Window shall be encoded to VT-100 byte sequences and transmitted… | gui/terminal_view.py:encode_key, gui/terminal_view.py:keyPressEvent; tests test_terminal_view.py |
 
 ## 3.11 File context-menu actions
@@ -361,8 +361,8 @@ _420 requirements across 54 sections._
 | UIR-012 | The main window shall contain a "Remote Files" group containing a drive-selection drop-down (UIR-017) followed… | app.py:setup_layout |
 | UIR-013 | The main window shall provide the actions Connect, Disconnect, Copy to Remote, Copy to Host… | app.py:setup_toolbar |
 | UIR-014 | The status bar shall be a single-line text label… | app.py:set_status |
-| UIR-015 | The Connect button shall be enabled at startup | — |
-| UIR-016 | The main window shall provide a separate Disconnect button, enabled at startup, that invokes the… | app.py |
+| UIR-015 | The Connect button shall be enabled at startup | app.py:setup_toolbar |
+| UIR-016 | The main window shall provide a separate Disconnect button, enabled at startup, that invokes the… | app.py:setup_toolbar |
 | UIR-017 | The Remote Files group shall contain a drive-selection drop-down, positioned immediately before the Update button… | app.py:setup_layout, mw_remote.py:change_drive |
 | UIR-018 | The Host Files multi-select widget (UIR-011) shall present a context menu on right-click containing the… | app.py:setup_layout, mw_context_menu.py:_host_context_menu |
 | UIR-019 | The Remote Files multi-select widget (UIR-012) shall present a context menu on right-click containing the… | app.py:setup_layout, mw_context_menu.py:_remote_context_menu |
@@ -630,7 +630,7 @@ _420 requirements across 54 sections._
 | ID | Summary | Impl |
 |----|---------|------|
 | CR-010 | The Copy to Remote and Copy to Host actions shall be guarded so that a… | mw_transfer_batches.py:do_copy_to_remote, mw_transfer_batches.py:do_copy_to_host |
-| CR-011 | The following settings are persisted but their behaviour is deferred to a future release and… | survey of app.py |
+| CR-011 | The following settings are persisted but their behaviour is deferred to a future release and… | survey of utils/config_handler.py, gui/config_dialogs.py |
 | CR-015 | Internationalisation (FR-121) shall translate only human-facing prose… | config_dialogs.py:ConfigDialog (field label_key translated, option values not), transfer_history_dialog.py:_cell_text; FR-121 |
 
 ## 8. Non-Functional Requirements
@@ -679,14 +679,14 @@ _420 requirements across 54 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| CR-012 | The graphical user interface shall be implemented with **PySide6 (Qt for Python)**… | — |
+| CR-012 | The graphical user interface shall be implemented with **PySide6 (Qt for Python)**… | app.py:main, pyproject.toml |
 | CR-013 | The Material Design visual theme (UIR-070) shall be supplied by the qt-material package, declared as… | app.py:main, theme.py:apply_theme |
 
 ## A6. Layer decoupling
 
 | ID | Summary | Impl |
 |----|---------|------|
-| CR-014 | The GUI, serial/terminal (terminal/), and configuration (utils/) layers shall remain decoupled such that the terminal/… | utils/i18n.py |
+| CR-014 | The GUI, serial/terminal (terminal/), and configuration (utils/) layers shall remain decoupled such that the terminal/… | utils/i18n.py, utils/file_filter.py, utils/transfer_history.py, terminal/vt100_engine.py:Cell, terminal/vt100_engine.py:VT100Engine |
 
 ## A7. Concurrency and extensibility
 

@@ -41,11 +41,15 @@ def test_connect_opens_ports_and_probes(gui):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-C05", "FR-050", "FR-055", "FR-058")
+@pytest.mark.mt("MT-C05", "FR-050", "FR-054", "FR-055", "FR-058")
 def test_disconnect_closes_ports_and_clears_list(gui):
     """Disconnect drops both status flags and clears the Remote Files list.
 
-    Verifies: FR-050, FR-055, FR-058.
+    The rc2014/elite_mini targets are single shared-port (``two_port=false``),
+    so this also exercises FR-054 (shared-port disconnect clears the Transport
+    flag too) on every bench run against them.
+
+    Verifies: FR-050, FR-054, FR-055, FR-058.
     """
     assert gui.connect()[0] == "ok"
     gui.win.remote_list.addItem("STALE.TXT")  # ensure there is something to clear

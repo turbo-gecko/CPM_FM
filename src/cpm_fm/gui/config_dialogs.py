@@ -227,12 +227,12 @@ class SerialConfigDialog(ConfigDialog):
     Specialized dialog for Serial Configuration
     (SRS docs/cpm_fm_requirements.md, UIR-020 through UIR-031).
 
-    Satisfies: UIR-020-UIR-031, IFR-002.
+    Satisfies: UIR-020-UIR-033, IFR-002.
     """
 
     def __init__(self, parent, settings, current_ports, callback, window_state=None):
         """
-        Satisfies: UIR-022-UIR-031.
+        Satisfies: UIR-022-UIR-033.
 
         Define fields based on Requirements.
         """
@@ -349,14 +349,14 @@ class GeneralConfigDialog(ConfigDialog):
     Specialized dialog for General Configuration
     (SRS docs/cpm_fm_requirements.md, UIR-040 through UIR-048).
 
-    Satisfies: UIR-040-UIR-059.
+    Satisfies: UIR-040-UIR-059, UIR-089, UIR-090.
     """
 
     def __init__(self, parent, settings, callback, window_state=None):
         """
         Satisfies: UIR-041, UIR-042, UIR-045, UIR-046, UIR-047, UIR-048,
         UIR-049, UIR-050, UIR-052, UIR-053, UIR-054, UIR-055, UIR-056,
-        UIR-058, UIR-059.
+        UIR-058, UIR-059, UIR-089, UIR-090.
 
         Command text fields limited to 79 characters. UIR-041: the remote
         command fields (List Files, Receive from Remote, Send to Remote, Rename,

@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_194/420 requirements have a verifying test; 226 untested; 0 stale tag(s)._
+_207/420 requirements have a verifying test; 213 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -16,15 +16,24 @@ _194/420 requirements have a verifying test; 226 untested; 0 stale tag(s)._
 | CR-010 | `tests/test_backup_restore.py:test_do_backup_requires_connection`, `tests/test_gui_smoke.py:test_drop_requires_both_flags`, `tests/test_gui_smoke.py:test_host_to_remote_requires_both_flags`, `tests/test_gui_smoke.py:test_remote_view_requires_both_flags` |
 | CR-014 | `tests/test_vt100_engine.py:test_engine_imports_no_gui_toolkit` |
 | DR-001 | `tests/test_cpm_parser.py:test_parse_dir_output_empty_input_yields_no_files`, `tests/test_cpm_parser.py:test_parse_dir_output_handles_crlf_line_endings` |
+| DR-002 | `tests/test_cpm_parser.py:test_parse_dir_output_ignores_prompt_for_any_drive_letter`, `tests/test_cpm_parser.py:test_parse_dir_output_ignores_prompts_and_empty` |
+| DR-003 | `tests/test_cpm_parser.py:test_parse_dir_output_ignores_no_file_case_insensitively`, `tests/test_cpm_parser.py:test_parse_dir_output_ignores_prompts_and_empty` |
 | DR-004 | `tests/test_cpm_parser.py:test_parse_dir_output_accepts_lowercase_drive_letter` |
 | DR-005 | `tests/test_cpm_parser.py:test_parse_dir_output_single_file_has_no_separator` |
 | DR-006 | `tests/test_cpm_parser.py:test_parse_dir_output_vertical_bar_format` |
+| DR-010 | `tests/test_cpm_parser.py:test_parse_dir_output_strips_leading_drive_prefix` |
 | DR-011 | `tests/test_cpm_parser.py:test_parse_dir_output_deduplicates_repeated_names`, `tests/test_cpm_parser.py:test_parse_dir_output_joins_multi_token_base`, `tests/test_cpm_parser.py:test_parse_dir_output_skips_empty_entry_between_delimiters` |
+| DR-012 | `tests/test_cpm_parser.py:test_parse_dir_output_collapses_internal_whitespace` |
 | DR-013 | `tests/test_cpm_parser.py:test_parse_dir_output_includes_extensionless_files`, `tests/test_cpm_parser.py:test_parse_dir_output_single_extensionless_file` |
 | DR-014 | `tests/test_cpm_parser.py:test_parse_dir_output_vertical_bar_extensionless` |
 | DR-015 | `tests/test_cpm_parser.py:test_parse_dir_output_bar_format_skips_dot_only_entry`, `tests/test_cpm_parser.py:test_parse_dir_output_vertical_bar_extensionless`, `tests/test_cpm_parser.py:test_parse_dir_output_vertical_bar_format` |
+| DR-020 | `tests/test_cpm_parser.py:test_parse_dir_output_duplicate_filenames_overwrite` |
 | DR-021 | `tests/test_cpm_parser.py:test_parse_dir_output_includes_extensionless_files` |
+| DR-022 | `tests/test_cpm_parser.py:test_parse_dir_output_preserves_filename_case` |
 | DR-023 | `tests/test_cpm_parser.py:test_parse_dir_output_includes_extensionless_files`, `tests/test_cpm_parser.py:test_parse_dir_output_single_extensionless_file` |
+| DR-024 | `tests/test_cpm_parser.py:test_parse_dir_output_never_raises_on_malformed_input` |
+| DR-025 | `tests/test_cpm_parser.py:test_parse_dir_output_ignores_prompts_and_empty` |
+| DR-026 | `tests/test_cpm_parser.py:test_parse_dir_output_tolerates_irregular_spacing_and_mixed_line_endings` |
 | DR-033 | `tests/test_cpm_parser.py:test_has_drive_prompt_accepts_zcpr_user_area`, `tests/test_cpm_parser.py:test_has_drive_prompt_detects_prompt`, `tests/test_cpm_parser.py:test_has_drive_prompt_ignores_path_style_prompt`, `tests/test_cpm_parser.py:test_has_drive_prompt_matches_lowercase_request`, `tests/test_cpm_parser.py:test_has_drive_prompt_matches_lowercase_response`, `tests/test_cpm_parser.py:test_has_drive_prompt_zcpr_matches_requested_drive_only` |
 | DR-033a | `tests/test_cpm_parser.py:test_drive_prompt_letter_extracts_plain_prompt`, `tests/test_cpm_parser.py:test_drive_prompt_letter_extracts_zcpr_prompt`, `tests/test_cpm_parser.py:test_drive_prompt_letter_none_when_absent`, `tests/test_cpm_parser.py:test_drive_prompt_letter_returns_first_prompt`, `tests/test_cpm_parser.py:test_drive_prompt_letter_upper_cases_result` |
 | DR-040 | `tests/test_version.py:test_get_version_is_semantic_version_string`, `tests/test_version.py:test_get_version_reads_version_file`, `tests/test_version.py:test_version_file_exists_in_src` |
@@ -34,6 +43,8 @@ _194/420 requirements have a verifying test; 226 untested; 0 stale tag(s)._
 | DR-044 | `tests/test_gui_smoke.py:test_app_icon_resource_present_and_loadable` |
 | DR-045 | `tests/test_transfer_history.py:test_malformed_file_degrades_to_empty`, `tests/test_transfer_history.py:test_missing_file_starts_empty`, `tests/test_transfer_history.py:test_persistence_round_trip` |
 | DR-047 | `tests/test_gui_smoke.py:test_manual_dialog_handles_missing_file` |
+| FR-001 | `tests/test_serial_manager.py:test_status_flags_default_false_at_startup` |
+| FR-002 | `tests/test_serial_manager.py:test_status_flags_default_false_at_startup` |
 | FR-004 | `tests/test_gui_smoke.py:test_geometry_and_last_config_persist_across_sessions` |
 | FR-005 | `tests/test_gui_smoke.py:test_geometry_and_last_config_persist_across_sessions` |
 | FR-006 | `tests/test_gui_smoke.py:test_menu_load_remembers_and_reuses_config_folder`, `tests/test_gui_smoke.py:test_menu_save_remembers_config_folder` |
@@ -63,7 +74,9 @@ _194/420 requirements have a verifying test; 226 untested; 0 stale tag(s)._
 | FR-050 | `tests/test_gui_smoke.py:test_disconnect_attempts_close_when_flags_false`, `tests/test_serial_manager.py:test_close_terminal_port_closes_and_clears_flag` |
 | FR-051 | `tests/test_gui_smoke.py:test_disconnect_keeps_remote_list_when_close_fails` |
 | FR-052 | `tests/test_serial_manager.py:test_close_terminal_port_closes_and_clears_flag`, `tests/test_serial_manager.py:test_close_terminal_port_returns_false_on_error` |
+| FR-054 | `tests/test_gui_smoke.py:test_disconnect_shared_port_also_clears_transport_flag` |
 | FR-055 | `tests/test_gui_smoke.py:test_disconnect_attempts_close_when_flags_false`, `tests/test_serial_manager.py:test_close_transport_port_closes_and_clears_flag` |
+| FR-056 | `tests/test_gui_smoke.py:test_disconnect_transport_close_failure_shows_error_dialog` |
 | FR-057 | `tests/test_serial_manager.py:test_close_transport_port_closes_and_clears_flag`, `tests/test_serial_manager.py:test_close_transport_port_returns_false_on_error` |
 | FR-058 | `tests/test_gui_smoke.py:test_clear_remote_files_empties_canonical_and_widget`, `tests/test_gui_smoke.py:test_disconnect_clears_remote_list`, `tests/test_gui_smoke.py:test_disconnect_keeps_remote_list_when_close_fails` |
 | FR-060 | `tests/test_gui_smoke.py:test_main_window_constructs` |
@@ -223,15 +236,6 @@ These defined requirements have no `Verifies:` test tag:
 - CR-012
 - CR-013
 - CR-015
-- DR-002
-- DR-003
-- DR-010
-- DR-012
-- DR-020
-- DR-022
-- DR-024
-- DR-025
-- DR-026
 - DR-030
 - DR-031
 - DR-032
@@ -247,8 +251,6 @@ These defined requirements have no `Verifies:` test tag:
 - DR-047a
 - DR-047b
 - DR-047c
-- FR-001
-- FR-002
 - FR-003
 - FR-010
 - FR-013
@@ -264,8 +266,6 @@ These defined requirements have no `Verifies:` test tag:
 - FR-039
 - FR-040
 - FR-053
-- FR-054
-- FR-056
 - FR-061
 - FR-062
 - FR-071

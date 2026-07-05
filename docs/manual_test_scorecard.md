@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.24 |
-| Scorecard for plan version | 1.24 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.25 |
+| Scorecard for plan version | 1.25 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -87,7 +87,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | ID | Title | Req | Result | Env | Notes |
 |----|-------|-----|:------:|:---:|-------|
 | MT-P01 | Port drop-downs enumerate host ports | IFR-003, UIR-022/023 | | | |
-| MT-P02 | Serial dialog title/layout | UIR-020/021/029 | | | |
+| MT-P02 | Serial dialog title/layout | FR-020, UIR-020/021/029 | | | |
 | MT-P03 | Drop-down values & defaults | UIR-024-028 | | | |
 | MT-P04 | msec fields 0–255 integer only | UIR-030/031 | | | |
 | MT-P05 | Flow control applied at open | UIR-028 | | | |
@@ -96,7 +96,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 ### §7 General config dialog
 | ID | Title | Req | Result | Env | Notes |
 |----|-------|-----|:------:|:---:|-------|
-| MT-G01 | Title; "Remote" group first; rest ungrouped | UIR-040/041/044 | | | |
+| MT-G01 | Title; "Remote" group first; rest ungrouped | FR-021, UIR-040/041/044 | | | |
 | MT-G02 | Command field defaults & limits | UIR-042/045/046 | | | |
 | MT-G03 | EOL drop-down; CR default | UIR-047/048 | | | |
 | MT-G04 | Launch/inter-file delay defaults & ranges | UIR-049/052 | | | |

@@ -43,7 +43,7 @@ class SerialManager:
         Opens a serial port.
         port_type: 'terminal' or 'transport'
 
-        Satisfies: FR-030, FR-032, FR-038, FR-040, UIR-028, NFR-002.
+        Satisfies: FR-030, FR-032, FR-033, FR-038, FR-040, UIR-028, UIR-032, UIR-033, NFR-002.
         """
         try:
             # Map settings to pyserial parameters

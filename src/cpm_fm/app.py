@@ -912,7 +912,7 @@ class MainWindow(
 
 def main() -> None:
     """
-    Satisfies: STR-002, CR-002, CR-013, UIR-078.
+    Satisfies: STR-002, CR-002, CR-012, CR-013, UIR-078.
     """
     app = cast(QApplication, QApplication.instance() or QApplication(sys.argv))
     # FR-004/FR-005: identity for QSettings-backed persistence (see WindowState).

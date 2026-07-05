@@ -140,6 +140,26 @@ def test_scan_codebase_reads_wrapped_suffixed_tags(tmp_path):
     assert all(e.module == "mod.py" for e in elements)
 
 
+def test_scan_codebase_reads_module_level_docstring_tag(tmp_path):
+    (tmp_path / "mod.py").write_text(
+        '"""Module summary.\n'
+        "\n"
+        "Satisfies: CR-014, FR-130.\n"
+        '"""\n'
+        "\n"
+        "def helper():\n"
+        '    """Unrelated helper, no tag."""\n'
+        "    return None\n",
+        encoding="utf-8",
+    )
+    elements = scan_codebase(str(tmp_path))
+    by_name = {(e.name, e.requirement_id) for e in elements}
+    assert ("<module>", "CR-014") in by_name
+    assert ("<module>", "FR-130") in by_name
+    # The untagged function contributes nothing alongside the module tag.
+    assert len(elements) == 2
+
+
 # ---------------------------------------------------------------------------
 # parser_code — the configurable docstring tag (Satisfies: vs Verifies:)
 # ---------------------------------------------------------------------------

@@ -156,6 +156,8 @@ class _TransfersMixin(MainWindowMixinBase):
 
         When enabled, host->remote sends use 1024-byte STX frames and the
         ``_1k`` launch commands replace the standard send/recv commands.
+
+        Satisfies: UIR-089.
         """
         return str(self.settings.get("xmodem_1k", "OFF")).upper() == "ON"
 
@@ -163,7 +165,7 @@ class _TransfersMixin(MainWindowMixinBase):
         self, cmd_key: str, default: str, filename: str, cmd_key_1k: str | None = None
     ) -> None:
         """
-        Satisfies: FR-087.
+        Satisfies: FR-087, UIR-089, UIR-090.
 
         Implements recv_remote_cmd / send_remote_cmd (UIR-045/UIR-046): the
         configured command is sent on the Terminal Port to launch the CP/M

@@ -164,7 +164,7 @@ class TerminalView(QScrollArea):
     """
 
     def __init__(self, engine: VT100Engine, parent: QWidget | None = None) -> None:
-        """Satisfies: FR-091, UIR-061."""
+        """Satisfies: FR-091, UIR-061, UIR-063."""
         super().__init__(parent)
         self._engine = engine
         self._autoscroll = True
@@ -222,7 +222,7 @@ class TerminalView(QScrollArea):
         arrow keys are transmitted rather than scrolling the view). Anything
         unmapped falls through to the base class.
 
-        Satisfies: FR-096, FR-094, FR-158.
+        Satisfies: FR-096, FR-094, FR-158, UIR-063.
         """
         data = encode_key(event.key(), event.modifiers(), event.text(), self._eol)
         if data and self._key_callback is not None:
@@ -306,7 +306,7 @@ class TerminalView(QScrollArea):
     def _colour(name: str, default: QColor) -> QColor:
         """Resolve a pyte colour name to a QColor ("default"/unknown -> default).
 
-        Satisfies: FR-091.
+        Satisfies: FR-091, FR-157c.
         """
         if name == "default":
             return default

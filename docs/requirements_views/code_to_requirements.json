@@ -1,6 +1,7 @@
 {
   "src/cpm_fm/app.py": [
     "CR-002",
+    "CR-012",
     "CR-013",
     "FR-003",
     "FR-004",
@@ -79,6 +80,8 @@
     "UIR-029",
     "UIR-030",
     "UIR-031",
+    "UIR-032",
+    "UIR-033",
     "UIR-040",
     "UIR-041",
     "UIR-042",
@@ -99,7 +102,9 @@
     "UIR-057",
     "UIR-058",
     "UIR-059",
-    "UIR-075"
+    "UIR-075",
+    "UIR-089",
+    "UIR-090"
   ],
   "src/cpm_fm/gui/conflict_dialog.py": [
     "FR-146",
@@ -306,7 +311,9 @@
     "FR-109",
     "FR-120",
     "FR-137",
-    "FR-138"
+    "FR-138",
+    "UIR-089",
+    "UIR-090"
   ],
   "src/cpm_fm/gui/remote_unavailable_dialog.py": [
     "FR-044",
@@ -318,9 +325,11 @@
     "FR-091a",
     "FR-094",
     "FR-096",
+    "FR-157c",
     "FR-158",
     "UIR-061",
     "UIR-062",
+    "UIR-063",
     "UIR-066"
   ],
   "src/cpm_fm/gui/terminal_window.py": [
@@ -414,6 +423,7 @@
     "FR-015",
     "FR-030",
     "FR-032",
+    "FR-033",
     "FR-036",
     "FR-037",
     "FR-038",
@@ -430,7 +440,9 @@
     "IFR-002",
     "NFR-001",
     "NFR-002",
-    "UIR-028"
+    "UIR-028",
+    "UIR-032",
+    "UIR-033"
   ],
   "src/cpm_fm/terminal/vt100_engine.py": [
     "CR-014",
@@ -480,11 +492,14 @@
     "IFR-004"
   ],
   "src/cpm_fm/utils/file_filter.py": [
+    "CR-014",
+    "FR-130",
     "FR-131",
     "FR-132",
     "FR-133"
   ],
   "src/cpm_fm/utils/i18n.py": [
+    "CR-014",
     "DR-042",
     "DR-043",
     "FR-121",
@@ -495,6 +510,7 @@
     "UIR-077"
   ],
   "src/cpm_fm/utils/transfer_history.py": [
+    "CR-014",
     "DR-045",
     "FR-140",
     "FR-141",
