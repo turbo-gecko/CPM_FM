@@ -19,5 +19,11 @@
     "viewer_cmd": "notepad $1",
     "rename_remote_cmd": "REN $2=$1",
     "delete_remote_cmd": "ERA $1",
-    "echo_transfer_data": "OFF"
+    "echo_transfer_data": "OFF",
+    "terminal_timeout_ms": "100",
+    "transport_timeout_ms": "100",
+    "xmodem_1k": "ON",
+    "recv_remote_cmd_1k": "B:PCPUT1K $1",
+    "send_remote_cmd_1k": "B:PCGET $1",
+    "boot_sequence": ""
 }
