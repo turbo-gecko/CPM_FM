@@ -174,6 +174,8 @@ terminal.local_echo = Echo the Shout
 terminal.autoscroll = Auto-drift
 terminal.input_hint = Type here, matey - every keystroke sails at once
 terminal.boot = Hoist into CP/M
+terminal.font = Letterin'...
+terminal.font_dialog_title = Terminal Letterin'
 
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = Signal Flag Config

@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.19.0**
+**Version 2.20.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -455,10 +455,14 @@ The Terminal is a **functional VT-100 terminal**: it interprets the VT-100/ANSI 
 ### Layout
 
 - **Receive area** (top) — A monospaced character-cell screen (80 × 24 initially) rendering the live terminal display, with at least 1000 lines of scrollback. It shows everything received from CP/M, plus optional local echo and transfer byte hex. This is also where you type (see below). The screen **reflows to the window size** — make the window larger or smaller and the number of visible columns and rows follows it. (Note: the remote is not told the new size, so a full-screen CP/M program that assumes an 80 × 24 screen still draws to that 80 × 24 area.)
-- **Controls** — **Clear** (resets the screen and empties the buffers), **Boot into CP/M** (runs the configured boot sequence — see [Section 9](#9-booting-the-remote-into-cpm)), **Local Echo** (echoes what you type into the screen; off by default), and **Autoscroll** (keeps the newest output in view; on by default).
+- **Controls** — **Clear** (resets the screen and empties the buffers), **Boot into CP/M** (runs the configured boot sequence — see [Section 9](#9-booting-the-remote-into-cpm)), **Local Echo** (echoes what you type into the screen; off by default), **Autoscroll** (keeps the newest output in view; on by default), and **Font…** (see below).
 - **Input hint** (bottom) — A reminder that there is no separate text field: you type directly into the terminal.
 
 > The **Boot into CP/M** button is disabled until you configure a boot sequence in Config → General; once a sequence is saved it becomes available without reopening the window.
+
+### Changing the terminal font
+
+The **Font…** button (in the control row, to the right of Autoscroll) opens your system's standard font-selection dialog, where you can choose the family, style, and size used to draw the Receive area. The new font is applied straight away — the character grid reflows to the new character size — and is **remembered across sessions**, so the Terminal reopens with the font you chose. The setting is a per-machine preference, independent of which configuration file is loaded. The default is a monospaced **Courier New**; a monospaced font is recommended so full-screen CP/M programs line up correctly.
 
 ### Typing to the Remote
 
@@ -557,6 +561,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 | Echo Transfer Data | OFF |
 | Viewer Command | `notepad $1` |
 | Boot Sequence | *(blank)* |
+| Terminal Font | Courier New (monospaced) |
 
 ---
 

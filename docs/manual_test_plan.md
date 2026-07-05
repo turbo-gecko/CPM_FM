@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.26 |
+| Version | 1.27 |
 | Status | Draft |
-| Date | 2026-07-05 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.19.0) |
+| Date | 2026-07-06 |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.20.0) |
 
 ---
 
@@ -400,6 +400,7 @@ files** — these tests delete data by design.
 | MT-W10 | UIR-068 | Open the Terminal Window with the Boot Sequence (MT-G10) **empty**, then set a non-empty Boot Sequence in General Config (window left open) and Save. | With an empty Boot Sequence the **"Boot into CP/M"** button (to the right of Clear) is disabled (greyed); after saving a non-empty sequence it becomes enabled without reopening the window. |
 | MT-W11 [CP/M] | FR-049 | Connected with a valid Boot Sequence configured, in the Terminal Window press **Boot into CP/M**. | The status bar shows the boot sequence running; the keystrokes are transmitted; on reaching CP/M the drive drop-down and Remote Files list update. If CP/M is not reached the status bar reports the failure and **no** modal "file system unavailable" dialog appears. |
 | MT-W12 | FR-091a | Resize the Terminal Window larger and smaller (and maximise). | The character-cell grid reflows to fit the window — more/fewer columns and rows become visible — down to a usable minimum; it does not stay clamped to a fixed 80×24 box. (Note: the remote is not told the new size, so a full-screen CP/M app that assumes 80×24 keeps addressing that page.) |
+| MT-W13 | UIR-069 | In the Terminal Window control row (right of Autoscroll) press **Font…**. In the standard font dialog, scroll the **Font** (family), **Font style**, and **Size** lists and select a different family, a bold/italic style, and a larger size; confirm. Then close the app, relaunch, and reopen the Terminal Window. | A standard font-selection dialog opens seeded with the current font, cleanly laid out (not a cramped/overlapping mess). **The Font / Font style / Size lists each show multiple rows and scroll**, so every family, style, and size is selectable (they are *not* collapsed to a single unusable row). On OK the Receive screen immediately repaints in the new font and the character grid reflows to the new cell size (FR-091a). After relaunch the chosen font is still in effect (persisted); Cancelling the dialog leaves the font unchanged. |
 
 ---
 

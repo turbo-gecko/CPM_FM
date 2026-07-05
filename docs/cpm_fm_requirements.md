@@ -11,7 +11,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 2.19.0 |
+| Version | 2.20.0 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
@@ -555,6 +555,7 @@ operation shows the standard progress dialog and can be cancelled.)*
 | UIR-066 | The Terminal Window shall provide an "Autoscroll" checkbox, right-aligned, that is enabled by default. | Mandatory | T | App_Requirements §Terminal Window; impl. `terminal_window.py:TerminalWindow`, `terminal_window.py:create_widgets` |
 | UIR-067 | The Terminal Window shall not provide a separate transmit field or Send button; the operator types directly into the Receive view and each keystroke is transmitted live (FR-096). A non-editable hint label below the control row shall indicate this. *(v2.17: replaced the transmit field and Send button with live keyboard input.)* | Mandatory | I | App_Requirements §Terminal Window; impl. `terminal_window.py:create_widgets` |
 | UIR-068 | The Terminal Window shall provide a "Boot into CP/M" button, in the control row (UIR-064) to the right of the Clear button, that executes the configured boot sequence (FR-049). The button shall be disabled whenever the `boot_sequence` setting is empty and enabled when it is non-empty; its enabled state shall be re-evaluated whenever the configuration changes while the window is open. *(v2.16.)* | Mandatory | T | impl. `terminal_window.py:TerminalWindow`, `terminal_window.py:create_widgets`, `terminal_window.py:set_boot_enabled`, `mw_remote.py:show_terminal` |
+| UIR-069 | The Terminal Window shall provide a "Font…" button in the control row (UIR-064), to the right of the Autoscroll checkbox (UIR-066), that opens the standard font-selection dialog (`QFontDialog`). The font chosen there shall be applied immediately to the Receive view (UIR-061) — the character-cell grid reflowing to the new cell metrics (FR-091a) — and persisted across application sessions in the UI-preferences store (QSettings, cf. FR-004/FR-124), independently of the loaded serial configuration. When no font has been chosen the Receive view shall default to a monospaced Courier New. *(v2.20.)* | Mandatory | T | impl. `terminal_window.py:create_widgets`, `terminal_window.py:_build_font_dialog`, `terminal_window.py:_on_font`, `terminal_window.py:set_terminal_font`, `gui/terminal_view.py:TerminalView.set_font`, `gui/terminal_view.py:TerminalView.current_font`, `gui/window_state.py:WindowState.terminal_font`, `mw_remote.py:show_terminal` |
 
 ### 4.6 Visual theme and modern layout (v1.3)
 
@@ -879,6 +880,7 @@ future refactor in the Issue Resolution Log (OI-27).
 | v2.17 interactive VT-100 terminal | FR-157, FR-158; revises FR-091 – FR-096, FR-098, UIR-061 – UIR-063, UIR-067; removes FR-155, FR-156 |
 | v2.18 requirements-quality pass (ISO 29148) + terminal grid reflow | FR-091a, FR-157a – FR-157h; revises FR-004, FR-036, FR-090, FR-091, FR-093, FR-131, FR-157, FR-158, NFR-002, UIR-062, UIR-064, UIR-065; FR-155/FR-156 priority corrected to `—` |
 | v2.19 misconfigured remote-command diagnosis and pre-flight test | FR-159, FR-160, FR-161, UIR-093, UIR-094, UIR-095 |
+| v2.20 configurable Terminal Window font | UIR-069 |
 
 ---
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QByteArray, QSettings
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QWidget
 
 from cpm_fm.utils.i18n import DEFAULT_LANGUAGE
@@ -11,6 +12,19 @@ from cpm_fm.utils.i18n import DEFAULT_LANGUAGE
 # WindowState works even before those are set and is easy to override in tests.
 ORG = "turbo-gecko"
 APP = "cpm-fm"
+
+
+def default_terminal_font() -> QFont:
+    """The Terminal Window Receive view's default font (UIR-069).
+
+    A monospaced Courier New — the historic hard-coded terminal font, now the
+    fallback when the user has not chosen one.
+
+    Satisfies: UIR-069.
+    """
+    font = QFont("Courier New")
+    font.setStyleHint(QFont.StyleHint.Monospace)
+    return font
 
 
 class WindowState:
@@ -108,6 +122,32 @@ class WindowState:
         Satisfies: FR-122, FR-124.
         """
         self._settings.setValue("language", name)
+
+    @property
+    def terminal_font(self) -> QFont:
+        """The Terminal Window Receive view font (a monospaced Courier New default).
+
+        Like the language and geometry, this is a global UI preference stored in
+        QSettings rather than the per-config serial JSON, so the chosen terminal
+        font persists across sessions independently of which configuration is
+        loaded. The font round-trips through the string form produced by
+        ``QFont.toString()``; a missing or unparseable value yields the default.
+
+        Satisfies: UIR-069.
+        """
+        value = self._settings.value("terminal_font", "")
+        if isinstance(value, str) and value:
+            font = QFont()
+            if font.fromString(value):
+                return font
+        return default_terminal_font()
+
+    @terminal_font.setter
+    def terminal_font(self, font: QFont) -> None:
+        """
+        Satisfies: UIR-069.
+        """
+        self._settings.setValue("terminal_font", font.toString())
 
     # ------------------------------------------------- file-list filter / sort
 

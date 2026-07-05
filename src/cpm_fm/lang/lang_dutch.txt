@@ -169,6 +169,8 @@ terminal.local_echo = Lokale echo
 terminal.autoscroll = Automatisch scrollen
 terminal.input_hint = Typ hier - toetsaanslagen worden direct verzonden
 terminal.boot = Opstarten in CP/M
+terminal.font = Lettertype...
+terminal.font_dialog_title = Terminal-lettertype
 
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = Seriële Configuratie

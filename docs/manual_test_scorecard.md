@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.26 |
-| Scorecard for plan version | 1.26 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.27 |
+| Scorecard for plan version | 1.27 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -245,6 +245,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-W10 | Boot button disabled when sequence empty; live enable on Save | UIR-068 | | | |
 | MT-W11 | Manual "Boot into CP/M" runs sequence + re-probes | FR-049 | | | |
 | MT-W12 | Terminal grid reflows to the window size | FR-091a | | | |
+| MT-W13 | Font… dialog lists usable (family/style/size scroll, not collapsed); change applies live, reflows, persists | UIR-069 | | | |
 
 ### §13 File context-menu actions
 | ID | Title | Req | Result | Env | Notes |

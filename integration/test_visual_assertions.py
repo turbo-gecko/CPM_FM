@@ -77,6 +77,44 @@ def test_material_theme_applied(vwin, qapp):
     assert qapp.styleSheet().strip() != ""
 
 
+@pytest.mark.mt("MT-W13", "UIR-069")
+def test_terminal_control_row_has_font_button(vwin):
+    """The Terminal Window control row exposes a "Font…" button.
+
+    Verifies: UIR-069.
+    """
+    vwin.show_terminal()
+    term = vwin.terminal_win
+    assert term is not None
+    labels = [b.text() for b in term.findChildren(QPushButton)]
+    assert any("Font" in t for t in labels), f"no Font button in control row: {labels}"
+
+
+@pytest.mark.mt("MT-W13", "UIR-069")
+def test_font_dialog_lists_usable_under_material_theme(vwin, qapp):
+    """The font dialog's family/style/size lists are usable under the app theme.
+
+    Built against the real applied Material stylesheet (UIR-070), whose fixed
+    QListView height would otherwise collapse the dialog's selection lists to a
+    single unusable row; the scoped override keeps them usably tall.
+
+    Verifies: UIR-069, UIR-070.
+    """
+    from PySide6.QtWidgets import QListView
+
+    assert qapp.styleSheet().strip() != ""  # the Material theme is genuinely applied
+    vwin.show_terminal()
+    dlg = vwin.terminal_win._build_font_dialog()
+    try:
+        dlg.show()
+        qapp.processEvents()
+        heights = [lv.height() for lv in dlg.findChildren(QListView)]
+        usable = [h for h in heights if h > 100]
+        assert len(usable) >= 3, f"font-dialog lists collapsed under theme: {heights}"
+    finally:
+        dlg.deleteLater()
+
+
 @pytest.mark.mt("MT-I03", "UIR-076")
 def test_about_dialog_contents(qapp):
     """Verifies: UIR-076."""

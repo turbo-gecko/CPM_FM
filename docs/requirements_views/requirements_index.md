@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_426 requirements across 54 sections._
+_427 requirements across 54 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -429,6 +429,7 @@ _426 requirements across 54 sections._
 | UIR-066 | The Terminal Window shall provide an "Autoscroll" checkbox, right-aligned, that is enabled by default | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets |
 | UIR-067 | The Terminal Window shall not provide a separate transmit field or Send button… | terminal_window.py:create_widgets |
 | UIR-068 | The Terminal Window shall provide a "Boot into CP/M" button, in the control row (UIR-064)… | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets, terminal_window.py:set_boot_enabled, mw_remote.py:show_terminal |
+| UIR-069 | The Terminal Window shall provide a "Font…" button in the control row (UIR-064), to the… | terminal_window.py:create_widgets, terminal_window.py:_build_font_dialog, terminal_window.py:_on_font, terminal_window.py:set_terminal_font, gui/terminal_view.py:TerminalView.set_font, gui/terminal_view.py:TerminalView.current_font, gui/window_state.py:WindowState.terminal_font, mw_remote.py:show_terminal |
 
 ## 4.6 Visual theme and modern layout (v1.3)
 

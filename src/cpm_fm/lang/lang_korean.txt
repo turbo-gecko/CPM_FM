@@ -169,6 +169,8 @@ terminal.local_echo = 로컬 에코
 terminal.autoscroll = 자동 스크롤
 terminal.input_hint = 여기에 입력하세요 - 키 입력이 즉시 전송됩니다
 terminal.boot = CP/M으로 부팅
+terminal.font = 글꼴...
+terminal.font_dialog_title = 터미널 글꼴
 
 # --- Serial Configuration dialog ----------------------------------------------
 config.serial.title = 시리얼 설정

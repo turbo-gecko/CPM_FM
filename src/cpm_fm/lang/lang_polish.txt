@@ -169,6 +169,8 @@ terminal.local_echo = Lokalny echo
 terminal.autoscroll = Automatyczne przewijanie
 terminal.input_hint = Pisz tutaj - naciśnięcia klawiszy są wysyłane na żywo
 terminal.boot = Uruchom w CP/M
+terminal.font = Czcionka...
+terminal.font_dialog_title = Czcionka terminala
 
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = Konfiguracja portu szeregowego

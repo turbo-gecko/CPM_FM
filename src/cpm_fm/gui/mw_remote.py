@@ -29,7 +29,7 @@ class _RemoteMixin(MainWindowMixinBase):
 
     def show_terminal(self):
         """
-        Satisfies: FR-097.
+        Satisfies: FR-097, UIR-069.
         """
         if not self.terminal_win:
             self.terminal_win = TerminalWindow(
@@ -38,10 +38,13 @@ class _RemoteMixin(MainWindowMixinBase):
                 self.clear_terminal_buffers,
                 self.do_boot_sequence,
                 engine=self._term_engine,
+                font_callback=self._save_terminal_font,
             )
             self.terminal_win.chk_echo.toggled.connect(self._set_local_echo)
             # FR-004: restore the Terminal Window's saved geometry on first open.
             self.window_state.restore_geometry("terminal", self.terminal_win)
+            # UIR-069: apply the persisted Receive-view font on first open.
+            self.terminal_win.set_terminal_font(self.window_state.terminal_font)
         else:
             self.terminal_win.showNormal()
         # UIR-068: the boot button is enabled only when a sequence is configured.
@@ -75,6 +78,13 @@ class _RemoteMixin(MainWindowMixinBase):
         Satisfies: FR-093.
         """
         self._local_echo = enabled
+
+    def _save_terminal_font(self, font):
+        """Persist the Terminal Window Receive-view font chosen via Font (UIR-069).
+
+        Satisfies: UIR-069.
+        """
+        self.window_state.terminal_font = font
 
     def handle_terminal_key(self, data: bytes):
         """Transmit raw keystroke bytes typed into the Terminal Window (FR-096).

@@ -973,6 +973,41 @@ def test_terminal_window_keystroke_transmits(qapp):
         term.deleteLater()
 
 
+def test_font_dialog_lists_survive_app_theme_height(qapp):
+    """The font dialog's family/style/size lists stay usable under the app theme.
+
+    The application-wide Material stylesheet (UIR-070) pins every QListView to a
+    fixed 36px height, which would collapse QFontDialog's selection lists to a
+    single unusable row. Reproduce that rule at the application level and assert
+    the dialog built by TerminalWindow restores usably tall lists (the scoped
+    ``_FONT_DIALOG_STYLE`` override).
+
+    Verifies: UIR-069.
+    """
+    from PySide6.QtWidgets import QListView
+
+    app = QApplication.instance()
+    saved = app.styleSheet()
+    term = TerminalWindow(None)
+    dlg = None
+    try:
+        # Mimic the qt-material rule that collapses list views app-wide.
+        app.setStyleSheet("QListView { height: 36px; }")
+        dlg = term._build_font_dialog()
+        dlg.show()
+        qapp.processEvents()
+        lists = dlg.findChildren(QListView)
+        # The family/style/size lists (3 of them) must be far taller than the
+        # collapsed 36px — i.e. the scoped override won over the app sheet.
+        tall = [lv for lv in lists if lv.height() > 100]
+        assert len(tall) >= 3, f"font-dialog lists collapsed: {[lv.height() for lv in lists]}"
+    finally:
+        if dlg is not None:
+            dlg.deleteLater()
+        term.deleteLater()
+        app.setStyleSheet(saved)
+
+
 def test_handle_terminal_key_sends_echoes_and_guards(qapp, state):
     """Verifies: FR-096, FR-092, FR-093, FR-098."""
     win = MainWindow(state)

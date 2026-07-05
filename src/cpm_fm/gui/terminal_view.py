@@ -163,8 +163,14 @@ class TerminalView(QScrollArea):
     Satisfies: FR-091, UIR-061, UIR-062.
     """
 
-    def __init__(self, engine: VT100Engine, parent: QWidget | None = None) -> None:
-        """Satisfies: FR-091, UIR-061, UIR-063."""
+    def __init__(
+        self, engine: VT100Engine, parent: QWidget | None = None, font: QFont | None = None
+    ) -> None:
+        """Satisfies: FR-091, UIR-061, UIR-063, UIR-069.
+
+        ``font`` sets the initial Receive-view font; when omitted a monospaced
+        Courier New is used (UIR-069).
+        """
         super().__init__(parent)
         self._engine = engine
         self._autoscroll = True
@@ -175,23 +181,54 @@ class TerminalView(QScrollArea):
         # Accept keyboard focus so the operator can type into the terminal.
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
-        font = QFont("Courier New")
-        font.setStyleHint(QFont.StyleHint.Monospace)
-        self._font = font
-        fm = QFontMetrics(font)
-        self._cell_w = max(1, fm.horizontalAdvance("M"))
-        self._cell_h = max(1, fm.height())
-        self._ascent = fm.ascent()
-
+        if font is None:
+            font = QFont("Courier New")
+            font.setStyleHint(QFont.StyleHint.Monospace)
         self._grid = _TerminalGrid(self)
-        self._grid.setFont(font)
+        self._apply_font(font)
         self.setWidget(self._grid)
         self.setWidgetResizable(False)
         # Terminal-like background for the area outside the fixed grid.
         self.viewport().setAutoFillBackground(True)
         self.refresh()
 
+    def _apply_font(self, font: QFont) -> None:
+        """Store ``font`` and recompute the cell metrics it implies (UIR-069).
+
+        Shared by construction and :meth:`set_font`: the cell width/height and
+        text baseline all derive from the font's :class:`QFontMetrics`, so they
+        must be recomputed together whenever the font changes.
+
+        Satisfies: FR-091, UIR-069.
+        """
+        self._font = font
+        fm = QFontMetrics(font)
+        self._cell_w = max(1, fm.horizontalAdvance("M"))
+        self._cell_h = max(1, fm.height())
+        self._ascent = fm.ascent()
+        self._grid.setFont(font)
+
     # -------------------------------------------------------------- public API
+
+    def set_font(self, font: QFont) -> None:
+        """Change the Receive-view font and reflow the grid to the new metrics.
+
+        The cell size derives from the font, so the emulator grid is reflowed to
+        the columns/rows that now fit the viewport (FR-091a) and repainted.
+
+        Satisfies: UIR-069, FR-091a.
+        """
+        self._apply_font(font)
+        if self.isVisible():
+            self._reflow_to_viewport()
+        self.refresh()
+
+    def current_font(self) -> QFont:
+        """The Receive-view's current font (used to seed the font dialog).
+
+        Satisfies: UIR-069.
+        """
+        return QFont(self._font)
 
     def set_engine(self, engine: VT100Engine) -> None:
         """Point the view at a different engine and repaint.

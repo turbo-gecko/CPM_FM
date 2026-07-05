@@ -169,6 +169,8 @@ terminal.local_echo = Lokales Echo
 terminal.autoscroll = Automatisch scrollen
 terminal.input_hint = Hier tippen - Tastenanschläge werden sofort gesendet
 terminal.boot = In CP/M starten
+terminal.font = Schriftart...
+terminal.font_dialog_title = Terminal-Schriftart
 
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = Serielle Konfiguration

@@ -169,6 +169,8 @@ terminal.local_echo = Écho local
 terminal.autoscroll = Défilement automatique
 terminal.input_hint = Tapez ici - les touches sont envoyées en direct
 terminal.boot = Démarrer dans CP/M
+terminal.font = Police...
+terminal.font_dialog_title = Police du terminal
 
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = Configuration série

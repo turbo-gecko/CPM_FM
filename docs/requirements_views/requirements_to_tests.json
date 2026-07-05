@@ -354,6 +354,7 @@
     "FR-091a": [
       "tests/test_terminal_view.py:test_grid_size_for_fits_cells_and_clamps_minimum",
       "tests/test_terminal_view.py:test_reflow_resizes_engine_to_viewport",
+      "tests/test_terminal_view.py:test_set_font_updates_cell_metrics_and_paints",
       "tests/test_vt100_engine.py:test_resize_changes_geometry"
     ],
     "FR-092": [
@@ -882,6 +883,15 @@
     ],
     "UIR-068": [
       "tests/test_gui_smoke.py:test_boot_button_reflects_config"
+    ],
+    "UIR-069": [
+      "tests/test_gui_smoke.py:test_font_dialog_lists_survive_app_theme_height",
+      "tests/test_terminal_view.py:test_constructor_accepts_font",
+      "tests/test_terminal_view.py:test_set_font_updates_cell_metrics_and_paints",
+      "tests/test_window_state.py:test_default_terminal_font_is_monospace",
+      "tests/test_window_state.py:test_terminal_font_default_when_unset",
+      "tests/test_window_state.py:test_terminal_font_persists_across_instances",
+      "tests/test_window_state.py:test_terminal_font_roundtrip"
     ],
     "UIR-075": [
       "tests/test_backup_restore.py:test_on_backup_restore_confirm_button_order",

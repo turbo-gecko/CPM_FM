@@ -169,6 +169,8 @@ terminal.local_echo = 本地回显
 terminal.autoscroll = 自动滚动
 terminal.input_hint = 在此输入 - 按键即时发送
 terminal.boot = 启动进入 CP/M
+terminal.font = 字体...
+terminal.font_dialog_title = 终端字体
 
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = 串口配置

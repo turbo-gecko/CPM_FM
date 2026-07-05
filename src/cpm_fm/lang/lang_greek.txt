@@ -169,6 +169,8 @@ terminal.local_echo = Τοπική αντήχηση
 terminal.autoscroll = Αυτόματη κύλιση
 terminal.input_hint = Πληκτρολογήστε εδώ - τα πλήκτρα αποστέλλονται ζωντανά
 terminal.boot = Εκκίνηση σε CP/M
+terminal.font = Γραμματοσειρά...
+terminal.font_dialog_title = Γραμματοσειρά τερματικού
 
 # --- Serial Configuration dialog ------------------------------------------------
 config.serial.title = Σειριακές Ρυθμίσεις

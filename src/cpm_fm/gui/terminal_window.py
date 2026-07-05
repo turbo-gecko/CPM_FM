@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import Callable
 
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QCheckBox,
+    QFontDialog,
     QHBoxLayout,
     QLabel,
     QMainWindow,
@@ -15,6 +17,15 @@ from PySide6.QtWidgets import (
 from cpm_fm.gui.terminal_view import TerminalView
 from cpm_fm.terminal.vt100_engine import VT100Engine
 from cpm_fm.utils.i18n import tr
+
+# UIR-069/UIR-070: the application-wide qt-material stylesheet sets a fixed 36px
+# height on every QListView, which collapses QFontDialog's family/style/size
+# lists to a single unusable row (the reported "cannot adjust the items"). A
+# selector scoped to the dialog restores usable, scrollable lists; it must be a
+# descendant selector (``QFontDialog QListView``) — a bare ``QListView`` rule
+# loses to the app-wide sheet on specificity — and use ``min-height`` to grow
+# past the theme's fixed ``height``.
+_FONT_DIALOG_STYLE = "QFontDialog QListView { min-height: 200px; }"
 
 
 class TerminalWindow(QMainWindow):
@@ -29,10 +40,16 @@ class TerminalWindow(QMainWindow):
     """
 
     def __init__(
-        self, parent, key_callback=None, clear_callback=None, boot_callback=None, engine=None
+        self,
+        parent,
+        key_callback=None,
+        clear_callback=None,
+        boot_callback=None,
+        engine=None,
+        font_callback=None,
     ):
         """
-        Satisfies: UIR-060, UIR-068, FR-091, FR-096.
+        Satisfies: UIR-060, UIR-068, UIR-069, FR-091, FR-096.
 
         No Qt parent, so this is an independent non-modal top-level window.
         The owning MainWindow keeps a reference to it.
@@ -42,6 +59,8 @@ class TerminalWindow(QMainWindow):
         window (no owner) gets its own engine so it is usable on its own.
         ``key_callback`` receives the raw bytes for each keystroke typed into the
         receive area, to be transmitted on the Terminal Port (FR-096).
+        ``font_callback`` receives the :class:`QFont` chosen via the Font button
+        so the owner can persist it (UIR-069).
         """
         super().__init__()
         # FR-091: the VT-100 screen model this window renders.
@@ -59,6 +78,9 @@ class TerminalWindow(QMainWindow):
         self.clear_callback = clear_callback
         # FR-049/UIR-068: invoked when the "Boot into CP/M" button is pressed.
         self.boot_callback = boot_callback
+        # UIR-069: invoked with the QFont chosen via the Font button so the owner
+        # can persist it across sessions.
+        self.font_callback = font_callback
 
         self.create_widgets()
 
@@ -79,7 +101,7 @@ class TerminalWindow(QMainWindow):
             setter(tr(key))
 
     def create_widgets(self):
-        """Satisfies: UIR-061, UIR-062, UIR-064, UIR-065, UIR-066, UIR-067, FR-096."""
+        """Satisfies: UIR-061, UIR-062, UIR-064, UIR-065, UIR-066, UIR-067, UIR-069, FR-096."""
         central = QWidget()
         self.setCentralWidget(central)
         layout = QVBoxLayout(central)
@@ -119,6 +141,12 @@ class TerminalWindow(QMainWindow):
         # UIR-062: the checkbox governs the receive view's autoscroll.
         self.chk_scroll.toggled.connect(self.receive_area.set_autoscroll)
         ctrl_layout.addWidget(self.chk_scroll)
+
+        # UIR-069: "Font…" button, right of the Autoscroll checkbox, opens the
+        # standard font-selection dialog for the Receive view.
+        self.btn_font = QPushButton(clicked=self._on_font)
+        self._register_text(self.btn_font.setText, "terminal.font")
+        ctrl_layout.addWidget(self.btn_font)
         layout.addLayout(ctrl_layout)
 
         # UIR-067: input hint. There is no transmit field — the operator types
@@ -162,6 +190,46 @@ class TerminalWindow(QMainWindow):
         Satisfies: UIR-068.
         """
         self.btn_boot.setEnabled(enabled)
+
+    def _build_font_dialog(self) -> QFontDialog:
+        """Create the font-selection dialog seeded with the Receive view's font.
+
+        Uses Qt's standard :class:`QFontDialog`, forced non-native so it renders
+        and behaves identically on every platform (Windows has no native Qt font
+        picker in any case), and carrying a scoped stylesheet that undoes the app
+        theme's list-collapsing rule so the family/style/size lists are usable
+        (see ``_FONT_DIALOG_STYLE``).
+
+        Satisfies: UIR-069.
+        """
+        dlg = QFontDialog(self.receive_area.current_font(), self)
+        dlg.setOption(QFontDialog.FontDialogOption.DontUseNativeDialog, True)
+        dlg.setWindowTitle(tr("terminal.font_dialog_title"))
+        dlg.setStyleSheet(_FONT_DIALOG_STYLE)
+        return dlg
+
+    def _on_font(self):
+        """Open the standard font dialog and apply/persist the chosen font.
+
+        Seeds :class:`QFontDialog` with the Receive view's current font; on OK,
+        applies the selection to the view immediately and hands it to
+        ``font_callback`` so the owner can persist it (UIR-069).
+
+        Satisfies: UIR-069.
+        """
+        dlg = self._build_font_dialog()
+        if dlg.exec():
+            font = dlg.selectedFont()
+            self.receive_area.set_font(font)
+            if self.font_callback:
+                self.font_callback(font)
+
+    def set_terminal_font(self, font: QFont):
+        """Apply ``font`` to the Receive view (e.g. the saved font on open).
+
+        Satisfies: UIR-069.
+        """
+        self.receive_area.set_font(font)
 
     def set_eol(self, eol: bytes):
         """Set the bytes the Enter key transmits (the configured EOL, FR-094).

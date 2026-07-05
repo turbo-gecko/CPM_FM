@@ -14,7 +14,7 @@ import pytest
 pytest.importorskip("PySide6")
 
 from PySide6.QtCore import Qt  # noqa: E402
-from PySide6.QtGui import QColor  # noqa: E402
+from PySide6.QtGui import QColor, QFont  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
 from cpm_fm.gui.terminal_view import TerminalView, encode_key, grid_size_for  # noqa: E402
@@ -173,6 +173,42 @@ def test_paint_does_not_raise(qapp):
         # attribute/cursor paint paths.
         engine.feed(b"\x1b[1;7;31mX\x1b[0m plain")
         view.refresh()
+        view._grid.grab()  # triggers paintEvent offscreen
+    finally:
+        view.deleteLater()
+
+
+def test_constructor_accepts_font(qapp):
+    """A font passed to the constructor is honoured by current_font.
+
+    Verifies: UIR-069.
+    """
+    engine = VT100Engine(cols=10, rows=3)
+    view = TerminalView(engine, font=QFont("Courier New", 18))
+    try:
+        assert view.current_font().pointSize() == 18
+    finally:
+        view.deleteLater()
+
+
+def test_set_font_updates_cell_metrics_and_paints(qapp):
+    """set_font recomputes the cell metrics and the grid still paints.
+
+    A larger point size yields larger cells; the grid canvas grows to match and
+    painting offscreen does not raise.
+
+    Verifies: UIR-069, FR-091a.
+    """
+    engine = VT100Engine(cols=20, rows=4)
+    view = TerminalView(engine, font=QFont("Courier New", 10))
+    try:
+        w_before, h_before = view._cell_w, view._cell_h
+        view.set_font(QFont("Courier New", 24))
+        assert view.current_font().pointSize() == 24
+        assert view._cell_w > w_before
+        assert view._cell_h > h_before
+        # The grid canvas tracks the new cell height, and painting still works.
+        assert view._grid.height() == view._total_rows() * view._cell_h
         view._grid.grab()  # triggers paintEvent offscreen
     finally:
         view.deleteLater()
