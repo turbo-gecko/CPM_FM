@@ -267,3 +267,15 @@ button.abort = Abortar
 button.test = Probar
 button.terminal = Terminal
 button.close = Cerrar
+
+# --- Macro buttons (v2.21) -----------------------------------------------------
+terminal.macros = Macros
+menu.config.macros = Botones de macro
+macro.title = Macros
+config.macros.title = Configuración de botones de macro
+config.macros.button = Botón {n}
+config.macros.label = Etiqueta
+config.macros.sequence = Secuencia de teclas
+status.macro_failed = Error de macro - comprueba su secuencia de teclas
+status.macro_settings_saved = Ajustes de macros guardados en {path}
+status.macro_settings_updated = Ajustes de macros actualizados

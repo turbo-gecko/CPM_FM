@@ -66,10 +66,12 @@
     "FR-004",
     "FR-020",
     "FR-021",
+    "FR-021b",
     "FR-121",
     "FR-159",
     "FR-160",
     "FR-161",
+    "FR-162",
     "IFR-002",
     "UIR-020",
     "UIR-021",
@@ -110,7 +112,8 @@
     "UIR-090",
     "UIR-093",
     "UIR-094",
-    "UIR-095"
+    "UIR-095",
+    "UIR-098"
   ],
   "src/cpm_fm/gui/conflict_dialog.py": [
     "FR-146",
@@ -137,6 +140,16 @@
     "FR-148",
     "FR-149",
     "UIR-085"
+  ],
+  "src/cpm_fm/gui/flow_layout.py": [
+    "UIR-097"
+  ],
+  "src/cpm_fm/gui/macro_window.py": [
+    "FR-121",
+    "FR-123",
+    "FR-162",
+    "FR-164",
+    "UIR-097"
   ],
   "src/cpm_fm/gui/manual_dialog.py": [
     "DR-047",
@@ -169,13 +182,15 @@
     "FR-020a",
     "FR-021",
     "FR-021a",
+    "FR-021b",
     "FR-022",
     "FR-023",
     "FR-060",
     "FR-125",
     "IFR-003",
     "UIR-076",
-    "UIR-091"
+    "UIR-091",
+    "UIR-098"
   ],
   "src/cpm_fm/gui/mw_context_menu.py": [
     "CR-010",
@@ -224,6 +239,7 @@
     "UIR-082"
   ],
   "src/cpm_fm/gui/mw_remote.py": [
+    "FR-021b",
     "FR-030",
     "FR-031",
     "FR-032",
@@ -274,9 +290,13 @@
     "FR-120",
     "FR-133",
     "FR-145",
+    "FR-162",
+    "FR-164",
     "NFR-004",
     "UIR-068",
-    "UIR-069"
+    "UIR-069",
+    "UIR-096",
+    "UIR-097"
   ],
   "src/cpm_fm/gui/mw_transfer_batches.py": [
     "CR-010",
@@ -361,7 +381,8 @@
     "UIR-066",
     "UIR-067",
     "UIR-068",
-    "UIR-069"
+    "UIR-069",
+    "UIR-096"
   ],
   "src/cpm_fm/gui/theme.py": [
     "CR-013",

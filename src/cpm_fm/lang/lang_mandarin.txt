@@ -267,3 +267,15 @@ button.abort = 中止
 button.test = 测试
 button.terminal = 终端
 button.close = 关闭
+
+# --- Macro buttons (v2.21) -----------------------------------------------------
+terminal.macros = 宏
+menu.config.macros = 宏按钮
+macro.title = 宏
+config.macros.title = 宏按钮配置
+config.macros.button = 按钮 {n}
+config.macros.label = 标签
+config.macros.sequence = 按键序列
+status.macro_failed = 宏运行失败 - 请检查其按键序列
+status.macro_settings_saved = 宏设置已保存到 {path}
+status.macro_settings_updated = 宏设置已更新

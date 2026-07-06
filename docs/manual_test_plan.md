@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.27 |
+| Version | 1.28 |
 | Status | Draft |
 | Date | 2026-07-06 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.20.0) |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.21.0) |
 
 ---
 
@@ -182,6 +182,16 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 | MT-G07 | UIR-054, UIR-055, UIR-056 | Inspect the Viewer/Editor field, and the "Rename" and "Delete" fields (in the Remote group). | Defaults `notepad $1`, `REN $2=$1`, `ERA $1`; the Rename/Delete fields are labelled just "Rename"/"Delete" (no "Remote" suffix) and limited to 79 chars. |
 | MT-G08 | UIR-043 | Confirm there is **no** "Change Disk" field. | The withdrawn field is absent. |
 | MT-G10 | UIR-059 | Inspect the "Boot Sequence" field (below the ungrouped settings). Type a multi-line script (e.g. `WAITFOR Boot:` then `SEND ` then `WAIT 1`), Save, reopen the dialog. | A multi-line text editor labelled "Boot Sequence", empty by default, accepting several lines. After Save and reopen the entered text (newlines included) is shown verbatim. |
+
+---
+
+## 7.1 Macro Buttons configuration dialog
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-G12 [visual] | FR-021b, UIR-003, UIR-098 | Open **Config > Macro Buttons**. | The Config menu contains a **Macro Buttons** item. It opens a modal, resizable dialog titled "Macro Buttons Config" with a **tab per button**, labelled **Button 1 … Button 10**; each tab has a **Label** field and a multi-line **Keystrokes** editor plus a **Test** button. Selecting a tab shows that button's settings. |
+| MT-G13 | FR-021b, UIR-098 | In Button 1 set Label `Dir` and Keystrokes `SEND DIR`; in Button 2 set Label `Reset` and Keystrokes `SENDRAW 03`. Save. Reopen the dialog. | The entered labels and keystroke scripts are shown verbatim after reopen. With a config file loaded, only the macro settings are written to it (other settings unchanged); with no config file loaded a warning is shown and the change applies to the session only. |
+| MT-G14 [CP/M] | FR-162, UIR-098 | Connected, in the Macro Buttons dialog type a script (e.g. `SENDRAW 0D`) into a slot's Keystrokes editor (need not be saved) and press its **Test** button. Then repeat with the Terminal Port **closed**. | Connected: the script runs on the Terminal Port (the remote responds — e.g. the drive prompt appears in the Terminal Window). Disconnected: a "Terminal port not connected" error dialog is shown and nothing is sent. |
 
 ---
 
@@ -401,6 +411,8 @@ files** — these tests delete data by design.
 | MT-W11 [CP/M] | FR-049 | Connected with a valid Boot Sequence configured, in the Terminal Window press **Boot into CP/M**. | The status bar shows the boot sequence running; the keystrokes are transmitted; on reaching CP/M the drive drop-down and Remote Files list update. If CP/M is not reached the status bar reports the failure and **no** modal "file system unavailable" dialog appears. |
 | MT-W12 | FR-091a | Resize the Terminal Window larger and smaller (and maximise). | The character-cell grid reflows to fit the window — more/fewer columns and rows become visible — down to a usable minimum; it does not stay clamped to a fixed 80×24 box. (Note: the remote is not told the new size, so a full-screen CP/M app that assumes 80×24 keeps addressing that page.) |
 | MT-W13 | UIR-069 | In the Terminal Window control row (right of Autoscroll) press **Font…**. In the standard font dialog, scroll the **Font** (family), **Font style**, and **Size** lists and select a different family, a bold/italic style, and a larger size; confirm. Then close the app, relaunch, and reopen the Terminal Window. | A standard font-selection dialog opens seeded with the current font, cleanly laid out (not a cramped/overlapping mess). **The Font / Font style / Size lists each show multiple rows and scroll**, so every family, style, and size is selectable (they are *not* collapsed to a single unusable row). On OK the Receive screen immediately repaints in the new font and the character grid reflows to the new cell size (FR-091a). After relaunch the chosen font is still in effect (persisted); Cancelling the dialog leaves the font unchanged. |
+| MT-W14 [CP/M or loopback] | UIR-096, UIR-097, FR-162, FR-164 | Configure at least two macro buttons (MT-G13). In the Terminal Window control row, tick the **Macros** checkbox (left of Local Echo). Connected, click one of the buttons whose script sends a command (e.g. `SENDRAW 0D`). | A floating window titled "Macros" appears showing one button per configured slot (label + script both set); empty slots do not appear. Clicking a button transmits its keystroke script on the Terminal Port and the remote responds in the Receive screen. |
+| MT-W15 | UIR-097, FR-164, FR-021b | With the Macros window open, resize it. Then edit the macro configuration (MT-G13) and Save with the window still open. Close the Macros window with its window control. | The buttons reflow to fit the window (more/fewer columns as it is resized). Saving new macro definitions refreshes the buttons live (added/removed/renamed without reopening). Closing the window hides it and unticks the **Macros** checkbox; re-ticking it reopens the same window. |
 
 ---
 

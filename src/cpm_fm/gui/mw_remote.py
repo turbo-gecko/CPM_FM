@@ -5,6 +5,7 @@ import time
 
 from PySide6.QtWidgets import QMessageBox
 
+from cpm_fm.gui.macro_window import MacroWindow
 from cpm_fm.gui.mw_base import MainWindowMixinBase
 from cpm_fm.gui.remote_unavailable_dialog import RemoteUnavailableDialog
 from cpm_fm.gui.terminal_window import TerminalWindow
@@ -41,6 +42,8 @@ class _RemoteMixin(MainWindowMixinBase):
                 font_callback=self._save_terminal_font,
             )
             self.terminal_win.chk_echo.toggled.connect(self._set_local_echo)
+            # UIR-096/FR-164: the Macros checkbox shows/hides the Macro Window.
+            self.terminal_win.chk_macros.toggled.connect(self._toggle_macro_window)
             # FR-004: restore the Terminal Window's saved geometry on first open.
             self.window_state.restore_geometry("terminal", self.terminal_win)
             # UIR-069: apply the persisted Receive-view font on first open.
@@ -72,6 +75,61 @@ class _RemoteMixin(MainWindowMixinBase):
         """
         if self.terminal_win is not None:
             self.terminal_win.set_boot_enabled(self._boot_sequence_configured())
+
+    def _toggle_macro_window(self, checked: bool):
+        """Show or hide the floating Macro Window from the Terminal checkbox.
+
+        Satisfies: UIR-096, FR-164.
+        """
+        if checked:
+            self._show_macro_window()
+        elif self.macro_win is not None:
+            self.macro_win.hide()
+
+    def _show_macro_window(self):
+        """Create (on first use) and show the Macro Window, refreshing its buttons.
+
+        Satisfies: UIR-097, FR-164.
+        """
+        if self.macro_win is None:
+            self.macro_win = MacroWindow(
+                self.terminal_win,
+                self.run_macro_script,
+                self._on_macro_window_hidden,
+            )
+            # FR-164: restore the Macro Window's saved geometry on first open.
+            self.window_state.restore_geometry("macro", self.macro_win)
+        self._refresh_macro_buttons()
+        self.macro_win.show()
+        self.macro_win.raise_()
+        self.macro_win.activateWindow()
+
+    def _on_macro_window_hidden(self):
+        """Clear the Terminal Window's Macros checkbox when the palette is closed.
+
+        Satisfies: FR-164.
+        """
+        if self.terminal_win is not None:
+            self.terminal_win.chk_macros.setChecked(False)
+
+    def _refresh_macro_buttons(self):
+        """Rebuild the Macro Window's buttons from the current settings (UIR-097).
+
+        Only slots whose label and keystroke script are both non-empty are shown;
+        called when the window is opened and whenever the macro configuration
+        changes (FR-021b).
+
+        Satisfies: UIR-097, FR-021b.
+        """
+        if self.macro_win is None:
+            return
+        macros = []
+        for i in range(1, MacroWindow.MACRO_COUNT + 1):
+            label = self.settings.get(f"macro_{i}_label", "").strip()
+            script = self.settings.get(f"macro_{i}_seq", "")
+            if label and script.strip():
+                macros.append((label, script))
+        self.macro_win.set_macros(macros)
 
     def _set_local_echo(self, enabled: bool):
         """
@@ -286,6 +344,19 @@ class _RemoteMixin(MainWindowMixinBase):
             self.set_status(tr("status.boot_failed"))
             return False
         self.set_status(tr("status.boot_running"))
+        self._execute_sequence(steps)
+        return True
+
+    def _execute_sequence(self, steps) -> None:
+        """Run an ordered list of parsed keystroke directives on the Terminal Port.
+
+        Shared by the boot sequence (FR-047/FR-049) and the macro buttons
+        (FR-162): SEND (text + EOL), SENDRAW (raw control bytes), WAIT (sleep),
+        and WAITFOR (capture until a string appears or the timeout elapses).
+        Synchronous; intended to run on a worker thread (NFR-004).
+
+        Satisfies: FR-047, FR-162, NFR-004.
+        """
         for step in steps:
             if step.kind == SEND:
                 # handle_terminal_send appends the configured EOL and echoes.
@@ -296,7 +367,41 @@ class _RemoteMixin(MainWindowMixinBase):
                 time.sleep(step.seconds)
             elif step.kind == WAITFOR:
                 self._wait_for_text(step.text, step.seconds)
-        return True
+
+    def run_macro_script(self, script: str) -> None:
+        """Execute a macro button's keystroke script on the Terminal Port (FR-162).
+
+        Parses ``script`` in the boot-sequence directive language and runs it on
+        a worker thread (NFR-004), like the boot sequence. Requires an open
+        Terminal Port — otherwise it reports the not-connected status and sends
+        nothing (cf. FR-098). An empty script is a no-op. Invoked by a Macro
+        Window button click and by the Macro config dialog's Test button.
+
+        Satisfies: FR-162, FR-098, NFR-004.
+        """
+        if not script.strip():
+            return
+        if not self.serial_mgr.terminal_connected:
+            self.set_status(tr("status.terminal_not_open_send"))
+            return
+        threading.Thread(target=self._run_sequence_logic, args=(script,), daemon=True).start()
+
+    def _run_sequence_logic(self, script: str) -> None:
+        """Worker: parse and execute a macro script on the Terminal Port (FR-162).
+
+        Parses on the worker thread so a malformed script is reported without
+        blocking the GUI; on a parse error it reports the failure in the status
+        bar and runs nothing (mirrors run_boot_sequence).
+
+        Satisfies: FR-162, NFR-004.
+        """
+        try:
+            steps = parse_boot_sequence(script)
+        except ValueError as e:
+            print(f"Macro parse error: {e}")
+            self.set_status(tr("status.macro_failed"))
+            return
+        self._execute_sequence(steps)
 
     def _wait_for_text(self, target: str, timeout: float) -> bool:
         """Capture Terminal Port output until ``target`` appears or ``timeout``.

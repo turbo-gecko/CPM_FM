@@ -7,7 +7,11 @@ import serial.tools.list_ports
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from cpm_fm.gui.about_dialog import AboutDialog
-from cpm_fm.gui.config_dialogs import GeneralConfigDialog, SerialConfigDialog
+from cpm_fm.gui.config_dialogs import (
+    GeneralConfigDialog,
+    MacroConfigDialog,
+    SerialConfigDialog,
+)
 from cpm_fm.gui.manual_dialog import ManualDialog
 from cpm_fm.gui.mw_base import MainWindowMixinBase
 from cpm_fm.utils.config_handler import DEFAULT_SETTINGS
@@ -244,6 +248,24 @@ class _ConfigMixin(MainWindowMixinBase):
                 self.set_status(tr("status.general_settings_updated"))
 
         GeneralConfigDialog(self, self.settings, update_settings, self.window_state)
+
+    def menu_macro_config(self):
+        """
+        Satisfies: FR-021b, UIR-098.
+        """
+
+        def update_settings(new_set):
+            self.settings.update(new_set)
+            # UIR-097: reflect the edited macro definitions in the live Macro
+            # Window if it is open.
+            self._refresh_macro_buttons()
+            # FR-021b: persist only the macro settings to the active config file,
+            # leaving the serial/general settings untouched. If no file is loaded
+            # the helper warns and the change stays session-only.
+            if not self._save_subset_to_active_config(new_set, "status.macro_settings_saved"):
+                self.set_status(tr("status.macro_settings_updated"))
+
+        MacroConfigDialog(self, self.settings, update_settings, self.window_state)
 
     def menu_manual(self):
         """Present the non-modal user-manual viewer (Help > Manual).

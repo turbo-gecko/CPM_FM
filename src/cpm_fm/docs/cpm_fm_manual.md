@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.20.0**
+**Version 2.21.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -200,6 +200,16 @@ Configure CP/M command templates and behavior. The remote-command fields are gat
 | **Boot Sequence** | An optional script of keystrokes that drives the remote into CP/M when it does not boot there on its own. See [Section 9](#9-booting-the-remote-into-cpm). | *(blank)* |
 
 > **The Save button in each dialog.** The **Save** button in the Serial dialog writes **only the serial settings** to the configuration file you currently have loaded, leaving the general settings in that file untouched. Likewise, the **Save** button in the General dialog writes **only the general settings**, leaving the serial settings untouched. Neither button opens a file picker. If no configuration file is loaded yet, the change is applied to the current session only and a warning reminds you to use **File → Save** to write it to a file. To save *everything* to a file (or to a new file), use **File → Save**.
+
+### Config → Macro Buttons
+
+Opens the **Macro Buttons Config** dialog, where you program the buttons shown in the Terminal Window's floating Macro Window (see [Section 13](#13-the-terminal-window)). The dialog has one **tab per button**, **Button 1** through **Button 10**; select a tab to edit that button. Each tab has:
+
+- **Label** — the caption shown on the button (up to 30 characters). A slot appears in the Macro Window only when it has both a label and a keystroke sequence.
+- **Keystrokes** — a short script in the same directive language as the boot sequence (`SEND`, `SENDRAW`, `WAIT`, `WAITFOR` — see [Section 9](#9-booting-the-remote-into-cpm)). For example, `SEND DIR` sends `DIR` followed by the end-of-line; `SENDRAW 03` sends a raw Ctrl-C.
+- **Test** — sends the slot's currently entered script (even before saving) to the remote so you can check it. This requires the Terminal Port to be open.
+
+Like the other config dialogs, **Save** writes only the macro settings to the loaded configuration file (and refreshes the Macro Window if it is open); with no file loaded the change applies to the session only.
 
 ### File Menu Actions
 
@@ -455,10 +465,16 @@ The Terminal is a **functional VT-100 terminal**: it interprets the VT-100/ANSI 
 ### Layout
 
 - **Receive area** (top) — A monospaced character-cell screen (80 × 24 initially) rendering the live terminal display, with at least 1000 lines of scrollback. It shows everything received from CP/M, plus optional local echo and transfer byte hex. This is also where you type (see below). The screen **reflows to the window size** — make the window larger or smaller and the number of visible columns and rows follows it. (Note: the remote is not told the new size, so a full-screen CP/M program that assumes an 80 × 24 screen still draws to that 80 × 24 area.)
-- **Controls** — **Clear** (resets the screen and empties the buffers), **Boot into CP/M** (runs the configured boot sequence — see [Section 9](#9-booting-the-remote-into-cpm)), **Local Echo** (echoes what you type into the screen; off by default), **Autoscroll** (keeps the newest output in view; on by default), and **Font…** (see below).
+- **Controls** — **Clear** (resets the screen and empties the buffers), **Boot into CP/M** (runs the configured boot sequence — see [Section 9](#9-booting-the-remote-into-cpm)), **Macros** (shows/hides the floating Macro Window — see below; off by default), **Local Echo** (echoes what you type into the screen; off by default), **Autoscroll** (keeps the newest output in view; on by default), and **Font…** (see below).
 - **Input hint** (bottom) — A reminder that there is no separate text field: you type directly into the terminal.
 
 > The **Boot into CP/M** button is disabled until you configure a boot sequence in Config → General; once a sequence is saved it becomes available without reopening the window.
+
+### Macro buttons
+
+Ticking the **Macros** checkbox opens a small floating **Macros** window: a palette of buttons that each send a pre-programmed sequence of keystrokes to the remote when clicked — handy for commands you type often (directory listings, loading a program, resetting the monitor). The window floats above the Terminal, and its buttons **reflow to fit** as you resize it. Closing the Macros window (or un-ticking the checkbox) hides it; it reopens in the same place when you tick the box again.
+
+You program the buttons in **Config → Macro Buttons** (see [Section 7](#7-configuration)). Up to ten buttons can be defined; a button appears in the window only when you have given it both a label and a keystroke sequence. Each button's sequence uses the **same script directives as the boot sequence** (`SEND`, `SENDRAW`, `WAIT`, `WAITFOR` — see [Section 9](#9-booting-the-remote-into-cpm)), so a macro can send text, raw control bytes, pauses, and wait-for-prompt steps. Clicking a button (or the **Test** button in the config dialog) requires the Terminal Port to be open.
 
 ### Changing the terminal font
 
@@ -561,6 +577,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 | Echo Transfer Data | OFF |
 | Viewer Command | `notepad $1` |
 | Boot Sequence | *(blank)* |
+| Macro Buttons (Label + Keystrokes, ×10) | *(blank)* |
 | Terminal Font | Courier New (monospaced) |
 
 ---

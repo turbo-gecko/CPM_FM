@@ -52,6 +52,14 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     # separated script (SEND/SENDRAW/WAIT/WAITFOR directives) run to drive a
     # remote that does not boot straight into CP/M. Empty disables the feature.
     "boot_sequence": "",
+    # FR-162/FR-021b/UIR-097/UIR-098: up to ten configurable macro buttons shown
+    # in the floating Macro Window. Each slot pairs a display label
+    # (macro_<n>_label) with a keystroke script (macro_<n>_seq) in the same
+    # directive language as boot_sequence (SEND/SENDRAW/WAIT/WAITFOR). A slot is
+    # shown as a button only when both are non-empty; all default empty. These
+    # persist per-configuration alongside the other settings.
+    **{f"macro_{i}_label": "" for i in range(1, 11)},
+    **{f"macro_{i}_seq": "" for i in range(1, 11)},
 }
 
 

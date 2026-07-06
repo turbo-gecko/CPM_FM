@@ -89,6 +89,44 @@ def test_terminal_window_clear(gui):
 
 
 @pytest.mark.hil
+@pytest.mark.mt("MT-W14", "FR-162", "FR-164", "UIR-096", "UIR-097")
+def test_macro_button_sends_keystrokes_over_serial(gui):
+    """A configured macro button transmits its script and the remote responds.
+
+    Configure one macro slot to send a carriage return (SENDRAW 0D), open the
+    Terminal Window, reveal the Macro Window via the Macros checkbox, and click
+    the generated button. The keystroke script runs on the Terminal Port and the
+    remote echoes its drive prompt onto the screen.
+
+    Verifies: FR-162, FR-164, UIR-096, UIR-097.
+    """
+    from PySide6.QtWidgets import QPushButton
+
+    assert gui.connect()[0] == "ok"
+    # FR-162: one macro slot that sends a bare CR to elicit the drive prompt.
+    gui.win.settings["macro_1_label"] = "Prompt"
+    gui.win.settings["macro_1_seq"] = "SENDRAW 0D"
+
+    gui.win.show_terminal()
+    term = gui.win.terminal_win
+    assert term is not None, "terminal window was not created"
+
+    # UIR-096/FR-164: the Macros checkbox shows the palette.
+    term.chk_macros.setChecked(True)
+    assert gui.win.macro_win is not None, "macro window was not created"
+    buttons = gui.win.macro_win.centralWidget().findChildren(QPushButton)
+    assert [b.text() for b in buttons] == ["Prompt"], "configured macro button not shown"
+
+    buttons[0].click()  # FR-162: runs the script on the Terminal Port
+    gui.process_until(
+        lambda: CPMParser.drive_prompt_letter(_screen_text(term)) is not None,
+        timeout=8.0,
+    )
+    text = _screen_text(term)
+    assert CPMParser.drive_prompt_letter(text) is not None, f"no prompt rendered: {text!r}"
+
+
+@pytest.mark.hil
 @pytest.mark.mt("MT-W10", "FR-157")
 def test_terminal_vt100_escape_sequences_render_without_crash(gui):
     """VT-100 escape sequences (cursor move, clear, SGR attributes) render without crash.

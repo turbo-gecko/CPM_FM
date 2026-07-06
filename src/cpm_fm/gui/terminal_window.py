@@ -101,7 +101,11 @@ class TerminalWindow(QMainWindow):
             setter(tr(key))
 
     def create_widgets(self):
-        """Satisfies: UIR-061, UIR-062, UIR-064, UIR-065, UIR-066, UIR-067, UIR-069, FR-096."""
+        """Build the Terminal Window widgets.
+
+        Satisfies: UIR-061, UIR-062, UIR-064, UIR-065, UIR-066, UIR-067, UIR-069,
+        UIR-096, FR-096.
+        """
         central = QWidget()
         self.setCentralWidget(central)
         layout = QVBoxLayout(central)
@@ -128,6 +132,14 @@ class TerminalWindow(QMainWindow):
         self.btn_boot.setEnabled(False)
         ctrl_layout.addWidget(self.btn_boot)
         ctrl_layout.addStretch()
+
+        # UIR-096: "Macros" checkbox, to the left of Local Echo, that shows/hides
+        # the floating Macro Window (FR-164). The owner wires its toggled signal
+        # in show_terminal. Unchecked by default.
+        self.chk_macros = QCheckBox()
+        self._register_text(self.chk_macros.setText, "terminal.macros")
+        self.chk_macros.setChecked(False)
+        ctrl_layout.addWidget(self.chk_macros)
 
         self.chk_echo = QCheckBox()  # UIR-065: disabled by default.
         self._register_text(self.chk_echo.setText, "terminal.local_echo")

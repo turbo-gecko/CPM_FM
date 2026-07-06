@@ -267,3 +267,15 @@ button.abort = Ματαίωση
 button.test = Δοκιμή
 button.terminal = Τερματικός
 button.close = Κλείσιμο
+
+# --- Macro buttons (v2.21) -----------------------------------------------------
+terminal.macros = Μακροεντολές
+menu.config.macros = Κουμπιά μακροεντολών
+macro.title = Μακροεντολές
+config.macros.title = Ρύθμιση κουμπιών μακροεντολών
+config.macros.button = Κουμπί {n}
+config.macros.label = Ετικέτα
+config.macros.sequence = Ακολουθία πλήκτρων
+status.macro_failed = Η μακροεντολή απέτυχε - ελέγξτε την ακολουθία πλήκτρων
+status.macro_settings_saved = Οι ρυθμίσεις μακροεντολών αποθηκεύτηκαν στο {path}
+status.macro_settings_updated = Οι ρυθμίσεις μακροεντολών ενημερώθηκαν

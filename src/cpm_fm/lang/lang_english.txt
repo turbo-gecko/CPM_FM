@@ -272,3 +272,15 @@ about.version = Version {version}
 # --- Manual viewer -------------------------------------------------------------
 manual.title = User Manual
 manual.load_error = Could not load the user manual from: {path}
+
+# --- Macro buttons (v2.21) -----------------------------------------------------
+terminal.macros = Macros
+menu.config.macros = Macro Buttons
+macro.title = Macros
+config.macros.title = Macro Buttons Config
+config.macros.button = Button {n}
+config.macros.label = Label
+config.macros.sequence = Keystrokes
+status.macro_failed = Macro failed - check its keystroke sequence
+status.macro_settings_saved = Macro settings saved to {path}
+status.macro_settings_updated = Macro settings updated

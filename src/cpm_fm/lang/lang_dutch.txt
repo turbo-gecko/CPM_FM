@@ -267,3 +267,15 @@ button.abort = Afbreken
 button.test = Testen
 button.terminal = Terminal
 button.close = Sluiten
+
+# --- Macro buttons (v2.21) -----------------------------------------------------
+terminal.macros = Macro's
+menu.config.macros = Macroknoppen
+macro.title = Macro's
+config.macros.title = Macroknoppen configureren
+config.macros.button = Knop {n}
+config.macros.label = Label
+config.macros.sequence = Toetsenreeks
+status.macro_failed = Macro mislukt - controleer de toetsenreeks
+status.macro_settings_saved = Macro-instellingen opgeslagen in {path}
+status.macro_settings_updated = Macro-instellingen bijgewerkt

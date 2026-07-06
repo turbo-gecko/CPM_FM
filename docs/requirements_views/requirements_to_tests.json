@@ -174,6 +174,12 @@
       "tests/test_gui_smoke.py:test_general_config_save_keeps_current_host_dir",
       "tests/test_gui_smoke.py:test_general_config_save_persists_general_only"
     ],
+    "FR-021b": [
+      "tests/test_macros.py:test_macro_config_round_trips_label_and_sequence",
+      "tests/test_macros.py:test_macro_settings_defaults_present_and_empty",
+      "tests/test_macros.py:test_menu_macro_config_saves_subset_and_refreshes",
+      "tests/test_macros.py:test_refresh_macro_buttons_shows_only_configured_slots"
+    ],
     "FR-022": [
       "tests/test_gui_smoke.py:test_menu_about_opens_dialog"
     ],
@@ -386,7 +392,9 @@
       "tests/test_terminal_view.py:test_encode_key_returns_none_for_modifier_only"
     ],
     "FR-098": [
-      "tests/test_gui_smoke.py:test_handle_terminal_key_sends_echoes_and_guards"
+      "tests/test_gui_smoke.py:test_handle_terminal_key_sends_echoes_and_guards",
+      "tests/test_macros.py:test_macro_config_test_button_guards_disconnected",
+      "tests/test_macros.py:test_run_macro_script_guards_when_disconnected"
     ],
     "FR-099": [
       "tests/test_gui_smoke.py:test_copy_to_remote_transfers_all_selected"
@@ -745,6 +753,21 @@
       "tests/test_gui_smoke.py:test_config_test_button_reports_success_when_remote_responds",
       "tests/test_gui_smoke.py:test_config_test_button_requires_connection"
     ],
+    "FR-162": [
+      "tests/test_macros.py:test_macro_config_test_button_runs_typed_script",
+      "tests/test_macros.py:test_macro_settings_defaults_present_and_empty",
+      "tests/test_macros.py:test_macro_window_builds_buttons_and_click_invokes_callback",
+      "tests/test_macros.py:test_run_macro_script_empty_is_noop",
+      "tests/test_macros.py:test_run_macro_script_guards_when_disconnected",
+      "tests/test_macros.py:test_run_macro_script_runs_on_worker_thread",
+      "tests/test_macros.py:test_run_sequence_logic_executes_directives",
+      "tests/test_macros.py:test_run_sequence_logic_parse_error_sets_status"
+    ],
+    "FR-164": [
+      "tests/test_macros.py:test_macro_window_close_hides_and_notifies",
+      "tests/test_macros.py:test_macro_window_hidden_clears_checkbox",
+      "tests/test_macros.py:test_macros_checkbox_toggles_macro_window"
+    ],
     "IFR-004": [
       "tests/test_config_handler.py:test_load_json_malformed_returns_empty",
       "tests/test_config_handler.py:test_load_json_reads_valid_object",
@@ -813,6 +836,9 @@
     ],
     "NFR-003q": [
       "tests/test_xmodem.py:test_receive_file_empty_transfer_writes_empty_file"
+    ],
+    "NFR-004": [
+      "tests/test_macros.py:test_run_macro_script_runs_on_worker_thread"
     ],
     "NFR-005": [
       "tests/test_i18n.py:test_available_languages_discovers_shipped_files"
@@ -961,6 +987,22 @@
     ],
     "UIR-095": [
       "tests/test_gui_smoke.py:test_general_config_remote_group_first"
+    ],
+    "UIR-096": [
+      "tests/test_macros.py:test_macros_checkbox_toggles_macro_window",
+      "tests/test_macros.py:test_terminal_window_has_macros_checkbox"
+    ],
+    "UIR-097": [
+      "tests/test_macros.py:test_flow_layout_holds_and_reports_items",
+      "tests/test_macros.py:test_macro_window_builds_buttons_and_click_invokes_callback",
+      "tests/test_macros.py:test_macro_window_rebuild_replaces_buttons",
+      "tests/test_macros.py:test_refresh_macro_buttons_shows_only_configured_slots"
+    ],
+    "UIR-098": [
+      "tests/test_macros.py:test_macro_config_round_trips_label_and_sequence",
+      "tests/test_macros.py:test_macro_config_test_button_guards_disconnected",
+      "tests/test_macros.py:test_macro_config_test_button_runs_typed_script",
+      "tests/test_macros.py:test_macro_config_uses_tabbed_layout"
     ]
   },
   "untested": [
@@ -1106,7 +1148,6 @@
     "NFR-001a",
     "NFR-001b",
     "NFR-001c",
-    "NFR-004",
     "STR-001",
     "STR-002",
     "STR-003",

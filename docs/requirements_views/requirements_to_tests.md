@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_213/427 requirements have a verifying test; 214 untested; 0 stale tag(s)._
+_220/433 requirements have a verifying test; 213 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -56,6 +56,7 @@ _213/427 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 | FR-019 | `tests/test_gui_smoke.py:test_menu_new_saves_to_current_file_resets_and_closes_ports`, `tests/test_gui_smoke.py:test_window_title_cleared_by_new` |
 | FR-020a | `tests/test_gui_smoke.py:test_dialog_save_warns_and_writes_nothing_when_no_config_loaded`, `tests/test_gui_smoke.py:test_serial_config_save_persists_only_serial_to_active_file` |
 | FR-021a | `tests/test_gui_smoke.py:test_dialog_save_warns_and_writes_nothing_when_no_config_loaded`, `tests/test_gui_smoke.py:test_general_config_save_keeps_current_host_dir`, `tests/test_gui_smoke.py:test_general_config_save_persists_general_only` |
+| FR-021b | `tests/test_macros.py:test_macro_config_round_trips_label_and_sequence`, `tests/test_macros.py:test_macro_settings_defaults_present_and_empty`, `tests/test_macros.py:test_menu_macro_config_saves_subset_and_refreshes`, `tests/test_macros.py:test_refresh_macro_buttons_shows_only_configured_slots` |
 | FR-022 | `tests/test_gui_smoke.py:test_menu_about_opens_dialog` |
 | FR-023 | `tests/test_gui_smoke.py:test_help_menu_contains_manual_action`, `tests/test_gui_smoke.py:test_menu_manual_opens_dialog`, `tests/test_gui_smoke.py:test_menu_manual_reuses_open_window` |
 | FR-030 | `tests/test_gui_smoke.py:test_connect_when_terminal_already_open_notifies_and_takes_no_action`, `tests/test_serial_manager.py:test_numeric_defaults_applied_when_absent`, `tests/test_serial_manager.py:test_numeric_fields_are_coerced_to_int`, `tests/test_serial_manager.py:test_open_port_returns_false_on_serial_error`, `tests/test_serial_manager.py:test_parity_maps_to_pyserial_constant` |
@@ -96,7 +97,7 @@ _213/427 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 | FR-094 | `tests/test_gui_smoke.py:test_handle_terminal_send_append_eol_flag`, `tests/test_gui_smoke.py:test_terminal_window_keystroke_transmits`, `tests/test_terminal_view.py:test_encode_key_enter_uses_eol` |
 | FR-095 | `tests/test_gui_smoke.py:test_terminal_window_render_and_clear`, `tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor` |
 | FR-096 | `tests/test_gui_smoke.py:test_handle_terminal_key_sends_echoes_and_guards`, `tests/test_gui_smoke.py:test_terminal_window_keystroke_transmits`, `tests/test_serial_manager.py:test_send_data_replaces_non_ascii`, `tests/test_serial_manager.py:test_send_data_returns_false_when_port_closed`, `tests/test_serial_manager.py:test_send_data_returns_false_when_port_none`, `tests/test_serial_manager.py:test_send_data_writes_ascii_to_open_port`, `tests/test_terminal_view.py:test_encode_key_control_combinations`, `tests/test_terminal_view.py:test_encode_key_enter_uses_eol`, `tests/test_terminal_view.py:test_encode_key_navigation_and_function_keys`, `tests/test_terminal_view.py:test_encode_key_printable_and_utf8`, `tests/test_terminal_view.py:test_encode_key_returns_none_for_modifier_only` |
-| FR-098 | `tests/test_gui_smoke.py:test_handle_terminal_key_sends_echoes_and_guards` |
+| FR-098 | `tests/test_gui_smoke.py:test_handle_terminal_key_sends_echoes_and_guards`, `tests/test_macros.py:test_macro_config_test_button_guards_disconnected`, `tests/test_macros.py:test_run_macro_script_guards_when_disconnected` |
 | FR-099 | `tests/test_gui_smoke.py:test_copy_to_remote_transfers_all_selected` |
 | FR-101 | `tests/test_cpm_parser.py:test_has_drive_prompt_ignores_blank_lines` |
 | FR-102 | `tests/test_cpm_parser.py:test_has_drive_prompt_detects_prompt`, `tests/test_gui_smoke.py:test_change_drive_success_refreshes_remote_list` |
@@ -167,6 +168,8 @@ _213/427 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 | FR-159 | `tests/test_gui_smoke.py:test_config_test_button_reports_no_response`, `tests/test_gui_smoke.py:test_download_no_response_reports_misconfigured_command_error`, `tests/test_gui_smoke.py:test_upload_no_response_reports_misconfigured_command_error`, `tests/test_xmodem.py:test_receive_file_no_response_stays_false_on_success`, `tests/test_xmodem.py:test_receive_file_sets_no_response_on_genuine_handshake_timeout`, `tests/test_xmodem.py:test_send_file_cancel_during_handshake_does_not_set_no_response`, `tests/test_xmodem.py:test_send_file_sets_no_response_on_genuine_handshake_timeout` |
 | FR-160 | `tests/test_gui_smoke.py:test_config_test_button_reports_no_response`, `tests/test_gui_smoke.py:test_config_test_button_reports_success_when_remote_responds`, `tests/test_xmodem.py:test_handshake_timeout_defaults_to_ten_seconds`, `tests/test_xmodem.py:test_receive_file_sets_no_response_on_genuine_handshake_timeout`, `tests/test_xmodem.py:test_send_file_sets_no_response_on_genuine_handshake_timeout` |
 | FR-161 | `tests/test_gui_smoke.py:test_config_test_button_reports_no_response`, `tests/test_gui_smoke.py:test_config_test_button_reports_success_when_remote_responds`, `tests/test_gui_smoke.py:test_config_test_button_requires_connection` |
+| FR-162 | `tests/test_macros.py:test_macro_config_test_button_runs_typed_script`, `tests/test_macros.py:test_macro_settings_defaults_present_and_empty`, `tests/test_macros.py:test_macro_window_builds_buttons_and_click_invokes_callback`, `tests/test_macros.py:test_run_macro_script_empty_is_noop`, `tests/test_macros.py:test_run_macro_script_guards_when_disconnected`, `tests/test_macros.py:test_run_macro_script_runs_on_worker_thread`, `tests/test_macros.py:test_run_sequence_logic_executes_directives`, `tests/test_macros.py:test_run_sequence_logic_parse_error_sets_status` |
+| FR-164 | `tests/test_macros.py:test_macro_window_close_hides_and_notifies`, `tests/test_macros.py:test_macro_window_hidden_clears_checkbox`, `tests/test_macros.py:test_macros_checkbox_toggles_macro_window` |
 | IFR-004 | `tests/test_config_handler.py:test_load_json_malformed_returns_empty`, `tests/test_config_handler.py:test_load_json_reads_valid_object`, `tests/test_config_handler.py:test_save_json_to_unwritable_path_returns_false` |
 | NFR-001 | `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
 | NFR-002 | `tests/test_serial_manager.py:test_flow_control_nested_key`, `tests/test_serial_manager.py:test_nested_key_names_are_honoured` |
@@ -187,6 +190,7 @@ _213/427 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 | NFR-003o | `tests/test_xmodem.py:test_abort_does_not_hang_when_tx_cannot_drain` |
 | NFR-003p | `tests/test_xmodem.py:test_send_file_aborts_after_nak_exhaustion` |
 | NFR-003q | `tests/test_xmodem.py:test_receive_file_empty_transfer_writes_empty_file` |
+| NFR-004 | `tests/test_macros.py:test_run_macro_script_runs_on_worker_thread` |
 | NFR-005 | `tests/test_i18n.py:test_available_languages_discovers_shipped_files` |
 | UIR-003 | `tests/test_gui_smoke.py:test_config_menu_has_language_submenu` |
 | UIR-004 | `tests/test_gui_smoke.py:test_help_menu_contains_about_action`, `tests/test_gui_smoke.py:test_help_menu_contains_manual_action` |
@@ -225,6 +229,9 @@ _213/427 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 | UIR-092 | `tests/test_i18n.py:test_remote_unavailable_keys_resolve` |
 | UIR-094 | `tests/test_gui_smoke.py:test_general_config_remote_group_first` |
 | UIR-095 | `tests/test_gui_smoke.py:test_general_config_remote_group_first` |
+| UIR-096 | `tests/test_macros.py:test_macros_checkbox_toggles_macro_window`, `tests/test_macros.py:test_terminal_window_has_macros_checkbox` |
+| UIR-097 | `tests/test_macros.py:test_flow_layout_holds_and_reports_items`, `tests/test_macros.py:test_macro_window_builds_buttons_and_click_invokes_callback`, `tests/test_macros.py:test_macro_window_rebuild_replaces_buttons`, `tests/test_macros.py:test_refresh_macro_buttons_shows_only_configured_slots` |
+| UIR-098 | `tests/test_macros.py:test_macro_config_round_trips_label_and_sequence`, `tests/test_macros.py:test_macro_config_test_button_guards_disconnected`, `tests/test_macros.py:test_macro_config_test_button_runs_typed_script`, `tests/test_macros.py:test_macro_config_uses_tabbed_layout` |
 
 ## Untested requirements
 
@@ -372,7 +379,6 @@ These defined requirements have no `Verifies:` test tag:
 - NFR-001a
 - NFR-001b
 - NFR-001c
-- NFR-004
 - STR-001
 - STR-002
 - STR-003

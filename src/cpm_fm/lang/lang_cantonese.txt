@@ -267,3 +267,15 @@ button.abort = 中止
 button.test = 測試
 button.terminal = 終端
 button.close = 關閉
+
+# --- Macro buttons (v2.21) -----------------------------------------------------
+terminal.macros = 巨集
+menu.config.macros = 巨集按鈕
+macro.title = 巨集
+config.macros.title = 巨集按鈕設定
+config.macros.button = 按鈕 {n}
+config.macros.label = 標籤
+config.macros.sequence = 按鍵序列
+status.macro_failed = 巨集執行失敗 - 請檢查其按鍵序列
+status.macro_settings_saved = 巨集設定已儲存至 {path}
+status.macro_settings_updated = 巨集設定已更新

@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_427 requirements across 54 sections._
+_433 requirements across 55 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -51,6 +51,7 @@ _427 requirements across 54 sections._
 | FR-020a | When the Serial Configuration Dialog's Save button is pressed, the application shall update the running… | mw_config.py:menu_serial_config, mw_config.py:_save_subset_to_active_config, config_dialogs.py:save; tests test_gui_smoke.py |
 | FR-021 | When the Config > General menu option is selected, the application shall present the General… | mw_config.py:menu_general_config, config_dialogs.py:save |
 | FR-021a | When the General Configuration Dialog's Save button is pressed, the application shall update the running… | mw_config.py:menu_general_config, mw_config.py:_save_subset_to_active_config, config_dialogs.py:save; tests test_gui_smoke.py |
+| FR-021b | When the Config > Macro Buttons menu option is selected, the application shall present the… | mw_config.py:menu_macro_config, mw_config.py:_save_subset_to_active_config, config_dialogs.py:MacroConfigDialog; tests test_gui_smoke.py |
 
 ## 3.4 Help menu
 
@@ -191,6 +192,8 @@ _427 requirements across 54 sections._
 | FR-157g | Received bytes shall be decoded as UTF-8 by default, with invalid byte sequences replaced by… | terminal/vt100_engine.py:__init__; tests test_vt100_engine.py |
 | FR-157h | The terminal shall be robust to arbitrary remote output… | terminal/vt100_engine.py:feed; tests test_vt100_engine.py |
 | FR-158 | Keys typed into the Terminal Window shall be encoded to VT-100 byte sequences and transmitted… | gui/terminal_view.py:encode_key, gui/terminal_view.py:keyPressEvent; tests test_terminal_view.py |
+| FR-162 | The application shall provide up to ten user-configurable **macro buttons** (the macro_1_label…macro_10_label and macro_1_seq…macro_10_seq settings… | mw_remote.py:run_macro_script, mw_remote.py:_run_sequence_logic, mw_remote.py:_execute_sequence, gui/macro_window.py:MacroWindow; tests test_macros.py |
+| FR-164 | The Terminal Window shall provide a "Macros" checkbox (UIR-096) that toggles the visibility of the… | mw_remote.py:_toggle_macro_window, mw_remote.py:_show_macro_window, mw_remote.py:_on_macro_window_hidden, mw_remote.py:_refresh_macro_buttons, gui/macro_window.py:MacroWindow.closeEvent, app.py:closeEvent; tests test_macros.py |
 
 ## 3.11 File context-menu actions
 
@@ -351,7 +354,7 @@ _427 requirements across 54 sections._
 |----|---------|------|
 | UIR-001 | The GUI shall present a menu bar at the top of the main window | app.py:setup_menu |
 | UIR-002 | The menu bar shall contain a File menu with the items New, Load, Save, and… | app.py:setup_menu |
-| UIR-003 | The menu bar shall contain a Config menu with the items Serial, General, and Language… | app.py:setup_menu, _setup_language_menu |
+| UIR-003 | The menu bar shall contain a Config menu with the items Serial, General, Macro Buttons… | app.py:setup_menu, _setup_language_menu |
 | UIR-004 | The menu bar shall contain a Help menu with the items Manual (FR-023) and About… | app.py:setup_menu |
 | UIR-005 | The main window title bar shall show the application name and, when a configuration file… | app.py:_update_window_title |
 
@@ -430,6 +433,8 @@ _427 requirements across 54 sections._
 | UIR-067 | The Terminal Window shall not provide a separate transmit field or Send button… | terminal_window.py:create_widgets |
 | UIR-068 | The Terminal Window shall provide a "Boot into CP/M" button, in the control row (UIR-064)… | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets, terminal_window.py:set_boot_enabled, mw_remote.py:show_terminal |
 | UIR-069 | The Terminal Window shall provide a "Font…" button in the control row (UIR-064), to the… | terminal_window.py:create_widgets, terminal_window.py:_build_font_dialog, terminal_window.py:_on_font, terminal_window.py:set_terminal_font, gui/terminal_view.py:TerminalView.set_font, gui/terminal_view.py:TerminalView.current_font, gui/window_state.py:WindowState.terminal_font, mw_remote.py:show_terminal |
+| UIR-096 | The Terminal Window shall provide a "Macros" checkbox in the control row (UIR-064), to the… | terminal_window.py:create_widgets, mw_remote.py:show_terminal |
+| UIR-097 | The Macro Window shall be a floating, resizable tool window titled "Macros" that displays the… | gui/macro_window.py:MacroWindow, gui/macro_window.py:set_macros, gui/flow_layout.py:FlowLayout, mw_remote.py:_refresh_macro_buttons, mw_remote.py:_show_macro_window |
 
 ## 4.6 Visual theme and modern layout (v1.3)
 
@@ -529,6 +534,12 @@ _427 requirements across 54 sections._
 | UIR-091c | The window shall provide a single **Close** button (centred per UIR-075) that dismisses it | — |
 | UIR-091d | If the manual file cannot be read, the window shall display an explanatory message rather… | — |
 | UIR-092 | The Remote Filesystem Unavailable dialog (FR-044) shall be a modal dialog whose body informs the… | gui/remote_unavailable_dialog.py:RemoteUnavailableDialog; lang/*.txt (dialog.remote_unavailable.title, dialog.remote_unavailable.body, button.abort, button.continue, button.terminal); FR-044, FR-045 |
+
+## 4.17 Macro Buttons Configuration Dialog
+
+| ID | Summary | Impl |
+|----|---------|------|
+| UIR-098 | The Macro Buttons Configuration Dialog (FR-021b) shall be a modal, resizable dialog titled "Macro Buttons… | config_dialogs.py:MacroConfigDialog, config_dialogs.py:MacroConfigDialog.create_widgets, config_dialogs.py:MacroConfigDialog._run_test, mw_config.py:menu_macro_config |
 
 ## 5. External Interface Requirements
 

@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.27 |
-| Scorecard for plan version | 1.27 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.28 |
+| Scorecard for plan version | 1.28 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -107,6 +107,9 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-G08 | No "Change Disk" field | UIR-043 | | | |
 | MT-G10 | Boot Sequence multi-line field round-trips | UIR-059 | | | |
 | MT-G11 | Test button (Send/Receive): reports no-response vs. success, no real transfer | UIR-094/095, FR-161 | | | |
+| MT-G12 | Macro Buttons config dialog: menu item, ten Button groups (Label + Keystrokes + Test), scrolls | FR-021b, UIR-003, UIR-098 | | | |
+| MT-G13 | Macro slots round-trip label + keystrokes; Save persists macro subset only | FR-021b, UIR-098 | | | |
+| MT-G14 | Macro dialog Test runs typed script on the port; not-connected error when closed | FR-162, UIR-098 | | | |
 
 ### §8 Config load / save
 | ID | Title | Req | Result | Env | Notes |
@@ -246,6 +249,8 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-W11 | Manual "Boot into CP/M" runs sequence + re-probes | FR-049 | | | |
 | MT-W12 | Terminal grid reflows to the window size | FR-091a | | | |
 | MT-W13 | Font… dialog lists usable (family/style/size scroll, not collapsed); change applies live, reflows, persists | UIR-069 | | | |
+| MT-W14 | Macros checkbox opens floating window; buttons per configured slot; click sends script | UIR-096/097, FR-162/164 | | | |
+| MT-W15 | Macro window buttons reflow on resize; live refresh on Save; close hides + unticks checkbox | UIR-097, FR-164, FR-021b | | | |
 
 ### §13 File context-menu actions
 | ID | Title | Req | Result | Env | Notes |

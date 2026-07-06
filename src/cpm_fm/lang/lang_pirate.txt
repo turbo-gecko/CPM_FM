@@ -272,3 +272,15 @@ button.abort = Abandon Ship
 button.test = Test the Waters
 button.terminal = Captain's Log
 button.close = Belay
+
+# --- Macro buttons (v2.21) -----------------------------------------------------
+terminal.macros = Battle Cries
+menu.config.macros = Battle Cry Buttons
+macro.title = Battle Cries
+config.macros.title = Battle Cry Buttons Config
+config.macros.button = Button {n}
+config.macros.label = Name
+config.macros.sequence = Key Volley
+status.macro_failed = The battle cry fell flat - check yer key volley
+status.macro_settings_saved = Battle cry orders stowed in {path}
+status.macro_settings_updated = Battle cry orders updated

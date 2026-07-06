@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 from cpm_fm.gui.conflict_dialog import CANCEL
 from cpm_fm.gui.dialog_buttons import build_button_row
 from cpm_fm.gui.file_list_widget import FileListWidget
+from cpm_fm.gui.macro_window import MacroWindow
 from cpm_fm.gui.mw_backup_restore import _BackupRestoreMixin
 from cpm_fm.gui.mw_config import _ConfigMixin
 from cpm_fm.gui.mw_context_menu import _ContextMenuMixin
@@ -168,6 +169,9 @@ class MainWindow(
 
         # UI State
         self.terminal_win: TerminalWindow | None = None
+        # UIR-097/FR-164: the floating Macro Window, created on first use when
+        # the Terminal Window's Macros checkbox is checked.
+        self.macro_win: MacroWindow | None = None
         # FR-105: the modal transfer-progress dialog, live only for the duration
         # of a transfer. Owned and torn down on the GUI thread.
         self._transfer_dialog: TransferProgressDialog | None = None
@@ -294,6 +298,8 @@ class MainWindow(
         self._update_host_group_title()
         if self.terminal_win is not None:
             self.terminal_win.retranslate_ui()
+        if self.macro_win is not None:
+            self.macro_win.retranslate_ui()
 
     def _update_window_title(self) -> None:
         """Set the main window title, appending the loaded config's name.
@@ -421,6 +427,7 @@ class MainWindow(
         self._register_text(config_menu.setTitle, "menu.config")
         self._add_menu_action(config_menu, "menu.config.serial", self.menu_serial_config)
         self._add_menu_action(config_menu, "menu.config.general", self.menu_general_config)
+        self._add_menu_action(config_menu, "menu.config.macros", self.menu_macro_config)
         self._setup_language_menu(config_menu)
 
         # UIR-004: Help menu with Manual (FR-023) and About (FR-022) items.
@@ -906,10 +913,15 @@ class MainWindow(
         self.window_state.save_geometry("main", self)
         if self.terminal_win:
             self.window_state.save_geometry("terminal", self.terminal_win)
+        # FR-164: persist the Macro Window geometry alongside the Terminal Window.
+        if self.macro_win:
+            self.window_state.save_geometry("macro", self.macro_win)
         # FR-015: close any open COM ports. FR-016: close all open windows.
         self.serial_mgr.close_ports()
         if self.terminal_win:
             self.terminal_win.close()
+        if self.macro_win:
+            self.macro_win.close()
         event.accept()
 
 

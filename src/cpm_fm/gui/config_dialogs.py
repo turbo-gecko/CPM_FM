@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from functools import partial
 from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QTimer
@@ -17,6 +18,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -701,3 +703,107 @@ class GeneralConfigDialog(ConfigDialog):
         """
         for widget in self.findChildren(QPushButton):
             widget.setEnabled(enabled)
+
+
+class MacroConfigDialog(ConfigDialog):
+    """Configuration dialog for the ten Macro Window buttons (UIR-098).
+
+    Presents ten "Button <n>" slots as a tabbed layout — one tab per slot — each
+    with a Label field, a multi-line Keystrokes editor (the button's
+    boot-sequence-style script, FR-047/FR-162), and a Test button that runs the
+    slot's currently entered script on the Terminal Port. It reuses
+    :class:`ConfigDialog`'s ``save``/``done``/geometry handling but replaces the
+    declarative form with a :class:`QTabWidget` (there is no fixed two-column
+    field list to build).
+
+    Satisfies: UIR-098, FR-021b, FR-162.
+    """
+
+    MACRO_COUNT = 10
+
+    def __init__(self, parent, settings, callback, window_state=None):
+        """
+        Satisfies: UIR-098, FR-021b.
+
+        ``parent`` is the MainWindow, stored under ``_main_window`` so the Test
+        handlers can reach its serial manager and macro runner (mirrors
+        :class:`GeneralConfigDialog`). Must be set before ``super().__init__``,
+        which builds the widgets and enters the modal ``exec()``.
+        """
+        self._main_window = parent
+        super().__init__(
+            parent,
+            tr("config.macros.title"),
+            settings,
+            [],  # no declarative field list — create_widgets is overridden
+            callback,
+            window_state,
+            "macro_config",
+        )
+
+    def create_widgets(self):
+        """Build the tabbed layout of ten macro-button slots (UIR-098).
+
+        Each slot is a tab (labelled "Button <n>") holding a Label field, a
+        Keystrokes editor, and a Test button. The Label/Keystrokes widgets are
+        registered in ``self.entries`` under the ``macro_<n>_label``/
+        ``macro_<n>_seq`` keys so the inherited :meth:`ConfigDialog.save` writes
+        them straight back to the settings (FR-021b).
+
+        Satisfies: UIR-098, UIR-075, FR-021b.
+        """
+        outer = QVBoxLayout(self)
+        self.entries: dict[str, Any] = {}
+
+        tabs = QTabWidget()
+        for i in range(1, self.MACRO_COUNT + 1):
+            page = QWidget()
+            form = QFormLayout(page)
+
+            label_edit = QLineEdit(str(self.settings.get(f"macro_{i}_label", "")))
+            label_edit.setMaxLength(30)
+            self.entries[f"macro_{i}_label"] = label_edit
+            form.addRow(tr("config.macros.label"), label_edit)
+
+            seq_edit = QPlainTextEdit(str(self.settings.get(f"macro_{i}_seq", "")))
+            self.entries[f"macro_{i}_seq"] = seq_edit
+            form.addRow(tr("config.macros.sequence"), seq_edit)
+
+            test_btn = QPushButton(tr("button.test"))
+            test_btn.clicked.connect(partial(self._run_test, i))
+            form.addRow("", test_btn)
+
+            # UIR-098: one tab per button slot, labelled "Button <n>".
+            tabs.addTab(page, tr("config.macros.button", n=i))
+        outer.addWidget(tabs)
+
+        # A sensible default size for the tabbed editor when no geometry is
+        # saved yet (restore_geometry, run after this, overrides it if present).
+        self.resize(420, 320)
+
+        # UIR-075: Cancel far left, Save far right.
+        save_btn = QPushButton(tr("button.save"))
+        save_btn.setDefault(True)
+        save_btn.clicked.connect(self.save)
+        cancel_btn = QPushButton(tr("button.cancel"))
+        cancel_btn.clicked.connect(self.reject)
+        outer.addLayout(build_button_row(accept_button=save_btn, reject_button=cancel_btn))
+
+    def _run_test(self, index: int) -> None:
+        """Send macro slot ``index``'s currently entered script to the terminal.
+
+        Runs the (possibly unsaved) script on the Terminal Port via the owner's
+        macro runner (FR-162). Permitted only when the Terminal Port is open;
+        otherwise the standard not-connected error is shown and nothing is sent.
+        An empty script is a no-op.
+
+        Satisfies: UIR-098, FR-162.
+        """
+        win = self._main_window
+        if not win.serial_mgr.terminal_connected:
+            QMessageBox.critical(self, tr("dialog.error.title"), tr("error.terminal_not_connected"))
+            return
+        script = self.entries[f"macro_{index}_seq"].toPlainText()
+        if not script.strip():
+            return
+        win.run_macro_script(script)
