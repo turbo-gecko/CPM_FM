@@ -187,7 +187,9 @@
     "FR-023",
     "FR-060",
     "FR-125",
+    "FR-157",
     "IFR-003",
+    "UIR-034",
     "UIR-076",
     "UIR-091",
     "UIR-098"
@@ -357,6 +359,8 @@
     "FR-096",
     "FR-157c",
     "FR-158",
+    "FR-158a",
+    "FR-158b",
     "UIR-061",
     "UIR-062",
     "UIR-063",
@@ -478,6 +482,13 @@
     "UIR-032",
     "UIR-033"
   ],
+  "src/cpm_fm/terminal/term_translate.py": [
+    "FR-157",
+    "FR-157h",
+    "FR-157i",
+    "FR-157j",
+    "UIR-034"
+  ],
   "src/cpm_fm/terminal/vt100_engine.py": [
     "CR-014",
     "FR-091",
@@ -492,6 +503,9 @@
     "FR-157f",
     "FR-157g",
     "FR-157h",
+    "FR-157i",
+    "FR-157j",
+    "UIR-034",
     "UIR-062"
   ],
   "src/cpm_fm/terminal/xmodem.py": [

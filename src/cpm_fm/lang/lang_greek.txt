@@ -181,6 +181,7 @@ config.serial.data_bits = Bits δεδομένων
 config.serial.parity = Παритетность
 config.serial.stop_bits = Stop bits
 config.serial.flow_control = Έλεγχος ροής
+config.serial.terminal_type = Τύπος τερματικού
 config.serial.msec_char = ms/χαρακτήρα
 config.serial.msec_line = ms/γραμμή
 config.serial.terminal_timeout = Χρονικό όριο τερματικού (ms)

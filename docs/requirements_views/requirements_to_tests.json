@@ -690,10 +690,17 @@
       "tests/test_backup_restore.py:test_restore_order_refresh_confirm_wipe_transfer"
     ],
     "FR-157": [
+      "tests/test_term_translate.py:test_identity_translator_passes_through",
+      "tests/test_term_translate.py:test_make_translator_defaults_to_identity",
+      "tests/test_term_translate.py:test_make_translator_selects_type",
+      "tests/test_vt100_engine.py:test_adm3a_engine_clear_screen",
       "tests/test_vt100_engine.py:test_cursor_addressing_cup",
       "tests/test_vt100_engine.py:test_erase_in_display_clears_screen",
       "tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds",
-      "tests/test_vt100_engine.py:test_sgr_ansi_colours"
+      "tests/test_vt100_engine.py:test_set_terminal_type_switches_interpretation",
+      "tests/test_vt100_engine.py:test_sgr_ansi_colours",
+      "tests/test_vt100_engine.py:test_terminal_type_defaults_to_vt100",
+      "tests/test_vt100_engine.py:test_vt52_engine_direct_address_and_text"
     ],
     "FR-157a": [
       "tests/test_vt100_engine.py:test_cursor_addressing_cup",
@@ -715,6 +722,7 @@
       "tests/test_vt100_engine.py:test_tab_advances_to_next_tab_stop"
     ],
     "FR-157f": [
+      "tests/test_term_translate.py:test_vt52_graphics_mode_maps_to_dec_charset",
       "tests/test_vt100_engine.py:test_dec_line_drawing_charset"
     ],
     "FR-157g": [
@@ -723,14 +731,52 @@
       "tests/test_vt100_engine.py:test_utf8_invalid_bytes_replaced_with_fffd"
     ],
     "FR-157h": [
+      "tests/test_term_translate.py:test_adm3a_unknown_escape_consumed",
+      "tests/test_term_translate.py:test_translators_never_raise_on_arbitrary_bytes",
+      "tests/test_term_translate.py:test_vt52_unknown_and_keypad_sequences_consumed",
       "tests/test_vt100_engine.py:test_unknown_escape_ignored_without_desync"
+    ],
+    "FR-157i": [
+      "tests/test_term_translate.py:test_make_translator_selects_type",
+      "tests/test_term_translate.py:test_translators_never_raise_on_arbitrary_bytes",
+      "tests/test_term_translate.py:test_vt52_cursor_moves",
+      "tests/test_term_translate.py:test_vt52_direct_address_split_across_chunks",
+      "tests/test_term_translate.py:test_vt52_direct_cursor_address",
+      "tests/test_term_translate.py:test_vt52_escape_split_across_chunks",
+      "tests/test_term_translate.py:test_vt52_graphics_mode_maps_to_dec_charset",
+      "tests/test_term_translate.py:test_vt52_home_and_erase",
+      "tests/test_term_translate.py:test_vt52_printables_and_controls_pass_through",
+      "tests/test_term_translate.py:test_vt52_reverse_line_feed",
+      "tests/test_term_translate.py:test_vt52_unknown_and_keypad_sequences_consumed",
+      "tests/test_vt100_engine.py:test_set_terminal_type_switches_interpretation",
+      "tests/test_vt100_engine.py:test_vt52_engine_direct_address_and_text"
+    ],
+    "FR-157j": [
+      "tests/test_term_translate.py:test_adm3a_clear_screen",
+      "tests/test_term_translate.py:test_adm3a_cursor_control_codes",
+      "tests/test_term_translate.py:test_adm3a_direct_address_split_across_chunks",
+      "tests/test_term_translate.py:test_adm3a_direct_cursor_address",
+      "tests/test_term_translate.py:test_adm3a_passthrough_controls",
+      "tests/test_term_translate.py:test_adm3a_unknown_escape_consumed",
+      "tests/test_term_translate.py:test_make_translator_selects_type",
+      "tests/test_term_translate.py:test_translators_never_raise_on_arbitrary_bytes",
+      "tests/test_vt100_engine.py:test_adm3a_engine_clear_screen"
     ],
     "FR-158": [
       "tests/test_terminal_view.py:test_encode_key_control_combinations",
+      "tests/test_terminal_view.py:test_encode_key_default_type_is_vt100",
       "tests/test_terminal_view.py:test_encode_key_enter_uses_eol",
       "tests/test_terminal_view.py:test_encode_key_navigation_and_function_keys",
       "tests/test_terminal_view.py:test_encode_key_printable_and_utf8",
       "tests/test_terminal_view.py:test_encode_key_returns_none_for_modifier_only"
+    ],
+    "FR-158a": [
+      "tests/test_terminal_view.py:test_encode_key_default_type_is_vt100",
+      "tests/test_terminal_view.py:test_encode_key_vt52_arrows"
+    ],
+    "FR-158b": [
+      "tests/test_terminal_view.py:test_encode_key_adm3a_arrows_and_home",
+      "tests/test_terminal_view.py:test_encode_key_default_type_is_vt100"
     ],
     "FR-159": [
       "tests/test_gui_smoke.py:test_config_test_button_reports_no_response",
@@ -879,6 +925,15 @@
     "UIR-033": [
       "tests/test_serial_manager.py:test_read_timeout_defaults_to_100ms_when_absent",
       "tests/test_serial_manager.py:test_read_timeout_is_per_port_and_converted_ms_to_seconds"
+    ],
+    "UIR-034": [
+      "tests/test_config_handler.py:test_default_settings_terminal_type_is_vt100",
+      "tests/test_term_translate.py:test_make_translator_defaults_to_identity",
+      "tests/test_term_translate.py:test_make_translator_selects_type",
+      "tests/test_vt100_engine.py:test_adm3a_engine_clear_screen",
+      "tests/test_vt100_engine.py:test_set_terminal_type_switches_interpretation",
+      "tests/test_vt100_engine.py:test_terminal_type_defaults_to_vt100",
+      "tests/test_vt100_engine.py:test_vt52_engine_direct_address_and_text"
     ],
     "UIR-041": [
       "tests/test_gui_smoke.py:test_general_config_remote_group_first"

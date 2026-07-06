@@ -56,6 +56,35 @@ def test_encode_key_navigation_and_function_keys():
     assert encode_key(Qt.Key.Key_Backspace, _NONE, "\x08") == b"\x08"
 
 
+def test_encode_key_vt52_arrows():
+    """Verifies: FR-158a."""
+    assert encode_key(Qt.Key.Key_Up, _NONE, "", terminal_type="VT52") == b"\x1bA"
+    assert encode_key(Qt.Key.Key_Down, _NONE, "", terminal_type="VT52") == b"\x1bB"
+    assert encode_key(Qt.Key.Key_Right, _NONE, "", terminal_type="VT52") == b"\x1bC"
+    assert encode_key(Qt.Key.Key_Left, _NONE, "", terminal_type="VT52") == b"\x1bD"
+    # Non-cursor keys still use the VT-100 encoding under VT-52.
+    assert encode_key(Qt.Key.Key_F1, _NONE, "", terminal_type="VT52") == b"\x1bOP"
+    assert encode_key(Qt.Key.Key_A, _NONE, "a", terminal_type="VT52") == b"a"
+
+
+def test_encode_key_adm3a_arrows_and_home():
+    """Verifies: FR-158b."""
+    assert encode_key(Qt.Key.Key_Up, _NONE, "", terminal_type="ADM-3A") == b"\x0b"
+    assert encode_key(Qt.Key.Key_Down, _NONE, "", terminal_type="ADM-3A") == b"\x0a"
+    assert encode_key(Qt.Key.Key_Left, _NONE, "", terminal_type="ADM-3A") == b"\x08"
+    assert encode_key(Qt.Key.Key_Right, _NONE, "", terminal_type="ADM-3A") == b"\x0c"
+    assert encode_key(Qt.Key.Key_Home, _NONE, "", terminal_type="ADM-3A") == b"\x1e"
+    # Other keys fall through to the VT-100 mapping (FR-158).
+    assert encode_key(Qt.Key.Key_End, _NONE, "", terminal_type="ADM-3A") == b"\x1b[F"
+
+
+def test_encode_key_default_type_is_vt100():
+    """Verifies: FR-158, FR-158a, FR-158b."""
+    # Without a terminal_type the arrow keys keep the VT-100 CSI form.
+    assert encode_key(Qt.Key.Key_Up, _NONE, "") == b"\x1b[A"
+    assert encode_key(Qt.Key.Key_Up, _NONE, "", terminal_type="VT100") == b"\x1b[A"
+
+
 def test_encode_key_control_combinations():
     """Verifies: FR-096, FR-158."""
     assert encode_key(Qt.Key.Key_C, _CTRL, "") == b"\x03"  # Ctrl-C

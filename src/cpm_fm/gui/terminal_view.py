@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QKeyEvent, QPainter, QPalette
 from PySide6.QtWidgets import QScrollArea, QWidget
 
+from cpm_fm.terminal.term_translate import ADM3A, VT52
 from cpm_fm.terminal.vt100_engine import Cell, VT100Engine
 
 # Navigation / editing / function keys -> VT-100 byte sequences. Arrow keys use
@@ -48,9 +49,34 @@ _CTRL_PUNCT: dict[Qt.Key, int] = {
     Qt.Key.Key_Space: 0x00,  # Ctrl-Space = NUL
 }
 
+# Terminal-type cursor-key overrides (FR-158a/FR-158b). Only the keys that
+# differ from the VT-100 mapping are listed; any key not here falls through to
+# the VT-100 encoding below.
+_VT52_KEYS: dict[Qt.Key, bytes] = {
+    Qt.Key.Key_Up: b"\x1bA",
+    Qt.Key.Key_Down: b"\x1bB",
+    Qt.Key.Key_Right: b"\x1bC",
+    Qt.Key.Key_Left: b"\x1bD",
+}
+_ADM3A_KEYS: dict[Qt.Key, bytes] = {
+    Qt.Key.Key_Up: b"\x0b",  # Ctrl-K
+    Qt.Key.Key_Down: b"\x0a",  # Ctrl-J
+    Qt.Key.Key_Left: b"\x08",  # Ctrl-H
+    Qt.Key.Key_Right: b"\x0c",  # Ctrl-L
+    Qt.Key.Key_Home: b"\x1e",  # RS
+}
+_TERMINAL_KEY_OVERRIDES: dict[str, dict[Qt.Key, bytes]] = {
+    VT52: _VT52_KEYS,
+    ADM3A: _ADM3A_KEYS,
+}
+
 
 def encode_key(
-    key: int, modifiers: Qt.KeyboardModifier, text: str, eol: bytes = b"\r"
+    key: int,
+    modifiers: Qt.KeyboardModifier,
+    text: str,
+    eol: bytes = b"\r",
+    terminal_type: str = "VT100",
 ) -> bytes | None:
     """Translate a key press to the bytes to transmit, or None if nothing.
 
@@ -58,10 +84,18 @@ def encode_key(
     sequences), Ctrl-letter / Ctrl-punctuation control bytes, and otherwise the
     typed character(s). Replaces the former transmit-field parsing.
 
-    Satisfies: FR-096, FR-094, FR-158.
+    ``terminal_type`` selects the cursor-key encoding: VT-52 (FR-158a) and
+    ADM-3A (FR-158b) override the arrow keys (and, for ADM-3A, Home); every
+    other key uses the VT-100 mapping regardless of type.
+
+    Satisfies: FR-096, FR-094, FR-158, FR-158a, FR-158b.
     """
     if key in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
         return eol
+    if _is_key(key):
+        override = _TERMINAL_KEY_OVERRIDES.get(terminal_type, {}).get(Qt.Key(key))
+        if override is not None:
+            return override
     special = _SPECIAL_KEYS.get(Qt.Key(key)) if _is_key(key) else None
     if special is not None:
         return special
@@ -259,9 +293,15 @@ class TerminalView(QScrollArea):
         arrow keys are transmitted rather than scrolling the view). Anything
         unmapped falls through to the base class.
 
-        Satisfies: FR-096, FR-094, FR-158, UIR-063.
+        Satisfies: FR-096, FR-094, FR-158, FR-158a, FR-158b, UIR-063.
         """
-        data = encode_key(event.key(), event.modifiers(), event.text(), self._eol)
+        data = encode_key(
+            event.key(),
+            event.modifiers(),
+            event.text(),
+            self._eol,
+            self._engine.terminal_type,
+        )
         if data and self._key_callback is not None:
             self._key_callback(data)
             event.accept()

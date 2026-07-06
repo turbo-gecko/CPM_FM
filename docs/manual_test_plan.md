@@ -4,7 +4,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.28 |
+| Version | 1.29 |
 | Status | Draft |
 | Date | 2026-07-06 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.21.0) |
@@ -44,7 +44,7 @@ What remains for **manual** verification, and is the subject of this plan:
    Cancel/affirmative button placement across dialogs (`UIR-*`, `UIR-075`, `CR-012`/`CR-013`).
 5. **OS integration** — File dialogs, geometry persistence across real sessions, viewer/editor launch
    and OS-default fallback, and `python -m cpm_fm` debug output (`FR-004`–`FR-006`, `FR-088`, `FR-112`).
-6. **Terminal Window** interactive VT-100 behaviour over a live link (`FR-090`–`FR-098`, `FR-157`, `FR-158`, `UIR-060`–`UIR-068`).
+6. **Terminal Window** interactive VT-100/VT-52/ADM-3A behaviour over a live link (`FR-090`–`FR-098`, `FR-157`, `FR-157i`, `FR-157j`, `FR-158`, `FR-158a`, `FR-158b`, `UIR-034`, `UIR-060`–`UIR-068`).
 
 Each test case lists the requirement IDs it verifies so coverage can be traced back to the SRS.
 
@@ -413,6 +413,7 @@ files** — these tests delete data by design.
 | MT-W13 | UIR-069 | In the Terminal Window control row (right of Autoscroll) press **Font…**. In the standard font dialog, scroll the **Font** (family), **Font style**, and **Size** lists and select a different family, a bold/italic style, and a larger size; confirm. Then close the app, relaunch, and reopen the Terminal Window. | A standard font-selection dialog opens seeded with the current font, cleanly laid out (not a cramped/overlapping mess). **The Font / Font style / Size lists each show multiple rows and scroll**, so every family, style, and size is selectable (they are *not* collapsed to a single unusable row). On OK the Receive screen immediately repaints in the new font and the character grid reflows to the new cell size (FR-091a). After relaunch the chosen font is still in effect (persisted); Cancelling the dialog leaves the font unchanged. |
 | MT-W14 [CP/M or loopback] | UIR-096, UIR-097, FR-162, FR-164 | Configure at least two macro buttons (MT-G13). In the Terminal Window control row, tick the **Macros** checkbox (left of Local Echo). Connected, click one of the buttons whose script sends a command (e.g. `SENDRAW 0D`). | A floating window titled "Macros" appears showing one button per configured slot (label + script both set); empty slots do not appear. Clicking a button transmits its keystroke script on the Terminal Port and the remote responds in the Receive screen. |
 | MT-W15 | UIR-097, FR-164, FR-021b | With the Macros window open, resize it. Then edit the macro configuration (MT-G13) and Save with the window still open. Close the Macros window with its window control. | The buttons reflow to fit the window (more/fewer columns as it is resized). Saving new macro definitions refreshes the buttons live (added/removed/renamed without reopening). Closing the window hides it and unticks the **Macros** checkbox; re-ticking it reopens the same window. |
+| MT-W16 [CP/M] | UIR-034, FR-157i, FR-157j, FR-158a, FR-158b | In Config → Serial set **Terminal Type** to **ADM-3A** (or **VT52**) and Save, then connect and run software written for that terminal (e.g. an ADM-3A build of WordStar, or a VT-52 program). Press the arrow keys in the Terminal Window. Then switch Terminal Type back to **VT100**. | The Terminal Type dropdown offers VT100/VT52/ADM-3A (default VT100). Under the chosen type the remote's cursor positioning and screen/line clears render correctly — no raw escape codes or garbled layout. The arrow keys transmit the terminal-specific codes (VT-52 → `ESC A`/`B`/`C`/`D`; ADM-3A → Ctrl-K/Ctrl-J/Ctrl-H/Ctrl-L). Switching back to VT100 restores VT-100 rendering/keys immediately, without reopening the window. |
 
 ---
 
@@ -493,7 +494,7 @@ or real cross-session persistence:
 - Connect/disconnect (real ports & error paths): `FR-030`–`FR-040`, `FR-050`–`FR-058`.
 - Remote listing & drive selection (live capture/timing): `FR-074`–`FR-079`, `FR-100`–`FR-104`.
 - Transfers (live X-Modem, CP/M launch, timing, byte echo, live cancel): `FR-080`–`FR-089`, `FR-099`, `FR-105`–`FR-109`, `FR-119`, `FR-120`, `NFR-003a`–`NFR-003q` (interop + CAN abort).
-- Terminal Window (interactive VT-100 over a link): `FR-090`–`FR-098`, `FR-157`, `FR-158`, `UIR-060`–`UIR-068`.
+- Terminal Window (interactive VT-100/VT-52/ADM-3A over a link): `FR-090`–`FR-098`, `FR-157`, `FR-157i`, `FR-157j`, `FR-158`, `FR-158a`, `FR-158b`, `UIR-034`, `UIR-060`–`UIR-068`.
 - File actions (real dialog/filesystem/viewer/remote cmd): `FR-112`, `FR-113`, `FR-114`–`FR-118`, `UIR-057`.
 - Interfaces (real): `IFR-001`–`IFR-004`.
 - Config dialogs (on-screen layout, field values/limits): `UIR-020`–`UIR-056`.

@@ -321,6 +321,14 @@ class SerialConfigDialog(ConfigDialog):
                 "options": ["NONE", "XON/XOFF", "RTS/CTS", "DSR/DTR"],
                 "default": "NONE",
             },
+            # UIR-034: terminal emulation type applied to the Terminal Window.
+            {
+                "key": "terminal_type",
+                "label_key": "config.serial.terminal_type",
+                "type": "dropdown",
+                "options": ["VT100", "VT52", "ADM-3A"],
+                "default": "VT100",
+            },
             # UIR-030/UIR-031: integer 0..255 inclusive.
             {
                 "key": "msec_char",

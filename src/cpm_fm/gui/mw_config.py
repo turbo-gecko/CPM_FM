@@ -47,10 +47,26 @@ class _ConfigMixin(MainWindowMixinBase):
             self.host_dir = host_dir
             self.refresh_host_files()
 
+        # UIR-034: apply the loaded terminal emulation type to the engine so
+        # received bytes are interpreted (FR-157) and cursor keys encoded
+        # (FR-158a/FR-158b) per the configured type from the first connect.
+        self._apply_terminal_type()
+
         # FR-017: the prior remote listing was captured under the previous
         # configuration and is no longer valid — clear it.
         self._clear_remote_files()
         self.set_status(tr("status.loaded_config", filename=filename))
+
+    def _apply_terminal_type(self) -> None:
+        """Configure the terminal engine from the current ``terminal_type``.
+
+        Reads the setting (default VT100) and applies it to the shared VT-100
+        engine. Called on configuration load and after a Serial Config save so
+        the running Terminal Window follows the selected type (UIR-034).
+
+        Satisfies: UIR-034, FR-157.
+        """
+        self._term_engine.set_terminal_type(self.settings.get("terminal_type", "VT100"))
 
     def menu_load(self):
         """
@@ -205,6 +221,9 @@ class _ConfigMixin(MainWindowMixinBase):
 
         def update_settings(new_set):
             self.settings.update(new_set)
+            # UIR-034: a change to the terminal type takes effect immediately on
+            # the shared engine (and any open Terminal Window).
+            self._apply_terminal_type()
             # FR-020a: persist only the serial settings to the active config
             # file, leaving the general settings in that file untouched. If no
             # file is loaded the helper warns and the change stays session-only.

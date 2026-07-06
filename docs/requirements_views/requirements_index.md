@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_433 requirements across 55 sections._
+_438 requirements across 55 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -182,7 +182,7 @@ _433 requirements across 55 sections._
 | FR-098 | If the Terminal Port is not open when the user types in the Terminal Window… | mw_remote.py:handle_terminal_key |
 | FR-155 | *Removed in v2.17.* (Was… | — |
 | FR-156 | *Removed in v2.17.* (Was… | — |
-| FR-157 | The terminal shall interpret the VT-100/ANSI control and escape sequences emitted by the remote and… | terminal/vt100_engine.py:VT100Engine (over the pyte>=0.8.2 runtime dependency); tests test_vt100_engine.py |
+| FR-157 | The terminal shall interpret the control and escape sequences emitted by the remote and render… | terminal/vt100_engine.py:VT100Engine (over the pyte>=0.8.2 runtime dependency), terminal/term_translate.py; tests test_vt100_engine.py, test_term_translate.py |
 | FR-157a | The terminal shall interpret cursor positioning and movement sequences — absolute addressing (CUP, ESC[row;colH) and… | terminal/vt100_engine.py:feed; tests test_vt100_engine.py |
 | FR-157b | The terminal shall interpret erase-in-line (EL, ESC[K) and erase-in-display (ED, ESC[J) sequences | terminal/vt100_engine.py:feed; tests test_vt100_engine.py |
 | FR-157c | The terminal shall interpret SGR character attributes (ESC[…m) — at least bold, underline, reverse-video, and… | terminal/vt100_engine.py:feed, gui/terminal_view.py:_colour; tests test_vt100_engine.py, test_terminal_view.py |
@@ -191,7 +191,11 @@ _433 requirements across 55 sections._
 | FR-157f | The terminal shall recognise the DEC special-graphics (line-drawing) charset designation (ESC(0 to select G0, ESC(B… | terminal/vt100_engine.py:feed; tests test_vt100_engine.py |
 | FR-157g | Received bytes shall be decoded as UTF-8 by default, with invalid byte sequences replaced by… | terminal/vt100_engine.py:__init__; tests test_vt100_engine.py |
 | FR-157h | The terminal shall be robust to arbitrary remote output… | terminal/vt100_engine.py:feed; tests test_vt100_engine.py |
+| FR-157i | When terminal_type is VT-52 (FR-157, UIR-034), the terminal shall interpret the VT-52 control set and… | terminal/term_translate.py:VT52Translator; tests test_term_translate.py |
+| FR-157j | When terminal_type is ADM-3A (FR-157, UIR-034), the terminal shall interpret the Lear Siegler ADM-3A control… | terminal/term_translate.py:ADM3ATranslator; tests test_term_translate.py |
 | FR-158 | Keys typed into the Terminal Window shall be encoded to VT-100 byte sequences and transmitted… | gui/terminal_view.py:encode_key, gui/terminal_view.py:keyPressEvent; tests test_terminal_view.py |
+| FR-158a | When terminal_type is VT-52 (FR-157i), the arrow keys Up/Down/Right/Left shall be transmitted as the VT-52… | gui/terminal_view.py:encode_key; tests test_terminal_view.py |
+| FR-158b | When terminal_type is ADM-3A (FR-157j), the arrow keys Up/Down/Left/Right shall be transmitted as the ADM-3A… | gui/terminal_view.py:encode_key; tests test_terminal_view.py |
 | FR-162 | The application shall provide up to ten user-configurable **macro buttons** (the macro_1_label…macro_10_label and macro_1_seq…macro_10_seq settings… | mw_remote.py:run_macro_script, mw_remote.py:_run_sequence_logic, mw_remote.py:_execute_sequence, gui/macro_window.py:MacroWindow; tests test_macros.py |
 | FR-164 | The Terminal Window shall provide a "Macros" checkbox (UIR-096) that toggles the visibility of the… | mw_remote.py:_toggle_macro_window, mw_remote.py:_show_macro_window, mw_remote.py:_on_macro_window_hidden, mw_remote.py:_refresh_macro_buttons, gui/macro_window.py:MacroWindow.closeEvent, app.py:closeEvent; tests test_macros.py |
 
@@ -394,6 +398,7 @@ _433 requirements across 55 sections._
 | UIR-031 | The dialog shall provide an "msec/line" text field that defaults to 0 and is limited… | config_dialogs.py:SerialConfigDialog, config_dialogs.py:__init__ |
 | UIR-032 | The dialog shall provide a "Terminal Timeout (ms)" text field that defaults to 100 and… | config_dialogs.py:SerialConfigDialog; serial_manager.py:open_port |
 | UIR-033 | The dialog shall provide a "Transfer Timeout (ms)" text field that defaults to 100 and… | config_dialogs.py:SerialConfigDialog; serial_manager.py:open_port; NFR-003i |
+| UIR-034 | The dialog shall provide a "Terminal Type" dropdown offering VT100, VT52, and ADM-3A, defaulting to… | config_dialogs.py:SerialConfigDialog, utils/config_handler.py, gui/mw_config.py:_apply_terminal_type; tests test_config_handler.py, test_vt100_engine.py |
 
 ## 4.4 General Configuration Dialog
 

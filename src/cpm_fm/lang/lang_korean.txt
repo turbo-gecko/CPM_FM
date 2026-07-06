@@ -181,6 +181,7 @@ config.serial.data_bits = 데이터 비트
 config.serial.parity = 패리티
 config.serial.stop_bits = 정지 비트
 config.serial.flow_control = 흐름 제어
+config.serial.terminal_type = 터미널 유형
 config.serial.msec_char = 문자당 ms
 config.serial.msec_line = 줄당 ms
 config.serial.terminal_timeout = 터미널 시간 초과 (ms)

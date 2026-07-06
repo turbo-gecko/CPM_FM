@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.21.0**
+**Version 2.22.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -153,12 +153,15 @@ Configure how the program talks to the serial hardware:
 | **Parity** | NONE, ODD, EVEN, MARK, SPACE | NONE |
 | **Stop Bits** | 1 or 2 | 1 |
 | **Flow Control** | NONE, XON/XOFF, RTS/CTS, DSR/DTR | NONE |
+| **Terminal Type** | VT100, VT52, ADM-3A | VT100 |
 | **Msec per Char** | 0 – 255 | 0 |
 | **Msec per Line** | 0 – 255 | 0 |
 | **Terminal Timeout (ms)** | 10 – 5000 | 100 |
 | **Transfer Timeout (ms)** | 10 – 5000 | 100 |
 
 > **Terminal Port vs. Transport Port:** The *Terminal Port* carries interactive commands and directory listings; the *Transport Port* carries X-Modem file transfers. They may be the **same** physical port or **two different** ports. When they share one port, the program automatically pauses terminal reading during transfers to keep the data clean.
+
+> **Terminal Type** selects the terminal emulation the Terminal Window uses to interpret the remote's output and to encode the cursor keys you type. The default **VT100** is a VT-100/ANSI terminal. Choose **VT52** for software written for a DEC VT-52, or **ADM-3A** for the classic Lear Siegler ADM-3A that much CP/M software (WordStar, Turbo Pascal, etc.) targets. VT-52 and ADM-3A output is translated into the same on-screen VT-100 model, so cursor positioning, screen clearing, and (for VT-52) line-drawing all work; the ADM-3A has no colour or text attributes. A change takes effect immediately in an open Terminal Window.
 
 > **Msec per Char / Msec per Line** add small pacing delays when sending data — useful for slower CP/M systems that can drop characters if fed too fast.
 
@@ -560,6 +563,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 | Parity | NONE |
 | Stop Bits | 1 |
 | Flow Control | NONE |
+| Terminal Type | VT100 |
 | Msec per Char / Line | 0 / 0 |
 | Terminal / Transfer Timeout | 100 ms / 100 ms |
 | List Files Cmd | `DIR` |

@@ -4,6 +4,8 @@ from dataclasses import dataclass
 
 from pyte import ByteStream, HistoryScreen
 
+from cpm_fm.terminal.term_translate import VT100, make_translator
+
 # Default terminal geometry and scrollback depth. 80x24 is the classic VT-100
 # page (the initial geometry of FR-091; the view then reflows it to the window
 # per FR-091a). DEFAULT_HISTORY is the >=1000-line scrollback depth backing the
@@ -64,6 +66,7 @@ class VT100Engine:
         rows: int = DEFAULT_ROWS,
         history: int = DEFAULT_HISTORY,
         use_utf8: bool = True,
+        terminal_type: str = VT100,
     ) -> None:
         """Create an engine with the given geometry and scrollback depth.
 
@@ -73,11 +76,20 @@ class VT100Engine:
         legacy 8-bit CP/M output. It can also be switched at runtime by the
         remote via the standard ``ESC % G`` / ``ESC % @`` sequences (FR-157g).
 
-        Satisfies: FR-091, FR-157g.
+        ``terminal_type`` selects the emulation the remote's output is
+        interpreted as (UIR-034): VT-100/ANSI (default), VT-52, or ADM-3A. For
+        the legacy types a :mod:`term_translate` translator rewrites the
+        incoming byte stream into VT-100/ANSI before it reaches ``pyte``, so the
+        one screen model, renderer, and scrollback are shared (FR-157/FR-157i/
+        FR-157j). Change it later with :meth:`set_terminal_type`.
+
+        Satisfies: FR-091, FR-157, FR-157g, FR-157i, FR-157j, UIR-034.
         """
         self._screen = HistoryScreen(cols, rows, history=history)
         self._stream = ByteStream(self._screen)
         self._stream.use_utf8 = use_utf8
+        self._terminal_type = terminal_type
+        self._translator = make_translator(terminal_type)
 
     # ------------------------------------------------------------------ input
 
@@ -91,10 +103,14 @@ class VT100Engine:
         unsupported or malformed sequences without raising or desynchronising
         the stream (FR-157h).
 
+        For a non-VT-100 ``terminal_type`` the bytes are first passed through
+        the active translator, which rewrites the VT-52/ADM-3A control set into
+        the VT-100/ANSI sequences ``pyte`` understands (FR-157i/FR-157j).
+
         Satisfies: FR-091, FR-157, FR-157a, FR-157b, FR-157c, FR-157d, FR-157e,
-        FR-157f, FR-157h.
+        FR-157f, FR-157h, FR-157i, FR-157j.
         """
-        self._stream.feed(data)
+        self._stream.feed(self._translator.translate(data))
 
     def reset(self) -> None:
         """Clear the screen and reset all terminal state to power-on defaults.
@@ -106,6 +122,29 @@ class VT100Engine:
         """
         self._screen.reset()
         self._screen.dirty.update(range(self._screen.lines))
+
+    @property
+    def terminal_type(self) -> str:
+        """The active emulation type (``VT100``/``VT52``/``ADM-3A``, UIR-034).
+
+        Read by the Terminal Window's key encoder to pick the cursor-key form
+        (FR-158a/FR-158b).
+
+        Satisfies: FR-157, UIR-034.
+        """
+        return self._terminal_type
+
+    def set_terminal_type(self, terminal_type: str) -> None:
+        """Switch the emulation type, rebuilding the byte-stream translator.
+
+        Applied when a configuration is loaded and whenever the serial settings
+        are saved (UIR-034). Existing screen contents are kept; only the
+        translator (and its partial-sequence state) is replaced.
+
+        Satisfies: FR-157, FR-157i, FR-157j, UIR-034.
+        """
+        self._terminal_type = terminal_type
+        self._translator = make_translator(terminal_type)
 
     def resize(self, cols: int, rows: int) -> None:
         """Resize the screen to ``cols`` x ``rows`` character cells.

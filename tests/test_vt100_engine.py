@@ -1,3 +1,4 @@
+from cpm_fm.terminal.term_translate import ADM3A, VT52
 from cpm_fm.terminal.vt100_engine import DEFAULT_COLS, DEFAULT_ROWS, VT100Engine
 
 
@@ -242,6 +243,45 @@ def test_unknown_escape_ignored_without_desync():
     e.feed(b"\x1b_some junk\x9c")  # APC string (ignored by pyte)
     e.feed(b"hello")
     assert "hello" in _text(e, 0) or "hello" in "".join(e.display)
+
+
+def test_terminal_type_defaults_to_vt100():
+    """Verifies: FR-157, UIR-034."""
+    assert VT100Engine().terminal_type == "VT100"
+
+
+def test_vt52_engine_direct_address_and_text():
+    """Verifies: FR-157, FR-157i, UIR-034."""
+    e = VT100Engine(terminal_type=VT52)
+    # VT-52 ESC Y positions the cursor (row 0x24->4, col 0x29->9, 0-based),
+    # then 'X' is written there via the shared VT-100 model.
+    e.feed(b"\x1bY\x24\x29X")
+    assert e.cursor == (10, 4)
+    assert e.display[4][9] == "X"
+
+
+def test_adm3a_engine_clear_screen():
+    """Verifies: FR-157, FR-157j, UIR-034."""
+    e = VT100Engine(terminal_type=ADM3A)
+    e.feed(b"hello")
+    e.feed(b"\x1a")  # Ctrl-Z -> clear screen and home
+    assert _text(e, 0) == ""
+    assert e.cursor == (0, 0)
+
+
+def test_set_terminal_type_switches_interpretation():
+    """Verifies: FR-157, FR-157i, UIR-034."""
+    e = VT100Engine()
+    assert e.terminal_type == "VT100"
+    e.set_terminal_type(VT52)
+    assert e.terminal_type == VT52
+    e.feed(b"\x1bYom!")  # row 0x6f->79->clamped to last row, col 0x6d
+    # The bare 'm!' following the address are printable and render as text; the
+    # point is that switching type routed the ESC Y through the VT-52 translator
+    # (no exception, stream stays in sync).
+    e.set_terminal_type("VT100")
+    e.feed(b"\x1b[H\x1b[2Jdone")
+    assert _text(e, 0) == "done"
 
 
 def test_engine_imports_no_gui_toolkit():

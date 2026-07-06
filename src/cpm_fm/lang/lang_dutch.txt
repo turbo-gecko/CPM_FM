@@ -181,6 +181,7 @@ config.serial.data_bits = Databits
 config.serial.parity = Pariteit
 config.serial.stop_bits = Stopbits
 config.serial.flow_control = Flowcontrole
+config.serial.terminal_type = Terminaltype
 config.serial.msec_char = ms/karakter
 config.serial.msec_line = ms/regel
 config.serial.terminal_timeout = Terminal-time-out (ms)

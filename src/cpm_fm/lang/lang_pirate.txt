@@ -186,6 +186,7 @@ config.serial.data_bits = Bits o' Information
 config.serial.parity = Parity Check
 config.serial.stop_bits = Stop Bits
 config.serial.flow_control = Flow Control
+config.serial.terminal_type = Talkin'-Box Type
 config.serial.msec_char = msec/char
 config.serial.msec_line = msec/line
 config.serial.terminal_timeout = Captain's Log Timeout (ms)

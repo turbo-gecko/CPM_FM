@@ -181,6 +181,7 @@ config.serial.data_bits = 數據位
 config.serial.parity = 校驗位
 config.serial.stop_bits = 停止位
 config.serial.flow_control = 流控
+config.serial.terminal_type = 終端機類型
 config.serial.msec_char = 字符間隔 (ms)
 config.serial.msec_line = 行間隔 (ms)
 config.serial.terminal_timeout = 終端逾時 (ms)
