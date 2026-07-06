@@ -172,6 +172,15 @@ terminal.boot = Εκκίνηση σε CP/M
 terminal.font = Γραμματοσειρά...
 terminal.font_dialog_title = Γραμματοσειρά τερματικού
 
+# --- Terminal context menu (v2.23) ---------------------------------------------
+terminal.menu.copy = Αντιγραφή
+terminal.menu.paste = Επικόλληση
+terminal.menu.clear = Καθαρισμός παραθύρου
+terminal.menu.font = Γραμματοσειρά...
+terminal.menu.reset_size = Επαναφορά μεγέθους (24×80)
+terminal.menu.terminal_type = Τύπος τερματικού
+terminal.menu.macros_sub = Μακροεντολές
+
 # --- Serial Configuration dialog ------------------------------------------------
 config.serial.title = Σειριακές Ρυθμίσεις
 config.serial.terminal_port = Θύρα τερματικού

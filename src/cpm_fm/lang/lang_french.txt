@@ -172,6 +172,15 @@ terminal.boot = Démarrer dans CP/M
 terminal.font = Police...
 terminal.font_dialog_title = Police du terminal
 
+# --- Terminal context menu (v2.23) ---------------------------------------------
+terminal.menu.copy = Copier
+terminal.menu.paste = Coller
+terminal.menu.clear = Effacer la fenêtre
+terminal.menu.font = Police...
+terminal.menu.reset_size = Réinitialiser la taille (24×80)
+terminal.menu.terminal_type = Type de terminal
+terminal.menu.macros_sub = Macros
+
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = Configuration série
 config.serial.terminal_port = Port terminal

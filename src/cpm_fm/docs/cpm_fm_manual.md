@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.22.0**
+**Version 2.24.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -482,6 +482,18 @@ You program the buttons in **Config → Macro Buttons** (see [Section 7](#7-conf
 ### Changing the terminal font
 
 The **Font…** button (in the control row, to the right of Autoscroll) opens your system's standard font-selection dialog, where you can choose the family, style, and size used to draw the Receive area. The new font is applied straight away — the character grid reflows to the new character size — and is **remembered across sessions**, so the Terminal reopens with the font you chose. The setting is a per-machine preference, independent of which configuration file is loaded. The default is a monospaced **Courier New**; a monospaced font is recommended so full-screen CP/M programs line up correctly.
+
+### The right-click menu
+
+**Right-click** anywhere in the Receive area for a context menu with five actions:
+
+- **Copy** — copies the currently highlighted text to the clipboard. To highlight, press and drag the left mouse button across the screen; trailing spaces are trimmed from each line. Copy is greyed out when nothing is selected.
+- **Paste** — sends the clipboard's text to the CP/M system as if you had typed it. Line breaks in the pasted text are sent as the configured end-of-line character(s). (As with typing, the Terminal Port must be open, or the status bar reports that it cannot send.)
+- **Clear Window** — resets the screen and empties the buffers (the same as the **Clear** button).
+- **Font…** — opens the font-selection dialog (the same as the **Font…** button, above).
+- **Reset Size (24×80)** — resizes the window so the character grid returns to the classic 80 columns × 24 rows.
+- **Terminal Type** (submenu) — lists **VT100**, **VT52**, and **ADM-3A** with the active type ticked. Choosing one switches the terminal emulation straight away — exactly like the **Terminal Type** dropdown in Config → Serial (see [Section 7](#7-configuration)). The choice is kept with the rest of the serial settings and saved next time you save the configuration.
+- **Macros** (submenu) — lists your configured macro buttons by label (the same ones shown in the Macro Window). Choosing one runs that macro's keystrokes on the CP/M system, so you can fire a macro without opening the Macro Window. If no macros are configured the submenu is greyed out.
 
 ### Typing to the Remote
 

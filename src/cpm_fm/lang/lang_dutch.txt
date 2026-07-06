@@ -172,6 +172,15 @@ terminal.boot = Opstarten in CP/M
 terminal.font = Lettertype...
 terminal.font_dialog_title = Terminal-lettertype
 
+# --- Terminal context menu (v2.23) ---------------------------------------------
+terminal.menu.copy = Kopiëren
+terminal.menu.paste = Plakken
+terminal.menu.clear = Venster wissen
+terminal.menu.font = Lettertype...
+terminal.menu.reset_size = Grootte herstellen (24×80)
+terminal.menu.terminal_type = Terminaltype
+terminal.menu.macros_sub = Macro's
+
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = Seriële Configuratie
 config.serial.terminal_port = Terminalpoort

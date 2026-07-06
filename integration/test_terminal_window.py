@@ -10,6 +10,7 @@ import pytest
 from helpers.trace import get_logger
 
 from cpm_fm.terminal.cpm_parser import CPMParser
+from cpm_fm.utils.i18n import tr
 
 log = get_logger("terminal-vt100")
 
@@ -118,6 +119,161 @@ def test_macro_button_sends_keystrokes_over_serial(gui):
     assert [b.text() for b in buttons] == ["Prompt"], "configured macro button not shown"
 
     buttons[0].click()  # FR-162: runs the script on the Terminal Port
+    gui.process_until(
+        lambda: CPMParser.drive_prompt_letter(_screen_text(term)) is not None,
+        timeout=8.0,
+    )
+    text = _screen_text(term)
+    assert CPMParser.drive_prompt_letter(text) is not None, f"no prompt rendered: {text!r}"
+
+
+@pytest.mark.hil
+@pytest.mark.mt("MT-W17", "UIR-099", "UIR-100", "FR-165")
+def test_terminal_context_menu_copy_selection(gui):
+    """The Receive-view context menu offers five items; Copy copies a selection.
+
+    Feed known text onto the screen, drag-select it, and confirm the context
+    menu's Copy action places the highlighted text on the system clipboard.
+
+    Verifies: UIR-099, UIR-100, FR-165.
+    """
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QApplication
+
+    assert gui.connect()[0] == "ok"
+    gui.win.show_terminal()
+    term = gui.win.terminal_win
+    assert term is not None, "terminal window was not created"
+
+    # UIR-099: five top-level command actions (excluding separators and the
+    # Terminal Type / Macros submenus, UIR-101/UIR-102).
+    menu = term._build_context_menu()
+    labels = [a.text() for a in menu.actions() if not a.isSeparator() and a.menu() is None]
+    assert len(labels) == 5, f"expected 5 menu items, got {labels}"
+
+    # Clear first so the screen layout is deterministic — a live connection has
+    # already rendered the drive prompt / listing, leaving the cursor mid-screen.
+    # No events are processed between here and the copy, so no remote bytes can
+    # interleave and shift what row 0 holds.
+    term.clear_text()
+    term.engine.feed(b"COPYTEST")
+    term.render_screen()
+    view = term.receive_area
+    cw = view._cell_w
+    # UIR-100: drag-select the eight characters on row 0.
+    view._mouse_press(0, 0, Qt.MouseButton.LeftButton)
+    view._mouse_move(8 * cw, 0)
+    view._mouse_release(8 * cw, 0, Qt.MouseButton.LeftButton)
+    assert view.has_selection()
+
+    QApplication.clipboard().clear()
+    view.copy_selection()  # FR-165
+    assert QApplication.clipboard().text() == "COPYTEST"
+
+
+@pytest.mark.hil
+@pytest.mark.mt("MT-W17", "FR-166", "FR-094")
+def test_terminal_context_menu_paste_sends_over_serial(gui):
+    """The context-menu Paste transmits the clipboard text on the Terminal Port.
+
+    Put a carriage return on the clipboard and invoke Paste; the EOL goes out on
+    the wire and the remote echoes its drive prompt onto the screen.
+
+    Verifies: FR-166, FR-094.
+    """
+    from PySide6.QtWidgets import QApplication
+
+    assert gui.connect()[0] == "ok"
+    gui.win.show_terminal()
+    term = gui.win.terminal_win
+    assert term is not None, "terminal window was not created"
+
+    QApplication.clipboard().setText("\n")  # normalises to the configured EOL
+    term._on_paste()  # FR-166: send the clipboard text on the Terminal Port
+    gui.process_until(
+        lambda: CPMParser.drive_prompt_letter(_screen_text(term)) is not None,
+        timeout=8.0,
+    )
+    text = _screen_text(term)
+    assert CPMParser.drive_prompt_letter(text) is not None, f"no prompt rendered: {text!r}"
+
+
+@pytest.mark.hil
+@pytest.mark.mt("MT-W18", "FR-167", "FR-091a")
+def test_terminal_context_menu_reset_size(gui):
+    """The context-menu Reset Size reflows the grid to 80 columns x 24 rows.
+
+    Verifies: FR-167, FR-091a.
+    """
+    assert gui.connect()[0] == "ok"
+    gui.win.show_terminal()
+    term = gui.win.terminal_win
+    assert term is not None, "terminal window was not created"
+
+    term.resize(320, 220)  # some off-target size first
+    gui.process_until(lambda: True, timeout=0.5)
+    term.reset_size()  # FR-167
+    gui.process_until(
+        lambda: (term.engine.cols, term.engine.rows) == (80, 24),
+        timeout=4.0,
+    )
+    assert (term.engine.cols, term.engine.rows) == (80, 24)
+
+
+@pytest.mark.hil
+@pytest.mark.mt("MT-W19", "UIR-101", "UIR-034")
+def test_terminal_context_menu_terminal_type_submenu(gui):
+    """The Terminal Type submenu switches the running terminal's emulation.
+
+    The submenu lists the three types with the active one checked; choosing a
+    different type applies it to the engine and updates the setting.
+
+    Verifies: UIR-101, UIR-034.
+    """
+    from cpm_fm.terminal.term_translate import ADM3A, TERMINAL_TYPES
+
+    assert gui.connect()[0] == "ok"
+    gui.win.show_terminal()
+    term = gui.win.terminal_win
+    assert term is not None, "terminal window was not created"
+
+    menu = term._build_context_menu()  # held so the submenu is not GC'd
+    sub = {a.menu().title(): a.menu() for a in menu.actions() if a.menu() is not None}[
+        tr("terminal.menu.terminal_type")
+    ]
+    labels = [a.text() for a in sub.actions()]
+    assert labels == list(TERMINAL_TYPES), f"unexpected type list: {labels}"
+
+    next(a for a in sub.actions() if a.text() == ADM3A).trigger()
+    assert term.engine.terminal_type == ADM3A
+    assert gui.win.settings["terminal_type"] == ADM3A
+
+
+@pytest.mark.hil
+@pytest.mark.mt("MT-W20", "UIR-102", "FR-162")
+def test_terminal_context_menu_macros_submenu_runs_over_serial(gui):
+    """The Macros submenu runs a configured macro's script on the Terminal Port.
+
+    Configure one macro slot to send a carriage return, then trigger it from the
+    context menu's Macros submenu; the remote echoes its drive prompt.
+
+    Verifies: UIR-102, FR-162.
+    """
+    assert gui.connect()[0] == "ok"
+    gui.win.settings["macro_1_label"] = "Prompt"
+    gui.win.settings["macro_1_seq"] = "SENDRAW 0D"
+
+    gui.win.show_terminal()
+    term = gui.win.terminal_win
+    assert term is not None, "terminal window was not created"
+
+    menu = term._build_context_menu()  # held so the submenu is not GC'd
+    sub = {a.menu().title(): a.menu() for a in menu.actions() if a.menu() is not None}[
+        tr("terminal.menu.macros_sub")
+    ]
+    assert [a.text() for a in sub.actions()] == ["Prompt"], "configured macro not listed"
+
+    sub.actions()[0].trigger()  # FR-162: runs the script on the Terminal Port
     gui.process_until(
         lambda: CPMParser.drive_prompt_letter(_screen_text(term)) is not None,
         timeout=8.0,

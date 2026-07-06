@@ -172,6 +172,15 @@ terminal.boot = Avvia in CP/M
 terminal.font = Carattere...
 terminal.font_dialog_title = Carattere del terminale
 
+# --- Terminal context menu (v2.23) ---------------------------------------------
+terminal.menu.copy = Copia
+terminal.menu.paste = Incolla
+terminal.menu.clear = Cancella finestra
+terminal.menu.font = Carattere...
+terminal.menu.reset_size = Ripristina dimensioni (24×80)
+terminal.menu.terminal_type = Tipo di terminale
+terminal.menu.macros_sub = Macro
+
 # --- Serial Configuration dialog ----------------------------------------------
 config.serial.title = Configurazione Seriale
 config.serial.terminal_port = Porta terminale

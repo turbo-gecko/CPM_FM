@@ -172,6 +172,15 @@ terminal.boot = CP/M으로 부팅
 terminal.font = 글꼴...
 terminal.font_dialog_title = 터미널 글꼴
 
+# --- Terminal context menu (v2.23) ---------------------------------------------
+terminal.menu.copy = 복사
+terminal.menu.paste = 붙여넣기
+terminal.menu.clear = 창 지우기
+terminal.menu.font = 글꼴...
+terminal.menu.reset_size = 크기 재설정 (24×80)
+terminal.menu.terminal_type = 터미널 유형
+terminal.menu.macros_sub = 매크로
+
 # --- Serial Configuration dialog ----------------------------------------------
 config.serial.title = 시리얼 설정
 config.serial.terminal_port = 터미널 포트

@@ -1078,6 +1078,226 @@ def test_handle_terminal_send_append_eol_flag(qapp, monkeypatch, state):
         win.close()
 
 
+def test_terminal_context_menu_has_five_items_and_copy_state(qapp):
+    """The Receive-view context menu offers the five actions; Copy tracks state.
+
+    Verifies: UIR-099, FR-165.
+    """
+    from PySide6.QtCore import Qt
+
+    from cpm_fm.terminal.vt100_engine import VT100Engine
+
+    engine = VT100Engine(cols=10, rows=3)
+    term = TerminalWindow(None, engine=engine)
+    try:
+        menu = term._build_context_menu()
+        # Top-level command actions only (exclude separators and the submenus).
+        actions = [a for a in menu.actions() if not a.isSeparator() and a.menu() is None]
+        labels = [a.text() for a in actions]
+        assert labels == [
+            i18n.tr("terminal.menu.copy"),
+            i18n.tr("terminal.menu.paste"),
+            i18n.tr("terminal.menu.clear"),
+            i18n.tr("terminal.menu.font"),
+            i18n.tr("terminal.menu.reset_size"),
+        ]
+        # FR-165: Copy disabled with no selection, enabled once text is selected.
+        assert actions[0].isEnabled() is False
+        engine.feed(b"HELLO")
+        term.receive_area.refresh()
+        cw = term.receive_area._cell_w
+        term.receive_area._mouse_press(0, 0, Qt.MouseButton.LeftButton)
+        term.receive_area._mouse_move(5 * cw, 0)
+        term.receive_area._mouse_release(5 * cw, 0, Qt.MouseButton.LeftButton)
+        assert term._build_context_menu().actions()[0].isEnabled() is True
+    finally:
+        term.deleteLater()
+
+
+def test_terminal_reset_size_reflows_to_80x24(qapp):
+    """Reset Size resizes the window so the grid reflows to 80 columns x 24 rows.
+
+    Verifies: FR-167.
+    """
+    from cpm_fm.terminal.vt100_engine import VT100Engine
+
+    engine = VT100Engine()
+    term = TerminalWindow(None, engine=engine)
+    try:
+        term.show()  # only a visible view reflows (FR-091a)
+        term.resize(300, 200)
+        qapp.processEvents()
+        term.reset_size()
+        qapp.processEvents()
+        assert (engine.cols, engine.rows) == (80, 24)
+    finally:
+        term.close()
+        term.deleteLater()
+
+
+def test_terminal_paste_action_reads_clipboard_and_calls_callback(qapp):
+    """The Paste action feeds the clipboard text to the paste callback.
+
+    Verifies: FR-166.
+    """
+    pasted = []
+    term = TerminalWindow(None, paste_callback=pasted.append)
+    try:
+        QApplication.clipboard().setText("DIR\n")
+        term._on_paste()
+        assert pasted == ["DIR\n"]
+    finally:
+        term.deleteLater()
+
+
+def test_handle_terminal_paste_normalises_sends_buffers_echoes(qapp, monkeypatch, state):
+    """Paste converts newlines to EOL, transmits, buffers, and echoes.
+
+    Verifies: FR-166, FR-092, FR-093, FR-094, FR-098.
+    """
+    win = MainWindow(state)
+    try:
+        win.settings = {"eol": "CR"}
+        # FR-098: with the port closed, nothing is sent and the status reports it.
+        win.serial_mgr.terminal_connected = False
+        win.handle_terminal_paste("A\nB")
+        qapp.processEvents()
+        assert win.statusBar().currentMessage() == i18n.tr("status.terminal_not_open_send")
+
+        sent = []
+        monkeypatch.setattr(
+            win.serial_mgr, "send_raw", lambda port, data: sent.append((port, data))
+        )
+        win.serial_mgr.terminal_connected = True
+        win._tx_buffer = ""
+        win._local_echo = False
+        emitted = []
+        win.term_write.connect(emitted.append)
+
+        # FR-094: "\r\n", "\r", and "\n" all normalise to the configured EOL (CR).
+        win.handle_terminal_paste("A\r\nB\rC\nD")
+        qapp.processEvents()
+        assert sent == [("terminal", b"A\rB\rC\rD")]
+        assert win._tx_buffer == "A\rB\rC\rD"  # FR-092
+        assert emitted == []  # FR-093: echo off => nothing echoed
+
+        # FR-093: with echo on, the transmitted bytes are echoed to the screen.
+        win._local_echo = True
+        win.handle_terminal_paste("X")
+        qapp.processEvents()
+        assert emitted == [b"X"]
+    finally:
+        win.close()
+
+
+def _submenus(menu):
+    """Map submenu title -> QMenu for the submenu actions of ``menu``."""
+    return {a.menu().title(): a.menu() for a in menu.actions() if a.menu() is not None}
+
+
+def test_terminal_context_menu_terminal_type_submenu(qapp):
+    """The Terminal Type submenu lists the types, checks the active one, applies.
+
+    Verifies: UIR-101, UIR-099.
+    """
+    from cpm_fm.terminal.term_translate import TERMINAL_TYPES, VT52
+    from cpm_fm.terminal.vt100_engine import VT100Engine
+
+    chosen = []
+    engine = VT100Engine()  # default VT100
+    term = TerminalWindow(None, engine=engine, terminal_type_callback=chosen.append)
+    try:
+        menu = term._build_context_menu()  # held so its submenus are not GC'd
+        sub = _submenus(menu)[i18n.tr("terminal.menu.terminal_type")]
+        acts = sub.actions()
+        assert [a.text() for a in acts] == list(TERMINAL_TYPES)
+        assert all(a.isCheckable() for a in acts)
+        # UIR-101: only the active type (VT100) is checked.
+        assert [a.text() for a in acts if a.isChecked()] == ["VT100"]
+        # Selecting VT52 hands the value to the callback.
+        next(a for a in acts if a.text() == VT52).trigger()
+        assert chosen == [VT52]
+    finally:
+        term.deleteLater()
+
+
+def test_terminal_context_menu_macros_submenu_lists_and_runs(qapp):
+    """The Macros submenu lists configured macros and runs the chosen script.
+
+    Verifies: UIR-102, FR-162.
+    """
+    from cpm_fm.terminal.vt100_engine import VT100Engine
+
+    ran = []
+    macros = [("Prompt", "SENDRAW 0D"), ("Dir", "SEND DIR")]
+    term = TerminalWindow(
+        None,
+        engine=VT100Engine(),
+        macros_provider=lambda: macros,
+        run_macro_callback=ran.append,
+    )
+    try:
+        menu = term._build_context_menu()  # held so its submenus are not GC'd
+        sub = _submenus(menu)[i18n.tr("terminal.menu.macros_sub")]
+        assert sub.isEnabled()
+        assert [a.text() for a in sub.actions()] == ["Prompt", "Dir"]
+        sub.actions()[0].trigger()  # FR-162: run the first macro's script
+        assert ran == ["SENDRAW 0D"]
+    finally:
+        term.deleteLater()
+
+
+def test_terminal_context_menu_macros_submenu_disabled_when_none(qapp):
+    """The Macros submenu is present but disabled when no macros are configured.
+
+    Verifies: UIR-102.
+    """
+    from cpm_fm.terminal.vt100_engine import VT100Engine
+
+    term = TerminalWindow(None, engine=VT100Engine(), macros_provider=lambda: [])
+    try:
+        menu = term._build_context_menu()  # held so its submenus are not GC'd
+        sub = _submenus(menu)[i18n.tr("terminal.menu.macros_sub")]
+        assert not sub.isEnabled()
+        assert sub.actions() == []
+    finally:
+        term.deleteLater()
+
+
+def test_set_terminal_type_from_menu_applies_and_updates_setting(qapp, state):
+    """Choosing a terminal type from the menu applies it and updates the setting.
+
+    Verifies: UIR-101, UIR-034.
+    """
+    from cpm_fm.terminal.term_translate import ADM3A
+
+    win = MainWindow(state)
+    try:
+        win._set_terminal_type_from_menu(ADM3A)
+        assert win.settings["terminal_type"] == ADM3A
+        assert win._term_engine.terminal_type == ADM3A
+    finally:
+        win.close()
+
+
+def test_configured_macros_filters_incomplete_slots(qapp, state):
+    """_configured_macros returns only slots with both label and script set.
+
+    Verifies: UIR-102, UIR-097, FR-162.
+    """
+    win = MainWindow(state)
+    try:
+        win.settings["macro_1_label"] = "Prompt"
+        win.settings["macro_1_seq"] = "SENDRAW 0D"
+        win.settings["macro_2_label"] = "  "  # blank label -> excluded
+        win.settings["macro_2_seq"] = "SEND X"
+        win.settings["macro_3_label"] = "NoScript"
+        win.settings["macro_3_seq"] = "   "  # blank script -> excluded
+        assert win._configured_macros() == [("Prompt", "SENDRAW 0D")]
+    finally:
+        win.close()
+
+
 def test_geometry_and_last_config_persist_across_sessions(qapp, state, tmp_path):
     """Verifies: FR-004, FR-005."""
     # FR-004/FR-005: a session's main-window geometry and last-used config file

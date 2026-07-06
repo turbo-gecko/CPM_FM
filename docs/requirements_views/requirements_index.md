@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_438 requirements across 55 sections._
+_445 requirements across 55 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -198,6 +198,9 @@ _438 requirements across 55 sections._
 | FR-158b | When terminal_type is ADM-3A (FR-157j), the arrow keys Up/Down/Left/Right shall be transmitted as the ADM-3A… | gui/terminal_view.py:encode_key; tests test_terminal_view.py |
 | FR-162 | The application shall provide up to ten user-configurable **macro buttons** (the macro_1_label…macro_10_label and macro_1_seq…macro_10_seq settings… | mw_remote.py:run_macro_script, mw_remote.py:_run_sequence_logic, mw_remote.py:_execute_sequence, gui/macro_window.py:MacroWindow; tests test_macros.py |
 | FR-164 | The Terminal Window shall provide a "Macros" checkbox (UIR-096) that toggles the visibility of the… | mw_remote.py:_toggle_macro_window, mw_remote.py:_show_macro_window, mw_remote.py:_on_macro_window_hidden, mw_remote.py:_refresh_macro_buttons, gui/macro_window.py:MacroWindow.closeEvent, app.py:closeEvent; tests test_macros.py |
+| FR-165 | The Terminal Window Receive view (UIR-061) shall provide a context-menu **Copy** action (UIR-099) that copies… | gui/terminal_view.py:TerminalView.selected_text, gui/terminal_view.py:TerminalView.has_selection, gui/terminal_view.py:TerminalView.copy_selection, terminal_window.py:_show_context_menu; tests test_terminal_view.py |
+| FR-166 | The Terminal Window Receive view shall provide a context-menu **Paste** action (UIR-099) that transmits the… | terminal_window.py:_on_paste, mw_remote.py:handle_terminal_paste; tests test_gui_smoke.py, test_terminal_view.py |
+| FR-167 | The Terminal Window Receive view shall provide a context-menu **Reset Size** action (UIR-099) that resets… | terminal_window.py:reset_size, gui/terminal_view.py:TerminalView.viewport_size_for; tests test_terminal_view.py |
 
 ## 3.11 File context-menu actions
 
@@ -398,7 +401,7 @@ _438 requirements across 55 sections._
 | UIR-031 | The dialog shall provide an "msec/line" text field that defaults to 0 and is limited… | config_dialogs.py:SerialConfigDialog, config_dialogs.py:__init__ |
 | UIR-032 | The dialog shall provide a "Terminal Timeout (ms)" text field that defaults to 100 and… | config_dialogs.py:SerialConfigDialog; serial_manager.py:open_port |
 | UIR-033 | The dialog shall provide a "Transfer Timeout (ms)" text field that defaults to 100 and… | config_dialogs.py:SerialConfigDialog; serial_manager.py:open_port; NFR-003i |
-| UIR-034 | The dialog shall provide a "Terminal Type" dropdown offering VT100, VT52, and ADM-3A, defaulting to… | config_dialogs.py:SerialConfigDialog, utils/config_handler.py, gui/mw_config.py:_apply_terminal_type; tests test_config_handler.py, test_vt100_engine.py |
+| UIR-034 | The dialog shall provide a "Terminal Type" dropdown offering VT100, VT52, and ADM-3A, defaulting to… | config_dialogs.py:SerialConfigDialog, utils/config_handler.py, gui/mw_config.py:_apply_terminal_type, gui/mw_remote.py:_set_terminal_type_from_menu; tests test_config_handler.py, test_vt100_engine.py, test_gui_smoke.py |
 
 ## 4.4 General Configuration Dialog
 
@@ -440,6 +443,10 @@ _438 requirements across 55 sections._
 | UIR-069 | The Terminal Window shall provide a "Font…" button in the control row (UIR-064), to the… | terminal_window.py:create_widgets, terminal_window.py:_build_font_dialog, terminal_window.py:_on_font, terminal_window.py:set_terminal_font, gui/terminal_view.py:TerminalView.set_font, gui/terminal_view.py:TerminalView.current_font, gui/window_state.py:WindowState.terminal_font, mw_remote.py:show_terminal |
 | UIR-096 | The Terminal Window shall provide a "Macros" checkbox in the control row (UIR-064), to the… | terminal_window.py:create_widgets, mw_remote.py:show_terminal |
 | UIR-097 | The Macro Window shall be a floating, resizable tool window titled "Macros" that displays the… | gui/macro_window.py:MacroWindow, gui/macro_window.py:set_macros, gui/flow_layout.py:FlowLayout, mw_remote.py:_refresh_macro_buttons, mw_remote.py:_show_macro_window |
+| UIR-099 | The Terminal Window Receive view (UIR-061) shall provide a right-click **context menu** with five items… | terminal_window.py:_build_context_menu, terminal_window.py:_show_context_menu, gui/terminal_view.py:_TerminalGrid.contextMenuEvent, gui/terminal_view.py:TerminalView.set_context_menu_callback |
+| UIR-100 | The Terminal Window Receive view shall support mouse text selection… | gui/terminal_view.py:TerminalView.mousePressEvent, gui/terminal_view.py:TerminalView.mouseMoveEvent, gui/terminal_view.py:TerminalView.mouseReleaseEvent, gui/terminal_view.py:TerminalView._paint_grid, gui/terminal_view.py:TerminalView.selected_text; tests test_terminal_view.py |
+| UIR-101 | The Terminal Window context menu (UIR-099) shall include a **Terminal Type** submenu listing the three… | terminal_window.py:_build_context_menu, mw_remote.py:_set_terminal_type_from_menu; tests test_gui_smoke.py |
+| UIR-102 | The Terminal Window context menu (UIR-099) shall include a **Macros** submenu listing the configured macro… | terminal_window.py:_build_context_menu, mw_remote.py:_configured_macros, mw_remote.py:run_macro_script; tests test_gui_smoke.py |
 
 ## 4.6 Visual theme and modern layout (v1.3)
 

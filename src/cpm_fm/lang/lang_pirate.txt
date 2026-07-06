@@ -177,6 +177,15 @@ terminal.boot = Hoist into CP/M
 terminal.font = Letterin'...
 terminal.font_dialog_title = Terminal Letterin'
 
+# --- Terminal context menu (v2.23) ---------------------------------------------
+terminal.menu.copy = Plunder
+terminal.menu.paste = Swab Aboard
+terminal.menu.clear = Scour the Deck
+terminal.menu.font = Letterin'...
+terminal.menu.reset_size = Trim the Sails (24×80)
+terminal.menu.terminal_type = Talkin'-Box Type
+terminal.menu.macros_sub = Battle Cries
+
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = Signal Flag Config
 config.serial.terminal_port = Captain's Log Port

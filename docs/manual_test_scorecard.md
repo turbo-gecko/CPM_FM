@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.29 |
-| Scorecard for plan version | 1.29 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.31 |
+| Scorecard for plan version | 1.31 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -252,6 +252,10 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-W14 | Macros checkbox opens floating window; buttons per configured slot; click sends script | UIR-096/097, FR-162/164 | | | |
 | MT-W15 | Macro window buttons reflow on resize; live refresh on Save; close hides + unticks checkbox | UIR-097, FR-164, FR-021b | | | |
 | MT-W16 | Terminal Type VT52/ADM-3A renders + encodes cursor keys per type; switch back to VT100 | UIR-034, FR-157i/j, FR-158a/b | | | |
+| MT-W17 | Right-click menu (5 items, Copy greyed w/o selection); drag-select + Copy → clipboard; Paste → Terminal Port (EOL-normalised) | UIR-099/100, FR-165/166 | | | |
+| MT-W18 | Right-click Clear Window / Font… / Reset Size (24×80) reflows grid to 80×24 | UIR-099, FR-095, UIR-069, FR-167 | | | |
+| MT-W19 | Terminal Type submenu (VT100/VT52/ADM-3A; active checked); selecting switches emulation live | UIR-099/101, UIR-034 | | | |
+| MT-W20 | Macros submenu lists configured macros + runs script; disabled when none | UIR-099/102, FR-162 | | | |
 
 ### §13 File context-menu actions
 | ID | Title | Req | Result | Env | Notes |

@@ -2,19 +2,23 @@ from __future__ import annotations
 
 from typing import Callable
 
+from PySide6.QtCore import QPoint
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QFontDialog,
     QHBoxLayout,
     QLabel,
     QMainWindow,
+    QMenu,
     QPushButton,
     QVBoxLayout,
     QWidget,
 )
 
 from cpm_fm.gui.terminal_view import TerminalView
+from cpm_fm.terminal.term_translate import TERMINAL_TYPES
 from cpm_fm.terminal.vt100_engine import VT100Engine
 from cpm_fm.utils.i18n import tr
 
@@ -47,9 +51,13 @@ class TerminalWindow(QMainWindow):
         boot_callback=None,
         engine=None,
         font_callback=None,
+        paste_callback=None,
+        terminal_type_callback=None,
+        macros_provider=None,
+        run_macro_callback=None,
     ):
         """
-        Satisfies: UIR-060, UIR-068, UIR-069, FR-091, FR-096.
+        Satisfies: UIR-060, UIR-068, UIR-069, FR-091, FR-096, FR-166, UIR-101, UIR-102.
 
         No Qt parent, so this is an independent non-modal top-level window.
         The owning MainWindow keeps a reference to it.
@@ -61,6 +69,14 @@ class TerminalWindow(QMainWindow):
         receive area, to be transmitted on the Terminal Port (FR-096).
         ``font_callback`` receives the :class:`QFont` chosen via the Font button
         so the owner can persist it (UIR-069).
+        ``paste_callback`` receives the clipboard text for the context-menu Paste
+        action, to be transmitted on the Terminal Port (FR-166).
+        ``terminal_type_callback`` receives the terminal-type value chosen in the
+        context menu's Terminal Type submenu, to be applied to the engine and
+        settings (UIR-101). ``macros_provider`` returns the list of configured
+        ``(label, script)`` macros for the Macros submenu, and
+        ``run_macro_callback`` receives the chosen macro's script to run it on the
+        Terminal Port (UIR-102/FR-162).
         """
         super().__init__()
         # FR-091: the VT-100 screen model this window renders.
@@ -81,6 +97,16 @@ class TerminalWindow(QMainWindow):
         # UIR-069: invoked with the QFont chosen via the Font button so the owner
         # can persist it across sessions.
         self.font_callback = font_callback
+        # FR-166: invoked with the clipboard text when the context-menu Paste
+        # action is used, so the owner can transmit it on the Terminal Port.
+        self.paste_callback = paste_callback
+        # UIR-101: invoked with the terminal-type value chosen in the Terminal
+        # Type submenu, so the owner can apply and persist it.
+        self.terminal_type_callback = terminal_type_callback
+        # UIR-102: returns the configured (label, script) macros for the Macros
+        # submenu; run_macro_callback runs the chosen macro's script (FR-162).
+        self.macros_provider = macros_provider
+        self.run_macro_callback = run_macro_callback
 
         self.create_widgets()
 
@@ -104,7 +130,7 @@ class TerminalWindow(QMainWindow):
         """Build the Terminal Window widgets.
 
         Satisfies: UIR-061, UIR-062, UIR-064, UIR-065, UIR-066, UIR-067, UIR-069,
-        UIR-096, FR-096.
+        UIR-096, UIR-099, FR-096.
         """
         central = QWidget()
         self.setCentralWidget(central)
@@ -116,6 +142,9 @@ class TerminalWindow(QMainWindow):
         # sent to the Terminal Port via key_callback (UIR-067/FR-096).
         self.receive_area = TerminalView(self.engine)
         self.receive_area.set_key_callback(self.key_callback)
+        # UIR-099: the Receive view reports a right-click here so this window can
+        # build and show the context menu.
+        self.receive_area.set_context_menu_callback(self._show_context_menu)
         layout.addWidget(self.receive_area)
 
         # Control Frame: Clear (left), Local Echo (centre), Autoscroll (right).
@@ -177,6 +206,7 @@ class TerminalWindow(QMainWindow):
         Satisfies: FR-095, UIR-064.
         """
         self.engine.reset()
+        self.receive_area.clear_selection()
         self.receive_area.refresh()
         if self.clear_callback:
             self.clear_callback()
@@ -235,6 +265,124 @@ class TerminalWindow(QMainWindow):
             self.receive_area.set_font(font)
             if self.font_callback:
                 self.font_callback(font)
+
+    def _build_context_menu(self) -> QMenu:
+        """Build the Receive-view context menu (UIR-099).
+
+        Five items — Copy (FR-165), Paste (FR-166), Clear (FR-095), Font…
+        (UIR-069), Reset Size (FR-167) — followed by the Terminal Type (UIR-101)
+        and Macros (UIR-102) submenus. Copy is disabled when nothing is selected.
+        Separated from :meth:`_show_context_menu` so the menu can be inspected in
+        tests without a blocking ``exec``.
+
+        Satisfies: UIR-099, FR-165, FR-166, FR-095, UIR-069, FR-167, UIR-101,
+        UIR-102.
+        """
+        menu = QMenu(self)
+        act_copy = menu.addAction(tr("terminal.menu.copy"))
+        act_copy.setEnabled(self.receive_area.has_selection())
+        act_copy.triggered.connect(self.receive_area.copy_selection)
+        menu.addAction(tr("terminal.menu.paste"), self._on_paste)
+        menu.addSeparator()
+        menu.addAction(tr("terminal.menu.clear"), self.clear_text)
+        menu.addAction(tr("terminal.menu.font"), self._on_font)
+        menu.addAction(tr("terminal.menu.reset_size"), self.reset_size)
+        menu.addSeparator()
+        self._add_terminal_type_submenu(menu)
+        self._add_macros_submenu(menu)
+        return menu
+
+    def _add_terminal_type_submenu(self, menu: QMenu) -> None:
+        """Append the Terminal Type submenu (UIR-101).
+
+        Lists the three ``terminal_type`` values as checkable items with the
+        engine's active type checked; selecting one hands the value to
+        ``terminal_type_callback`` for application and persistence (UIR-034).
+
+        Satisfies: UIR-101.
+        """
+        # Parent the submenu to ``menu`` so it shares the menu's lifetime.
+        sub = QMenu(tr("terminal.menu.terminal_type"), menu)
+        menu.addMenu(sub)
+        active = self.engine.terminal_type
+        for term_type in TERMINAL_TYPES:
+            act = sub.addAction(term_type)
+            act.setCheckable(True)
+            act.setChecked(term_type == active)
+            # Bind term_type per-iteration; the callback applies + persists it.
+            act.triggered.connect(lambda _checked=False, t=term_type: self._on_terminal_type(t))
+
+    def _add_macros_submenu(self, menu: QMenu) -> None:
+        """Append the Macros submenu listing configured macros (UIR-102).
+
+        Each configured ``(label, script)`` becomes an item that runs the script
+        on the Terminal Port via ``run_macro_callback`` (FR-162). With no macros
+        configured the submenu is disabled.
+
+        Satisfies: UIR-102, FR-162.
+        """
+        # Parent the submenu to ``menu`` so it shares the menu's lifetime.
+        sub = QMenu(tr("terminal.menu.macros_sub"), menu)
+        menu.addMenu(sub)
+        macros = self.macros_provider() if self.macros_provider else []
+        if not macros:
+            sub.setEnabled(False)
+            return
+        for label, script in macros:
+            act = sub.addAction(label)
+            act.triggered.connect(lambda _checked=False, s=script: self._on_run_macro(s))
+
+    def _on_terminal_type(self, term_type: str) -> None:
+        """Apply a terminal type chosen in the submenu (UIR-101).
+
+        Satisfies: UIR-101.
+        """
+        if self.terminal_type_callback:
+            self.terminal_type_callback(term_type)
+
+    def _on_run_macro(self, script: str) -> None:
+        """Run a macro chosen in the Macros submenu (UIR-102/FR-162).
+
+        Satisfies: UIR-102, FR-162.
+        """
+        if self.run_macro_callback:
+            self.run_macro_callback(script)
+
+    def _show_context_menu(self, global_pos: QPoint):
+        """Show the Receive-view right-click context menu at ``global_pos``.
+
+        Satisfies: UIR-099.
+        """
+        self._build_context_menu().exec(global_pos)
+
+    def _on_paste(self):
+        """Send the clipboard text to the Terminal Port as typed input (FR-166).
+
+        Reads the system clipboard and hands the text to ``paste_callback`` so
+        the owner can transmit it (newline-to-EOL conversion and buffering happen
+        there); a no-op when the clipboard is empty.
+
+        Satisfies: FR-166.
+        """
+        text = QApplication.clipboard().text()
+        if text and self.paste_callback:
+            self.paste_callback(text)
+
+    def reset_size(self):
+        """Reset the window so the Receive grid reflows to 80 columns × 24 rows.
+
+        Resizes this window by the delta between the viewport size that holds an
+        80×24 grid and its current viewport size; the reflow (FR-091a) then
+        settles the emulator to that geometry. Scrollbar visibility depends only
+        on the scrollback depth (unchanged by the reset), so the delta is exact.
+
+        Satisfies: FR-167.
+        """
+        target = self.receive_area.viewport_size_for(80, 24)
+        current = self.receive_area.viewport().size()
+        dw = target.width() - current.width()
+        dh = target.height() - current.height()
+        self.resize(self.width() + dw, self.height() + dh)
 
     def set_terminal_font(self, font: QFont):
         """Apply ``font`` to the Receive view (e.g. the saved font on open).

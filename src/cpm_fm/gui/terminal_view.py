@@ -2,9 +2,18 @@ from __future__ import annotations
 
 from typing import Callable
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QKeyEvent, QPainter, QPalette
-from PySide6.QtWidgets import QScrollArea, QWidget
+from PySide6.QtCore import QPoint, QSize, Qt
+from PySide6.QtGui import (
+    QColor,
+    QContextMenuEvent,
+    QFont,
+    QFontMetrics,
+    QKeyEvent,
+    QMouseEvent,
+    QPainter,
+    QPalette,
+)
+from PySide6.QtWidgets import QApplication, QScrollArea, QWidget
 
 from cpm_fm.terminal.term_translate import ADM3A, VT52
 from cpm_fm.terminal.vt100_engine import Cell, VT100Engine
@@ -184,6 +193,25 @@ class _TerminalGrid(QWidget):
         """Satisfies: FR-091, UIR-061."""
         self._view._paint_grid(self, event.rect())
 
+    def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802 (Qt override)
+        """Begin a text selection on a left-button press (UIR-100)."""
+        p = event.position().toPoint()
+        self._view._mouse_press(p.x(), p.y(), event.button())
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:  # noqa: N802 (Qt override)
+        """Extend the in-progress selection as the mouse is dragged (UIR-100)."""
+        p = event.position().toPoint()
+        self._view._mouse_move(p.x(), p.y())
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802 (Qt override)
+        """Finish the selection on button release (UIR-100)."""
+        p = event.position().toPoint()
+        self._view._mouse_release(p.x(), p.y(), event.button())
+
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:  # noqa: N802 (Qt override)
+        """Delegate the right-click context menu to the owning view (UIR-099)."""
+        self._view._context_menu(event.globalPos())
+
 
 class TerminalView(QScrollArea):
     """VT-100 screen renderer: a monospaced character grid over a VT100Engine.
@@ -212,6 +240,15 @@ class TerminalView(QScrollArea):
         # for transmission on the Terminal Port. FR-094: Enter transmits the EOL.
         self._key_callback: Callable[[bytes], None] | None = None
         self._eol = b"\r"
+        # UIR-100: mouse text-selection state, as absolute (row, col) cell
+        # coordinates spanning scrollback + live screen. None when nothing is
+        # selected; _selecting is True only during an active click-drag.
+        self._sel_anchor: tuple[int, int] | None = None
+        self._sel_end: tuple[int, int] | None = None
+        self._selecting = False
+        # UIR-099: invoked with a global QPoint when the view is right-clicked,
+        # so the owner can build and show the context menu.
+        self._context_menu_cb: Callable[[QPoint], None] | None = None
         # Accept keyboard focus so the operator can type into the terminal.
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
@@ -286,6 +323,79 @@ class TerminalView(QScrollArea):
         """
         self._eol = eol
 
+    def set_context_menu_callback(self, callback: Callable[[QPoint], None] | None) -> None:
+        """Set the handler invoked (with a global QPoint) on a right-click.
+
+        The owner (Terminal Window) builds and shows the context menu; the view
+        only reports where the click occurred (UIR-099).
+
+        Satisfies: UIR-099.
+        """
+        self._context_menu_cb = callback
+
+    def has_selection(self) -> bool:
+        """Whether any text is currently highlighted (backs Copy's enabled state).
+
+        Satisfies: FR-165, UIR-100.
+        """
+        return self._selection_range() is not None
+
+    def selected_text(self) -> str:
+        """The highlighted text: selected cells row by row, trailing blanks
+        trimmed per row, rows joined by a single newline (FR-165).
+
+        Returns an empty string when nothing is selected.
+
+        Satisfies: FR-165, UIR-100.
+        """
+        rng = self._selection_range()
+        if rng is None:
+            return ""
+        (r0, c0), (r1, c1) = rng
+        lines: list[str] = []
+        for row in range(r0, r1 + 1):
+            cells = self._row_cells(row)
+            if cells is None:
+                lines.append("")
+                continue
+            start = c0 if row == r0 else 0
+            end = c1 if row == r1 else len(cells)
+            chars = "".join((cell.char or " ") for cell in cells[start:end])
+            lines.append(chars.rstrip())
+        return "\n".join(lines)
+
+    def copy_selection(self) -> None:
+        """Copy the highlighted text to the system clipboard (FR-165).
+
+        A no-op when nothing is selected.
+
+        Satisfies: FR-165.
+        """
+        text = self.selected_text()
+        if text:
+            QApplication.clipboard().setText(text)
+
+    def clear_selection(self) -> None:
+        """Drop any current selection and repaint (e.g. on Clear/reset).
+
+        Satisfies: UIR-100.
+        """
+        self._sel_anchor = None
+        self._sel_end = None
+        self._selecting = False
+        self._grid.update()
+
+    def viewport_size_for(self, cols: int, rows: int) -> QSize:
+        """Pixel size of a viewport that holds exactly ``cols`` x ``rows`` cells.
+
+        Backs the Terminal Window's Reset-Size action (FR-167): the window resizes
+        so its Receive-view viewport becomes this size, and the reflow (FR-091a)
+        then settles the grid to the requested geometry.
+
+        Satisfies: FR-167.
+        """
+        return QSize(cols * self._cell_w, rows * self._cell_h)
+
     def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802 (Qt override)
         """Encode the key press and send it to the Terminal Port (FR-096).
 
@@ -356,8 +466,100 @@ class TerminalView(QScrollArea):
         vp = self.viewport().size()
         cols, rows = grid_size_for(vp.width(), vp.height(), self._cell_w, self._cell_h)
         if (cols, rows) != (self._engine.cols, self._engine.rows):
+            # Row/column indices shift on a reflow, so any selection is stale.
+            self._sel_anchor = self._sel_end = None
+            self._selecting = False
             self._engine.resize(cols, rows)
         self.refresh()
+
+    # ------------------------------------------------------------ mouse/selection
+
+    def _mouse_press(self, x: int, y: int, button: Qt.MouseButton) -> None:
+        """Start a selection at the clicked cell on a left-button press (UIR-100).
+
+        Satisfies: UIR-100.
+        """
+        if button == Qt.MouseButton.LeftButton:
+            self._sel_anchor = self._cell_at(x, y)
+            self._sel_end = self._sel_anchor
+            self._selecting = True
+            self._grid.update()
+
+    def _mouse_move(self, x: int, y: int) -> None:
+        """Extend the active selection to the current cell (UIR-100).
+
+        Satisfies: UIR-100.
+        """
+        if self._selecting:
+            self._sel_end = self._cell_at(x, y)
+            self._grid.update()
+
+    def _mouse_release(self, x: int, y: int, button: Qt.MouseButton) -> None:
+        """Finish the selection; a click with no drag clears it (UIR-100).
+
+        Satisfies: UIR-100.
+        """
+        if button == Qt.MouseButton.LeftButton and self._selecting:
+            self._sel_end = self._cell_at(x, y)
+            self._selecting = False
+            if self._sel_anchor == self._sel_end:
+                self._sel_anchor = self._sel_end = None
+            self._grid.update()
+
+    def _context_menu(self, global_pos: QPoint) -> None:
+        """Report a right-click to the owner so it can show the menu (UIR-099).
+
+        Satisfies: UIR-099.
+        """
+        if self._context_menu_cb is not None:
+            self._context_menu_cb(global_pos)
+
+    def _cell_at(self, x: int, y: int) -> tuple[int, int]:
+        """Map a grid-local pixel position to a clamped (row, col) cell.
+
+        Column is clamped to ``0..cols`` (``cols`` meaning past the last cell, so
+        a drag to a line's end selects the whole line); row to the painted range.
+
+        Satisfies: UIR-100.
+        """
+        row = max(0, min(y // self._cell_h, self._total_rows() - 1))
+        col = max(0, min(x // self._cell_w, self._engine.cols))
+        return row, col
+
+    def _selection_range(
+        self,
+    ) -> tuple[tuple[int, int], tuple[int, int]] | None:
+        """Normalised (start, end) selection in reading order, or None if empty.
+
+        Satisfies: FR-165, UIR-100.
+        """
+        if self._sel_anchor is None or self._sel_end is None:
+            return None
+        a, b = self._sel_anchor, self._sel_end
+        if a == b:
+            return None
+        return (a, b) if a <= b else (b, a)
+
+    @staticmethod
+    def _is_selected(
+        row: int, col: int, rng: tuple[tuple[int, int], tuple[int, int]] | None
+    ) -> bool:
+        """Whether cell (row, col) falls inside the stream selection ``rng``.
+
+        Satisfies: UIR-100.
+        """
+        if rng is None:
+            return False
+        (r0, c0), (r1, c1) = rng
+        if row < r0 or row > r1:
+            return False
+        if r0 == r1:
+            return c0 <= col < c1
+        if row == r0:
+            return col >= c0
+        if row == r1:
+            return col < c1
+        return True
 
     # ---------------------------------------------------------------- internals
 
@@ -400,13 +602,17 @@ class TerminalView(QScrollArea):
     def _paint_grid(self, widget: QWidget, rect) -> None:
         """Paint the rows intersecting ``rect`` (called from the grid's paint).
 
-        Satisfies: FR-091, UIR-061.
+        Satisfies: FR-091, UIR-061, UIR-100.
         """
         painter = QPainter(widget)
         painter.setFont(self._font)
         pal = self.palette()
         default_bg = pal.color(QPalette.ColorRole.Base)
         default_fg = pal.color(QPalette.ColorRole.Text)
+        # UIR-100: palette colours for highlighted (selected) cells.
+        sel_bg = pal.color(QPalette.ColorRole.Highlight)
+        sel_fg = pal.color(QPalette.ColorRole.HighlightedText)
+        rng = self._selection_range()
         painter.fillRect(rect, default_bg)
 
         cw, ch = self._cell_w, self._cell_h
@@ -423,8 +629,12 @@ class TerminalView(QScrollArea):
                 bg = self._colour(cell.bg, default_bg)
                 if cell.reverse:
                     fg, bg = bg, fg
+                # UIR-100: selected cells override colour with the highlight pair.
+                selected = self._is_selected(row, col, rng)
+                if selected:
+                    fg, bg = sel_fg, sel_bg
                 x = col * cw
-                if bg != default_bg:
+                if selected or bg != default_bg:
                     painter.fillRect(x, y, cw, ch, bg)
                 if cell.char and cell.char != " ":
                     f = self._font

@@ -30,7 +30,7 @@ class _RemoteMixin(MainWindowMixinBase):
 
     def show_terminal(self):
         """
-        Satisfies: FR-097, UIR-069.
+        Satisfies: FR-097, UIR-069, FR-166, UIR-101, UIR-102.
         """
         if not self.terminal_win:
             self.terminal_win = TerminalWindow(
@@ -40,6 +40,10 @@ class _RemoteMixin(MainWindowMixinBase):
                 self.do_boot_sequence,
                 engine=self._term_engine,
                 font_callback=self._save_terminal_font,
+                paste_callback=self.handle_terminal_paste,
+                terminal_type_callback=self._set_terminal_type_from_menu,
+                macros_provider=self._configured_macros,
+                run_macro_callback=self.run_macro_script,
             )
             self.terminal_win.chk_echo.toggled.connect(self._set_local_echo)
             # UIR-096/FR-164: the Macros checkbox shows/hides the Macro Window.
@@ -123,13 +127,24 @@ class _RemoteMixin(MainWindowMixinBase):
         """
         if self.macro_win is None:
             return
-        macros = []
+        self.macro_win.set_macros(self._configured_macros())
+
+    def _configured_macros(self) -> list[tuple[str, str]]:
+        """The configured macros as ``(label, script)`` pairs (UIR-097/UIR-102).
+
+        A slot is included only when both its label and keystroke script are
+        non-empty. Shared by the Macro Window (UIR-097) and the Terminal Window
+        context menu's Macros submenu (UIR-102).
+
+        Satisfies: UIR-097, UIR-102, FR-162.
+        """
+        macros: list[tuple[str, str]] = []
         for i in range(1, MacroWindow.MACRO_COUNT + 1):
             label = self.settings.get(f"macro_{i}_label", "").strip()
             script = self.settings.get(f"macro_{i}_seq", "")
             if label and script.strip():
                 macros.append((label, script))
-        self.macro_win.set_macros(macros)
+        return macros
 
     def _set_local_echo(self, enabled: bool):
         """
@@ -143,6 +158,22 @@ class _RemoteMixin(MainWindowMixinBase):
         Satisfies: UIR-069.
         """
         self.window_state.terminal_font = font
+
+    def _set_terminal_type_from_menu(self, term_type: str) -> None:
+        """Apply a terminal type chosen in the Terminal Window context menu.
+
+        Updates the ``terminal_type`` setting and applies it to the shared engine
+        immediately — the same live effect as the Config → Serial dropdown
+        (UIR-034); the new value is persisted with the serial configuration on
+        the next save. Re-renders the open Terminal Window so the change in
+        interpretation takes effect at once.
+
+        Satisfies: UIR-101, UIR-034, FR-157.
+        """
+        self.settings["terminal_type"] = term_type
+        self._term_engine.set_terminal_type(term_type)
+        if self.terminal_win is not None:
+            self.terminal_win.render_screen()
 
     def handle_terminal_key(self, data: bytes):
         """Transmit raw keystroke bytes typed into the Terminal Window (FR-096).
@@ -162,6 +193,32 @@ class _RemoteMixin(MainWindowMixinBase):
         self.serial_mgr.send_raw("terminal", data)
         # FR-092: record transmitted data in the transmit buffer (decoded to
         # text, matching the receive-buffer convention).
+        self._tx_buffer += data.decode("ascii", errors="replace")
+        # FR-093: local echo copies transmitted data to the receive area only.
+        if self._local_echo:
+            self.term_write.emit(data)
+
+    def handle_terminal_paste(self, text: str):
+        """Transmit clipboard text on the Terminal Port as typed input (FR-166).
+
+        Runs on the GUI thread (from the Terminal Window's context-menu Paste
+        action). Converts any line separators in the pasted text (CRLF, CR, or
+        LF) to the configured EOL (FR-094), sends the encoded bytes on the
+        Terminal Port, records them in the transmit buffer (FR-092), and — when
+        Local Echo is on — echoes them to the screen (FR-093). If the Terminal
+        Port is not open, reports it and sends nothing (FR-098).
+
+        Satisfies: FR-166, FR-092, FR-093, FR-094, FR-098.
+        """
+        if not self.serial_mgr.terminal_connected:
+            self.set_status(tr("status.terminal_not_open_send"))
+            return
+        eol_char = EOL_MAP.get(self.settings.get("eol", "CR"), "\r")
+        # FR-094: normalise line separators in the pasted text to the EOL.
+        normalised = text.replace("\r\n", "\n").replace("\r", "\n").replace("\n", eol_char)
+        data = normalised.encode("ascii", errors="replace")
+        self.serial_mgr.send_raw("terminal", data)
+        # FR-092: record transmitted data in the transmit buffer.
         self._tx_buffer += data.decode("ascii", errors="replace")
         # FR-093: local echo copies transmitted data to the receive area only.
         if self._local_echo:

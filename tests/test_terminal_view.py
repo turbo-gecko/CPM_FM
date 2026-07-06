@@ -241,3 +241,158 @@ def test_set_font_updates_cell_metrics_and_paints(qapp):
         view._grid.grab()  # triggers paintEvent offscreen
     finally:
         view.deleteLater()
+
+
+def _drag(view, r0, c0, r1, c1):
+    """Simulate a left-button click-drag from cell (r0,c0) to (r1,c1)."""
+    cw, ch = view._cell_w, view._cell_h
+    view._mouse_press(c0 * cw, r0 * ch, Qt.MouseButton.LeftButton)
+    view._mouse_move(c1 * cw, r1 * ch)
+    view._mouse_release(c1 * cw, r1 * ch, Qt.MouseButton.LeftButton)
+
+
+def test_mouse_drag_selects_text_on_one_row(qapp):
+    """A left click-drag highlights a range whose text is retrievable.
+
+    Verifies: UIR-100, FR-165.
+    """
+    engine = VT100Engine(cols=10, rows=3)
+    view = TerminalView(engine)
+    try:
+        engine.feed(b"HELLO")
+        view.refresh()
+        _drag(view, 0, 0, 0, 5)  # cols 0..5 (exclusive) => "HELLO"
+        assert view.has_selection()
+        assert view.selected_text() == "HELLO"
+        view._grid.grab()  # selection paint path must not raise
+    finally:
+        view.deleteLater()
+
+
+def test_plain_click_clears_selection(qapp):
+    """A left press with no drag clears any existing selection.
+
+    Verifies: UIR-100.
+    """
+    engine = VT100Engine(cols=10, rows=3)
+    view = TerminalView(engine)
+    try:
+        engine.feed(b"HELLO")
+        view.refresh()
+        _drag(view, 0, 0, 0, 5)
+        assert view.has_selection()
+        # Press and release on the same cell (no drag) => cleared.
+        cw = view._cell_w
+        view._mouse_press(2 * cw, 0, Qt.MouseButton.LeftButton)
+        view._mouse_release(2 * cw, 0, Qt.MouseButton.LeftButton)
+        assert not view.has_selection()
+        assert view.selected_text() == ""
+    finally:
+        view.deleteLater()
+
+
+def test_selected_text_trims_trailing_blanks_and_joins_rows(qapp):
+    """Multi-row selection trims trailing blanks per row, joins with newline.
+
+    Verifies: FR-165, UIR-100.
+    """
+    engine = VT100Engine(cols=10, rows=3)
+    view = TerminalView(engine)
+    try:
+        engine.feed(b"AB\r\nCD")  # row0="AB", row1="CD"
+        view.refresh()
+        # Select from row0 col0 to row1 end: whole first row + "CD".
+        _drag(view, 0, 0, 1, engine.cols)
+        # Trailing blank cells past "AB"/"CD" are trimmed; rows joined by "\n".
+        assert view.selected_text() == "AB\nCD"
+    finally:
+        view.deleteLater()
+
+
+def test_copy_selection_puts_text_on_clipboard(qapp):
+    """Copy writes the highlighted text to the system clipboard.
+
+    Verifies: FR-165.
+    """
+    from PySide6.QtWidgets import QApplication as _QApp
+
+    engine = VT100Engine(cols=10, rows=3)
+    view = TerminalView(engine)
+    try:
+        engine.feed(b"COPYME")
+        view.refresh()
+        _QApp.clipboard().clear()
+        _drag(view, 0, 0, 0, 6)
+        view.copy_selection()
+        assert _QApp.clipboard().text() == "COPYME"
+    finally:
+        view.deleteLater()
+
+
+def test_copy_selection_no_selection_is_noop(qapp):
+    """Copy with nothing selected leaves the clipboard untouched.
+
+    Verifies: FR-165.
+    """
+    from PySide6.QtWidgets import QApplication as _QApp
+
+    engine = VT100Engine(cols=10, rows=3)
+    view = TerminalView(engine)
+    try:
+        _QApp.clipboard().setText("previous")
+        assert not view.has_selection()
+        view.copy_selection()
+        assert _QApp.clipboard().text() == "previous"
+    finally:
+        view.deleteLater()
+
+
+def test_clear_selection_drops_highlight(qapp):
+    """clear_selection removes the current highlight (used on Clear/reset).
+
+    Verifies: UIR-100.
+    """
+    engine = VT100Engine(cols=10, rows=3)
+    view = TerminalView(engine)
+    try:
+        engine.feed(b"HELLO")
+        view.refresh()
+        _drag(view, 0, 0, 0, 5)
+        assert view.has_selection()
+        view.clear_selection()
+        assert not view.has_selection()
+    finally:
+        view.deleteLater()
+
+
+def test_viewport_size_for_returns_exact_cell_extent(qapp):
+    """viewport_size_for gives the pixel size holding cols x rows cells.
+
+    Verifies: FR-167.
+    """
+    engine = VT100Engine(cols=10, rows=3)
+    view = TerminalView(engine)
+    try:
+        size = view.viewport_size_for(80, 24)
+        assert size.width() == 80 * view._cell_w
+        assert size.height() == 24 * view._cell_h
+    finally:
+        view.deleteLater()
+
+
+def test_context_menu_callback_invoked_with_position(qapp):
+    """A right-click reports its global position to the registered handler.
+
+    Verifies: UIR-099.
+    """
+    from PySide6.QtCore import QPoint
+
+    engine = VT100Engine(cols=10, rows=3)
+    view = TerminalView(engine)
+    try:
+        seen = []
+        view.set_context_menu_callback(seen.append)
+        view._context_menu(QPoint(5, 7))
+        assert seen == [QPoint(5, 7)]
+    finally:
+        view.deleteLater()

@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.29 |
+| Version | 1.31 |
 | Status | Draft |
-| Date | 2026-07-06 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.21.0) |
+| Date | 2026-07-07 |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.24.0) |
 
 ---
 
@@ -414,6 +414,10 @@ files** — these tests delete data by design.
 | MT-W14 [CP/M or loopback] | UIR-096, UIR-097, FR-162, FR-164 | Configure at least two macro buttons (MT-G13). In the Terminal Window control row, tick the **Macros** checkbox (left of Local Echo). Connected, click one of the buttons whose script sends a command (e.g. `SENDRAW 0D`). | A floating window titled "Macros" appears showing one button per configured slot (label + script both set); empty slots do not appear. Clicking a button transmits its keystroke script on the Terminal Port and the remote responds in the Receive screen. |
 | MT-W15 | UIR-097, FR-164, FR-021b | With the Macros window open, resize it. Then edit the macro configuration (MT-G13) and Save with the window still open. Close the Macros window with its window control. | The buttons reflow to fit the window (more/fewer columns as it is resized). Saving new macro definitions refreshes the buttons live (added/removed/renamed without reopening). Closing the window hides it and unticks the **Macros** checkbox; re-ticking it reopens the same window. |
 | MT-W16 [CP/M] | UIR-034, FR-157i, FR-157j, FR-158a, FR-158b | In Config → Serial set **Terminal Type** to **ADM-3A** (or **VT52**) and Save, then connect and run software written for that terminal (e.g. an ADM-3A build of WordStar, or a VT-52 program). Press the arrow keys in the Terminal Window. Then switch Terminal Type back to **VT100**. | The Terminal Type dropdown offers VT100/VT52/ADM-3A (default VT100). Under the chosen type the remote's cursor positioning and screen/line clears render correctly — no raw escape codes or garbled layout. The arrow keys transmit the terminal-specific codes (VT-52 → `ESC A`/`B`/`C`/`D`; ADM-3A → Ctrl-K/Ctrl-J/Ctrl-H/Ctrl-L). Switching back to VT100 restores VT-100 rendering/keys immediately, without reopening the window. |
+| MT-W17 [CP/M or loopback] | UIR-099, UIR-100, FR-165, FR-166 | Connected: produce some output in the Receive screen, then **click-drag** the mouse across part of it to highlight text. **Right-click** the Receive screen and choose **Copy**; paste into a text editor to check. Copy a short command (e.g. `DIR`) from elsewhere to the clipboard, right-click the Receive screen and choose **Paste**. | Dragging highlights the text (shown in the selection colour). The right-click menu shows five items — **Copy**, **Paste**, **Clear Window**, **Font…**, **Reset Size (24×80)** — with **Copy** greyed when nothing is selected. Copy places the highlighted text on the clipboard (trailing spaces trimmed per line). Paste transmits the clipboard text on the Terminal Port as if typed (newlines sent as the configured EOL); with the port closed it reports "Terminal port not connected - cannot send" and sends nothing. |
+| MT-W18 | UIR-099, FR-095, UIR-069, FR-167 | Right-click the Receive screen and use **Clear Window**, then **Font…**, then **Reset Size (24×80)** (after first resizing the window to a non-80×24 shape). | **Clear Window** resets the screen and buffers (as the Clear button, MT-W06). **Font…** opens the same font dialog as the Font… button (MT-W13). **Reset Size (24×80)** resizes the window so the character-cell grid reflows to exactly 80 columns × 24 rows. |
+| MT-W19 [CP/M] | UIR-099, UIR-101, UIR-034 | Right-click the Receive screen and open the **Terminal Type** submenu; note the tick against the active type, then choose a different type (e.g. **ADM-3A**). Reopen the submenu to confirm the tick moved. | The submenu lists **VT100**, **VT52**, **ADM-3A** with the currently active type checked. Choosing another type applies it to the running terminal immediately (matching the Config → Serial **Terminal Type** dropdown, MT-W16) — subsequent output is interpreted and the cursor keys encoded per the new type — and the tick follows the selection. |
+| MT-W20 [CP/M or loopback] | UIR-099, UIR-102, FR-162 | Configure at least one macro button (MT-G13). Right-click the Receive screen and open the **Macros** submenu; choose a macro whose script sends a command (e.g. `SENDRAW 0D`). Then clear all macro definitions and reopen the submenu. | The submenu lists one item per configured macro (label shown; empty slots omitted), in the same set as the Macro Window (MT-W14). Selecting one runs its keystroke script on the Terminal Port and the remote responds in the Receive screen. With no macros configured the **Macros** submenu is present but greyed (disabled). |
 
 ---
 

@@ -18,3 +18,4 @@ dist/
 docs/bug_list.md
 /temp
 .test_*.txt
+integration/results/runs_ledger.json
