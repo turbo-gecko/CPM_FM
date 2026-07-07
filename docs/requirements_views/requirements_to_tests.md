@@ -112,7 +112,7 @@ _242/456 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 | FR-108 | `tests/test_gui_smoke.py:test_batch_aborts_on_failure` |
 | FR-108a | `tests/test_gui_smoke.py:test_batch_aborts_on_failure` |
 | FR-108b | `tests/test_gui_smoke.py:test_batch_aborts_on_failure` |
-| FR-109 | `tests/test_gui_smoke.py:test_batch_waits_for_prompt_between_files`, `tests/test_gui_smoke.py:test_wait_for_terminal_idle_returns_early_on_cancel` |
+| FR-109 | `tests/test_gui_smoke.py:test_batch_does_not_settle_when_nothing_transferred`, `tests/test_gui_smoke.py:test_batch_waits_for_prompt_between_files`, `tests/test_gui_smoke.py:test_host_batch_settles_after_final_file_before_refresh`, `tests/test_gui_smoke.py:test_remote_batch_settles_after_final_file_before_refresh`, `tests/test_gui_smoke.py:test_wait_for_terminal_idle_returns_early_on_cancel` |
 | FR-110 | `tests/test_gui_smoke.py:test_context_menu_targets_uses_clicked_item_when_outside_selection`, `tests/test_gui_smoke.py:test_context_menu_targets_uses_full_selection_when_clicked_item_selected`, `tests/test_gui_smoke.py:test_host_delete_removes_all_selected_files`, `tests/test_gui_smoke.py:test_host_view_launches_viewer` |
 | FR-111 | `tests/test_gui_smoke.py:test_remote_delete_sends_command_per_selected_file` |
 | FR-112 | `tests/test_gui_smoke.py:test_build_viewer_args_substitutes_token`, `tests/test_gui_smoke.py:test_host_view_launches_viewer`, `tests/test_gui_smoke.py:test_remote_view_downloads_then_opens` |

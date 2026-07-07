@@ -473,7 +473,10 @@
       "tests/test_gui_smoke.py:test_batch_aborts_on_failure"
     ],
     "FR-109": [
+      "tests/test_gui_smoke.py:test_batch_does_not_settle_when_nothing_transferred",
       "tests/test_gui_smoke.py:test_batch_waits_for_prompt_between_files",
+      "tests/test_gui_smoke.py:test_host_batch_settles_after_final_file_before_refresh",
+      "tests/test_gui_smoke.py:test_remote_batch_settles_after_final_file_before_refresh",
       "tests/test_gui_smoke.py:test_wait_for_terminal_idle_returns_early_on_cancel"
     ],
     "FR-110": [

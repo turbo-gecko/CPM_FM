@@ -370,6 +370,82 @@ def test_batch_waits_for_prompt_between_files(qapp, monkeypatch, state):
         win.close()
 
 
+def test_remote_batch_settles_after_final_file_before_refresh(qapp, monkeypatch, state):
+    """Verifies: FR-109."""
+    # FR-109: after the final file of an upload batch the inter-file settle
+    # period is waited before the FR-099 completion refresh, so the post-batch
+    # Remote-list DIR is not issued while a slow CP/M peer is still returning to
+    # its prompt (otherwise the just-uploaded file can be missing from the list).
+    win = MainWindow(state)
+    try:
+        _arm_transfer(win, monkeypatch)
+        win.settings = {"xfer_launch_delay": 0, "xfer_interfile_delay": 2}
+        events = []
+        monkeypatch.setattr(
+            win,
+            "_cancellable_sleep",
+            lambda secs, cancel_event=None: events.append(("sleep", secs)) or False,
+        )
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: events.append(("refresh", None)))
+        win._transfer_to_remote_batch([os.path.join(win.host_dir, "A.TXT")])
+        qapp.processEvents()
+        # The final-file settle waited exactly the inter-file delay, before refresh.
+        assert ("sleep", 2.0) in events
+        assert events.index(("sleep", 2.0)) < events.index(("refresh", None))
+    finally:
+        win.close()
+
+
+def test_host_batch_settles_after_final_file_before_refresh(qapp, monkeypatch, state):
+    """Verifies: FR-109."""
+    # FR-109: the download batch applies the same post-final-file settle before
+    # signalling completion, keeping the remote quiescent for any command that
+    # follows the batch (parity with uploads).
+    win = MainWindow(state)
+    try:
+        _arm_transfer(win, monkeypatch)
+        win.settings = {"xfer_launch_delay": 0, "xfer_interfile_delay": 2}
+        events = []
+        monkeypatch.setattr(
+            win,
+            "_cancellable_sleep",
+            lambda secs, cancel_event=None: events.append(("sleep", secs)) or False,
+        )
+        monkeypatch.setattr(win, "refresh_host_files", lambda: events.append(("refresh", None)))
+        win._transfer_to_host_batch([os.path.join(win.host_dir, "A.TXT")])
+        qapp.processEvents()
+        assert ("sleep", 2.0) in events
+        assert events.index(("sleep", 2.0)) < events.index(("refresh", None))
+    finally:
+        win.close()
+
+
+def test_batch_does_not_settle_when_nothing_transferred(qapp, monkeypatch, state):
+    """Verifies: FR-109."""
+    # FR-109: the post-batch settle is applied only when at least one file was
+    # transferred; an all-skipped batch adds no needless delay.
+    from cpm_fm.gui.conflict_dialog import SKIP
+
+    win = MainWindow(state)
+    try:
+        _arm_transfer(win, monkeypatch)
+        win.settings = {"xfer_launch_delay": 0, "xfer_interfile_delay": 2}
+        delays = []
+        monkeypatch.setattr(
+            win, "_cancellable_sleep", lambda secs, cancel_event=None: delays.append(secs) or False
+        )
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: None)
+        monkeypatch.setattr(win, "_fresh_remote_names", lambda: set())
+        # An invalid CP/M 8.3 name (11-char base) triggers the rename prompt; Skip
+        # it so the batch finishes having transferred nothing.
+        monkeypatch.setattr(win, "_prompt_invalid_name", lambda name: (SKIP, None))
+        win._transfer_to_remote_batch([os.path.join(win.host_dir, "TOOLONGNAME.TXT")])
+        qapp.processEvents()
+        assert 2.0 not in delays  # no final-file settle when nothing succeeded
+    finally:
+        win.close()
+
+
 def test_batch_progress_dialog_shows_file_position(qapp, state):
     """Verifies: FR-105, UIR-051."""
     # FR-105/UIR-051: one dialog serves the batch; transfer_file_started switches

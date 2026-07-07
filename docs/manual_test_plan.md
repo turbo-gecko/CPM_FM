@@ -4,7 +4,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.35 |
+| Version | 1.36 |
 | Status | Draft |
 | Date | 2026-07-07 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.25.0) |
@@ -283,7 +283,7 @@ CP/M side. Use the multi-block (≥1 KB) file plus small files from §2.3.
 | MT-T05 | FR-105, UIR-051 | During MT-T03/T04 watch the progress dialog. | Modal dialog titled "Sending File"/"Receiving File"; shows the filename, a live Blocks/Bytes count that increments per block, and a progress bar (tracking bytes on send; indeterminate on receive); a centred **Cancel** button (FR-120) is present but **no** window close (X) control; auto-closes on completion. |
 | MT-T06 | FR-106, FR-107, FR-105 | Multi-select three host files; Copy to Remote. | Files transfer **sequentially in list order**, each with its own `PCGET`; a **single** progress dialog serves the batch and shows "File i of N"; on success the Remote list refreshes once. |
 | MT-T07 | FR-108 | In a 3-file batch, arrange for the middle file to fail (e.g. abort it on the CP/M side / disconnect briefly). | Batch aborts (third file not attempted); error dialog names the failed file; because file 1 succeeded, the destination list refreshes once. |
-| MT-T08 | FR-109 | Run a multi-file batch and watch the Terminal Window between files. | Before each file **after the first**, the app waits for the CCP prompt to return plus the inter-file settle delay; the second/third launch commands are not truncated ("command not found"). |
+| MT-T08 | FR-109 | Run a multi-file batch and watch the Terminal Window between files, and note the auto-refresh after the last file. | Before each file **after the first**, the app waits for the CCP prompt to return plus the inter-file settle delay; the second/third launch commands are not truncated ("command not found"). **After the final file, the app waits the inter-file settle delay before the auto-refresh `DIR`, so the just-transferred file(s) reliably appear in the refreshed Remote list even on a slow CP/M peer (no missing entry that only shows on a manual Update).** |
 | MT-T09 | FR-086, UIR-058 | With Echo Transfer Data **OFF** (default), open the Terminal Window, then run a transfer. Then set Echo Transfer Data **ON** (Config > General) and run another transfer. | OFF: no `<HH>` tokens appear during the transfer (other terminal traffic is unaffected). ON: every byte sent/received on the Transport Port is echoed into the Receive area as `<HH>` hex tokens (uppercase two-digit). |
 | MT-T10 | NFR-003c, NFR-003f, NFR-003h | Transfer to/from a 1K-capable sender (e.g. PCPUT1K) and a checksum-only sender (PCPUT V1.0). | Receive polls **NAK first** (no stray `C`); 1K (STX) frames accepted from 1K senders; final packet padded with 0x1A. Content round-trips intact. |
 | MT-T11 | NFR-001 | During a large transfer, move/resize the main window and hover the toolbar. | UI stays responsive (transfer runs off the GUI thread); progress keeps updating. |

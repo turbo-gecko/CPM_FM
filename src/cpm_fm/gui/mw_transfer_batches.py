@@ -161,6 +161,12 @@ class _TransferBatchesMixin(MainWindowMixinBase):
             self._record_history(remote_name, filepath, "remote", "success", total_bytes, "", retry)
             succeeded += 1
         self.set_status(tr("status.successfully_uploaded", count=succeeded))
+        # FR-109: after the final file, wait the inter-file settle period before
+        # the FR-099 refresh so the post-batch Remote-list DIR is not issued while
+        # a slow CP/M peer is still returning to the prompt (which would list the
+        # drive before the just-uploaded file's directory entry is visible).
+        if succeeded:
+            self._cancellable_sleep(self._interfile_delay())
         # FR-099: refresh the Remote Files list so the uploaded files show.
         self.transfer_completed.emit("remote")
 
@@ -328,6 +334,13 @@ class _TransferBatchesMixin(MainWindowMixinBase):
             )
             succeeded += 1
         self.set_status(tr("status.successfully_downloaded", count=succeeded))
+        # FR-109: after the final file, wait the inter-file settle period before
+        # signalling completion, so any command that follows the batch is not
+        # issued while a slow CP/M peer is still returning to the prompt. The
+        # Host-list refresh reads the local filesystem, but the settle keeps the
+        # remote quiescent for a subsequent remote command (parity with uploads).
+        if succeeded:
+            self._cancellable_sleep(self._interfile_delay())
         # FR-099: refresh the Host Files list so the downloaded files show.
         self.transfer_completed.emit("host")
 

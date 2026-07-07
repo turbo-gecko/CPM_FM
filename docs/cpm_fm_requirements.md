@@ -11,7 +11,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 2.26.3 |
+| Version | 2.26.4 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
@@ -242,7 +242,7 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | FR-108 | If any file in a multi-file batch fails to transfer, the application shall abort the batch. The abort and partial-success handling are specified by FR-108a–FR-108b. *(v1.6.)* | Mandatory | T | impl. `mw_transfer_batches.py:_transfer_to_remote_batch`, `mw_transfer_batches.py:_transfer_to_host_batch` |
 | FR-108a | On any file's failure the application shall abort the batch — it shall not attempt the remaining files — and shall display an error dialog naming the failed file. | Mandatory | T | — |
 | FR-108b | If at least one file in the batch transferred successfully before the failure, the destination file list shall be refreshed once (per FR-099). | Mandatory | T | — |
-| FR-109 | In a multi-file batch, before issuing the FR-087 launch command for each file **after the first**, the application shall wait for the Terminal Port output to go idle (the previous CP/M transfer program having finished and the CCP command prompt having returned) and then wait an additional `xfer_interfile_delay` settle period (UIR-052, default 2 s). This prevents the leading characters of the next command from being lost while CP/M is still returning to the prompt and not yet servicing its UART (the multi-file analogue of FR-089). *(v1.6.1.)* | Mandatory | T | impl. `mw_transfers.py:_wait_for_terminal_idle`, `mw_transfers.py:_interfile_delay`, `mw_transfer_batches.py:_transfer_to_remote_batch`, `mw_transfer_batches.py:_transfer_to_host_batch` |
+| FR-109 | In a multi-file batch, before issuing the FR-087 launch command for each file **after the first**, the application shall wait for the Terminal Port output to go idle (the previous CP/M transfer program having finished and the CCP command prompt having returned) and then wait an additional `xfer_interfile_delay` settle period (UIR-052, default 2 s). This prevents the leading characters of the next command from being lost while CP/M is still returning to the prompt and not yet servicing its UART (the multi-file analogue of FR-089). **After the final file of the batch has transferred, and before emitting the transfer-completed refresh (FR-099), the application shall likewise wait the `xfer_interfile_delay` settle period so the post-batch Remote-list `DIR` (FR-073) is not issued while CP/M is still returning to the prompt — otherwise, on a slow CP/M peer, the just-transferred file can be absent from the refreshed listing.** *(v1.6.1; v2.26.4: settle also applied after the final file, before the post-batch refresh.)* | Mandatory | T | impl. `mw_transfers.py:_wait_for_terminal_idle`, `mw_transfers.py:_interfile_delay`, `mw_transfer_batches.py:_transfer_to_remote_batch`, `mw_transfer_batches.py:_transfer_to_host_batch` |
 
 ### 3.10 Terminal window — receive and transmit
 

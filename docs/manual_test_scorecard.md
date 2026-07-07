@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.35 |
-| Scorecard for plan version | 1.35 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.36 |
+| Scorecard for plan version | 1.36 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -172,7 +172,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-T05 | Progress dialog content/behaviour (Cancel button, no X) | FR-105, UIR-051 | | | |
 | MT-T06 | Multi-file batch, sequential, "File i of N" | FR-106/107/105 | | | |
 | MT-T07 | Batch abort on mid-file failure | FR-108 | | | |
-| MT-T08 | Inter-file wait; no truncated command | FR-109 | | | |
+| MT-T08 | Inter-file wait (no truncated command) + post-final-file settle before refresh | FR-109 | | | |
 | MT-T09 | Hex byte echo `<HH>` to Terminal Window; suppressed when Echo Transfer Data OFF | FR-086, UIR-058 | | | |
 | MT-T10 | NAK-first; 1K frames; 0x1A pad; integrity | NFR-003c, NFR-003f, NFR-003h | | | |
 | MT-T11 | UI responsive during large transfer | NFR-001 | | | |

@@ -229,6 +229,12 @@ class CpmPeer:
         except (TypeError, ValueError):
             return 3.0
 
+    def _interfile_delay(self) -> float:
+        try:
+            return max(0.0, float(self.settings.get("xfer_interfile_delay", 2.0)))
+        except (TypeError, ValueError):
+            return 2.0
+
     def send_file(
         self,
         local_path: str,
@@ -266,10 +272,16 @@ class CpmPeer:
             time.sleep(self._launch_delay())
             ok = XModem(ser).send_file(local_path, use_1k=use_1k)
             step(log, "send %s → %s", remote_name, "OK" if ok else "FAILED")
-            return ok
         finally:
             if self._shared_port:
                 self.sm.resume_terminal_reads()
+        # FR-109 mirror: after the transfer, let the (possibly slow) CP/M peer
+        # return to its prompt — and, on a shared port, let the resumed read loop
+        # drain XMODEM's trailing output — before the caller issues its next
+        # command / DIR, so a subsequent listing sees the just-written file.
+        if ok:
+            time.sleep(self._interfile_delay())
+        return ok
 
     def recv_file(
         self,
@@ -303,7 +315,13 @@ class CpmPeer:
             time.sleep(self._launch_delay())
             ok = XModem(ser).receive_file(save_path, use_1k=use_1k)
             step(log, "recv %s → %s", remote_name, "OK" if ok else "FAILED")
-            return ok
         finally:
             if self._shared_port:
                 self.sm.resume_terminal_reads()
+        # FR-109 mirror: after the transfer, let the (possibly slow) CP/M peer
+        # return to its prompt — and, on a shared port, let the resumed read loop
+        # drain XMODEM's trailing output — before the caller issues its next
+        # command / DIR (parity with the app's post-batch settle).
+        if ok:
+            time.sleep(self._interfile_delay())
+        return ok

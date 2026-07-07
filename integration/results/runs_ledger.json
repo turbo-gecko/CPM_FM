@@ -1171,5 +1171,71 @@
       "Pass": 12
     },
     "artifacts": "integration/results/_local/20260707T081937Z_d8c8558"
+  },
+  {
+    "run_id": "20260707T091802Z_e317cb6",
+    "timestamp": "2026-07-07T09:18:02.790323+00:00",
+    "target": "rc2014_mini",
+    "app_version": "2.26.3",
+    "git_commit": "e317cb65a0642ce520aa3490f18fefe14235a437",
+    "git_dirty": true,
+    "summary": {
+      "Fail": 2,
+      "Skipped": 1
+    },
+    "artifacts": "integration/results/rc2014_mini/20260707T091802Z_e317cb6"
+  },
+  {
+    "run_id": "20260707T092030Z_e317cb6",
+    "timestamp": "2026-07-07T09:20:30.991737+00:00",
+    "target": "_local",
+    "app_version": "2.26.3",
+    "git_commit": "e317cb65a0642ce520aa3490f18fefe14235a437",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 12
+    },
+    "artifacts": "integration/results/_local/20260707T092030Z_e317cb6"
+  },
+  {
+    "run_id": "20260707T092030Z_e317cb6",
+    "timestamp": "2026-07-07T09:20:30.991737+00:00",
+    "target": "rc2014_mini",
+    "app_version": "2.26.3",
+    "git_commit": "e317cb65a0642ce520aa3490f18fefe14235a437",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 31,
+      "Fail": 6,
+      "Skipped": 3,
+      "N-A": 3
+    },
+    "artifacts": "integration/results/rc2014_mini/20260707T092030Z_e317cb6"
+  },
+  {
+    "run_id": "20260707T100429Z_e317cb6",
+    "timestamp": "2026-07-07T10:04:29.300371+00:00",
+    "target": "_local",
+    "app_version": "2.26.4",
+    "git_commit": "e317cb65a0642ce520aa3490f18fefe14235a437",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 12
+    },
+    "artifacts": "integration/results/_local/20260707T100429Z_e317cb6"
+  },
+  {
+    "run_id": "20260707T100429Z_e317cb6",
+    "timestamp": "2026-07-07T10:04:29.300371+00:00",
+    "target": "rc2014_mini",
+    "app_version": "2.26.4",
+    "git_commit": "e317cb65a0642ce520aa3490f18fefe14235a437",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 35,
+      "Skipped": 5,
+      "N-A": 3
+    },
+    "artifacts": "integration/results/rc2014_mini/20260707T100429Z_e317cb6"
   }
 ]

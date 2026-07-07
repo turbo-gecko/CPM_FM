@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.26.3**
+**Version 2.26.4**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -219,7 +219,7 @@ Configure CP/M command templates and behavior. The remote-command fields are gat
 |---------|---------|---------|
 | **Transfer Launch Delay** | Seconds to wait after issuing the CP/M command before starting the X-Modem handshake, giving the CP/M program time to start. | 3 |
 | **Transfer Handshake Timeout** | Seconds to wait for the remote's first response after the launch delay before treating the transfer as a misconfigured command (see [Section 17](#17-tips-and-troubleshooting)). | 10 |
-| **Inter-File Delay** | Seconds to pause between files in a batch, so the CP/M prompt returns before the next command. | 2 |
+| **Inter-File Delay** | Seconds to pause between files in a batch, so the CP/M prompt returns before the next command — and once more after the last file, before the file list refreshes, so the just-transferred file reliably appears (increase this if a transferred file is missing from the list until you press Update, which can happen on a slow CP/M machine). | 2 |
 | **EOL** | Line terminator used when sending text from the Terminal and the boot sequence: CR, LF, or CRLF. | CR |
 | **Debug Logging** | Writes verbose transfer tracing to standard output. | OFF |
 | **Echo Transfer Data** | Shows raw X-Modem bytes as hex tokens (e.g. `<01><06>`) in the Terminal window. | OFF |
