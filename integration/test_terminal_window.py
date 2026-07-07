@@ -223,6 +223,11 @@ def test_terminal_context_menu_macros_submenu_runs_over_serial(gui):
     Verifies: UIR-102, FR-162.
     """
     assert gui.connect()[0] == "ok"
+    # Clear every macro slot first so the submenu is deterministic regardless of
+    # what the target's config ships (some examples pre-populate sample macros).
+    for i in range(1, 11):
+        gui.win.settings[f"macro_{i}_label"] = ""
+        gui.win.settings[f"macro_{i}_seq"] = ""
     gui.win.settings["macro_1_label"] = "Prompt"
     gui.win.settings["macro_1_seq"] = "SENDRAW 0D"
 
