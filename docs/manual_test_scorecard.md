@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.31 |
-| Scorecard for plan version | 1.31 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.32 |
+| Scorecard for plan version | 1.32 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -107,9 +107,10 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-G08 | No "Change Disk" field | UIR-043 | | | |
 | MT-G10 | Boot Sequence multi-line field round-trips | UIR-059 | | | |
 | MT-G11 | Test button (Send/Receive): reports no-response vs. success, no real transfer | UIR-094/095, FR-161 | | | |
-| MT-G12 | Macro Buttons config dialog: menu item, ten Button groups (Label + Keystrokes + Test), scrolls | FR-021b, UIR-003, UIR-098 | | | |
-| MT-G13 | Macro slots round-trip label + keystrokes; Save persists macro subset only | FR-021b, UIR-098 | | | |
-| MT-G14 | Macro dialog Test runs typed script on the port; not-connected error when closed | FR-162, UIR-098 | | | |
+| MT-G12 | Config → Terminal dialog: menu item, Terminal tab (Type/Local Echo/Autoscroll) + Macros tab (ten Button slots) | FR-021c, UIR-003, UIR-103, UIR-103a, UIR-103d | | | |
+| MT-G12a | Terminal tab settings round-trip; Save persists terminal+macro subset only | FR-021c, UIR-034, UIR-103b, UIR-103c | | | |
+| MT-G13 | Macro slots round-trip label + keystrokes; Save persists terminal+macro subset only | FR-021b, FR-021c, UIR-098, UIR-103d | | | |
+| MT-G14 | Macros-tab Test runs typed script on the port; not-connected error when closed | FR-162, UIR-098, UIR-103d | | | |
 
 ### §8 Config load / save
 | ID | Title | Req | Result | Env | Notes |
@@ -237,25 +238,24 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | ID | Title | Req | Result | Env | Notes |
 |----|-------|-----|:------:|:---:|-------|
 | MT-W01 | Terminal button opens/restores window | FR-097, UIR-060 | | | |
-| MT-W02 | Character-cell screen; no transmit field/Send; input hint | UIR-061/063/067 | | | |
+| MT-W02 | Character-cell screen; no transmit field/Send; no control row; input hint | UIR-061/063/064/067 | | | |
 | MT-W03 | Type + Enter sent live; remote responds | FR-091/096 | | | |
-| MT-W04 | Local Echo behaviour | UIR-065, FR-093 | | | |
-| MT-W05 | Autoscroll + scrollback behaviour | UIR-066/062 | | | |
-| MT-W06 | Clear resets screen + buffers | FR-095 | | | |
+| MT-W04 | Local Echo (Config → Terminal) behaviour | UIR-103b, FR-093 | | | |
+| MT-W05 | Autoscroll (Config → Terminal) + scrollback behaviour | UIR-103c/104/062 | | | |
+| MT-W06 | Context-menu Clear Window resets screen + buffers | FR-095, UIR-099 | | | |
 | MT-W07 | Type with port closed → status msg | FR-098 | | | |
 | MT-W08 | Ctrl+C / arrows / Backspace / Esc keys encoded live | FR-158 | | | |
 | MT-W09 | Full-screen VT-100 program renders correctly | FR-091/157 | | | |
-| MT-W10 | Boot button disabled when sequence empty; live enable on Save | UIR-068 | | | |
-| MT-W11 | Manual "Boot into CP/M" runs sequence + re-probes | FR-049 | | | |
+| MT-W10 | Context-menu Boot item disabled when sequence empty; live enable on Save | UIR-105 | | | |
+| MT-W11 | Context-menu "Boot into CP/M" runs sequence + re-probes | FR-049, UIR-105 | | | |
 | MT-W12 | Terminal grid reflows to the window size | FR-091a | | | |
-| MT-W13 | Font… dialog lists usable (family/style/size scroll, not collapsed); change applies live, reflows, persists | UIR-069 | | | |
-| MT-W14 | Macros checkbox opens floating window; buttons per configured slot; click sends script | UIR-096/097, FR-162/164 | | | |
-| MT-W15 | Macro window buttons reflow on resize; live refresh on Save; close hides + unticks checkbox | UIR-097, FR-164, FR-021b | | | |
-| MT-W16 | Terminal Type VT52/ADM-3A renders + encodes cursor keys per type; switch back to VT100 | UIR-034, FR-157i/j, FR-158a/b | | | |
-| MT-W17 | Right-click menu (5 items, Copy greyed w/o selection); drag-select + Copy → clipboard; Paste → Terminal Port (EOL-normalised) | UIR-099/100, FR-165/166 | | | |
+| MT-W13 | Context-menu Font… dialog lists usable (family/style/size scroll, not collapsed); change applies live, reflows, persists | UIR-069, UIR-099 | | | |
+| MT-W16 | Terminal Type (Config → Terminal) VT52/ADM-3A renders + encodes cursor keys per type; switch back to VT100 | UIR-034, UIR-103a, FR-157i/j, FR-158a/b | | | |
+| MT-W17 | Right-click menu (6 items, Copy greyed w/o selection); drag-select + Copy → clipboard; Paste → Terminal Port (EOL-normalised) | UIR-099/100, FR-165/166 | | | |
 | MT-W18 | Right-click Clear Window / Font… / Reset Size (24×80) reflows grid to 80×24 | UIR-099, FR-095, UIR-069, FR-167 | | | |
 | MT-W19 | Terminal Type submenu (VT100/VT52/ADM-3A; active checked); selecting switches emulation live | UIR-099/101, UIR-034 | | | |
 | MT-W20 | Macros submenu lists configured macros + runs script; disabled when none | UIR-099/102, FR-162 | | | |
+| MT-W21 | Terminal/History windows reopen on start-up when open at exit | FR-168 | | | |
 
 ### §13 File context-menu actions
 | ID | Title | Req | Result | Env | Notes |

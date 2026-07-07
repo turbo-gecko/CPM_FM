@@ -54,7 +54,13 @@ _COLUMNS = (
 
 
 class TransferHistoryDialog(QDialog):
-    """Modal dialog showing and acting on the transfer history (Feature 2).
+    """Non-modal window showing and acting on the transfer history (Feature 2).
+
+    Non-modal (UIR-083) so it can be left open alongside the main window and the
+    Terminal Window, and be reopened on start-up when it was open at exit
+    (FR-168). Re-transfer records the chosen entry on ``retransfer_entry`` and
+    closes the dialog; the owner reads it from the ``finished`` signal and starts
+    the transfer after the dialog has closed (FR-144).
 
     Satisfies: FR-143, FR-144, UIR-082, UIR-083.
     """
@@ -77,7 +83,9 @@ class TransferHistoryDialog(QDialog):
         self.retransfer_entry: dict[str, Any] | None = None
 
         self.setWindowTitle(tr("history.title"))
-        self.setModal(True)
+        # UIR-083: non-modal so it can coexist with (and be restored alongside)
+        # the other windows (FR-168).
+        self.setModal(False)
         self.resize(720, 420)
 
         self._build_widgets()

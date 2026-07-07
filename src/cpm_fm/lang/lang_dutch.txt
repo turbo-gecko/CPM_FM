@@ -164,12 +164,7 @@ transfer.count = Blokken: {blocks}    Bytes: {bytes_done}
 
 # --- Terminal window ---------------------------------------------------------
 terminal.title = Terminal
-terminal.clear = Wissen
-terminal.local_echo = Lokale echo
-terminal.autoscroll = Automatisch scrollen
 terminal.input_hint = Typ hier - toetsaanslagen worden direct verzonden
-terminal.boot = Opstarten in CP/M
-terminal.font = Lettertype...
 terminal.font_dialog_title = Terminal-lettertype
 
 # --- Terminal context menu (v2.23) ---------------------------------------------
@@ -178,6 +173,7 @@ terminal.menu.paste = Plakken
 terminal.menu.clear = Venster wissen
 terminal.menu.font = Lettertype...
 terminal.menu.reset_size = Grootte herstellen (24×80)
+terminal.menu.boot = Opstarten in CP/M
 terminal.menu.terminal_type = Terminaltype
 terminal.menu.macros_sub = Macro's
 
@@ -190,11 +186,21 @@ config.serial.data_bits = Databits
 config.serial.parity = Pariteit
 config.serial.stop_bits = Stopbits
 config.serial.flow_control = Flowcontrole
-config.serial.terminal_type = Terminaltype
 config.serial.msec_char = ms/karakter
 config.serial.msec_line = ms/regel
 config.serial.terminal_timeout = Terminal-time-out (ms)
 config.serial.transport_timeout = Transport-time-out (ms)
+
+# --- Terminal Configuration dialog (v2.25) ---
+menu.config.terminal = Terminal
+config.terminal.title = Terminal Configuratie
+config.terminal.tab.terminal = Terminal
+config.terminal.tab.macros = Macro's
+config.terminal.terminal_type = Terminaltype
+config.terminal.local_echo = Lokale echo
+config.terminal.autoscroll = Automatisch scrollen
+status.terminal_settings_saved = Terminal instellingen opgeslagen in {path}
+status.terminal_settings_updated = Terminal instellingen bijgewerkt
 
 # --- General Configuration dialog --------------------------------------------
 config.general.title = Algemene Configuratie
@@ -279,13 +285,7 @@ button.terminal = Terminal
 button.close = Sluiten
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-terminal.macros = Macro's
-menu.config.macros = Macroknoppen
-macro.title = Macro's
-config.macros.title = Macroknoppen configureren
 config.macros.button = Knop {n}
 config.macros.label = Label
 config.macros.sequence = Toetsenreeks
 status.macro_failed = Macro mislukt - controleer de toetsenreeks
-status.macro_settings_saved = Macro-instellingen opgeslagen in {path}
-status.macro_settings_updated = Macro-instellingen bijgewerkt

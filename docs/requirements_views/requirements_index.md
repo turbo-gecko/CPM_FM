@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_445 requirements across 55 sections._
+_454 requirements across 55 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -39,6 +39,7 @@ _445 requirements across 55 sections._
 | FR-014 | On saving, the application shall write the **entire** internal settings store — both serial configuration… | mw_config.py:menu_save, config_handler.py:save_json; tests test_config_handler.py, test_gui_smoke.py |
 | FR-015 | The File > Exit menu item shall close any open COM ports | app.py:closeEvent, serial_manager.py:close_ports |
 | FR-016 | The File > Exit menu item shall close all open dialogs and windows | app.py:closeEvent |
+| FR-168 | On exit, the application shall record which of its non-modal auxiliary windows — the Terminal… | app.py:closeEvent, app.py:_restore_open_windows, window_state.py:window_open, window_state.py:set_window_open, mw_remote.py:show_terminal, mw_history.py:show_history; tests test_gui_smoke.py, test_window_state.py |
 | FR-017 | On loading a configuration file, the application shall clear the Remote Files list… | mw_config.py:load_config |
 | FR-018 | The File > New menu item (presented at the top of the File menu) shall… | mw_config.py:menu_new, mw_config.py:_save_to_path |
 | FR-019 | After the current configuration has been successfully saved (FR-018), the File > New menu item… | mw_config.py:menu_new, config_handler.py:DEFAULT_SETTINGS |
@@ -51,7 +52,8 @@ _445 requirements across 55 sections._
 | FR-020a | When the Serial Configuration Dialog's Save button is pressed, the application shall update the running… | mw_config.py:menu_serial_config, mw_config.py:_save_subset_to_active_config, config_dialogs.py:save; tests test_gui_smoke.py |
 | FR-021 | When the Config > General menu option is selected, the application shall present the General… | mw_config.py:menu_general_config, config_dialogs.py:save |
 | FR-021a | When the General Configuration Dialog's Save button is pressed, the application shall update the running… | mw_config.py:menu_general_config, mw_config.py:_save_subset_to_active_config, config_dialogs.py:save; tests test_gui_smoke.py |
-| FR-021b | When the Config > Macro Buttons menu option is selected, the application shall present the… | mw_config.py:menu_macro_config, mw_config.py:_save_subset_to_active_config, config_dialogs.py:MacroConfigDialog; tests test_gui_smoke.py |
+| FR-021b | The macro-button settings (macro_<n>_label/macro_<n>_seq, FR-162… | config_dialogs.py:TerminalConfigDialog, config_dialogs.py:TerminalConfigDialog.create_widgets; tests test_gui_smoke.py, test_macros.py |
+| FR-021c | When the Config > Terminal menu option is selected, the application shall present the Terminal… | mw_config.py:menu_terminal_config, mw_config.py:_apply_terminal_settings, mw_config.py:_save_subset_to_active_config, config_dialogs.py:TerminalConfigDialog; tests test_gui_smoke.py, test_macros.py |
 
 ## 3.4 Help menu
 
@@ -83,7 +85,7 @@ _445 requirements across 55 sections._
 | FR-046 | The remote-file-system probe (FR-041–FR-045) shall be performed only when both the Terminal and Transport status… | mw_remote.py:do_connect |
 | FR-047 | The application shall support an optional, user-configured **boot sequence** (the boot_sequence setting, UIR-059… | terminal/boot_sequence.py:parse_boot_sequence, mw_remote.py:run_boot_sequence |
 | FR-048 | If the post-connect probe detects no drive prompt after its retry (FR-043) and a non-empty… | mw_remote.py:_do_connect_probe_logic, mw_remote.py:run_boot_sequence |
-| FR-049 | When the Terminal Window's "Boot into CP/M" button (UIR-068) is pressed, the application shall execute… | mw_remote.py:run_boot_sequence, mw_remote.py:show_terminal, terminal_window.py:create_widgets |
+| FR-049 | When the Terminal Window's context-menu "Boot into CP/M" action (UIR-105) is chosen, the application shall… | mw_remote.py:run_boot_sequence, mw_remote.py:show_terminal, terminal_window.py:_build_context_menu, terminal_window.py:_on_boot |
 
 ## 3.6 Disconnecting from the remote system
 
@@ -174,7 +176,7 @@ _445 requirements across 55 sections._
 | FR-091 | All data received from the Terminal Port shall be interpreted as a VT-100/ANSI terminal stream… | terminal/vt100_engine.py:VT100Engine, gui/terminal_view.py:TerminalView, app.py:_on_term_write, mw_remote.py:handle_terminal_recv, serial_manager.py:_read_loop; tests test_vt100_engine.py, test_terminal_view.py |
 | FR-091a | The character-cell grid shall reflow to the Terminal Window size… | gui/terminal_view.py:TerminalView.resizeEvent, gui/terminal_view.py:TerminalView._reflow_to_viewport, gui/terminal_view.py:grid_size_for, terminal/vt100_engine.py:VT100Engine.resize; tests test_vt100_engine.py, test_terminal_view.py |
 | FR-092 | All data transmitted to the Terminal Port (including the EOL, FR-094) shall be accumulated in… | mw_remote.py:handle_terminal_send, mw_remote.py:handle_terminal_key, _tx_buffer |
-| FR-093 | When the Local Echo checkbox is enabled, transmitted data shall be copied to the Receive… | app.py:_on_term_write, mw_remote.py:_set_local_echo, mw_remote.py:handle_terminal_send, mw_remote.py:handle_terminal_key |
+| FR-093 | When Local Echo is enabled (the local_echo setting, UIR-103b… | app.py:_on_term_write, mw_config.py:_apply_terminal_settings, mw_remote.py:handle_terminal_send, mw_remote.py:handle_terminal_key |
 | FR-094 | Line-oriented data sent to the Terminal Port (boot-sequence SEND, remote command templates) shall have the… | mw_remote.py:handle_terminal_send, gui/terminal_view.py:encode_key |
 | FR-095 | When the Clear button in the Terminal Window is pressed, the terminal screen shall be… | terminal_window.py:clear_text, terminal/vt100_engine.py:VT100Engine.reset, mw_remote.py:clear_terminal_buffers |
 | FR-096 | Characters and keys typed into the Terminal Window's receive area shall be transmitted to the… | gui/terminal_view.py:keyPressEvent, gui/terminal_view.py:encode_key, mw_remote.py:handle_terminal_key, serial_manager.py:send_raw; tests test_terminal_view.py, test_gui_smoke.py |
@@ -196,8 +198,8 @@ _445 requirements across 55 sections._
 | FR-158 | Keys typed into the Terminal Window shall be encoded to VT-100 byte sequences and transmitted… | gui/terminal_view.py:encode_key, gui/terminal_view.py:keyPressEvent; tests test_terminal_view.py |
 | FR-158a | When terminal_type is VT-52 (FR-157i), the arrow keys Up/Down/Right/Left shall be transmitted as the VT-52… | gui/terminal_view.py:encode_key; tests test_terminal_view.py |
 | FR-158b | When terminal_type is ADM-3A (FR-157j), the arrow keys Up/Down/Left/Right shall be transmitted as the ADM-3A… | gui/terminal_view.py:encode_key; tests test_terminal_view.py |
-| FR-162 | The application shall provide up to ten user-configurable **macro buttons** (the macro_1_label…macro_10_label and macro_1_seq…macro_10_seq settings… | mw_remote.py:run_macro_script, mw_remote.py:_run_sequence_logic, mw_remote.py:_execute_sequence, gui/macro_window.py:MacroWindow; tests test_macros.py |
-| FR-164 | The Terminal Window shall provide a "Macros" checkbox (UIR-096) that toggles the visibility of the… | mw_remote.py:_toggle_macro_window, mw_remote.py:_show_macro_window, mw_remote.py:_on_macro_window_hidden, mw_remote.py:_refresh_macro_buttons, gui/macro_window.py:MacroWindow.closeEvent, app.py:closeEvent; tests test_macros.py |
+| FR-162 | The application shall provide up to ten user-configurable **macro buttons** (the macro_1_label…macro_10_label and macro_1_seq…macro_10_seq settings… | mw_remote.py:run_macro_script, mw_remote.py:_run_sequence_logic, mw_remote.py:_execute_sequence, mw_remote.py:_configured_macros; tests test_macros.py, test_gui_smoke.py |
+| FR-164 | *Removed in v2.25.* (Was… | — |
 | FR-165 | The Terminal Window Receive view (UIR-061) shall provide a context-menu **Copy** action (UIR-099) that copies… | gui/terminal_view.py:TerminalView.selected_text, gui/terminal_view.py:TerminalView.has_selection, gui/terminal_view.py:TerminalView.copy_selection, terminal_window.py:_show_context_menu; tests test_terminal_view.py |
 | FR-166 | The Terminal Window Receive view shall provide a context-menu **Paste** action (UIR-099) that transmits the… | terminal_window.py:_on_paste, mw_remote.py:handle_terminal_paste; tests test_gui_smoke.py, test_terminal_view.py |
 | FR-167 | The Terminal Window Receive view shall provide a context-menu **Reset Size** action (UIR-099) that resets… | terminal_window.py:reset_size, gui/terminal_view.py:TerminalView.viewport_size_for; tests test_terminal_view.py |
@@ -291,7 +293,7 @@ _445 requirements across 55 sections._
 | FR-141b | A **retention policy** shall bound the file… | — |
 | FR-141c | A missing, unreadable, or malformed history file shall degrade to an empty history rather than… | — |
 | FR-142 | Each transfer shall record its per-file outcome in the history (FR-140) as it completes… | mw_transfer_batches.py:_transfer_to_remote_batch, mw_transfer_batches.py:_transfer_to_host_batch, mw_history.py:_record_history; utils/transfer_history.py:TransferHistory.add_entry (lock); tests test_transfer_history.py, test_gui_smoke.py |
-| FR-143 | The application shall present a modal **Transfer History dialog** (UIR-082/UIR-083) showing the recorded entries (FR-140)… | gui/transfer_history_dialog.py:TransferHistoryDialog; mw_history.py:show_history; tests test_gui_smoke.py |
+| FR-143 | The application shall present a non-modal **Transfer History window** (UIR-082/UIR-083) showing the recorded entries (FR-140)… | gui/transfer_history_dialog.py:TransferHistoryDialog; mw_history.py:show_history, mw_history.py:_on_history_finished; tests test_gui_smoke.py |
 | FR-144 | The Transfer History dialog shall allow the user to **re-transfer** a selected entry… | gui/transfer_history_dialog.py:TransferHistoryDialog (_on_retransfer, retransfer_entry); mw_history.py:show_history, mw_history.py:_retransfer, mw_transfer_batches.py:_transfer_to_remote_batch/mw_transfer_batches.py:_transfer_to_host_batch (retry); tests test_gui_smoke.py |
 | FR-144a | Re-transfer shall restore the file path and direction from the entry and re-initiate the transfer… | — |
 | FR-144b | The new attempt shall be recorded in the history marked as a re-transfer (retry) | — |
@@ -361,7 +363,7 @@ _445 requirements across 55 sections._
 |----|---------|------|
 | UIR-001 | The GUI shall present a menu bar at the top of the main window | app.py:setup_menu |
 | UIR-002 | The menu bar shall contain a File menu with the items New, Load, Save, and… | app.py:setup_menu |
-| UIR-003 | The menu bar shall contain a Config menu with the items Serial, General, Macro Buttons… | app.py:setup_menu, _setup_language_menu |
+| UIR-003 | The menu bar shall contain a Config menu with the items Serial, Terminal (UIR-103), General… | app.py:setup_menu, _setup_language_menu |
 | UIR-004 | The menu bar shall contain a Help menu with the items Manual (FR-023) and About… | app.py:setup_menu |
 | UIR-005 | The main window title bar shall show the application name and, when a configuration file… | app.py:_update_window_title |
 
@@ -401,7 +403,7 @@ _445 requirements across 55 sections._
 | UIR-031 | The dialog shall provide an "msec/line" text field that defaults to 0 and is limited… | config_dialogs.py:SerialConfigDialog, config_dialogs.py:__init__ |
 | UIR-032 | The dialog shall provide a "Terminal Timeout (ms)" text field that defaults to 100 and… | config_dialogs.py:SerialConfigDialog; serial_manager.py:open_port |
 | UIR-033 | The dialog shall provide a "Transfer Timeout (ms)" text field that defaults to 100 and… | config_dialogs.py:SerialConfigDialog; serial_manager.py:open_port; NFR-003i |
-| UIR-034 | The dialog shall provide a "Terminal Type" dropdown offering VT100, VT52, and ADM-3A, defaulting to… | config_dialogs.py:SerialConfigDialog, utils/config_handler.py, gui/mw_config.py:_apply_terminal_type, gui/mw_remote.py:_set_terminal_type_from_menu; tests test_config_handler.py, test_vt100_engine.py, test_gui_smoke.py |
+| UIR-034 | The Terminal Config dialog's Terminal tab (UIR-103a) shall provide a "Terminal Type" dropdown offering VT100… | config_dialogs.py:TerminalConfigDialog, utils/config_handler.py, gui/mw_config.py:_apply_terminal_type, gui/mw_config.py:_apply_terminal_settings, gui/mw_remote.py:_set_terminal_type_from_menu; tests test_config_handler.py, test_vt100_engine.py, test_gui_smoke.py |
 
 ## 4.4 General Configuration Dialog
 
@@ -435,18 +437,25 @@ _445 requirements across 55 sections._
 | UIR-061 | The Terminal Window shall contain a character-cell terminal view named "Receive" that renders the VT-100… | gui/terminal_view.py:TerminalView, terminal_window.py:create_widgets |
 | UIR-062 | The Receive view shall maintain a scrollback buffer retaining at least the most recent 1000… | gui/terminal_view.py:TerminalView, gui/terminal_view.py:refresh, gui/terminal_view.py:set_autoscroll |
 | UIR-063 | The Receive view shall not be an editable text field — its content is rendered… | gui/terminal_view.py:TerminalView, gui/terminal_view.py:keyPressEvent |
-| UIR-064 | The Terminal Window shall provide a "Clear" button, left-aligned, below the Receive view | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets, terminal_window.py:clear_text |
-| UIR-065 | The Terminal Window shall provide a "Local Echo" checkbox, centred, that is unchecked (local echo… | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets |
-| UIR-066 | The Terminal Window shall provide an "Autoscroll" checkbox, right-aligned, that is enabled by default | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets |
+| UIR-064 | The Terminal Window shall present only the Receive view (UIR-061) and, below it, the input-hint… | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets |
+| UIR-065 | *Removed in v2.25.* (Was… | — |
+| UIR-066 | *Removed in v2.25.* (Was… | — |
 | UIR-067 | The Terminal Window shall not provide a separate transmit field or Send button… | terminal_window.py:create_widgets |
-| UIR-068 | The Terminal Window shall provide a "Boot into CP/M" button, in the control row (UIR-064)… | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets, terminal_window.py:set_boot_enabled, mw_remote.py:show_terminal |
-| UIR-069 | The Terminal Window shall provide a "Font…" button in the control row (UIR-064), to the… | terminal_window.py:create_widgets, terminal_window.py:_build_font_dialog, terminal_window.py:_on_font, terminal_window.py:set_terminal_font, gui/terminal_view.py:TerminalView.set_font, gui/terminal_view.py:TerminalView.current_font, gui/window_state.py:WindowState.terminal_font, mw_remote.py:show_terminal |
-| UIR-096 | The Terminal Window shall provide a "Macros" checkbox in the control row (UIR-064), to the… | terminal_window.py:create_widgets, mw_remote.py:show_terminal |
-| UIR-097 | The Macro Window shall be a floating, resizable tool window titled "Macros" that displays the… | gui/macro_window.py:MacroWindow, gui/macro_window.py:set_macros, gui/flow_layout.py:FlowLayout, mw_remote.py:_refresh_macro_buttons, mw_remote.py:_show_macro_window |
-| UIR-099 | The Terminal Window Receive view (UIR-061) shall provide a right-click **context menu** with five items… | terminal_window.py:_build_context_menu, terminal_window.py:_show_context_menu, gui/terminal_view.py:_TerminalGrid.contextMenuEvent, gui/terminal_view.py:TerminalView.set_context_menu_callback |
+| UIR-068 | *Removed in v2.25.* (Was… | — |
+| UIR-069 | The Terminal Window shall provide a "Font…" action in the Receive-view context menu (UIR-099) that… | terminal_window.py:_build_context_menu, terminal_window.py:_build_font_dialog, terminal_window.py:_on_font, terminal_window.py:set_terminal_font, gui/terminal_view.py:TerminalView.set_font, gui/terminal_view.py:TerminalView.current_font, gui/window_state.py:WindowState.terminal_font, mw_remote.py:show_terminal |
+| UIR-096 | *Removed in v2.25.* (Was… | — |
+| UIR-097 | *Removed in v2.25.* (Was… | — |
+| UIR-099 | The Terminal Window Receive view (UIR-061) shall provide a right-click **context menu** with six items… | terminal_window.py:_build_context_menu, terminal_window.py:_show_context_menu, gui/terminal_view.py:_TerminalGrid.contextMenuEvent, gui/terminal_view.py:TerminalView.set_context_menu_callback |
 | UIR-100 | The Terminal Window Receive view shall support mouse text selection… | gui/terminal_view.py:TerminalView.mousePressEvent, gui/terminal_view.py:TerminalView.mouseMoveEvent, gui/terminal_view.py:TerminalView.mouseReleaseEvent, gui/terminal_view.py:TerminalView._paint_grid, gui/terminal_view.py:TerminalView.selected_text; tests test_terminal_view.py |
 | UIR-101 | The Terminal Window context menu (UIR-099) shall include a **Terminal Type** submenu listing the three… | terminal_window.py:_build_context_menu, mw_remote.py:_set_terminal_type_from_menu; tests test_gui_smoke.py |
 | UIR-102 | The Terminal Window context menu (UIR-099) shall include a **Macros** submenu listing the configured macro… | terminal_window.py:_build_context_menu, mw_remote.py:_configured_macros, mw_remote.py:run_macro_script; tests test_gui_smoke.py |
+| UIR-103 | The Terminal Config dialog (Config > Terminal, FR-021c) shall be a modal, resizable dialog titled… | config_dialogs.py:TerminalConfigDialog, config_dialogs.py:TerminalConfigDialog.create_widgets; tests test_macros.py, test_gui_smoke.py |
+| UIR-103a | The **Terminal** tab shall present, in a two-column form (as UIR-021), the Terminal Type dropdown… | config_dialogs.py:TerminalConfigDialog.create_widgets; tests test_gui_smoke.py |
+| UIR-103b | The Terminal tab shall provide a "Local Echo" checkbox, persisted as the local_echo setting (ON/OFF)… | config_dialogs.py:TerminalConfigDialog, utils/config_handler.py, gui/mw_config.py:_apply_terminal_settings; tests test_config_handler.py, test_gui_smoke.py |
+| UIR-103c | The Terminal tab shall provide an "Autoscroll" checkbox, persisted as the autoscroll setting (ON/OFF), checked… | config_dialogs.py:TerminalConfigDialog, utils/config_handler.py, gui/mw_config.py:_apply_terminal_settings; tests test_config_handler.py, test_gui_smoke.py |
+| UIR-103d | The **Macros** tab shall present the ten macro-button slots (UIR-098) numbered 1..10 as a nested… | config_dialogs.py:TerminalConfigDialog.create_widgets, config_dialogs.py:TerminalConfigDialog._run_test; tests test_macros.py |
+| UIR-104 | The autoscroll setting (UIR-103c… | gui/mw_config.py:_apply_terminal_settings, gui/mw_remote.py:show_terminal, terminal_window.py:set_autoscroll, gui/terminal_view.py:TerminalView.set_autoscroll; tests test_gui_smoke.py |
+| UIR-105 | The Terminal Window context menu (UIR-099) shall include a **Boot into CP/M** action that executes… | terminal_window.py:_build_context_menu, terminal_window.py:_on_boot, mw_remote.py:show_terminal, mw_remote.py:_boot_sequence_configured; tests test_gui_smoke.py |
 
 ## 4.6 Visual theme and modern layout (v1.3)
 
@@ -507,7 +516,7 @@ _445 requirements across 55 sections._
 | ID | Summary | Impl |
 |----|---------|------|
 | UIR-082 | The main-window toolbar (UIR-071) shall provide a **History** action that opens the Transfer History dialog… | app.py:setup_toolbar, mw_history.py:show_history; lang/*.txt (toolbar.history) |
-| UIR-083 | The Transfer History dialog (FR-143) shall be a modal dialog titled "Transfer History"… | gui/transfer_history_dialog.py:TransferHistoryDialog; lang/*.txt (history.*) |
+| UIR-083 | The Transfer History window (FR-143) shall be a non-modal window titled "Transfer History"… | gui/transfer_history_dialog.py:TransferHistoryDialog; lang/*.txt (history.*) |
 | UIR-083a | The dialog shall contain a **filter row** with a **Direction** drop-down (All / To Remote… | — |
 | UIR-083b | The dialog shall contain a read-only **table** with the columns Time, File, Direction, Status, Size… | — |
 | UIR-083c | The dialog shall contain a button row with **Re-transfer** (enabled only when a row is… | — |
@@ -551,7 +560,7 @@ _445 requirements across 55 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| UIR-098 | The Macro Buttons Configuration Dialog (FR-021b) shall be a modal, resizable dialog titled "Macro Buttons… | config_dialogs.py:MacroConfigDialog, config_dialogs.py:MacroConfigDialog.create_widgets, config_dialogs.py:MacroConfigDialog._run_test, mw_config.py:menu_macro_config |
+| UIR-098 | The ten macro-button slots (FR-162), numbered 1..10, shall be edited on the Terminal Config dialog's… | config_dialogs.py:TerminalConfigDialog.create_widgets, config_dialogs.py:TerminalConfigDialog._run_test |
 
 ## 5. External Interface Requirements
 

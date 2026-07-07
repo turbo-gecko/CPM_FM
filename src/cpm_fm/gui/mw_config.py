@@ -9,8 +9,8 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 from cpm_fm.gui.about_dialog import AboutDialog
 from cpm_fm.gui.config_dialogs import (
     GeneralConfigDialog,
-    MacroConfigDialog,
     SerialConfigDialog,
+    TerminalConfigDialog,
 )
 from cpm_fm.gui.manual_dialog import ManualDialog
 from cpm_fm.gui.mw_base import MainWindowMixinBase
@@ -47,10 +47,11 @@ class _ConfigMixin(MainWindowMixinBase):
             self.host_dir = host_dir
             self.refresh_host_files()
 
-        # UIR-034: apply the loaded terminal emulation type to the engine so
-        # received bytes are interpreted (FR-157) and cursor keys encoded
-        # (FR-158a/FR-158b) per the configured type from the first connect.
-        self._apply_terminal_type()
+        # UIR-034/UIR-103a: apply the loaded terminal settings — emulation type
+        # (so received bytes are interpreted per FR-157 and cursor keys encoded
+        # per FR-158a/FR-158b from the first connect), Local Echo (FR-093), and
+        # Autoscroll (UIR-062).
+        self._apply_terminal_settings()
 
         # FR-017: the prior remote listing was captured under the previous
         # configuration and is no longer valid — clear it.
@@ -67,6 +68,25 @@ class _ConfigMixin(MainWindowMixinBase):
         Satisfies: UIR-034, FR-157.
         """
         self._term_engine.set_terminal_type(self.settings.get("terminal_type", "VT100"))
+
+    def _apply_terminal_settings(self) -> None:
+        """Apply the terminal settings (emulation type, Local Echo, Autoscroll).
+
+        Configures the engine emulation type (UIR-034/FR-157), caches the Local
+        Echo flag for the worker threads (FR-093), and, when the Terminal Window
+        is open, applies the Autoscroll preference to its Receive view (UIR-062).
+        Called on configuration load, on a Terminal Config save, and when the
+        Terminal Window is opened, so the running terminal follows the configured
+        Terminal settings (UIR-103a).
+
+        Satisfies: UIR-103a, UIR-034, FR-093, UIR-062, UIR-104.
+        """
+        self._apply_terminal_type()
+        # FR-093: cached so worker threads read a plain bool (NFR-004).
+        self._local_echo = self.settings.get("local_echo", "OFF").upper() == "ON"
+        # UIR-062/UIR-104: apply Autoscroll to the open Receive view.
+        if self.terminal_win is not None:
+            self.terminal_win.set_autoscroll(self.settings.get("autoscroll", "ON").upper() == "ON")
 
     def menu_load(self):
         """
@@ -221,9 +241,6 @@ class _ConfigMixin(MainWindowMixinBase):
 
         def update_settings(new_set):
             self.settings.update(new_set)
-            # UIR-034: a change to the terminal type takes effect immediately on
-            # the shared engine (and any open Terminal Window).
-            self._apply_terminal_type()
             # FR-020a: persist only the serial settings to the active config
             # file, leaving the general settings in that file untouched. If no
             # file is loaded the helper warns and the change stays session-only.
@@ -256,10 +273,6 @@ class _ConfigMixin(MainWindowMixinBase):
                 self.host_dir = new_host_dir
                 self.refresh_host_files()
 
-            # UIR-068: a change to the boot sequence may enable/disable the
-            # Terminal Window's boot button while that window is open.
-            self._refresh_boot_button()
-
             # FR-021a: persist only the general settings to the active config
             # file, leaving the serial settings in that file untouched. If no
             # file is loaded the helper warns and the change stays session-only.
@@ -268,23 +281,29 @@ class _ConfigMixin(MainWindowMixinBase):
 
         GeneralConfigDialog(self, self.settings, update_settings, self.window_state)
 
-    def menu_macro_config(self):
-        """
-        Satisfies: FR-021b, UIR-098.
+    def menu_terminal_config(self):
+        """Present the Terminal Config dialog (terminal settings + macros).
+
+        Satisfies: FR-021c, UIR-103, UIR-103a, UIR-034, FR-093, UIR-062, FR-021b.
         """
 
         def update_settings(new_set):
             self.settings.update(new_set)
-            # UIR-097: reflect the edited macro definitions in the live Macro
-            # Window if it is open.
-            self._refresh_macro_buttons()
-            # FR-021b: persist only the macro settings to the active config file,
-            # leaving the serial/general settings untouched. If no file is loaded
-            # the helper warns and the change stays session-only.
-            if not self._save_subset_to_active_config(new_set, "status.macro_settings_saved"):
-                self.set_status(tr("status.macro_settings_updated"))
+            # UIR-103a/UIR-034/FR-093/UIR-062: apply the terminal settings live —
+            # emulation type on the shared engine (and any open Terminal Window),
+            # the Local Echo flag, and the Autoscroll preference.
+            self._apply_terminal_settings()
+            # UIR-062: re-render the open Terminal Window so a terminal-type change
+            # takes effect at once.
+            if self.terminal_win is not None:
+                self.terminal_win.render_screen()
+            # FR-021c: persist only the terminal + macro settings to the active
+            # config file, leaving the serial/general settings untouched. If no
+            # file is loaded the helper warns and the change stays session-only.
+            if not self._save_subset_to_active_config(new_set, "status.terminal_settings_saved"):
+                self.set_status(tr("status.terminal_settings_updated"))
 
-        MacroConfigDialog(self, self.settings, update_settings, self.window_state)
+        TerminalConfigDialog(self, self.settings, update_settings, self.window_state)
 
     def menu_manual(self):
         """Present the non-modal user-manual viewer (Help > Manual).

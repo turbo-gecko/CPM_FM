@@ -1078,10 +1078,10 @@ def test_handle_terminal_send_append_eol_flag(qapp, monkeypatch, state):
         win.close()
 
 
-def test_terminal_context_menu_has_five_items_and_copy_state(qapp):
-    """The Receive-view context menu offers the five actions; Copy tracks state.
+def test_terminal_context_menu_has_six_items_and_copy_state(qapp):
+    """The Receive-view context menu offers the six actions; Copy tracks state.
 
-    Verifies: UIR-099, FR-165.
+    Verifies: UIR-099, FR-165, UIR-105.
     """
     from PySide6.QtCore import Qt
 
@@ -1100,6 +1100,7 @@ def test_terminal_context_menu_has_five_items_and_copy_state(qapp):
             i18n.tr("terminal.menu.clear"),
             i18n.tr("terminal.menu.font"),
             i18n.tr("terminal.menu.reset_size"),
+            i18n.tr("terminal.menu.boot"),
         ]
         # FR-165: Copy disabled with no selection, enabled once text is selected.
         assert actions[0].isEnabled() is False
@@ -1110,6 +1111,32 @@ def test_terminal_context_menu_has_five_items_and_copy_state(qapp):
         term.receive_area._mouse_move(5 * cw, 0)
         term.receive_area._mouse_release(5 * cw, 0, Qt.MouseButton.LeftButton)
         assert term._build_context_menu().actions()[0].isEnabled() is True
+    finally:
+        term.deleteLater()
+
+
+def test_terminal_context_menu_boot_enabled_reflects_provider(qapp):
+    """The Boot into CP/M item is enabled only when a boot sequence is configured.
+
+    Verifies: UIR-105, FR-049.
+    """
+    from cpm_fm.terminal.vt100_engine import VT100Engine
+
+    configured = {"boot": False}
+    term = TerminalWindow(
+        None, engine=VT100Engine(), boot_enabled_provider=lambda: configured["boot"]
+    )
+    try:
+
+        def boot_action():
+            menu = term._build_context_menu()
+            return next(a for a in menu.actions() if a.text() == i18n.tr("terminal.menu.boot"))
+
+        # UIR-105: disabled with no boot sequence configured.
+        assert boot_action().isEnabled() is False
+        # ...enabled once one is configured (re-evaluated each time the menu opens).
+        configured["boot"] = True
+        assert boot_action().isEnabled() is True
     finally:
         term.deleteLater()
 
@@ -1283,7 +1310,7 @@ def test_set_terminal_type_from_menu_applies_and_updates_setting(qapp, state):
 def test_configured_macros_filters_incomplete_slots(qapp, state):
     """_configured_macros returns only slots with both label and script set.
 
-    Verifies: UIR-102, UIR-097, FR-162.
+    Verifies: UIR-102, FR-162.
     """
     win = MainWindow(state)
     try:
@@ -1296,6 +1323,122 @@ def test_configured_macros_filters_incomplete_slots(qapp, state):
         assert win._configured_macros() == [("Prompt", "SENDRAW 0D")]
     finally:
         win.close()
+
+
+def test_apply_terminal_settings_applies_local_echo_and_autoscroll(qapp, state):
+    """Local Echo and Autoscroll settings are applied to the running terminal.
+
+    Verifies: UIR-103a, UIR-104, FR-093.
+    """
+    from cpm_fm.utils.config_handler import DEFAULT_SETTINGS
+
+    win = MainWindow(state)
+    try:
+        win.settings = dict(DEFAULT_SETTINGS)
+        win.settings["local_echo"] = "ON"
+        win.settings["autoscroll"] = "OFF"
+        win.show_terminal()  # applies the terminal settings on open
+        assert win._local_echo is True  # FR-093
+        assert win.terminal_win.receive_area._autoscroll is False  # UIR-104
+        # A later change re-applied updates both.
+        win.settings["local_echo"] = "OFF"
+        win.settings["autoscroll"] = "ON"
+        win._apply_terminal_settings()
+        assert win._local_echo is False
+        assert win.terminal_win.receive_area._autoscroll is True
+    finally:
+        win.close()
+
+
+def test_show_history_is_nonmodal_and_reused(qapp, state):
+    """The Transfer History window is non-modal and reused across openings.
+
+    Verifies: FR-143, UIR-083.
+    """
+    win = MainWindow(state)
+    try:
+        win.show_history()
+        first = win._history_dialog
+        assert first is not None
+        assert first.isVisible() is True
+        assert first.isModal() is False  # UIR-083: non-modal
+        win.show_history()  # already open -> raised, not duplicated
+        assert win._history_dialog is first
+    finally:
+        win.close()
+
+
+def test_history_finished_triggers_pending_retransfer(qapp, state, monkeypatch):
+    """Closing the history window with a pending entry starts the re-transfer.
+
+    Verifies: FR-144.
+    """
+    win = MainWindow(state)
+    try:
+        win.show_history()
+        dlg = win._history_dialog
+        entry = {"path": "/h/X.TXT", "direction": "remote", "filename": "X.TXT"}
+        got = []
+        monkeypatch.setattr(win, "_retransfer", got.append)
+        # Simulate a Re-transfer click: record the entry, then close the window.
+        dlg.retransfer_entry = entry
+        dlg.accept()
+        qapp.processEvents()
+        assert got == [entry]
+        # The pending entry is consumed so a plain close does not re-fire it.
+        assert dlg.retransfer_entry is None
+    finally:
+        win.close()
+
+
+def test_open_windows_restored_on_startup(qapp, state):
+    """Windows recorded open at exit are reopened on the next start-up.
+
+    Verifies: FR-168.
+    """
+    state.set_window_open("terminal", True)
+    state.set_window_open("history", True)
+    win = MainWindow(state)
+    try:
+        assert win.terminal_win is not None and win.terminal_win.isVisible()
+        assert win._history_dialog is not None and win._history_dialog.isVisible()
+    finally:
+        win.close()
+
+
+def test_open_windows_not_restored_when_none_recorded(qapp, state):
+    """No auxiliary windows are opened when none were recorded open.
+
+    Verifies: FR-168.
+    """
+    win = MainWindow(state)
+    try:
+        assert win.terminal_win is None
+        assert win._history_dialog is None
+    finally:
+        win.close()
+
+
+def test_closeevent_records_which_windows_were_open(qapp, state):
+    """On exit the open state of the Terminal/History windows is persisted.
+
+    Verifies: FR-168.
+    """
+    win = MainWindow(state)
+    win.show_terminal()
+    win.show_history()
+    win.close()
+    assert state.window_open("terminal") is True
+    assert state.window_open("history") is True
+
+    # A session with neither open records both as closed. Clear the recorded
+    # flags first so the new window does not restore the two windows on start-up.
+    state.set_window_open("terminal", False)
+    state.set_window_open("history", False)
+    win2 = MainWindow(state)
+    win2.close()
+    assert state.window_open("terminal") is False
+    assert state.window_open("history") is False
 
 
 def test_geometry_and_last_config_persist_across_sessions(qapp, state, tmp_path):
@@ -3749,21 +3892,26 @@ def test_boot_no_recovery_when_sequence_empty(qapp, monkeypatch, state):
         win.close()
 
 
-def test_boot_button_reflects_config(qapp, state):
-    """Verifies: UIR-068."""
-    # UIR-068: the Terminal Window boot button is enabled only when a non-empty
-    # boot sequence is configured, re-evaluated on demand.
+def test_boot_menu_item_reflects_config(qapp, state):
+    """Verifies: UIR-105, FR-049."""
+    # UIR-105: the Terminal Window context-menu "Boot into CP/M" item is enabled
+    # only when a non-empty boot sequence is configured, re-evaluated each time
+    # the menu opens (the owner provides the state via boot_enabled_provider).
     win = MainWindow(state)
     try:
+
+        def boot_enabled():
+            menu = win.terminal_win._build_context_menu()
+            act = next(a for a in menu.actions() if a.text() == i18n.tr("terminal.menu.boot"))
+            return act.isEnabled()
+
         win.settings["boot_sequence"] = ""
         win.show_terminal()
-        assert win.terminal_win.btn_boot.isEnabled() is False
+        assert boot_enabled() is False
         win.settings["boot_sequence"] = "SEND \\r"
-        win._refresh_boot_button()
-        assert win.terminal_win.btn_boot.isEnabled() is True
+        assert boot_enabled() is True
         win.settings["boot_sequence"] = "   "  # whitespace only counts as empty
-        win._refresh_boot_button()
-        assert win.terminal_win.btn_boot.isEnabled() is False
+        assert boot_enabled() is False
     finally:
         win.close()
 

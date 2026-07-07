@@ -164,12 +164,7 @@ transfer.count = Μπλοκ: {blocks}    Bytes: {bytes_done}
 
 # --- Terminal window ------------------------------------------------------------
 terminal.title = Τερματικός
-terminal.clear = Καθαρισμός
-terminal.local_echo = Τοπική αντήχηση
-terminal.autoscroll = Αυτόματη κύλιση
 terminal.input_hint = Πληκτρολογήστε εδώ - τα πλήκτρα αποστέλλονται ζωντανά
-terminal.boot = Εκκίνηση σε CP/M
-terminal.font = Γραμματοσειρά...
 terminal.font_dialog_title = Γραμματοσειρά τερματικού
 
 # --- Terminal context menu (v2.23) ---------------------------------------------
@@ -178,6 +173,7 @@ terminal.menu.paste = Επικόλληση
 terminal.menu.clear = Καθαρισμός παραθύρου
 terminal.menu.font = Γραμματοσειρά...
 terminal.menu.reset_size = Επαναφορά μεγέθους (24×80)
+terminal.menu.boot = Εκκίνηση σε CP/M
 terminal.menu.terminal_type = Τύπος τερματικού
 terminal.menu.macros_sub = Μακροεντολές
 
@@ -190,11 +186,21 @@ config.serial.data_bits = Bits δεδομένων
 config.serial.parity = Παритетность
 config.serial.stop_bits = Stop bits
 config.serial.flow_control = Έλεγχος ροής
-config.serial.terminal_type = Τύπος τερματικού
 config.serial.msec_char = ms/χαρακτήρα
 config.serial.msec_line = ms/γραμμή
 config.serial.terminal_timeout = Χρονικό όριο τερματικού (ms)
 config.serial.transport_timeout = Χρονικό όριο μεταφοράς (ms)
+
+# --- Terminal Configuration dialog (v2.25) ---
+menu.config.terminal = Τερματικός
+config.terminal.title = Τερματικές Ρυθμίσεις
+config.terminal.tab.terminal = Τερματικός
+config.terminal.tab.macros = Μακροεντολές
+config.terminal.terminal_type = Τύπος τερματικού
+config.terminal.local_echo = Τοπική αντήχηση
+config.terminal.autoscroll = Αυτόματη κύλιση
+status.terminal_settings_saved = Οι τερματικές ρυθμίσεις αποθηκεύτηκαν στο {path}
+status.terminal_settings_updated = Οι τερματικές ρυθμίσεις ενημερώθηκαν
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = Γενικές Ρυθμίσεις
@@ -279,13 +285,7 @@ button.terminal = Τερματικός
 button.close = Κλείσιμο
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-terminal.macros = Μακροεντολές
-menu.config.macros = Κουμπιά μακροεντολών
-macro.title = Μακροεντολές
-config.macros.title = Ρύθμιση κουμπιών μακροεντολών
 config.macros.button = Κουμπί {n}
 config.macros.label = Ετικέτα
 config.macros.sequence = Ακολουθία πλήκτρων
 status.macro_failed = Η μακροεντολή απέτυχε - ελέγξτε την ακολουθία πλήκτρων
-status.macro_settings_saved = Οι ρυθμίσεις μακροεντολών αποθηκεύτηκαν στο {path}
-status.macro_settings_updated = Οι ρυθμίσεις μακροεντολών ενημερώθηκαν

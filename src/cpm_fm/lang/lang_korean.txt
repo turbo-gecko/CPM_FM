@@ -164,12 +164,7 @@ transfer.count = 블록: {blocks}    바이트: {bytes_done}
 
 # --- Terminal window ----------------------------------------------------------
 terminal.title = 터미널
-terminal.clear = 지우기
-terminal.local_echo = 로컬 에코
-terminal.autoscroll = 자동 스크롤
 terminal.input_hint = 여기에 입력하세요 - 키 입력이 즉시 전송됩니다
-terminal.boot = CP/M으로 부팅
-terminal.font = 글꼴...
 terminal.font_dialog_title = 터미널 글꼴
 
 # --- Terminal context menu (v2.23) ---------------------------------------------
@@ -178,6 +173,7 @@ terminal.menu.paste = 붙여넣기
 terminal.menu.clear = 창 지우기
 terminal.menu.font = 글꼴...
 terminal.menu.reset_size = 크기 재설정 (24×80)
+terminal.menu.boot = CP/M으로 부팅
 terminal.menu.terminal_type = 터미널 유형
 terminal.menu.macros_sub = 매크로
 
@@ -190,11 +186,21 @@ config.serial.data_bits = 데이터 비트
 config.serial.parity = 패리티
 config.serial.stop_bits = 정지 비트
 config.serial.flow_control = 흐름 제어
-config.serial.terminal_type = 터미널 유형
 config.serial.msec_char = 문자당 ms
 config.serial.msec_line = 줄당 ms
 config.serial.terminal_timeout = 터미널 시간 초과 (ms)
 config.serial.transport_timeout = 전송 시간 초과 (ms)
+
+# --- Terminal Configuration dialog (v2.25) ------------------------------------
+menu.config.terminal = 터미널
+config.terminal.title = 터미널 설정
+config.terminal.tab.terminal = 터미널
+config.terminal.tab.macros = 매크로
+config.terminal.terminal_type = 터미널 유형
+config.terminal.local_echo = 로컬 에코
+config.terminal.autoscroll = 자동 스크롤
+status.terminal_settings_saved = 터미널 설정을 {path}에 저장함
+status.terminal_settings_updated = 터미널 설정이 업데이트됨
 
 # --- General Configuration dialog ---------------------------------------------
 config.general.title = 일반 설정
@@ -279,13 +285,7 @@ button.terminal = 터미널
 button.close = 닫기
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-terminal.macros = 매크로
-menu.config.macros = 매크로 버튼
-macro.title = 매크로
-config.macros.title = 매크로 버튼 설정
 config.macros.button = 버튼 {n}
 config.macros.label = 레이블
 config.macros.sequence = 키 입력
 status.macro_failed = 매크로 실패 - 키 입력 시퀀스를 확인하세요
-status.macro_settings_saved = 매크로 설정을 {path}에 저장했습니다
-status.macro_settings_updated = 매크로 설정이 업데이트되었습니다

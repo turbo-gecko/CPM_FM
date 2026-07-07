@@ -169,12 +169,7 @@ transfer.count = Chests: {blocks}    Gold: {bytes_done}
 
 # --- Terminal window -----------------------------------------------------------
 terminal.title = Captain's Log
-terminal.clear = Scour the Deck
-terminal.local_echo = Echo the Shout
-terminal.autoscroll = Auto-drift
 terminal.input_hint = Type here, matey - every keystroke sails at once
-terminal.boot = Hoist into CP/M
-terminal.font = Letterin'...
 terminal.font_dialog_title = Terminal Letterin'
 
 # --- Terminal context menu (v2.23) ---------------------------------------------
@@ -183,6 +178,7 @@ terminal.menu.paste = Swab Aboard
 terminal.menu.clear = Scour the Deck
 terminal.menu.font = Letterin'...
 terminal.menu.reset_size = Trim the Sails (24×80)
+terminal.menu.boot = Hoist into CP/M
 terminal.menu.terminal_type = Talkin'-Box Type
 terminal.menu.macros_sub = Battle Cries
 
@@ -195,11 +191,21 @@ config.serial.data_bits = Bits o' Information
 config.serial.parity = Parity Check
 config.serial.stop_bits = Stop Bits
 config.serial.flow_control = Flow Control
-config.serial.terminal_type = Talkin'-Box Type
 config.serial.msec_char = msec/char
 config.serial.msec_line = msec/line
 config.serial.terminal_timeout = Captain's Log Timeout (ms)
 config.serial.transport_timeout = Cargo Route Timeout (ms)
+
+# --- Terminal Configuration dialog (v2.25) -------------------------------------
+menu.config.terminal = Captain's Log
+config.terminal.title = Captain's Log Config
+config.terminal.tab.terminal = Captain's Log
+config.terminal.tab.macros = Battle Cries
+config.terminal.terminal_type = Talkin'-Box Type
+config.terminal.local_echo = Echo the Shout
+config.terminal.autoscroll = Auto-drift
+status.terminal_settings_saved = Captain's Log stowed in {path}
+status.terminal_settings_updated = Captain's Log updated
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = Ship's Orders
@@ -284,13 +290,7 @@ button.terminal = Captain's Log
 button.close = Belay
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-terminal.macros = Battle Cries
-menu.config.macros = Battle Cry Buttons
-macro.title = Battle Cries
-config.macros.title = Battle Cry Buttons Config
 config.macros.button = Button {n}
 config.macros.label = Name
 config.macros.sequence = Key Volley
 status.macro_failed = The battle cry fell flat - check yer key volley
-status.macro_settings_saved = Battle cry orders stowed in {path}
-status.macro_settings_updated = Battle cry orders updated

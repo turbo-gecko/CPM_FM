@@ -90,52 +90,14 @@ def test_terminal_window_clear(gui):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-W14", "FR-162", "FR-164", "UIR-096", "UIR-097")
-def test_macro_button_sends_keystrokes_over_serial(gui):
-    """A configured macro button transmits its script and the remote responds.
-
-    Configure one macro slot to send a carriage return (SENDRAW 0D), open the
-    Terminal Window, reveal the Macro Window via the Macros checkbox, and click
-    the generated button. The keystroke script runs on the Terminal Port and the
-    remote echoes its drive prompt onto the screen.
-
-    Verifies: FR-162, FR-164, UIR-096, UIR-097.
-    """
-    from PySide6.QtWidgets import QPushButton
-
-    assert gui.connect()[0] == "ok"
-    # FR-162: one macro slot that sends a bare CR to elicit the drive prompt.
-    gui.win.settings["macro_1_label"] = "Prompt"
-    gui.win.settings["macro_1_seq"] = "SENDRAW 0D"
-
-    gui.win.show_terminal()
-    term = gui.win.terminal_win
-    assert term is not None, "terminal window was not created"
-
-    # UIR-096/FR-164: the Macros checkbox shows the palette.
-    term.chk_macros.setChecked(True)
-    assert gui.win.macro_win is not None, "macro window was not created"
-    buttons = gui.win.macro_win.centralWidget().findChildren(QPushButton)
-    assert [b.text() for b in buttons] == ["Prompt"], "configured macro button not shown"
-
-    buttons[0].click()  # FR-162: runs the script on the Terminal Port
-    gui.process_until(
-        lambda: CPMParser.drive_prompt_letter(_screen_text(term)) is not None,
-        timeout=8.0,
-    )
-    text = _screen_text(term)
-    assert CPMParser.drive_prompt_letter(text) is not None, f"no prompt rendered: {text!r}"
-
-
-@pytest.mark.hil
-@pytest.mark.mt("MT-W17", "UIR-099", "UIR-100", "FR-165")
+@pytest.mark.mt("MT-W17", "UIR-099", "UIR-100", "FR-165", "UIR-105")
 def test_terminal_context_menu_copy_selection(gui):
-    """The Receive-view context menu offers five items; Copy copies a selection.
+    """The Receive-view context menu offers six items; Copy copies a selection.
 
     Feed known text onto the screen, drag-select it, and confirm the context
     menu's Copy action places the highlighted text on the system clipboard.
 
-    Verifies: UIR-099, UIR-100, FR-165.
+    Verifies: UIR-099, UIR-100, FR-165, UIR-105.
     """
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication
@@ -145,11 +107,12 @@ def test_terminal_context_menu_copy_selection(gui):
     term = gui.win.terminal_win
     assert term is not None, "terminal window was not created"
 
-    # UIR-099: five top-level command actions (excluding separators and the
-    # Terminal Type / Macros submenus, UIR-101/UIR-102).
+    # UIR-099/UIR-105: six top-level command actions — Copy, Paste, Clear Window,
+    # Font…, Reset Size, Boot into CP/M — (excluding separators and the Terminal
+    # Type / Macros submenus, UIR-101/UIR-102).
     menu = term._build_context_menu()
     labels = [a.text() for a in menu.actions() if not a.isSeparator() and a.menu() is None]
-    assert len(labels) == 5, f"expected 5 menu items, got {labels}"
+    assert len(labels) == 6, f"expected 6 menu items, got {labels}"
 
     # Clear first so the screen layout is deterministic — a live connection has
     # already rendered the drive prompt / listing, leaving the cursor mid-screen.

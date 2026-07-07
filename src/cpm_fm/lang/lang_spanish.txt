@@ -164,12 +164,7 @@ transfer.count = Bloques: {blocks}    Bytes: {bytes_done}
 
 # --- Terminal window -----------------------------------------------------------
 terminal.title = Terminal
-terminal.clear = Borrar
-terminal.local_echo = Eco local
-terminal.autoscroll = Desplazamiento automático
 terminal.input_hint = Escribe aquí - las teclas se envían al instante
-terminal.boot = Arrancar en CP/M
-terminal.font = Fuente...
 terminal.font_dialog_title = Fuente del terminal
 
 # --- Terminal context menu (v2.23) ---------------------------------------------
@@ -178,6 +173,7 @@ terminal.menu.paste = Pegar
 terminal.menu.clear = Borrar ventana
 terminal.menu.font = Fuente...
 terminal.menu.reset_size = Restablecer tamaño (24×80)
+terminal.menu.boot = Arrancar en CP/M
 terminal.menu.terminal_type = Tipo de terminal
 terminal.menu.macros_sub = Macros
 
@@ -190,11 +186,21 @@ config.serial.data_bits = Bits de datos
 config.serial.parity = Paridad
 config.serial.stop_bits = Bits de parada
 config.serial.flow_control = Control de flujo
-config.serial.terminal_type = Tipo de terminal
 config.serial.msec_char = ms/carácter
 config.serial.msec_line = ms/línea
 config.serial.terminal_timeout = Tiempo de espera de terminal (ms)
 config.serial.transport_timeout = Tiempo de espera de transferencia (ms)
+
+# --- Terminal Configuration dialog (v2.25) -------------------------------------
+menu.config.terminal = Terminal
+config.terminal.title = Configuración terminal
+config.terminal.tab.terminal = Terminal
+config.terminal.tab.macros = Macros
+config.terminal.terminal_type = Tipo de terminal
+config.terminal.local_echo = Eco local
+config.terminal.autoscroll = Desplazamiento automático
+status.terminal_settings_saved = Ajustes de terminal guardados en {path}
+status.terminal_settings_updated = Ajustes de terminal actualizados
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = Configuración general
@@ -279,13 +285,7 @@ button.terminal = Terminal
 button.close = Cerrar
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-terminal.macros = Macros
-menu.config.macros = Botones de macro
-macro.title = Macros
-config.macros.title = Configuración de botones de macro
 config.macros.button = Botón {n}
 config.macros.label = Etiqueta
 config.macros.sequence = Secuencia de teclas
 status.macro_failed = Error de macro - comprueba su secuencia de teclas
-status.macro_settings_saved = Ajustes de macros guardados en {path}
-status.macro_settings_updated = Ajustes de macros actualizados

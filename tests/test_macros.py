@@ -1,12 +1,14 @@
-"""Unit tests for the floating Macro Window and its configuration (v2.21).
+"""Unit tests for the macro buttons and the Terminal Config dialog (v2.21/v2.25).
 
-Exercise the macro-button feature headlessly under an offscreen Qt platform:
-the ``macro_<n>_*`` settings defaults, the reflowing :class:`FlowLayout`, the
-:class:`MacroWindow` palette (button build/click/close), the "Macros" checkbox
-wiring on the Terminal Window, the keystroke-script execution path, and the
-:class:`MacroConfigDialog` round-trip and Test button.
+Exercise the macro-button feature headlessly under an offscreen Qt platform: the
+``macro_<n>_*`` settings defaults, the keystroke-script execution path, and the
+:class:`TerminalConfigDialog` — its Terminal tab (Terminal Type / Local Echo /
+Autoscroll) and its Macros tab (the ten Button slots, round-trip, and Test
+button). The floating Macro Window and its checkbox were removed in v2.25; macros
+are now run from the Terminal Window context-menu Macros submenu (covered in
+``test_gui_smoke.py``).
 
-Satisfies: FR-162, FR-164, FR-021b, UIR-096, UIR-097, UIR-098.
+Satisfies: FR-162, FR-021b, FR-021c, UIR-098, UIR-103, UIR-103a, UIR-103d.
 """
 
 import os
@@ -18,13 +20,10 @@ import pytest
 pytest.importorskip("PySide6")
 
 from PySide6.QtCore import QSettings  # noqa: E402
-from PySide6.QtWidgets import QApplication, QPushButton  # noqa: E402
+from PySide6.QtWidgets import QApplication, QTabWidget  # noqa: E402
 
 from cpm_fm.app import MainWindow  # noqa: E402
-from cpm_fm.gui.config_dialogs import ConfigDialog, MacroConfigDialog  # noqa: E402
-from cpm_fm.gui.flow_layout import FlowLayout  # noqa: E402
-from cpm_fm.gui.macro_window import MacroWindow  # noqa: E402
-from cpm_fm.gui.terminal_window import TerminalWindow  # noqa: E402
+from cpm_fm.gui.config_dialogs import ConfigDialog, TerminalConfigDialog  # noqa: E402
 from cpm_fm.gui.window_state import WindowState  # noqa: E402
 from cpm_fm.utils import i18n  # noqa: E402
 from cpm_fm.utils.config_handler import DEFAULT_SETTINGS  # noqa: E402
@@ -62,157 +61,6 @@ def test_macro_settings_defaults_present_and_empty():
     for i in range(1, 11):
         assert DEFAULT_SETTINGS[f"macro_{i}_label"] == ""
         assert DEFAULT_SETTINGS[f"macro_{i}_seq"] == ""
-
-
-# --------------------------------------------------------------------------- #
-# FlowLayout
-# --------------------------------------------------------------------------- #
-
-
-def test_flow_layout_holds_and_reports_items(qapp):
-    """Verifies: UIR-097."""
-    # UIR-097: the flow layout tracks the widgets added to it and reports a
-    # height for a given width (the mechanism that lets the buttons reflow).
-    from PySide6.QtWidgets import QWidget
-
-    host = QWidget()
-    layout = FlowLayout(host)
-    for _ in range(3):
-        layout.addWidget(QPushButton("x"))
-    try:
-        assert layout.count() == 3
-        assert layout.hasHeightForWidth() is True
-        assert layout.heightForWidth(200) > 0
-    finally:
-        host.deleteLater()
-
-
-# --------------------------------------------------------------------------- #
-# MacroWindow
-# --------------------------------------------------------------------------- #
-
-
-def test_macro_window_builds_buttons_and_click_invokes_callback(qapp):
-    """Verifies: UIR-097, FR-162."""
-    # UIR-097/FR-162: one button per configured slot, in order; clicking a button
-    # hands its keystroke script to the click callback.
-    clicked: list[str] = []
-    win = MacroWindow(None, click_callback=clicked.append)
-    try:
-        win.set_macros([("Dir", "SEND DIR"), ("Reset", "SENDRAW 03")])
-        assert win._flow.count() == 2
-        buttons = win.centralWidget().findChildren(QPushButton)
-        assert [b.text() for b in buttons] == ["Dir", "Reset"]
-        buttons[1].click()
-        assert clicked == ["SENDRAW 03"]
-    finally:
-        win.deleteLater()
-
-
-def test_macro_window_rebuild_replaces_buttons(qapp):
-    """Verifies: UIR-097."""
-    # UIR-097: refreshing the palette clears the previous buttons before adding
-    # the new set (so a re-config does not accumulate stale buttons).
-    win = MacroWindow(None)
-    try:
-        win.set_macros([("A", "SEND A"), ("B", "SEND B"), ("C", "SEND C")])
-        assert win._flow.count() == 3
-        win.set_macros([("A", "SEND A")])
-        assert win._flow.count() == 1
-    finally:
-        win.deleteLater()
-
-
-def test_macro_window_close_hides_and_notifies(qapp):
-    """Verifies: FR-164."""
-    # FR-164: closing the palette hides it (it persists) and notifies the owner
-    # so the Terminal Window's checkbox can be cleared.
-    hidden: list[int] = []
-    win = MacroWindow(None, hidden_callback=lambda: hidden.append(1))
-    try:
-        win.show()
-        win.close()
-        assert win.isVisible() is False
-        assert hidden == [1]
-    finally:
-        win.deleteLater()
-
-
-# --------------------------------------------------------------------------- #
-# Terminal Window checkbox
-# --------------------------------------------------------------------------- #
-
-
-def test_terminal_window_has_macros_checkbox(qapp):
-    """Verifies: UIR-096."""
-    # UIR-096: the Terminal Window carries an unchecked "Macros" checkbox.
-    term = TerminalWindow(None)
-    try:
-        assert term.chk_macros.text() == "Macros"
-        assert term.chk_macros.isChecked() is False
-    finally:
-        term.deleteLater()
-
-
-# --------------------------------------------------------------------------- #
-# MainWindow wiring
-# --------------------------------------------------------------------------- #
-
-
-def test_macros_checkbox_toggles_macro_window(qapp, state):
-    """Verifies: UIR-096, FR-164."""
-    # UIR-096/FR-164: checking the box creates and shows the palette; unchecking
-    # it hides the palette.
-    win = MainWindow(state)
-    try:
-        win.settings = dict(DEFAULT_SETTINGS)
-        win.settings["macro_1_label"] = "Dir"
-        win.settings["macro_1_seq"] = "SEND DIR"
-        win.show_terminal()
-        assert win.macro_win is None
-
-        win.terminal_win.chk_macros.setChecked(True)
-        assert win.macro_win is not None
-        assert win.macro_win.isVisible() is True
-
-        win.terminal_win.chk_macros.setChecked(False)
-        assert win.macro_win.isVisible() is False
-    finally:
-        win.close()
-
-
-def test_refresh_macro_buttons_shows_only_configured_slots(qapp, state):
-    """Verifies: UIR-097, FR-021b."""
-    # UIR-097: a slot appears only when both its label and its keystroke script
-    # are non-empty; label-only, script-only, and blank slots are skipped.
-    win = MainWindow(state)
-    try:
-        win.settings = dict(DEFAULT_SETTINGS)
-        win.settings["macro_1_label"] = "Dir"
-        win.settings["macro_1_seq"] = "SEND DIR"
-        win.settings["macro_2_label"] = "NoScript"  # label only -> skipped
-        win.settings["macro_3_seq"] = "SEND X"  # script only -> skipped
-        win.show_terminal()
-        win._show_macro_window()
-        assert win.macro_win._flow.count() == 1
-    finally:
-        win.close()
-
-
-def test_macro_window_hidden_clears_checkbox(qapp, state):
-    """Verifies: FR-164."""
-    # FR-164: when the palette is closed via its window control it clears the
-    # Terminal Window's Macros checkbox (kept in sync).
-    win = MainWindow(state)
-    try:
-        win.settings = dict(DEFAULT_SETTINGS)
-        win.show_terminal()
-        win.terminal_win.chk_macros.setChecked(True)
-        assert win.terminal_win.chk_macros.isChecked() is True
-        win.macro_win.close()
-        assert win.terminal_win.chk_macros.isChecked() is False
-    finally:
-        win.close()
 
 
 # --------------------------------------------------------------------------- #
@@ -321,18 +169,68 @@ def test_run_sequence_logic_parse_error_sets_status(qapp, state):
 
 
 # --------------------------------------------------------------------------- #
-# MacroConfigDialog
+# TerminalConfigDialog — Terminal tab
 # --------------------------------------------------------------------------- #
 
 
-def test_macro_config_round_trips_label_and_sequence(qapp, monkeypatch):
-    """Verifies: UIR-098, FR-021b."""
-    # UIR-098/FR-021b: the dialog seeds each slot from settings and returns all
-    # twenty macro keys on Save, preserving the edited label and script.
+def test_terminal_config_has_terminal_and_macros_tabs(qapp, monkeypatch):
+    """Verifies: UIR-103, UIR-103a, UIR-103d."""
+    # UIR-103: the dialog is a two-tab layout — a Terminal tab and a Macros tab;
+    # the Macros tab holds a nested ten-slot tab widget (UIR-103d/UIR-098).
+    monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
+    dlg = TerminalConfigDialog(None, {}, lambda s: None)
+    try:
+        tabs = dlg.findChildren(QTabWidget)
+        # The outer (2-tab) widget plus the nested macro (10-tab) widget.
+        assert len(tabs) == 2
+        outer = next(t for t in tabs if t.count() == 2)
+        assert [outer.tabText(i) for i in range(2)] == ["Terminal", "Macros"]
+        inner = next(t for t in tabs if t.count() == 10)
+        assert [inner.tabText(i) for i in range(10)] == [f"Button {n}" for n in range(1, 11)]
+    finally:
+        dlg.deleteLater()
+
+
+def test_terminal_config_terminal_tab_round_trips(qapp, monkeypatch):
+    """Verifies: UIR-103a, UIR-034, UIR-103b, UIR-103c."""
+    # UIR-103a: the Terminal tab seeds Terminal Type / Local Echo / Autoscroll
+    # from settings and returns them on Save (checkboxes as ON/OFF).
+    monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
+    saved: dict = {}
+    dlg = TerminalConfigDialog(
+        None,
+        {"terminal_type": "VT52", "local_echo": "ON", "autoscroll": "OFF"},
+        saved.update,
+    )
+    try:
+        assert dlg.entries["terminal_type"].currentText() == "VT52"
+        assert dlg.entries["local_echo"].isChecked() is True
+        assert dlg.entries["autoscroll"].isChecked() is False
+        dlg.entries["terminal_type"].setCurrentText("ADM-3A")
+        dlg.entries["autoscroll"].setChecked(True)
+        dlg.save()
+        assert saved["terminal_type"] == "ADM-3A"
+        assert saved["local_echo"] == "ON"
+        assert saved["autoscroll"] == "ON"
+    finally:
+        dlg.deleteLater()
+
+
+# --------------------------------------------------------------------------- #
+# TerminalConfigDialog — Macros tab
+# --------------------------------------------------------------------------- #
+
+
+def test_terminal_config_macros_round_trip_label_and_sequence(qapp, monkeypatch):
+    """Verifies: UIR-098, UIR-103d, FR-021b."""
+    # UIR-098/FR-021b: the Macros tab seeds each slot from settings and returns
+    # all twenty macro keys on Save, preserving the edited label and script.
     monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
 
     saved: dict = {}
-    dlg = MacroConfigDialog(None, {"macro_1_label": "Dir", "macro_1_seq": "SEND DIR"}, saved.update)
+    dlg = TerminalConfigDialog(
+        None, {"macro_1_label": "Dir", "macro_1_seq": "SEND DIR"}, saved.update
+    )
     try:
         assert dlg.entries["macro_1_label"].text() == "Dir"
         assert dlg.entries["macro_1_seq"].toPlainText() == "SEND DIR"
@@ -342,34 +240,17 @@ def test_macro_config_round_trips_label_and_sequence(qapp, monkeypatch):
         assert saved["macro_1_label"] == "Dir"
         assert saved["macro_2_label"] == "Reset"
         assert saved["macro_2_seq"] == "SENDRAW 03"
-        # All ten slots are written back.
+        # All ten slots are written back, plus the three terminal settings.
         assert all(f"macro_{i}_label" in saved for i in range(1, 11))
         assert all(f"macro_{i}_seq" in saved for i in range(1, 11))
+        assert {"terminal_type", "local_echo", "autoscroll"} <= set(saved)
     finally:
         dlg.deleteLater()
 
 
-def test_macro_config_uses_tabbed_layout(qapp, monkeypatch):
-    """Verifies: UIR-098."""
-    # UIR-098: the ten slots are presented as a tabbed layout, one tab per
-    # button, labelled "Button 1" .. "Button 10".
-    from PySide6.QtWidgets import QTabWidget
-
-    monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
-    dlg = MacroConfigDialog(None, {}, lambda s: None)
-    try:
-        tabs = dlg.findChildren(QTabWidget)
-        assert len(tabs) == 1
-        tab = tabs[0]
-        assert tab.count() == 10
-        assert [tab.tabText(i) for i in range(tab.count())] == [f"Button {n}" for n in range(1, 11)]
-    finally:
-        dlg.deleteLater()
-
-
-def test_macro_config_test_button_runs_typed_script(qapp, state, monkeypatch):
-    """Verifies: UIR-098, FR-162."""
-    # UIR-098: the per-slot Test button runs that slot's currently entered script
+def test_terminal_config_test_button_runs_typed_script(qapp, state, monkeypatch):
+    """Verifies: UIR-103d, FR-162."""
+    # UIR-103d: the per-slot Test button runs that slot's currently entered script
     # via the owner's macro runner when the Terminal Port is open.
     monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
     win = MainWindow(state)
@@ -377,7 +258,7 @@ def test_macro_config_test_button_runs_typed_script(qapp, state, monkeypatch):
         win.serial_mgr.terminal_connected = True
         ran: list[str] = []
         monkeypatch.setattr(win, "run_macro_script", ran.append)
-        dlg = MacroConfigDialog(win, {}, lambda s: None)
+        dlg = TerminalConfigDialog(win, {}, lambda s: None)
         try:
             dlg.entries["macro_3_seq"].setPlainText("SEND DIR")
             dlg._run_test(3)
@@ -388,9 +269,9 @@ def test_macro_config_test_button_runs_typed_script(qapp, state, monkeypatch):
         win.close()
 
 
-def test_macro_config_test_button_guards_disconnected(qapp, state, monkeypatch):
-    """Verifies: UIR-098, FR-098."""
-    # UIR-098: with the Terminal Port closed the Test button shows the standard
+def test_terminal_config_test_button_guards_disconnected(qapp, state, monkeypatch):
+    """Verifies: UIR-103d, FR-098."""
+    # UIR-103d: with the Terminal Port closed the Test button shows the standard
     # not-connected error and sends nothing.
     monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
     win = MainWindow(state)
@@ -403,7 +284,7 @@ def test_macro_config_test_button_guards_disconnected(qapp, state, monkeypatch):
         )
         ran: list[str] = []
         monkeypatch.setattr(win, "run_macro_script", ran.append)
-        dlg = MacroConfigDialog(win, {}, lambda s: None)
+        dlg = TerminalConfigDialog(win, {}, lambda s: None)
         try:
             dlg.entries["macro_1_seq"].setPlainText("SEND DIR")
             dlg._run_test(1)
@@ -415,11 +296,16 @@ def test_macro_config_test_button_guards_disconnected(qapp, state, monkeypatch):
         win.close()
 
 
-def test_menu_macro_config_saves_subset_and_refreshes(qapp, state, monkeypatch, tmp_path):
-    """Verifies: FR-021b."""
-    # FR-021b: the Macro dialog Save writes only the macro settings to the loaded
-    # config file (leaving other settings untouched) and refreshes the live
-    # palette.
+# --------------------------------------------------------------------------- #
+# MainWindow wiring — Config > Terminal save
+# --------------------------------------------------------------------------- #
+
+
+def test_menu_terminal_config_saves_subset_and_applies(qapp, state, monkeypatch, tmp_path):
+    """Verifies: FR-021c, FR-021b, UIR-034, FR-093."""
+    # FR-021c: the Terminal dialog Save writes only the terminal + macro settings
+    # to the loaded config file (leaving other settings untouched) and applies
+    # them live (engine terminal type, local-echo flag).
     import json
 
     win = MainWindow(state)
@@ -430,27 +316,37 @@ def test_menu_macro_config_saves_subset_and_refreshes(qapp, state, monkeypatch, 
             encoding="utf-8",
         )
         win.window_state.last_config = str(cfg)
+        win.settings = dict(DEFAULT_SETTINGS)
+        win.settings["terminal_port"] = "COM1"
 
         captured = {}
 
         def fake_dialog(parent, settings, callback, window_state):
             captured["callback"] = callback
 
-        monkeypatch.setattr("cpm_fm.gui.mw_config.MacroConfigDialog", fake_dialog)
-        refreshed = []
-        monkeypatch.setattr(win, "_refresh_macro_buttons", lambda: refreshed.append(1))
+        monkeypatch.setattr("cpm_fm.gui.mw_config.TerminalConfigDialog", fake_dialog)
 
-        win.menu_macro_config()
-        captured["callback"]({"macro_1_label": "Dir", "macro_1_seq": "SEND DIR"})
+        win.menu_terminal_config()
+        captured["callback"](
+            {
+                "terminal_type": "VT52",
+                "local_echo": "ON",
+                "autoscroll": "OFF",
+                "macro_1_label": "Dir",
+                "macro_1_seq": "SEND DIR",
+            }
+        )
 
         on_disk = json.loads(cfg.read_text(encoding="utf-8"))
+        assert on_disk["terminal_type"] == "VT52"
+        assert on_disk["local_echo"] == "ON"
         assert on_disk["macro_1_label"] == "Dir"
-        assert on_disk["macro_1_seq"] == "SEND DIR"
         # Other settings untouched.
         assert on_disk["terminal_port"] == "COM1"
         assert on_disk["speed"] == "9600"
-        # Live palette refreshed.
-        assert refreshed == [1]
+        # Applied live: engine terminal type and the cached local-echo flag.
+        assert win._term_engine.terminal_type == "VT52"
+        assert win._local_echo is True
     finally:
         win.close()
 

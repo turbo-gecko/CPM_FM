@@ -164,12 +164,7 @@ transfer.count = 塊: {blocks}    字節: {bytes_done}
 
 # --- Terminal window -----------------------------------------------------------
 terminal.title = 終端
-terminal.clear = 清除
-terminal.local_echo = 本地回顯
-terminal.autoscroll = 自動滾動
 terminal.input_hint = 喺度打字 - 按鍵即時傳送
-terminal.boot = 啟動進入 CP/M
-terminal.font = 字型...
 terminal.font_dialog_title = 終端機字型
 
 # --- Terminal context menu (v2.23) ---------------------------------------------
@@ -178,6 +173,7 @@ terminal.menu.paste = 貼上
 terminal.menu.clear = 清除視窗
 terminal.menu.font = 字型...
 terminal.menu.reset_size = 重設大小 (24×80)
+terminal.menu.boot = 啟動進入 CP/M
 terminal.menu.terminal_type = 終端機類型
 terminal.menu.macros_sub = 巨集
 
@@ -190,11 +186,21 @@ config.serial.data_bits = 數據位
 config.serial.parity = 校驗位
 config.serial.stop_bits = 停止位
 config.serial.flow_control = 流控
-config.serial.terminal_type = 終端機類型
 config.serial.msec_char = 字符間隔 (ms)
 config.serial.msec_line = 行間隔 (ms)
 config.serial.terminal_timeout = 終端逾時 (ms)
 config.serial.transport_timeout = 傳輸逾時 (ms)
+
+# --- Terminal Configuration dialog (v2.25) -------------------------------------
+menu.config.terminal = 終端
+config.terminal.title = 終端設定
+config.terminal.tab.terminal = 終端
+config.terminal.tab.macros = 巨集
+config.terminal.terminal_type = 終端機類型
+config.terminal.local_echo = 本地回顯
+config.terminal.autoscroll = 自動滾動
+status.terminal_settings_saved = 終端設定已儲存到 {path}
+status.terminal_settings_updated = 終端設定已更新
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = 一般設定
@@ -279,13 +285,7 @@ button.terminal = 終端
 button.close = 關閉
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-terminal.macros = 巨集
-menu.config.macros = 巨集按鈕
-macro.title = 巨集
-config.macros.title = 巨集按鈕設定
 config.macros.button = 按鈕 {n}
 config.macros.label = 標籤
 config.macros.sequence = 按鍵序列
 status.macro_failed = 巨集執行失敗 - 請檢查其按鍵序列
-status.macro_settings_saved = 巨集設定已儲存至 {path}
-status.macro_settings_updated = 巨集設定已更新

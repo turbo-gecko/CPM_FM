@@ -149,6 +149,34 @@ class WindowState:
         """
         self._settings.setValue("terminal_font", font.toString())
 
+    # --------------------------------------------------- open-window restoration
+
+    # FR-168: which auxiliary windows were open when the application last closed,
+    # so they can be reopened on the next start-up. Like geometry and language,
+    # this is UI/session state kept in QSettings (not the per-config serial JSON),
+    # stored per window under a distinct ``open/<name>`` key. ``name`` is a stable
+    # window identifier such as "terminal" or "history".
+
+    def window_open(self, name: str) -> bool:
+        """Whether window ``name`` was recorded open at the last exit.
+
+        QSettings round-trips booleans as the strings "true"/"false" through an
+        INI backend, so accept either a real bool or that string form.
+
+        Satisfies: FR-168.
+        """
+        value = self._settings.value(f"open/{name}", False)
+        if isinstance(value, bool):
+            return value
+        return str(value).strip().lower() in ("1", "true", "yes")
+
+    def set_window_open(self, name: str, is_open: bool) -> None:
+        """Record whether window ``name`` is open (persisted for restart restore).
+
+        Satisfies: FR-168.
+        """
+        self._settings.setValue(f"open/{name}", bool(is_open))
+
     # ------------------------------------------------- file-list filter / sort
 
     # FR-134: the last-used filter text and sort settings for each file pane are

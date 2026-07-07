@@ -194,12 +194,7 @@ transfer.count = Blocks: {blocks}    Bytes: {bytes_done}
 
 # --- Terminal window -----------------------------------------------------------
 terminal.title = Terminal
-terminal.clear = Clear
-terminal.local_echo = Local Echo
-terminal.autoscroll = Autoscroll
 terminal.input_hint = Type here - keystrokes are sent live
-terminal.boot = Boot into CP/M
-terminal.font = Font...
 terminal.font_dialog_title = Terminal Font
 
 # --- Terminal context menu (v2.23) ---------------------------------------------
@@ -208,6 +203,7 @@ terminal.menu.paste = Paste
 terminal.menu.clear = Clear Window
 terminal.menu.font = Font...
 terminal.menu.reset_size = Reset Size (24×80)
+terminal.menu.boot = Boot into CP/M
 terminal.menu.terminal_type = Terminal Type
 terminal.menu.macros_sub = Macros
 
@@ -220,11 +216,21 @@ config.serial.data_bits = Data Bits
 config.serial.parity = Parity
 config.serial.stop_bits = Stop Bits
 config.serial.flow_control = Flow Control
-config.serial.terminal_type = Terminal Type
 config.serial.msec_char = msec/char
 config.serial.msec_line = msec/line
 config.serial.terminal_timeout = Terminal Timeout (ms)
 config.serial.transport_timeout = Transfer Timeout (ms)
+
+# --- Terminal Configuration dialog (v2.25) -------------------------------------
+menu.config.terminal = Terminal
+config.terminal.title = Terminal Config
+config.terminal.tab.terminal = Terminal
+config.terminal.tab.macros = Macros
+config.terminal.terminal_type = Terminal Type
+config.terminal.local_echo = Local Echo
+config.terminal.autoscroll = Autoscroll
+status.terminal_settings_saved = Terminal settings saved to {path}
+status.terminal_settings_updated = Terminal settings updated
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = General Config
@@ -284,13 +290,7 @@ manual.title = User Manual
 manual.load_error = Could not load the user manual from: {path}
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-terminal.macros = Macros
-menu.config.macros = Macro Buttons
-macro.title = Macros
-config.macros.title = Macro Buttons Config
 config.macros.button = Button {n}
 config.macros.label = Label
 config.macros.sequence = Keystrokes
 status.macro_failed = Macro failed - check its keystroke sequence
-status.macro_settings_saved = Macro settings saved to {path}
-status.macro_settings_updated = Macro settings updated

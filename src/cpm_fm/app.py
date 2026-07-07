@@ -29,7 +29,6 @@ from PySide6.QtWidgets import (
 from cpm_fm.gui.conflict_dialog import CANCEL
 from cpm_fm.gui.dialog_buttons import build_button_row
 from cpm_fm.gui.file_list_widget import FileListWidget
-from cpm_fm.gui.macro_window import MacroWindow
 from cpm_fm.gui.mw_backup_restore import _BackupRestoreMixin
 from cpm_fm.gui.mw_config import _ConfigMixin
 from cpm_fm.gui.mw_context_menu import _ContextMenuMixin
@@ -42,6 +41,7 @@ from cpm_fm.gui.mw_transfers import _TransfersMixin
 from cpm_fm.gui.terminal_window import TerminalWindow
 from cpm_fm.gui.theme import app_icon, apply_theme
 from cpm_fm.gui.transfer_dialog import TransferProgressDialog
+from cpm_fm.gui.transfer_history_dialog import TransferHistoryDialog
 from cpm_fm.gui.window_state import APP, ORG, WindowState
 from cpm_fm.terminal.serial_manager import SerialManager
 from cpm_fm.terminal.vt100_engine import VT100Engine
@@ -169,9 +169,9 @@ class MainWindow(
 
         # UI State
         self.terminal_win: TerminalWindow | None = None
-        # UIR-097/FR-164: the floating Macro Window, created on first use when
-        # the Terminal Window's Macros checkbox is checked.
-        self.macro_win: MacroWindow | None = None
+        # UIR-082/FR-168: the non-modal Transfer History window, reused across
+        # openings (created on first use) and restored on start-up if it was open.
+        self._history_dialog: TransferHistoryDialog | None = None
         # FR-105: the modal transfer-progress dialog, live only for the duration
         # of a transfer. Owned and torn down on the GUI thread.
         self._transfer_dialog: TransferProgressDialog | None = None
@@ -256,6 +256,26 @@ class MainWindow(
         if last and os.path.exists(last):
             self.load_config(last)
 
+        # FR-168: reopen the auxiliary windows that were open when the app last
+        # closed, so a session's window layout is restored on start-up. Deferred
+        # to here (after config load and geometry restore) so each window opens
+        # with its saved geometry and the loaded settings applied.
+        self._restore_open_windows()
+
+    def _restore_open_windows(self) -> None:
+        """Reopen the auxiliary windows recorded open at the last exit (FR-168).
+
+        Restores the Terminal Window and the Transfer History window when the
+        UI-preferences store marks them as having been open when the application
+        last closed (FR-168), reusing the same open paths as the toolbar actions.
+
+        Satisfies: FR-168.
+        """
+        if self.window_state.window_open("terminal"):
+            self.show_terminal()
+        if self.window_state.window_open("history"):
+            self.show_history()
+
     # ------------------------------------------------------------------ i18n
 
     def _register_text(self, setter: Callable[[str], None], key: str) -> None:
@@ -298,8 +318,6 @@ class MainWindow(
         self._update_host_group_title()
         if self.terminal_win is not None:
             self.terminal_win.retranslate_ui()
-        if self.macro_win is not None:
-            self.macro_win.retranslate_ui()
 
     def _update_window_title(self) -> None:
         """Set the main window title, appending the loaded config's name.
@@ -426,8 +444,8 @@ class MainWindow(
         config_menu = menubar.addMenu("")
         self._register_text(config_menu.setTitle, "menu.config")
         self._add_menu_action(config_menu, "menu.config.serial", self.menu_serial_config)
+        self._add_menu_action(config_menu, "menu.config.terminal", self.menu_terminal_config)
         self._add_menu_action(config_menu, "menu.config.general", self.menu_general_config)
-        self._add_menu_action(config_menu, "menu.config.macros", self.menu_macro_config)
         self._setup_language_menu(config_menu)
 
         # UIR-004: Help menu with Manual (FR-023) and About (FR-022) items.
@@ -903,25 +921,33 @@ class MainWindow(
 
     def closeEvent(self, event):
         """
-        Satisfies: FR-004, FR-015, FR-016.
+        Satisfies: FR-004, FR-015, FR-016, FR-168.
 
         FR-004: persist window geometry on exit. The Terminal Window persists
         in the background when the user closes it (it hides rather than
         destroys), so it still exists here and its current geometry is saved.
+        FR-168: record which auxiliary windows are open now, so the next start-up
+        can reopen them.
         """
         self._disconnect_signals()  # prevent orphaned slot accumulation (NFR-004)
         self.window_state.save_geometry("main", self)
+        # FR-168: remember whether the Terminal Window and Transfer History window
+        # are open, and persist their current geometry (FR-004), so they can be
+        # restored on the next start-up.
+        terminal_open = bool(self.terminal_win and self.terminal_win.isVisible())
+        self.window_state.set_window_open("terminal", terminal_open)
         if self.terminal_win:
             self.window_state.save_geometry("terminal", self.terminal_win)
-        # FR-164: persist the Macro Window geometry alongside the Terminal Window.
-        if self.macro_win:
-            self.window_state.save_geometry("macro", self.macro_win)
+        history_open = bool(self._history_dialog and self._history_dialog.isVisible())
+        self.window_state.set_window_open("history", history_open)
+        if self._history_dialog:
+            self.window_state.save_geometry("transfer_history", self._history_dialog)
         # FR-015: close any open COM ports. FR-016: close all open windows.
         self.serial_mgr.close_ports()
         if self.terminal_win:
             self.terminal_win.close()
-        if self.macro_win:
-            self.macro_win.close()
+        if self._history_dialog:
+            self._history_dialog.close()
         event.accept()
 
 

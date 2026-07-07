@@ -77,17 +77,26 @@ def test_material_theme_applied(vwin, qapp):
     assert qapp.styleSheet().strip() != ""
 
 
-@pytest.mark.mt("MT-W13", "UIR-069")
-def test_terminal_control_row_has_font_button(vwin):
-    """The Terminal Window control row exposes a "Font…" button.
+@pytest.mark.mt("MT-W13", "UIR-064", "UIR-069")
+def test_terminal_window_has_no_control_row_and_font_in_context_menu(vwin):
+    """The Terminal Window has no control-row buttons; Font is in the context menu.
 
-    Verifies: UIR-069.
+    The v2.25 cleanup removed the Clear/Boot/Macros/Local-Echo/Autoscroll/Font
+    control row (UIR-064): the window carries no push buttons below the Receive
+    view. Font is reached from the Receive-view context menu (UIR-069/UIR-099).
+
+    Verifies: UIR-064, UIR-069.
     """
+    from cpm_fm.utils.i18n import tr
+
     vwin.show_terminal()
     term = vwin.terminal_win
     assert term is not None
-    labels = [b.text() for b in term.findChildren(QPushButton)]
-    assert any("Font" in t for t in labels), f"no Font button in control row: {labels}"
+    # UIR-064: no control-row buttons remain on the window.
+    assert term.findChildren(QPushButton) == []
+    # UIR-069/UIR-099: Font… is available from the Receive-view context menu.
+    labels = [a.text() for a in term._build_context_menu().actions()]
+    assert tr("terminal.menu.font") in labels, f"no Font in context menu: {labels}"
 
 
 @pytest.mark.mt("MT-W13", "UIR-069")

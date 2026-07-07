@@ -14,8 +14,8 @@ class _HistoryMixin(MainWindowMixinBase):
     """Transfer-history recording and the history dialog for MainWindow (mixin).
 
     Records each file's transfer outcome in the persistent history (FR-140/142/
-    144), opens the modal Transfer History dialog (FR-143), and re-initiates a
-    transfer from a selected history entry by reusing the batch transfers
+    144), opens the non-modal Transfer History window (FR-143), and re-initiates
+    a transfer from a selected history entry by reusing the batch transfers
     (FR-144). The file-size helper used when recording a download lives here too.
     """
 
@@ -62,19 +62,45 @@ class _HistoryMixin(MainWindowMixinBase):
             self._debug(f"[history] failed to record entry: {e!r}")
 
     def show_history(self):
-        """Open the modal Transfer History dialog and act on a re-transfer.
+        """Open (or re-raise) the non-modal Transfer History window (UIR-082).
 
-        Runs on the GUI thread. The dialog records the chosen entry on
-        ``retransfer_entry`` and closes itself when Re-transfer is clicked, so
-        the transfer (and its own modal progress dialog) starts only after this
-        dialog has closed (FR-144).
+        Runs on the GUI thread. The window is reused across invocations: if it is
+        already open it is raised and activated rather than opening a second copy
+        (mirrors the Manual viewer). Being non-modal (UIR-083) it can be left open
+        alongside the other windows and restored on start-up (FR-168). Re-transfer
+        records the chosen entry on ``retransfer_entry`` and closes the dialog; the
+        ``finished`` handler then starts the transfer, so it (and its own modal
+        progress dialog) begins only after this window has closed (FR-144).
 
-        Satisfies: FR-143, FR-144, UIR-082.
+        Satisfies: FR-143, FR-144, UIR-082, FR-168.
         """
+        existing = self._history_dialog
+        if existing is not None and existing.isVisible():
+            existing.raise_()
+            existing.activateWindow()
+            return
         dlg = TransferHistoryDialog(self, self.transfer_history, self.window_state)
-        dlg.exec()
-        if dlg.retransfer_entry is not None:
-            self._retransfer(dlg.retransfer_entry)
+        self._history_dialog = dlg
+        dlg.finished.connect(self._on_history_finished)
+        dlg.show()
+        dlg.raise_()
+        dlg.activateWindow()
+
+    def _on_history_finished(self, _result: int) -> None:
+        """Start a re-transfer requested from the (now closed) history window.
+
+        Invoked from the dialog's ``finished`` signal so the re-transfer — and its
+        own modal progress dialog — starts only after the non-modal history window
+        has closed (FR-144).
+
+        Satisfies: FR-144.
+        """
+        dlg = self._history_dialog
+        if dlg is None or dlg.retransfer_entry is None:
+            return
+        entry = dlg.retransfer_entry
+        dlg.retransfer_entry = None
+        self._retransfer(entry)
 
     def _retransfer(self, entry: dict):
         """Re-initiate the transfer described by a history ``entry`` (FR-144).

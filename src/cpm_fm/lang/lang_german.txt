@@ -164,12 +164,7 @@ transfer.count = Blöcke: {blocks}    Bytes: {bytes_done}
 
 # --- Terminal window -----------------------------------------------------------
 terminal.title = Terminal
-terminal.clear = Löschen
-terminal.local_echo = Lokales Echo
-terminal.autoscroll = Automatisch scrollen
 terminal.input_hint = Hier tippen - Tastenanschläge werden sofort gesendet
-terminal.boot = In CP/M starten
-terminal.font = Schriftart...
 terminal.font_dialog_title = Terminal-Schriftart
 
 # --- Terminal context menu (v2.23) ---------------------------------------------
@@ -178,6 +173,7 @@ terminal.menu.paste = Einfügen
 terminal.menu.clear = Fenster löschen
 terminal.menu.font = Schriftart...
 terminal.menu.reset_size = Größe zurücksetzen (24×80)
+terminal.menu.boot = In CP/M starten
 terminal.menu.terminal_type = Terminaltyp
 terminal.menu.macros_sub = Makros
 
@@ -190,11 +186,21 @@ config.serial.data_bits = Datenbits
 config.serial.parity = Parität
 config.serial.stop_bits = Stoppbits
 config.serial.flow_control = Flusssteuerung
-config.serial.terminal_type = Terminaltyp
 config.serial.msec_char = ms/Zeichen
 config.serial.msec_line = ms/Zeile
 config.serial.terminal_timeout = Terminal-Timeout (ms)
 config.serial.transport_timeout = Übertragungs-Timeout (ms)
+
+# --- Terminal Configuration dialog (v2.25) -------------------------------------
+menu.config.terminal = Terminal
+config.terminal.title = Terminal-Konfiguration
+config.terminal.tab.terminal = Terminal
+config.terminal.tab.macros = Makros
+config.terminal.terminal_type = Terminaltyp
+config.terminal.local_echo = Lokales Echo
+config.terminal.autoscroll = Automatisch scrollen
+status.terminal_settings_saved = Terminal-Einstellungen gespeichert in {path}
+status.terminal_settings_updated = Terminal-Einstellungen aktualisiert
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = Allgemeine Konfiguration
@@ -279,13 +285,7 @@ button.terminal = Terminal
 button.close = Schließen
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-terminal.macros = Makros
-menu.config.macros = Makrotasten
-macro.title = Makros
-config.macros.title = Makrotasten-Konfiguration
 config.macros.button = Taste {n}
 config.macros.label = Beschriftung
 config.macros.sequence = Tastenfolge
 status.macro_failed = Makro fehlgeschlagen - Tastenfolge prüfen
-status.macro_settings_saved = Makroeinstellungen gespeichert in {path}
-status.macro_settings_updated = Makroeinstellungen aktualisiert

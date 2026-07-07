@@ -5,7 +5,6 @@ import time
 
 from PySide6.QtWidgets import QMessageBox
 
-from cpm_fm.gui.macro_window import MacroWindow
 from cpm_fm.gui.mw_base import MainWindowMixinBase
 from cpm_fm.gui.remote_unavailable_dialog import RemoteUnavailableDialog
 from cpm_fm.gui.terminal_window import TerminalWindow
@@ -14,6 +13,9 @@ from cpm_fm.terminal.cpm_parser import CPMParser
 from cpm_fm.utils.i18n import tr
 
 EOL_MAP = {"CR": "\r", "LF": "\n", "CRLF": "\r\n"}
+
+# UIR-098/FR-162: the number of configurable macro-button slots.
+MACRO_COUNT = 10
 
 
 class _RemoteMixin(MainWindowMixinBase):
@@ -30,7 +32,7 @@ class _RemoteMixin(MainWindowMixinBase):
 
     def show_terminal(self):
         """
-        Satisfies: FR-097, UIR-069, FR-166, UIR-101, UIR-102.
+        Satisfies: FR-097, UIR-069, UIR-103a, FR-166, UIR-101, UIR-102, UIR-105.
         """
         if not self.terminal_win:
             self.terminal_win = TerminalWindow(
@@ -44,18 +46,19 @@ class _RemoteMixin(MainWindowMixinBase):
                 terminal_type_callback=self._set_terminal_type_from_menu,
                 macros_provider=self._configured_macros,
                 run_macro_callback=self.run_macro_script,
+                # UIR-105: the context-menu Boot action is enabled only when a
+                # boot sequence is configured; read fresh each time the menu opens.
+                boot_enabled_provider=self._boot_sequence_configured,
             )
-            self.terminal_win.chk_echo.toggled.connect(self._set_local_echo)
-            # UIR-096/FR-164: the Macros checkbox shows/hides the Macro Window.
-            self.terminal_win.chk_macros.toggled.connect(self._toggle_macro_window)
             # FR-004: restore the Terminal Window's saved geometry on first open.
             self.window_state.restore_geometry("terminal", self.terminal_win)
             # UIR-069: apply the persisted Receive-view font on first open.
             self.terminal_win.set_terminal_font(self.window_state.terminal_font)
         else:
             self.terminal_win.showNormal()
-        # UIR-068: the boot button is enabled only when a sequence is configured.
-        self._refresh_boot_button()
+        # UIR-103a: apply Local Echo (FR-093) and Autoscroll (UIR-062) from the
+        # current Terminal settings now the window exists.
+        self._apply_terminal_settings()
         # FR-094: the Enter key transmits the configured EOL.
         eol_char = EOL_MAP.get(self.settings.get("eol", "CR"), "\r")
         self.terminal_win.set_eol(eol_char.encode("ascii"))
@@ -68,89 +71,22 @@ class _RemoteMixin(MainWindowMixinBase):
         # FR-096: focus the receive area so typing is transmitted immediately.
         self.terminal_win.focus_input()
 
-    def _refresh_boot_button(self):
-        """Sync the Terminal Window boot button's enabled state to the config.
-
-        Enabled only when a non-empty boot sequence is configured (UIR-068);
-        re-evaluated on open and whenever the configuration changes while the
-        window is open.
-
-        Satisfies: UIR-068.
-        """
-        if self.terminal_win is not None:
-            self.terminal_win.set_boot_enabled(self._boot_sequence_configured())
-
-    def _toggle_macro_window(self, checked: bool):
-        """Show or hide the floating Macro Window from the Terminal checkbox.
-
-        Satisfies: UIR-096, FR-164.
-        """
-        if checked:
-            self._show_macro_window()
-        elif self.macro_win is not None:
-            self.macro_win.hide()
-
-    def _show_macro_window(self):
-        """Create (on first use) and show the Macro Window, refreshing its buttons.
-
-        Satisfies: UIR-097, FR-164.
-        """
-        if self.macro_win is None:
-            self.macro_win = MacroWindow(
-                self.terminal_win,
-                self.run_macro_script,
-                self._on_macro_window_hidden,
-            )
-            # FR-164: restore the Macro Window's saved geometry on first open.
-            self.window_state.restore_geometry("macro", self.macro_win)
-        self._refresh_macro_buttons()
-        self.macro_win.show()
-        self.macro_win.raise_()
-        self.macro_win.activateWindow()
-
-    def _on_macro_window_hidden(self):
-        """Clear the Terminal Window's Macros checkbox when the palette is closed.
-
-        Satisfies: FR-164.
-        """
-        if self.terminal_win is not None:
-            self.terminal_win.chk_macros.setChecked(False)
-
-    def _refresh_macro_buttons(self):
-        """Rebuild the Macro Window's buttons from the current settings (UIR-097).
-
-        Only slots whose label and keystroke script are both non-empty are shown;
-        called when the window is opened and whenever the macro configuration
-        changes (FR-021b).
-
-        Satisfies: UIR-097, FR-021b.
-        """
-        if self.macro_win is None:
-            return
-        self.macro_win.set_macros(self._configured_macros())
-
     def _configured_macros(self) -> list[tuple[str, str]]:
-        """The configured macros as ``(label, script)`` pairs (UIR-097/UIR-102).
+        """The configured macros as ``(label, script)`` pairs (UIR-102).
 
         A slot is included only when both its label and keystroke script are
-        non-empty. Shared by the Macro Window (UIR-097) and the Terminal Window
-        context menu's Macros submenu (UIR-102).
+        non-empty. Feeds the Terminal Window context menu's Macros submenu
+        (UIR-102).
 
-        Satisfies: UIR-097, UIR-102, FR-162.
+        Satisfies: UIR-102, FR-162.
         """
         macros: list[tuple[str, str]] = []
-        for i in range(1, MacroWindow.MACRO_COUNT + 1):
+        for i in range(1, MACRO_COUNT + 1):
             label = self.settings.get(f"macro_{i}_label", "").strip()
             script = self.settings.get(f"macro_{i}_seq", "")
             if label and script.strip():
                 macros.append((label, script))
         return macros
-
-    def _set_local_echo(self, enabled: bool):
-        """
-        Satisfies: FR-093.
-        """
-        self._local_echo = enabled
 
     def _save_terminal_font(self, font):
         """Persist the Terminal Window Receive-view font chosen via Font (UIR-069).
@@ -431,8 +367,9 @@ class _RemoteMixin(MainWindowMixinBase):
         Parses ``script`` in the boot-sequence directive language and runs it on
         a worker thread (NFR-004), like the boot sequence. Requires an open
         Terminal Port — otherwise it reports the not-connected status and sends
-        nothing (cf. FR-098). An empty script is a no-op. Invoked by a Macro
-        Window button click and by the Macro config dialog's Test button.
+        nothing (cf. FR-098). An empty script is a no-op. Invoked by the Terminal
+        Window context-menu Macros submenu (UIR-102) and by the Terminal Config
+        dialog's macro Test button.
 
         Satisfies: FR-162, FR-098, NFR-004.
         """

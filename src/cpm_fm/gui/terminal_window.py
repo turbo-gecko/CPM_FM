@@ -6,13 +6,10 @@ from PySide6.QtCore import QPoint
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
-    QCheckBox,
     QFontDialog,
-    QHBoxLayout,
     QLabel,
     QMainWindow,
     QMenu,
-    QPushButton,
     QVBoxLayout,
     QWidget,
 )
@@ -55,9 +52,10 @@ class TerminalWindow(QMainWindow):
         terminal_type_callback=None,
         macros_provider=None,
         run_macro_callback=None,
+        boot_enabled_provider=None,
     ):
         """
-        Satisfies: UIR-060, UIR-068, UIR-069, FR-091, FR-096, FR-166, UIR-101, UIR-102.
+        Satisfies: UIR-060, UIR-067, UIR-069, FR-091, FR-096, FR-166, UIR-101, UIR-102, UIR-105.
 
         No Qt parent, so this is an independent non-modal top-level window.
         The owning MainWindow keeps a reference to it.
@@ -67,8 +65,14 @@ class TerminalWindow(QMainWindow):
         window (no owner) gets its own engine so it is usable on its own.
         ``key_callback`` receives the raw bytes for each keystroke typed into the
         receive area, to be transmitted on the Terminal Port (FR-096).
-        ``font_callback`` receives the :class:`QFont` chosen via the Font button
-        so the owner can persist it (UIR-069).
+        ``clear_callback`` is invoked by the context-menu Clear action so the
+        owner can clear the receive/transmit data buffers (FR-095).
+        ``boot_callback`` runs the configured boot sequence for the context-menu
+        "Boot into CP/M" action (FR-049); ``boot_enabled_provider`` returns
+        whether that action should be enabled (a boot sequence is configured,
+        UIR-105).
+        ``font_callback`` receives the :class:`QFont` chosen via the context-menu
+        Font action so the owner can persist it (UIR-069).
         ``paste_callback`` receives the clipboard text for the context-menu Paste
         action, to be transmitted on the Terminal Port (FR-166).
         ``terminal_type_callback`` receives the terminal-type value chosen in the
@@ -77,6 +81,11 @@ class TerminalWindow(QMainWindow):
         ``(label, script)`` macros for the Macros submenu, and
         ``run_macro_callback`` receives the chosen macro's script to run it on the
         Terminal Port (UIR-102/FR-162).
+
+        The Terminal Window carries no on-window controls below the Receive view
+        (UIR-064): Clear, Font, Boot and terminal-type/macro actions are all
+        reached from the Receive-view context menu (UIR-099); Local Echo and
+        Autoscroll are set in the Terminal Config dialog (UIR-103a).
         """
         super().__init__()
         # FR-091: the VT-100 screen model this window renders.
@@ -89,13 +98,15 @@ class TerminalWindow(QMainWindow):
         # FR-096: invoked with the bytes for each keystroke typed in the receive
         # area, so the owner can transmit them on the Terminal Port.
         self.key_callback = key_callback
-        # Invoked when the Clear button is pressed, so the owner can clear the
-        # receive/transmit data buffers alongside the display (FR-090/FR-092).
+        # FR-095: invoked by the context-menu Clear action, so the owner can clear
+        # the receive/transmit data buffers alongside the display (FR-090/FR-092).
         self.clear_callback = clear_callback
-        # FR-049/UIR-068: invoked when the "Boot into CP/M" button is pressed.
+        # FR-049/UIR-105: invoked when the context-menu "Boot into CP/M" action is
+        # chosen; boot_enabled_provider reports whether it should be enabled.
         self.boot_callback = boot_callback
-        # UIR-069: invoked with the QFont chosen via the Font button so the owner
-        # can persist it across sessions.
+        self.boot_enabled_provider = boot_enabled_provider
+        # UIR-069: invoked with the QFont chosen via the context-menu Font action
+        # so the owner can persist it across sessions.
         self.font_callback = font_callback
         # FR-166: invoked with the clipboard text when the context-menu Paste
         # action is used, so the owner can transmit it on the Terminal Port.
@@ -129,8 +140,13 @@ class TerminalWindow(QMainWindow):
     def create_widgets(self):
         """Build the Terminal Window widgets.
 
-        Satisfies: UIR-061, UIR-062, UIR-064, UIR-065, UIR-066, UIR-067, UIR-069,
-        UIR-096, UIR-099, FR-096.
+        The window holds only the Receive view and an input-hint label — there
+        are no controls below the view (UIR-064). Clear, Font, Boot and the
+        terminal-type/macro actions live on the Receive-view context menu
+        (UIR-099); Local Echo and Autoscroll are Terminal Config settings
+        (UIR-103a).
+
+        Satisfies: UIR-061, UIR-062, UIR-064, UIR-067, UIR-099, FR-096.
         """
         central = QWidget()
         self.setCentralWidget(central)
@@ -146,49 +162,6 @@ class TerminalWindow(QMainWindow):
         # build and show the context menu.
         self.receive_area.set_context_menu_callback(self._show_context_menu)
         layout.addWidget(self.receive_area)
-
-        # Control Frame: Clear (left), Local Echo (centre), Autoscroll (right).
-        ctrl_layout = QHBoxLayout()
-        self.btn_clear = QPushButton(clicked=self.clear_text)
-        self._register_text(self.btn_clear.setText, "terminal.clear")
-        ctrl_layout.addWidget(self.btn_clear)
-
-        # UIR-068: "Boot into CP/M" button, to the right of Clear. Disabled until
-        # the owner enables it via set_boot_enabled (i.e. when a boot sequence is
-        # configured).
-        self.btn_boot = QPushButton(clicked=self._on_boot)
-        self._register_text(self.btn_boot.setText, "terminal.boot")
-        self.btn_boot.setEnabled(False)
-        ctrl_layout.addWidget(self.btn_boot)
-        ctrl_layout.addStretch()
-
-        # UIR-096: "Macros" checkbox, to the left of Local Echo, that shows/hides
-        # the floating Macro Window (FR-164). The owner wires its toggled signal
-        # in show_terminal. Unchecked by default.
-        self.chk_macros = QCheckBox()
-        self._register_text(self.chk_macros.setText, "terminal.macros")
-        self.chk_macros.setChecked(False)
-        ctrl_layout.addWidget(self.chk_macros)
-
-        self.chk_echo = QCheckBox()  # UIR-065: disabled by default.
-        self._register_text(self.chk_echo.setText, "terminal.local_echo")
-        self.chk_echo.setChecked(False)
-        ctrl_layout.addWidget(self.chk_echo)
-        ctrl_layout.addStretch()
-
-        self.chk_scroll = QCheckBox()  # UIR-066: enabled by default.
-        self._register_text(self.chk_scroll.setText, "terminal.autoscroll")
-        self.chk_scroll.setChecked(True)
-        # UIR-062: the checkbox governs the receive view's autoscroll.
-        self.chk_scroll.toggled.connect(self.receive_area.set_autoscroll)
-        ctrl_layout.addWidget(self.chk_scroll)
-
-        # UIR-069: "Font…" button, right of the Autoscroll checkbox, opens the
-        # standard font-selection dialog for the Receive view.
-        self.btn_font = QPushButton(clicked=self._on_font)
-        self._register_text(self.btn_font.setText, "terminal.font")
-        ctrl_layout.addWidget(self.btn_font)
-        layout.addLayout(ctrl_layout)
 
         # UIR-067: input hint. There is no transmit field — the operator types
         # directly into the receive area and each keystroke is sent live.
@@ -221,17 +194,20 @@ class TerminalWindow(QMainWindow):
     def _on_boot(self):
         """Run the configured boot sequence (FR-049).
 
-        Satisfies: FR-049, UIR-068.
+        Satisfies: FR-049, UIR-105.
         """
         if self.boot_callback:
             self.boot_callback()
 
-    def set_boot_enabled(self, enabled: bool):
-        """Enable/disable the "Boot into CP/M" button (UIR-068).
+    def set_autoscroll(self, enabled: bool):
+        """Set whether the Receive view auto-scrolls to the newest output.
 
-        Satisfies: UIR-068.
+        Applied from the ``autoscroll`` setting (UIR-104) when the window opens
+        and whenever the Terminal Config is saved (UIR-103a).
+
+        Satisfies: UIR-062, UIR-104.
         """
-        self.btn_boot.setEnabled(enabled)
+        self.receive_area.set_autoscroll(enabled)
 
     def _build_font_dialog(self) -> QFontDialog:
         """Create the font-selection dialog seeded with the Receive view's font.
@@ -269,14 +245,16 @@ class TerminalWindow(QMainWindow):
     def _build_context_menu(self) -> QMenu:
         """Build the Receive-view context menu (UIR-099).
 
-        Five items — Copy (FR-165), Paste (FR-166), Clear (FR-095), Font…
-        (UIR-069), Reset Size (FR-167) — followed by the Terminal Type (UIR-101)
-        and Macros (UIR-102) submenus. Copy is disabled when nothing is selected.
-        Separated from :meth:`_show_context_menu` so the menu can be inspected in
-        tests without a blocking ``exec``.
+        Six items — Copy (FR-165), Paste (FR-166), Clear (FR-095), Font…
+        (UIR-069), Reset Size (FR-167), Boot into CP/M (FR-049/UIR-105) —
+        followed by the Terminal Type (UIR-101) and Macros (UIR-102) submenus.
+        Copy is disabled when nothing is selected; Boot into CP/M is disabled
+        unless a boot sequence is configured. Separated from
+        :meth:`_show_context_menu` so the menu can be inspected in tests without
+        a blocking ``exec``.
 
-        Satisfies: UIR-099, FR-165, FR-166, FR-095, UIR-069, FR-167, UIR-101,
-        UIR-102.
+        Satisfies: UIR-099, FR-165, FR-166, FR-095, UIR-069, FR-167, FR-049,
+        UIR-105, UIR-101, UIR-102.
         """
         menu = QMenu(self)
         act_copy = menu.addAction(tr("terminal.menu.copy"))
@@ -287,6 +265,11 @@ class TerminalWindow(QMainWindow):
         menu.addAction(tr("terminal.menu.clear"), self.clear_text)
         menu.addAction(tr("terminal.menu.font"), self._on_font)
         menu.addAction(tr("terminal.menu.reset_size"), self.reset_size)
+        # FR-049/UIR-105: run the configured boot sequence; enabled only when a
+        # boot sequence is configured (reported by boot_enabled_provider).
+        act_boot = menu.addAction(tr("terminal.menu.boot"), self._on_boot)
+        boot_enabled = self.boot_enabled_provider() if self.boot_enabled_provider else False
+        act_boot.setEnabled(bool(boot_enabled))
         menu.addSeparator()
         self._add_terminal_type_submenu(menu)
         self._add_macros_submenu(menu)

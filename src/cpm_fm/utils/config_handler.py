@@ -18,6 +18,14 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     # bytes as (VT100 / VT52 / ADM-3A). Drives FR-157/FR-157i/FR-157j rendering
     # and FR-158a/FR-158b cursor-key encoding. Default VT100 (current behaviour).
     "terminal_type": "VT100",
+    # UIR-103/FR-093: Local Echo — copy transmitted data to the Terminal Window
+    # Receive view. Persisted per-configuration; default OFF. Configured on the
+    # Terminal Config dialog's Terminal tab (UIR-103a).
+    "local_echo": "OFF",
+    # UIR-104/UIR-062: Autoscroll — keep the newest output visible in the Receive
+    # view. Persisted per-configuration; default ON. Configured on the Terminal
+    # Config dialog's Terminal tab (UIR-103a).
+    "autoscroll": "ON",
     "msec_char": "0",
     "msec_line": "0",
     # Per-port serial read timeouts, in milliseconds. Applied as the pyserial

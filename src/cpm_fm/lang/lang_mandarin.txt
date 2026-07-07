@@ -164,12 +164,7 @@ transfer.count = 块: {blocks}    字节: {bytes_done}
 
 # --- Terminal window -----------------------------------------------------------
 terminal.title = 终端
-terminal.clear = 清除
-terminal.local_echo = 本地回显
-terminal.autoscroll = 自动滚动
 terminal.input_hint = 在此输入 - 按键即时发送
-terminal.boot = 启动进入 CP/M
-terminal.font = 字体...
 terminal.font_dialog_title = 终端字体
 
 # --- Terminal context menu (v2.23) ---------------------------------------------
@@ -178,6 +173,7 @@ terminal.menu.paste = 粘贴
 terminal.menu.clear = 清除窗口
 terminal.menu.font = 字体...
 terminal.menu.reset_size = 重置大小 (24×80)
+terminal.menu.boot = 启动进入 CP/M
 terminal.menu.terminal_type = 终端类型
 terminal.menu.macros_sub = 宏
 
@@ -190,11 +186,21 @@ config.serial.data_bits = 数据位
 config.serial.parity = 校验位
 config.serial.stop_bits = 停止位
 config.serial.flow_control = 流控
-config.serial.terminal_type = 终端类型
 config.serial.msec_char = 字符间隔 (ms)
 config.serial.msec_line = 行间隔 (ms)
 config.serial.terminal_timeout = 终端超时 (ms)
 config.serial.transport_timeout = 传输超时 (ms)
+
+# --- Terminal Configuration dialog (v2.25) -------------------------------------
+menu.config.terminal = 终端
+config.terminal.title = 终端配置
+config.terminal.tab.terminal = 终端
+config.terminal.tab.macros = 宏
+config.terminal.terminal_type = 终端类型
+config.terminal.local_echo = 本地回显
+config.terminal.autoscroll = 自动滚动
+status.terminal_settings_saved = 终端设置已保存到 {path}
+status.terminal_settings_updated = 终端设置已更新
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = 常规配置
@@ -279,13 +285,7 @@ button.terminal = 终端
 button.close = 关闭
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-terminal.macros = 宏
-menu.config.macros = 宏按钮
-macro.title = 宏
-config.macros.title = 宏按钮配置
 config.macros.button = 按钮 {n}
 config.macros.label = 标签
 config.macros.sequence = 按键序列
 status.macro_failed = 宏运行失败 - 请检查其按键序列
-status.macro_settings_saved = 宏设置已保存到 {path}
-status.macro_settings_updated = 宏设置已更新

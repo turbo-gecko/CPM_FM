@@ -77,3 +77,37 @@ def test_default_terminal_font_is_monospace():
     font = default_terminal_font()
     assert font.family() == "Courier New"
     assert font.styleHint() == QFont.StyleHint.Monospace
+
+
+def test_window_open_defaults_false(state):
+    """An unset store reports each window as not-open.
+
+    Verifies: FR-168.
+    """
+    assert state.window_open("terminal") is False
+    assert state.window_open("history") is False
+
+
+def test_window_open_roundtrip(state):
+    """Recording a window open/closed round-trips through the store.
+
+    Verifies: FR-168.
+    """
+    state.set_window_open("terminal", True)
+    state.set_window_open("history", False)
+    assert state.window_open("terminal") is True
+    assert state.window_open("history") is False
+
+
+def test_window_open_persists_across_instances(tmp_path, qapp):
+    """The recorded open windows survive a fresh WindowState over the same store.
+
+    Verifies: FR-168.
+    """
+    path = str(tmp_path / "state.ini")
+    ws1 = WindowState(QSettings(path, QSettings.Format.IniFormat))
+    ws1.set_window_open("terminal", True)
+
+    ws2 = WindowState(QSettings(path, QSettings.Format.IniFormat))
+    assert ws2.window_open("terminal") is True
+    assert ws2.window_open("history") is False

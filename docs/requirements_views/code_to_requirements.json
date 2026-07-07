@@ -31,6 +31,7 @@
     "FR-125",
     "FR-126",
     "FR-141",
+    "FR-168",
     "NFR-004",
     "STR-002",
     "UIR-001",
@@ -67,6 +68,7 @@
     "FR-020",
     "FR-021",
     "FR-021b",
+    "FR-093",
     "FR-121",
     "FR-159",
     "FR-160",
@@ -87,6 +89,7 @@
     "UIR-031",
     "UIR-032",
     "UIR-033",
+    "UIR-034",
     "UIR-040",
     "UIR-041",
     "UIR-042",
@@ -113,7 +116,9 @@
     "UIR-093",
     "UIR-094",
     "UIR-095",
-    "UIR-098"
+    "UIR-098",
+    "UIR-103",
+    "UIR-103a"
   ],
   "src/cpm_fm/gui/conflict_dialog.py": [
     "FR-146",
@@ -140,16 +145,6 @@
     "FR-148",
     "FR-149",
     "UIR-085"
-  ],
-  "src/cpm_fm/gui/flow_layout.py": [
-    "UIR-097"
-  ],
-  "src/cpm_fm/gui/macro_window.py": [
-    "FR-121",
-    "FR-123",
-    "FR-162",
-    "FR-164",
-    "UIR-097"
   ],
   "src/cpm_fm/gui/manual_dialog.py": [
     "DR-047",
@@ -183,16 +178,21 @@
     "FR-021",
     "FR-021a",
     "FR-021b",
+    "FR-021c",
     "FR-022",
     "FR-023",
     "FR-060",
+    "FR-093",
     "FR-125",
     "FR-157",
     "IFR-003",
     "UIR-034",
+    "UIR-062",
     "UIR-076",
     "UIR-091",
-    "UIR-098"
+    "UIR-103",
+    "UIR-103a",
+    "UIR-104"
   ],
   "src/cpm_fm/gui/mw_context_menu.py": [
     "CR-010",
@@ -238,10 +238,10 @@
     "FR-142",
     "FR-143",
     "FR-144",
+    "FR-168",
     "UIR-082"
   ],
   "src/cpm_fm/gui/mw_remote.py": [
-    "FR-021b",
     "FR-030",
     "FR-031",
     "FR-032",
@@ -294,16 +294,14 @@
     "FR-145",
     "FR-157",
     "FR-162",
-    "FR-164",
     "FR-166",
     "NFR-004",
     "UIR-034",
-    "UIR-068",
     "UIR-069",
-    "UIR-096",
-    "UIR-097",
     "UIR-101",
-    "UIR-102"
+    "UIR-102",
+    "UIR-103a",
+    "UIR-105"
   ],
   "src/cpm_fm/gui/mw_transfer_batches.py": [
     "CR-010",
@@ -399,10 +397,11 @@
     "UIR-067",
     "UIR-068",
     "UIR-069",
-    "UIR-096",
     "UIR-099",
     "UIR-101",
-    "UIR-102"
+    "UIR-102",
+    "UIR-104",
+    "UIR-105"
   ],
   "src/cpm_fm/gui/theme.py": [
     "CR-013",
@@ -432,6 +431,7 @@
     "FR-122",
     "FR-124",
     "FR-134",
+    "FR-168",
     "UIR-069"
   ],
   "src/cpm_fm/terminal/boot_sequence.py": [

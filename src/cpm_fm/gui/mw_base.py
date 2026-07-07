@@ -8,7 +8,8 @@ if TYPE_CHECKING:
     from PySide6.QtWidgets import QComboBox, QLineEdit, QToolButton
 
     from cpm_fm.gui.file_list_widget import FileListWidget
-    from cpm_fm.gui.macro_window import MacroWindow
+    from cpm_fm.gui.terminal_window import TerminalWindow
+    from cpm_fm.gui.transfer_history_dialog import TransferHistoryDialog
     from cpm_fm.gui.window_state import WindowState
     from cpm_fm.terminal.serial_manager import SerialManager
     from cpm_fm.terminal.vt100_engine import VT100Engine
@@ -41,8 +42,10 @@ class MainWindowMixinBase:
         _remote_capture_buffer: str
         _capture_active: bool
         _term_engine: VT100Engine
-        # UIR-097/FR-164: the floating Macro Window (created on first use).
-        macro_win: MacroWindow | None
+        # The non-modal Terminal Window (UIR-060) and Transfer History window
+        # (UIR-083), created on first use; None until then.
+        terminal_win: TerminalWindow | None
+        _history_dialog: TransferHistoryDialog | None
         _transfer_cancel: threading.Event
         _conflict_policy: str | None
         _conflict_answered: threading.Event

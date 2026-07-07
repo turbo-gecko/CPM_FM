@@ -175,10 +175,12 @@
       "tests/test_gui_smoke.py:test_general_config_save_persists_general_only"
     ],
     "FR-021b": [
-      "tests/test_macros.py:test_macro_config_round_trips_label_and_sequence",
       "tests/test_macros.py:test_macro_settings_defaults_present_and_empty",
-      "tests/test_macros.py:test_menu_macro_config_saves_subset_and_refreshes",
-      "tests/test_macros.py:test_refresh_macro_buttons_shows_only_configured_slots"
+      "tests/test_macros.py:test_menu_terminal_config_saves_subset_and_applies",
+      "tests/test_macros.py:test_terminal_config_macros_round_trip_label_and_sequence"
+    ],
+    "FR-021c": [
+      "tests/test_macros.py:test_menu_terminal_config_saves_subset_and_applies"
     ],
     "FR-022": [
       "tests/test_gui_smoke.py:test_menu_about_opens_dialog"
@@ -256,8 +258,10 @@
       "tests/test_gui_smoke.py:test_boot_no_recovery_when_sequence_empty"
     ],
     "FR-049": [
+      "tests/test_gui_smoke.py:test_boot_menu_item_reflects_config",
       "tests/test_gui_smoke.py:test_manual_boot_failure_sets_status_without_dialog",
-      "tests/test_gui_smoke.py:test_manual_boot_success_reprobes_and_sets_drive"
+      "tests/test_gui_smoke.py:test_manual_boot_success_reprobes_and_sets_drive",
+      "tests/test_gui_smoke.py:test_terminal_context_menu_boot_enabled_reflects_provider"
     ],
     "FR-050": [
       "tests/test_gui_smoke.py:test_disconnect_attempts_close_when_flags_false",
@@ -368,8 +372,10 @@
       "tests/test_gui_smoke.py:test_handle_terminal_paste_normalises_sends_buffers_echoes"
     ],
     "FR-093": [
+      "tests/test_gui_smoke.py:test_apply_terminal_settings_applies_local_echo_and_autoscroll",
       "tests/test_gui_smoke.py:test_handle_terminal_key_sends_echoes_and_guards",
-      "tests/test_gui_smoke.py:test_handle_terminal_paste_normalises_sends_buffers_echoes"
+      "tests/test_gui_smoke.py:test_handle_terminal_paste_normalises_sends_buffers_echoes",
+      "tests/test_macros.py:test_menu_terminal_config_saves_subset_and_applies"
     ],
     "FR-094": [
       "tests/test_gui_smoke.py:test_handle_terminal_paste_normalises_sends_buffers_echoes",
@@ -397,8 +403,8 @@
     "FR-098": [
       "tests/test_gui_smoke.py:test_handle_terminal_key_sends_echoes_and_guards",
       "tests/test_gui_smoke.py:test_handle_terminal_paste_normalises_sends_buffers_echoes",
-      "tests/test_macros.py:test_macro_config_test_button_guards_disconnected",
-      "tests/test_macros.py:test_run_macro_script_guards_when_disconnected"
+      "tests/test_macros.py:test_run_macro_script_guards_when_disconnected",
+      "tests/test_macros.py:test_terminal_config_test_button_guards_disconnected"
     ],
     "FR-099": [
       "tests/test_gui_smoke.py:test_copy_to_remote_transfers_all_selected"
@@ -619,11 +625,13 @@
     ],
     "FR-143": [
       "tests/test_gui_smoke.py:test_history_dialog_lists_filters_and_clears",
+      "tests/test_gui_smoke.py:test_show_history_is_nonmodal_and_reused",
       "tests/test_transfer_history.py:test_clear_history",
       "tests/test_transfer_history.py:test_export_history"
     ],
     "FR-144": [
       "tests/test_gui_smoke.py:test_history_dialog_retransfer_sets_entry_and_accepts",
+      "tests/test_gui_smoke.py:test_history_finished_triggers_pending_retransfer",
       "tests/test_gui_smoke.py:test_retransfer_blocked_when_not_connected",
       "tests/test_gui_smoke.py:test_retransfer_missing_file_reports_and_starts_nothing",
       "tests/test_gui_smoke.py:test_retransfer_reuses_batch_with_retry_flag"
@@ -806,22 +814,16 @@
     "FR-162": [
       "tests/test_gui_smoke.py:test_configured_macros_filters_incomplete_slots",
       "tests/test_gui_smoke.py:test_terminal_context_menu_macros_submenu_lists_and_runs",
-      "tests/test_macros.py:test_macro_config_test_button_runs_typed_script",
       "tests/test_macros.py:test_macro_settings_defaults_present_and_empty",
-      "tests/test_macros.py:test_macro_window_builds_buttons_and_click_invokes_callback",
       "tests/test_macros.py:test_run_macro_script_empty_is_noop",
       "tests/test_macros.py:test_run_macro_script_guards_when_disconnected",
       "tests/test_macros.py:test_run_macro_script_runs_on_worker_thread",
       "tests/test_macros.py:test_run_sequence_logic_executes_directives",
-      "tests/test_macros.py:test_run_sequence_logic_parse_error_sets_status"
-    ],
-    "FR-164": [
-      "tests/test_macros.py:test_macro_window_close_hides_and_notifies",
-      "tests/test_macros.py:test_macro_window_hidden_clears_checkbox",
-      "tests/test_macros.py:test_macros_checkbox_toggles_macro_window"
+      "tests/test_macros.py:test_run_sequence_logic_parse_error_sets_status",
+      "tests/test_macros.py:test_terminal_config_test_button_runs_typed_script"
     ],
     "FR-165": [
-      "tests/test_gui_smoke.py:test_terminal_context_menu_has_five_items_and_copy_state",
+      "tests/test_gui_smoke.py:test_terminal_context_menu_has_six_items_and_copy_state",
       "tests/test_terminal_view.py:test_copy_selection_no_selection_is_noop",
       "tests/test_terminal_view.py:test_copy_selection_puts_text_on_clipboard",
       "tests/test_terminal_view.py:test_mouse_drag_selects_text_on_one_row",
@@ -834,6 +836,14 @@
     "FR-167": [
       "tests/test_gui_smoke.py:test_terminal_reset_size_reflows_to_80x24",
       "tests/test_terminal_view.py:test_viewport_size_for_returns_exact_cell_extent"
+    ],
+    "FR-168": [
+      "tests/test_gui_smoke.py:test_closeevent_records_which_windows_were_open",
+      "tests/test_gui_smoke.py:test_open_windows_not_restored_when_none_recorded",
+      "tests/test_gui_smoke.py:test_open_windows_restored_on_startup",
+      "tests/test_window_state.py:test_window_open_defaults_false",
+      "tests/test_window_state.py:test_window_open_persists_across_instances",
+      "tests/test_window_state.py:test_window_open_roundtrip"
     ],
     "IFR-004": [
       "tests/test_config_handler.py:test_load_json_malformed_returns_empty",
@@ -950,6 +960,8 @@
     "UIR-034": [
       "tests/test_config_handler.py:test_default_settings_terminal_type_is_vt100",
       "tests/test_gui_smoke.py:test_set_terminal_type_from_menu_applies_and_updates_setting",
+      "tests/test_macros.py:test_menu_terminal_config_saves_subset_and_applies",
+      "tests/test_macros.py:test_terminal_config_terminal_tab_round_trips",
       "tests/test_term_translate.py:test_make_translator_defaults_to_identity",
       "tests/test_term_translate.py:test_make_translator_selects_type",
       "tests/test_vt100_engine.py:test_adm3a_engine_clear_screen",
@@ -983,9 +995,6 @@
     ],
     "UIR-066": [
       "tests/test_terminal_view.py:test_autoscroll_toggle_moves_to_bottom"
-    ],
-    "UIR-068": [
-      "tests/test_gui_smoke.py:test_boot_button_reflects_config"
     ],
     "UIR-069": [
       "tests/test_gui_smoke.py:test_font_dialog_lists_survive_app_theme_height",
@@ -1028,6 +1037,9 @@
     "UIR-082": [
       "tests/test_gui_smoke.py:test_history_toolbar_action_present"
     ],
+    "UIR-083": [
+      "tests/test_gui_smoke.py:test_show_history_is_nonmodal_and_reused"
+    ],
     "UIR-084": [
       "tests/test_conflict_resolution.py:test_conflict_dialog_cancel_on_window_close",
       "tests/test_conflict_resolution.py:test_on_conflict_detected_records_choice_and_releases_worker"
@@ -1065,25 +1077,11 @@
     "UIR-095": [
       "tests/test_gui_smoke.py:test_general_config_remote_group_first"
     ],
-    "UIR-096": [
-      "tests/test_macros.py:test_macros_checkbox_toggles_macro_window",
-      "tests/test_macros.py:test_terminal_window_has_macros_checkbox"
-    ],
-    "UIR-097": [
-      "tests/test_gui_smoke.py:test_configured_macros_filters_incomplete_slots",
-      "tests/test_macros.py:test_flow_layout_holds_and_reports_items",
-      "tests/test_macros.py:test_macro_window_builds_buttons_and_click_invokes_callback",
-      "tests/test_macros.py:test_macro_window_rebuild_replaces_buttons",
-      "tests/test_macros.py:test_refresh_macro_buttons_shows_only_configured_slots"
-    ],
     "UIR-098": [
-      "tests/test_macros.py:test_macro_config_round_trips_label_and_sequence",
-      "tests/test_macros.py:test_macro_config_test_button_guards_disconnected",
-      "tests/test_macros.py:test_macro_config_test_button_runs_typed_script",
-      "tests/test_macros.py:test_macro_config_uses_tabbed_layout"
+      "tests/test_macros.py:test_terminal_config_macros_round_trip_label_and_sequence"
     ],
     "UIR-099": [
-      "tests/test_gui_smoke.py:test_terminal_context_menu_has_five_items_and_copy_state",
+      "tests/test_gui_smoke.py:test_terminal_context_menu_has_six_items_and_copy_state",
       "tests/test_gui_smoke.py:test_terminal_context_menu_terminal_type_submenu",
       "tests/test_terminal_view.py:test_context_menu_callback_invoked_with_position"
     ],
@@ -1101,6 +1099,34 @@
       "tests/test_gui_smoke.py:test_configured_macros_filters_incomplete_slots",
       "tests/test_gui_smoke.py:test_terminal_context_menu_macros_submenu_disabled_when_none",
       "tests/test_gui_smoke.py:test_terminal_context_menu_macros_submenu_lists_and_runs"
+    ],
+    "UIR-103": [
+      "tests/test_macros.py:test_terminal_config_has_terminal_and_macros_tabs"
+    ],
+    "UIR-103a": [
+      "tests/test_gui_smoke.py:test_apply_terminal_settings_applies_local_echo_and_autoscroll",
+      "tests/test_macros.py:test_terminal_config_has_terminal_and_macros_tabs",
+      "tests/test_macros.py:test_terminal_config_terminal_tab_round_trips"
+    ],
+    "UIR-103b": [
+      "tests/test_macros.py:test_terminal_config_terminal_tab_round_trips"
+    ],
+    "UIR-103c": [
+      "tests/test_macros.py:test_terminal_config_terminal_tab_round_trips"
+    ],
+    "UIR-103d": [
+      "tests/test_macros.py:test_terminal_config_has_terminal_and_macros_tabs",
+      "tests/test_macros.py:test_terminal_config_macros_round_trip_label_and_sequence",
+      "tests/test_macros.py:test_terminal_config_test_button_guards_disconnected",
+      "tests/test_macros.py:test_terminal_config_test_button_runs_typed_script"
+    ],
+    "UIR-104": [
+      "tests/test_gui_smoke.py:test_apply_terminal_settings_applies_local_echo_and_autoscroll"
+    ],
+    "UIR-105": [
+      "tests/test_gui_smoke.py:test_boot_menu_item_reflects_config",
+      "tests/test_gui_smoke.py:test_terminal_context_menu_boot_enabled_reflects_provider",
+      "tests/test_gui_smoke.py:test_terminal_context_menu_has_six_items_and_copy_state"
     ]
   },
   "untested": [
@@ -1240,6 +1266,7 @@
     "FR-153d",
     "FR-155",
     "FR-156",
+    "FR-164",
     "IFR-001",
     "IFR-002",
     "IFR-003",
@@ -1297,12 +1324,12 @@
     "UIR-064",
     "UIR-065",
     "UIR-067",
+    "UIR-068",
     "UIR-070",
     "UIR-071",
     "UIR-072",
     "UIR-073",
     "UIR-074",
-    "UIR-083",
     "UIR-083a",
     "UIR-083b",
     "UIR-083c",
@@ -1316,7 +1343,9 @@
     "UIR-091b",
     "UIR-091c",
     "UIR-091d",
-    "UIR-093"
+    "UIR-093",
+    "UIR-096",
+    "UIR-097"
   ],
   "stale": {}
 }

@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.24.0**
+**Version 2.25.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -138,7 +138,7 @@ A draggable splitter sits between the panes so you can resize them.
 
 ## 7. Configuration
 
-Settings are stored in JSON configuration files that you create and save to a folder of your choosing. There are two configuration dialogs, both reached from the **Config** menu.
+Settings are stored in JSON configuration files that you create and save to a folder of your choosing. There are three configuration dialogs — **Serial**, **Terminal**, and **General** — all reached from the **Config** menu.
 
 ### Config → Serial
 
@@ -153,7 +153,6 @@ Configure how the program talks to the serial hardware:
 | **Parity** | NONE, ODD, EVEN, MARK, SPACE | NONE |
 | **Stop Bits** | 1 or 2 | 1 |
 | **Flow Control** | NONE, XON/XOFF, RTS/CTS, DSR/DTR | NONE |
-| **Terminal Type** | VT100, VT52, ADM-3A | VT100 |
 | **Msec per Char** | 0 – 255 | 0 |
 | **Msec per Line** | 0 – 255 | 0 |
 | **Terminal Timeout (ms)** | 10 – 5000 | 100 |
@@ -161,11 +160,37 @@ Configure how the program talks to the serial hardware:
 
 > **Terminal Port vs. Transport Port:** The *Terminal Port* carries interactive commands and directory listings; the *Transport Port* carries X-Modem file transfers. They may be the **same** physical port or **two different** ports. When they share one port, the program automatically pauses terminal reading during transfers to keep the data clean.
 
-> **Terminal Type** selects the terminal emulation the Terminal Window uses to interpret the remote's output and to encode the cursor keys you type. The default **VT100** is a VT-100/ANSI terminal. Choose **VT52** for software written for a DEC VT-52, or **ADM-3A** for the classic Lear Siegler ADM-3A that much CP/M software (WordStar, Turbo Pascal, etc.) targets. VT-52 and ADM-3A output is translated into the same on-screen VT-100 model, so cursor positioning, screen clearing, and (for VT-52) line-drawing all work; the ADM-3A has no colour or text attributes. A change takes effect immediately in an open Terminal Window.
-
 > **Msec per Char / Msec per Line** add small pacing delays when sending data — useful for slower CP/M systems that can drop characters if fed too fast.
 
 > **Terminal Timeout / Transfer Timeout** set the serial read timeout (in milliseconds) for each port. The default is **100 ms**. When using **XMODEM 1K** transfers, it is recommended to increase these to **1000 ms** to improve reliability, as the larger 1024-byte blocks take longer to arrive than the default timeout allows for in a single read.
+
+### Config → Terminal
+
+Configure the Terminal Window and its macro buttons. The dialog has two tabs.
+
+**Terminal tab:**
+
+| Field | Options | Default |
+|-------|---------|---------|
+| **Terminal Type** | VT100, VT52, ADM-3A | VT100 |
+| **Local Echo** | On / Off | Off |
+| **Autoscroll** | On / Off | On |
+
+> **Terminal Type** selects the terminal emulation the Terminal Window uses to interpret the remote's output and to encode the cursor keys you type. The default **VT100** is a VT-100/ANSI terminal. Choose **VT52** for software written for a DEC VT-52, or **ADM-3A** for the classic Lear Siegler ADM-3A that much CP/M software (WordStar, Turbo Pascal, etc.) targets. VT-52 and ADM-3A output is translated into the same on-screen VT-100 model, so cursor positioning, screen clearing, and (for VT-52) line-drawing all work; the ADM-3A has no colour or text attributes. A change takes effect immediately in an open Terminal Window. (You can also switch the type on the fly from the Terminal Window's right-click menu — see [Section 13](#13-the-terminal-window).)
+
+> **Local Echo** shows what you type in the Terminal Window on screen. Leave it **Off** when the remote already echoes your keystrokes (the usual case); turn it **On** if what you type does not appear.
+
+> **Autoscroll** keeps the newest output visible as it arrives. Leave it **On** for normal use; turn it **Off** to stop the view jumping to the bottom while you scroll back through earlier output.
+
+**Macros tab:**
+
+Program the ten macro buttons offered by the Terminal Window's right-click **Macros** submenu. The tab has one inner **tab per button**, **Button 1** through **Button 10**; select a tab to edit that button. Each tab has:
+
+- **Label** — the caption shown for the macro (up to 30 characters). A slot is offered only when it has both a label and a keystroke sequence.
+- **Keystrokes** — a short script in the same directive language as the boot sequence (`SEND`, `SENDRAW`, `WAIT`, `WAITFOR` — see [Section 9](#9-booting-the-remote-into-cpm)). For example, `SEND DIR` sends `DIR` followed by the end-of-line; `SENDRAW 03` sends a raw Ctrl-C.
+- **Test** — sends the slot's currently entered script (even before saving) to the remote so you can check it. This requires the Terminal Port to be open.
+
+Like the other config dialogs, **Save** writes only the terminal and macro settings to the loaded configuration file (applying them immediately to a running Terminal Window); with no file loaded the change applies to the session only.
 
 ### Config → General
 
@@ -202,24 +227,14 @@ Configure CP/M command templates and behavior. The remote-command fields are gat
 | **Host Directory** | The host working directory, saved with the configuration. | — |
 | **Boot Sequence** | An optional script of keystrokes that drives the remote into CP/M when it does not boot there on its own. See [Section 9](#9-booting-the-remote-into-cpm). | *(blank)* |
 
-> **The Save button in each dialog.** The **Save** button in the Serial dialog writes **only the serial settings** to the configuration file you currently have loaded, leaving the general settings in that file untouched. Likewise, the **Save** button in the General dialog writes **only the general settings**, leaving the serial settings untouched. Neither button opens a file picker. If no configuration file is loaded yet, the change is applied to the current session only and a warning reminds you to use **File → Save** to write it to a file. To save *everything* to a file (or to a new file), use **File → Save**.
-
-### Config → Macro Buttons
-
-Opens the **Macro Buttons Config** dialog, where you program the buttons shown in the Terminal Window's floating Macro Window (see [Section 13](#13-the-terminal-window)). The dialog has one **tab per button**, **Button 1** through **Button 10**; select a tab to edit that button. Each tab has:
-
-- **Label** — the caption shown on the button (up to 30 characters). A slot appears in the Macro Window only when it has both a label and a keystroke sequence.
-- **Keystrokes** — a short script in the same directive language as the boot sequence (`SEND`, `SENDRAW`, `WAIT`, `WAITFOR` — see [Section 9](#9-booting-the-remote-into-cpm)). For example, `SEND DIR` sends `DIR` followed by the end-of-line; `SENDRAW 03` sends a raw Ctrl-C.
-- **Test** — sends the slot's currently entered script (even before saving) to the remote so you can check it. This requires the Terminal Port to be open.
-
-Like the other config dialogs, **Save** writes only the macro settings to the loaded configuration file (and refreshes the Macro Window if it is open); with no file loaded the change applies to the session only.
+> **The Save button in each dialog.** The **Save** button in the Serial dialog writes **only the serial settings** to the configuration file you currently have loaded, leaving the other settings in that file untouched. The **Terminal** dialog likewise writes only the terminal and macro settings, and the **General** dialog writes only the general settings. No button opens a file picker. If no configuration file is loaded yet, the change is applied to the current session only and a warning reminds you to use **File → Save** to write it to a file. To save *everything* to a file (or to a new file), use **File → Save**.
 
 ### File Menu Actions
 
 - **New** — Saves the current configuration, then resets all settings to their defaults and closes any open ports.
 - **Load** — Opens a saved JSON configuration. The loaded file's name appears in the title bar, and its host directory (if stored) is restored.
 - **Save** — Writes the **entire** current configuration (all serial and general settings) to a JSON file you choose. The saved configuration is remembered and reloaded automatically on the next launch.
-- **Exit** — Closes all ports and saves your window geometry and the current configuration name.
+- **Exit** — Closes all ports and saves your window geometry and the current configuration name. It also remembers which of the **Terminal Window** and **Transfer History** window were open and reopens them on the next launch.
 
 ---
 
@@ -461,39 +476,29 @@ The rename and delete dialogs follow a consistent layout: **Cancel** on the left
 
 ## 13. The Terminal Window
 
-Open the Terminal from the toolbar **Terminal** button. It is a non-modal window — it stays available in the background and reopens in the same state when you click the button again.
+Open the Terminal from the toolbar **Terminal** button. It is a non-modal window — it stays available in the background and reopens in the same state when you click the button again. If the Terminal Window is open when you exit the app, it is **reopened automatically** the next time you start (see [Section 7](#7-configuration), *Exit*).
 
 The Terminal is a **functional VT-100 terminal**: it interprets the VT-100/ANSI escape sequences CP/M software emits (cursor positioning, screen and line erase, colour and text attributes, scrolling), so full-screen programs such as editors display correctly rather than as raw escape codes.
 
 ### Layout
 
-- **Receive area** (top) — A monospaced character-cell screen (80 × 24 initially) rendering the live terminal display, with at least 1000 lines of scrollback. It shows everything received from CP/M, plus optional local echo and transfer byte hex. This is also where you type (see below). The screen **reflows to the window size** — make the window larger or smaller and the number of visible columns and rows follows it. (Note: the remote is not told the new size, so a full-screen CP/M program that assumes an 80 × 24 screen still draws to that 80 × 24 area.)
-- **Controls** — **Clear** (resets the screen and empties the buffers), **Boot into CP/M** (runs the configured boot sequence — see [Section 9](#9-booting-the-remote-into-cpm)), **Macros** (shows/hides the floating Macro Window — see below; off by default), **Local Echo** (echoes what you type into the screen; off by default), **Autoscroll** (keeps the newest output in view; on by default), and **Font…** (see below).
+- **Receive area** — A monospaced character-cell screen (80 × 24 initially) rendering the live terminal display, with at least 1000 lines of scrollback. It shows everything received from CP/M, plus optional local echo and transfer byte hex. This is also where you type (see below). The screen **reflows to the window size** — make the window larger or smaller and the number of visible columns and rows follows it. (Note: the remote is not told the new size, so a full-screen CP/M program that assumes an 80 × 24 screen still draws to that 80 × 24 area.)
 - **Input hint** (bottom) — A reminder that there is no separate text field: you type directly into the terminal.
 
-> The **Boot into CP/M** button is disabled until you configure a boot sequence in Config → General; once a sequence is saved it becomes available without reopening the window.
-
-### Macro buttons
-
-Ticking the **Macros** checkbox opens a small floating **Macros** window: a palette of buttons that each send a pre-programmed sequence of keystrokes to the remote when clicked — handy for commands you type often (directory listings, loading a program, resetting the monitor). The window floats above the Terminal, and its buttons **reflow to fit** as you resize it. Closing the Macros window (or un-ticking the checkbox) hides it; it reopens in the same place when you tick the box again.
-
-You program the buttons in **Config → Macro Buttons** (see [Section 7](#7-configuration)). Up to ten buttons can be defined; a button appears in the window only when you have given it both a label and a keystroke sequence. Each button's sequence uses the **same script directives as the boot sequence** (`SEND`, `SENDRAW`, `WAIT`, `WAITFOR` — see [Section 9](#9-booting-the-remote-into-cpm)), so a macro can send text, raw control bytes, pauses, and wait-for-prompt steps. Clicking a button (or the **Test** button in the config dialog) requires the Terminal Port to be open.
-
-### Changing the terminal font
-
-The **Font…** button (in the control row, to the right of Autoscroll) opens your system's standard font-selection dialog, where you can choose the family, style, and size used to draw the Receive area. The new font is applied straight away — the character grid reflows to the new character size — and is **remembered across sessions**, so the Terminal reopens with the font you chose. The setting is a per-machine preference, independent of which configuration file is loaded. The default is a monospaced **Courier New**; a monospaced font is recommended so full-screen CP/M programs line up correctly.
+The window has **no buttons or checkboxes** — every terminal action is on the **right-click menu** (below). **Local Echo** and **Autoscroll** are set in **Config → Terminal** (see [Section 7](#7-configuration)), and the macro buttons are programmed on that dialog's **Macros** tab.
 
 ### The right-click menu
 
-**Right-click** anywhere in the Receive area for a context menu with five actions:
+**Right-click** anywhere in the Receive area for a context menu:
 
 - **Copy** — copies the currently highlighted text to the clipboard. To highlight, press and drag the left mouse button across the screen; trailing spaces are trimmed from each line. Copy is greyed out when nothing is selected.
 - **Paste** — sends the clipboard's text to the CP/M system as if you had typed it. Line breaks in the pasted text are sent as the configured end-of-line character(s). (As with typing, the Terminal Port must be open, or the status bar reports that it cannot send.)
-- **Clear Window** — resets the screen and empties the buffers (the same as the **Clear** button).
-- **Font…** — opens the font-selection dialog (the same as the **Font…** button, above).
+- **Clear Window** — resets the screen and empties the buffers.
+- **Font…** — opens your system's standard font-selection dialog, where you can choose the family, style, and size used to draw the Receive area. The new font is applied straight away — the character grid reflows to the new character size — and is **remembered across sessions**, independently of which configuration file is loaded. The default is a monospaced **Courier New**; a monospaced font is recommended so full-screen CP/M programs line up correctly.
 - **Reset Size (24×80)** — resizes the window so the character grid returns to the classic 80 columns × 24 rows.
-- **Terminal Type** (submenu) — lists **VT100**, **VT52**, and **ADM-3A** with the active type ticked. Choosing one switches the terminal emulation straight away — exactly like the **Terminal Type** dropdown in Config → Serial (see [Section 7](#7-configuration)). The choice is kept with the rest of the serial settings and saved next time you save the configuration.
-- **Macros** (submenu) — lists your configured macro buttons by label (the same ones shown in the Macro Window). Choosing one runs that macro's keystrokes on the CP/M system, so you can fire a macro without opening the Macro Window. If no macros are configured the submenu is greyed out.
+- **Boot into CP/M** — runs the configured boot sequence (see [Section 9](#9-booting-the-remote-into-cpm)). It is greyed out until you configure a boot sequence in Config → General.
+- **Terminal Type** (submenu) — lists **VT100**, **VT52**, and **ADM-3A** with the active type ticked. Choosing one switches the terminal emulation straight away — exactly like the **Terminal Type** dropdown in Config → Terminal (see [Section 7](#7-configuration)). The choice is kept with the rest of the terminal settings and saved next time you save the configuration.
+- **Macros** (submenu) — lists your configured macro buttons by label. Choosing one runs that macro's keystrokes on the CP/M system. If no macros are configured the submenu is greyed out. You program the macros on the **Macros** tab of **Config → Terminal** (see [Section 7](#7-configuration)); each uses the same script directives as the boot sequence (`SEND`, `SENDRAW`, `WAIT`, `WAITFOR`), and running one requires the Terminal Port to be open.
 
 ### Typing to the Remote
 
@@ -510,11 +515,11 @@ Click into the receive area to give it focus, then type — **each keystroke is 
 
 ## 14. Transfer History
 
-The program records **every transfer attempt** — success, failure, cancellation, or skip — in a persistent history file (`~/.cpm_fm_history.json`). Open it from the toolbar **History** button.
+The program records **every transfer attempt** — success, failure, cancellation, or skip — in a persistent history file (`~/.cpm_fm_history.json`). Open it from the toolbar **History** button. The History window is **non-modal**, so you can leave it open beside the main window and the Terminal; clicking **History** again simply brings the open window to the front. If it is open when you exit, it reopens on the next launch (see [Section 7](#7-configuration), *Exit*).
 
 Each entry stores the timestamp, filename, path, direction, status, size, and any error message. History is automatically pruned to a maximum of 500 entries and 30 days.
 
-In the History dialog you can:
+In the History window you can:
 
 - **Filter by direction** — All, Remote (uploads), or Host (downloads).
 - **Filter by status** — All, Success, Failure, Cancelled, or Skipped.
@@ -576,6 +581,8 @@ Switch languages at any time via **Config → Language**. The change is applied 
 | Stop Bits | 1 |
 | Flow Control | NONE |
 | Terminal Type | VT100 |
+| Local Echo | OFF |
+| Autoscroll | ON |
 | Msec per Char / Line | 0 / 0 |
 | Terminal / Transfer Timeout | 100 ms / 100 ms |
 | List Files Cmd | `DIR` |

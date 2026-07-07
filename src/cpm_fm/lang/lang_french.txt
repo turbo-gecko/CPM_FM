@@ -164,12 +164,7 @@ transfer.count = Blocs : {blocks}    Octets : {bytes_done}
 
 # --- Terminal window -----------------------------------------------------------
 terminal.title = Terminal
-terminal.clear = Effacer
-terminal.local_echo = Écho local
-terminal.autoscroll = Défilement automatique
 terminal.input_hint = Tapez ici - les touches sont envoyées en direct
-terminal.boot = Démarrer dans CP/M
-terminal.font = Police...
 terminal.font_dialog_title = Police du terminal
 
 # --- Terminal context menu (v2.23) ---------------------------------------------
@@ -178,6 +173,7 @@ terminal.menu.paste = Coller
 terminal.menu.clear = Effacer la fenêtre
 terminal.menu.font = Police...
 terminal.menu.reset_size = Réinitialiser la taille (24×80)
+terminal.menu.boot = Démarrer dans CP/M
 terminal.menu.terminal_type = Type de terminal
 terminal.menu.macros_sub = Macros
 
@@ -190,11 +186,21 @@ config.serial.data_bits = Bits de données
 config.serial.parity = Parité
 config.serial.stop_bits = Bits d'arrêt
 config.serial.flow_control = Contrôle de flux
-config.serial.terminal_type = Type de terminal
 config.serial.msec_char = ms/caractère
 config.serial.msec_line = ms/ligne
 config.serial.terminal_timeout = Délai terminal (ms)
 config.serial.transport_timeout = Délai de transfert (ms)
+
+# --- Terminal Configuration dialog (v2.25) -------------------------------------
+menu.config.terminal = Terminal
+config.terminal.title = Configuration terminal
+config.terminal.tab.terminal = Terminal
+config.terminal.tab.macros = Macros
+config.terminal.terminal_type = Type de terminal
+config.terminal.local_echo = Écho local
+config.terminal.autoscroll = Défilement automatique
+status.terminal_settings_saved = Paramètres terminal enregistrés dans {path}
+status.terminal_settings_updated = Paramètres terminal mis à jour
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = Configuration générale
@@ -279,13 +285,7 @@ button.terminal = Terminal
 button.close = Fermer
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-terminal.macros = Macros
-menu.config.macros = Boutons macro
-macro.title = Macros
-config.macros.title = Configuration des boutons macro
 config.macros.button = Bouton {n}
 config.macros.label = Libellé
 config.macros.sequence = Séquence de touches
 status.macro_failed = Échec de la macro - vérifiez sa séquence de touches
-status.macro_settings_saved = Paramètres des macros enregistrés dans {path}
-status.macro_settings_updated = Paramètres des macros mis à jour

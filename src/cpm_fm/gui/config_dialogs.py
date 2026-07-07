@@ -321,14 +321,6 @@ class SerialConfigDialog(ConfigDialog):
                 "options": ["NONE", "XON/XOFF", "RTS/CTS", "DSR/DTR"],
                 "default": "NONE",
             },
-            # UIR-034: terminal emulation type applied to the Terminal Window.
-            {
-                "key": "terminal_type",
-                "label_key": "config.serial.terminal_type",
-                "type": "dropdown",
-                "options": ["VT100", "VT52", "ADM-3A"],
-                "default": "VT100",
-            },
             # UIR-030/UIR-031: integer 0..255 inclusive.
             {
                 "key": "msec_char",
@@ -713,57 +705,111 @@ class GeneralConfigDialog(ConfigDialog):
             widget.setEnabled(enabled)
 
 
-class MacroConfigDialog(ConfigDialog):
-    """Configuration dialog for the ten Macro Window buttons (UIR-098).
+class TerminalConfigDialog(ConfigDialog):
+    """Configuration dialog for the Terminal Window settings and macro buttons.
 
-    Presents ten "Button <n>" slots as a tabbed layout — one tab per slot — each
-    with a Label field, a multi-line Keystrokes editor (the button's
-    boot-sequence-style script, FR-047/FR-162), and a Test button that runs the
-    slot's currently entered script on the Terminal Port. It reuses
-    :class:`ConfigDialog`'s ``save``/``done``/geometry handling but replaces the
-    declarative form with a :class:`QTabWidget` (there is no fixed two-column
-    field list to build).
+    A tabbed dialog (UIR-103) with two tabs:
 
-    Satisfies: UIR-098, FR-021b, FR-162.
+    * **Terminal** (UIR-103a) — a two-column form holding the Terminal Type
+      dropdown (UIR-034), the Local Echo checkbox (UIR-103b/FR-093), and the
+      Autoscroll checkbox (UIR-103c/UIR-062).
+    * **Macros** (UIR-103d/UIR-098) — ten "Button <n>" slots as a nested tabbed
+      layout, each with a Label field, a multi-line Keystrokes editor (the
+      button's boot-sequence-style script, FR-047/FR-162), and a Test button
+      that runs the slot's currently entered script on the Terminal Port.
+
+    It reuses :class:`ConfigDialog`'s ``save``/``done``/geometry handling and
+    :meth:`ConfigDialog._build_field` for the Terminal-tab fields, but replaces
+    the single declarative form with a :class:`QTabWidget`. On Save the inherited
+    :meth:`ConfigDialog.save` writes every registered entry — the three terminal
+    settings and all twenty ``macro_<n>_*`` keys — back to the settings.
+
+    Satisfies: UIR-103, UIR-103a, UIR-098, UIR-034, FR-093, FR-021b, FR-162.
     """
 
     MACRO_COUNT = 10
 
     def __init__(self, parent, settings, callback, window_state=None):
         """
-        Satisfies: UIR-098, FR-021b.
+        Satisfies: UIR-103, UIR-103a, UIR-034, FR-021b.
 
         ``parent`` is the MainWindow, stored under ``_main_window`` so the Test
         handlers can reach its serial manager and macro runner (mirrors
-        :class:`GeneralConfigDialog`). Must be set before ``super().__init__``,
-        which builds the widgets and enters the modal ``exec()``.
+        :class:`GeneralConfigDialog`). The Terminal-tab field list is passed to
+        the base as ``fields`` so :meth:`ConfigDialog._build_field` can build
+        those rows; the macro tabs are built directly in :meth:`create_widgets`.
+        Must be set before ``super().__init__``, which builds the widgets and
+        enters the modal ``exec()``.
         """
         self._main_window = parent
+        # UIR-103a: the three Terminal-tab settings, built via the base field
+        # machinery so their save/round-trip is shared with the other dialogs.
+        terminal_fields = [
+            # UIR-034: terminal emulation type applied to the Terminal Window.
+            {
+                "key": "terminal_type",
+                "label_key": "config.terminal.terminal_type",
+                "type": "dropdown",
+                "options": ["VT100", "VT52", "ADM-3A"],
+                "default": "VT100",
+            },
+            # UIR-103b/FR-093: copy transmitted data to the Receive view.
+            {
+                "key": "local_echo",
+                "label_key": "config.terminal.local_echo",
+                "type": "checkbox",
+                "default": "OFF",
+            },
+            # UIR-103c/UIR-062: keep the newest output visible in the Receive view.
+            {
+                "key": "autoscroll",
+                "label_key": "config.terminal.autoscroll",
+                "type": "checkbox",
+                "default": "ON",
+            },
+        ]
         super().__init__(
             parent,
-            tr("config.macros.title"),
+            tr("config.terminal.title"),
             settings,
-            [],  # no declarative field list — create_widgets is overridden
+            terminal_fields,
             callback,
             window_state,
-            "macro_config",
+            "terminal_config",
         )
 
     def create_widgets(self):
-        """Build the tabbed layout of ten macro-button slots (UIR-098).
+        """Build the Terminal-settings tab and the nested macro-button tabs.
 
-        Each slot is a tab (labelled "Button <n>") holding a Label field, a
-        Keystrokes editor, and a Test button. The Label/Keystrokes widgets are
-        registered in ``self.entries`` under the ``macro_<n>_label``/
-        ``macro_<n>_seq`` keys so the inherited :meth:`ConfigDialog.save` writes
-        them straight back to the settings (FR-021b).
+        The **Terminal** tab lays the three ``self.fields`` (Terminal Type, Local
+        Echo, Autoscroll) into a two-column form via
+        :meth:`ConfigDialog._build_field`. The **Macros** tab holds a nested
+        :class:`QTabWidget` of ten slots, each a Label field, a Keystrokes editor,
+        and a Test button; the Label/Keystrokes widgets are registered in
+        ``self.entries`` under the ``macro_<n>_label``/``macro_<n>_seq`` keys so
+        the inherited :meth:`ConfigDialog.save` writes all of them (with the three
+        terminal settings) straight back to the settings.
 
-        Satisfies: UIR-098, UIR-075, FR-021b.
+        Satisfies: UIR-103, UIR-103a, UIR-098, UIR-075, FR-021b.
         """
         outer = QVBoxLayout(self)
         self.entries: dict[str, Any] = {}
 
         tabs = QTabWidget()
+
+        # UIR-103a: the Terminal-settings tab (Terminal Type / Local Echo /
+        # Autoscroll) as a two-column form.
+        term_page = QWidget()
+        term_form = QFormLayout(term_page)
+        for field in self.fields:
+            label, widget = self._build_field(field)
+            term_form.addRow(label, widget)
+        tabs.addTab(term_page, tr("config.terminal.tab.terminal"))
+
+        # UIR-103d/UIR-098: the Macros tab — a nested tab per button slot.
+        macro_page = QWidget()
+        macro_layout = QVBoxLayout(macro_page)
+        macro_tabs = QTabWidget()
         for i in range(1, self.MACRO_COUNT + 1):
             page = QWidget()
             form = QFormLayout(page)
@@ -782,12 +828,15 @@ class MacroConfigDialog(ConfigDialog):
             form.addRow("", test_btn)
 
             # UIR-098: one tab per button slot, labelled "Button <n>".
-            tabs.addTab(page, tr("config.macros.button", n=i))
+            macro_tabs.addTab(page, tr("config.macros.button", n=i))
+        macro_layout.addWidget(macro_tabs)
+        tabs.addTab(macro_page, tr("config.terminal.tab.macros"))
+
         outer.addWidget(tabs)
 
         # A sensible default size for the tabbed editor when no geometry is
         # saved yet (restore_geometry, run after this, overrides it if present).
-        self.resize(420, 320)
+        self.resize(460, 380)
 
         # UIR-075: Cancel far left, Save far right.
         save_btn = QPushButton(tr("button.save"))
