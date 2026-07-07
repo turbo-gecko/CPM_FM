@@ -286,7 +286,7 @@ button.terminal = 終端
 button.close = 關閉
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-config.macros.button = 按鈕 {n}
+config.macros.macro = 巨集 {n}
 config.macros.label = 標籤
 config.macros.sequence = 按鍵序列
 status.macro_failed = 巨集執行失敗 - 請檢查其按鍵序列

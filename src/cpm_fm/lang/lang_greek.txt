@@ -286,7 +286,7 @@ button.terminal = Τερματικός
 button.close = Κλείσιμο
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-config.macros.button = Κουμπί {n}
+config.macros.macro = Μακροεντολή {n}
 config.macros.label = Ετικέτα
 config.macros.sequence = Ακολουθία πλήκτρων
 status.macro_failed = Η μακροεντολή απέτυχε - ελέγξτε την ακολουθία πλήκτρων

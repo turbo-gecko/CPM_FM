@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.27.0**
+**Version 2.27.1**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -184,7 +184,7 @@ Configure the Terminal Window and its macro buttons. The dialog has two tabs.
 
 **Macros tab:**
 
-Program the ten macro buttons offered by the Terminal Window's right-click **Macros** submenu. The tab has one inner **tab per button**, **Button 1** through **Button 10**; select a tab to edit that button. Each tab has:
+Program the ten macros offered by the Terminal Window's right-click **Macros** submenu. The tab has one inner **tab per macro**, **Macro 1** through **Macro 10**; select a tab to edit that macro. Each tab has:
 
 - **Label** — the caption shown for the macro (up to 30 characters). A slot is offered only when it has both a label and a keystroke sequence.
 - **Keystrokes** — a short script in the same directive language as the boot sequence (`SEND`, `SENDRAW`, `WAIT`, `WAITFOR` — see [Section 9](#9-booting-the-remote-into-cpm)). For example, `SEND DIR` sends `DIR` followed by the end-of-line; `SENDRAW 03` sends a raw Ctrl-C.

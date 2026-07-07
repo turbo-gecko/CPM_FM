@@ -286,7 +286,7 @@ button.terminal = 终端
 button.close = 关闭
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-config.macros.button = 按钮 {n}
+config.macros.macro = 宏 {n}
 config.macros.label = 标签
 config.macros.sequence = 按键序列
 status.macro_failed = 宏运行失败 - 请检查其按键序列

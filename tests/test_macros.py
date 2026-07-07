@@ -3,7 +3,7 @@
 Exercise the macro-button feature headlessly under an offscreen Qt platform: the
 ``macro_<n>_*`` settings defaults, the keystroke-script execution path, and the
 :class:`TerminalConfigDialog` — its Terminal tab (Terminal Type / Local Echo /
-Autoscroll) and its Macros tab (the ten Button slots, round-trip, and Test
+Autoscroll) and its Macros tab (the ten Macro slots, round-trip, and Test
 button). The floating Macro Window and its checkbox were removed in v2.25; macros
 are now run from the Terminal Window context-menu Macros submenu (covered in
 ``test_gui_smoke.py``).
@@ -186,7 +186,7 @@ def test_terminal_config_has_terminal_and_macros_tabs(qapp, monkeypatch):
         outer = next(t for t in tabs if t.count() == 2)
         assert [outer.tabText(i) for i in range(2)] == ["Terminal", "Macros"]
         inner = next(t for t in tabs if t.count() == 10)
-        assert [inner.tabText(i) for i in range(10)] == [f"Button {n}" for n in range(1, 11)]
+        assert [inner.tabText(i) for i in range(10)] == [f"Macro {n}" for n in range(1, 11)]
     finally:
         dlg.deleteLater()
 

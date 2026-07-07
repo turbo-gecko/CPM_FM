@@ -291,7 +291,7 @@ manual.title = User Manual
 manual.load_error = Could not load the user manual from: {path}
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-config.macros.button = Button {n}
+config.macros.macro = Macro {n}
 config.macros.label = Label
 config.macros.sequence = Keystrokes
 status.macro_failed = Macro failed - check its keystroke sequence

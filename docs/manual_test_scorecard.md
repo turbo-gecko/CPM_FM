@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.37 |
-| Scorecard for plan version | 1.37 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.38 |
+| Scorecard for plan version | 1.38 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -109,7 +109,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-G08 | No "Change Disk" field | UIR-043 | | | |
 | MT-G10 | Boot Sequence multi-line field round-trips | UIR-059 | | | |
 | MT-G11 | Test button (Send/Receive): reports no-response vs. success, no real transfer | UIR-094/095, FR-161 | | | |
-| MT-G12 | Config → Terminal dialog: menu item, Terminal tab (Type/Local Echo/Autoscroll) + Macros tab (ten Button slots) | FR-021c, UIR-003, UIR-103, UIR-103a, UIR-103d | | | |
+| MT-G12 | Config → Terminal dialog: menu item, Terminal tab (Type/Local Echo/Autoscroll) + Macros tab (ten Macro slots) | FR-021c, UIR-003, UIR-103, UIR-103a, UIR-103d | | | |
 | MT-G12a | Terminal tab settings round-trip; Save persists terminal+macro subset only | FR-021c, UIR-034, UIR-103b, UIR-103c | | | |
 | MT-G13 | Macro slots round-trip label + keystrokes; Save persists terminal+macro subset only | FR-021b, FR-021c, UIR-098, UIR-103d | | | |
 | MT-G14 | Macros-tab Test runs typed script on the port; not-connected error when closed | FR-162, UIR-098, UIR-103d | | | |

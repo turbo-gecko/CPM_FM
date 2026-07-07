@@ -286,7 +286,7 @@ button.terminal = 터미널
 button.close = 닫기
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-config.macros.button = 버튼 {n}
+config.macros.macro = 매크로 {n}
 config.macros.label = 레이블
 config.macros.sequence = 키 입력
 status.macro_failed = 매크로 실패 - 키 입력 시퀀스를 확인하세요

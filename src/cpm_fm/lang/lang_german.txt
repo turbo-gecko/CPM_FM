@@ -286,7 +286,7 @@ button.terminal = Terminal
 button.close = Schließen
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-config.macros.button = Taste {n}
+config.macros.macro = Makro {n}
 config.macros.label = Beschriftung
 config.macros.sequence = Tastenfolge
 status.macro_failed = Makro fehlgeschlagen - Tastenfolge prüfen

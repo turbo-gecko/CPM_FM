@@ -286,7 +286,7 @@ button.terminal = Terminal
 button.close = Sluiten
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-config.macros.button = Knop {n}
+config.macros.macro = Macro {n}
 config.macros.label = Label
 config.macros.sequence = Toetsenreeks
 status.macro_failed = Macro mislukt - controleer de toetsenreeks

@@ -291,7 +291,7 @@ button.terminal = Captain's Log
 button.close = Belay
 
 # --- Macro buttons (v2.21) -----------------------------------------------------
-config.macros.button = Button {n}
+config.macros.macro = Macro {n}
 config.macros.label = Name
 config.macros.sequence = Key Volley
 status.macro_failed = The battle cry fell flat - check yer key volley

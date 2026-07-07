@@ -4,7 +4,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.37 |
+| Version | 1.38 |
 | Status | Draft |
 | Date | 2026-07-07 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.25.0) |
@@ -191,9 +191,9 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
-| MT-G12 [visual] | FR-021c, UIR-003, UIR-103, UIR-103a, UIR-103d | Open **Config > Terminal**. | The Config menu contains a **Terminal** item (between Serial and General; there is **no** Macro Buttons item). It opens a modal, resizable dialog titled "Terminal Config" with two tabs — **Terminal** and **Macros**. The Terminal tab shows **Terminal Type** (VT100/VT52/ADM-3A, default VT100), **Local Echo** (default off), and **Autoscroll** (default on). The Macros tab has a **tab per button**, labelled **Button 1 … Button 10**; each has a **Label** field, a multi-line **Keystrokes** editor, and a **Test** button. |
+| MT-G12 [visual] | FR-021c, UIR-003, UIR-103, UIR-103a, UIR-103d | Open **Config > Terminal**. | The Config menu contains a **Terminal** item (between Serial and General; there is **no** Macro Buttons item). It opens a modal, resizable dialog titled "Terminal Config" with two tabs — **Terminal** and **Macros**. The Terminal tab shows **Terminal Type** (VT100/VT52/ADM-3A, default VT100), **Local Echo** (default off), and **Autoscroll** (default on). The Macros tab has a **tab per macro**, labelled **Macro 1 … Macro 10**; each has a **Label** field, a multi-line **Keystrokes** editor, and a **Test** button. |
 | MT-G12a | FR-021c, UIR-034, UIR-103b, UIR-103c | On the Terminal tab set Terminal Type = ADM-3A, tick Local Echo, untick Autoscroll; Save. Reopen the dialog. | The three values round-trip. With a config file loaded, only the terminal + macro settings are written to it (serial/general settings unchanged); with no file loaded a warning is shown and the change applies to the session only. |
-| MT-G13 | FR-021b, FR-021c, UIR-098, UIR-103d | On the Macros tab, in Button 1 set Label `Dir` and Keystrokes `SEND DIR`; in Button 2 set Label `Reset` and Keystrokes `SENDRAW 03`. Save. Reopen the dialog. | The entered labels and keystroke scripts are shown verbatim after reopen and are written to the loaded config file along with the terminal settings. |
+| MT-G13 | FR-021b, FR-021c, UIR-098, UIR-103d | On the Macros tab, in Macro 1 set Label `Dir` and Keystrokes `SEND DIR`; in Macro 2 set Label `Reset` and Keystrokes `SENDRAW 03`. Save. Reopen the dialog. | The entered labels and keystroke scripts are shown verbatim after reopen and are written to the loaded config file along with the terminal settings. |
 | MT-G14 [CP/M] | FR-162, UIR-098, UIR-103d | Connected, on the Macros tab type a script (e.g. `SENDRAW 0D`) into a slot's Keystrokes editor (need not be saved) and press its **Test** button. Then repeat with the Terminal Port **closed**. | Connected: the script runs on the Terminal Port (the remote responds — e.g. the drive prompt appears in the Terminal Window). Disconnected: a "Terminal port not connected" error dialog is shown and nothing is sent. |
 
 ---

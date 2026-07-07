@@ -725,7 +725,7 @@ class TerminalConfigDialog(ConfigDialog):
     * **Terminal** (UIR-103a) — a two-column form holding the Terminal Type
       dropdown (UIR-034), the Local Echo checkbox (UIR-103b/FR-093), and the
       Autoscroll checkbox (UIR-103c/UIR-062).
-    * **Macros** (UIR-103d/UIR-098) — ten "Button <n>" slots as a nested tabbed
+    * **Macros** (UIR-103d/UIR-098) — ten "Macro <n>" slots as a nested tabbed
       layout, each with a Label field, a multi-line Keystrokes editor (the
       button's boot-sequence-style script, FR-047/FR-162), and a Test button
       that runs the slot's currently entered script on the Terminal Port.
@@ -818,7 +818,7 @@ class TerminalConfigDialog(ConfigDialog):
             term_form.addRow(label, widget)
         tabs.addTab(term_page, tr("config.terminal.tab.terminal"))
 
-        # UIR-103d/UIR-098: the Macros tab — a nested tab per button slot.
+        # UIR-103d/UIR-098: the Macros tab — a nested tab per macro slot.
         macro_page = QWidget()
         macro_layout = QVBoxLayout(macro_page)
         macro_tabs = QTabWidget()
@@ -839,8 +839,8 @@ class TerminalConfigDialog(ConfigDialog):
             test_btn.clicked.connect(partial(self._run_test, i))
             form.addRow("", test_btn)
 
-            # UIR-098: one tab per button slot, labelled "Button <n>".
-            macro_tabs.addTab(page, tr("config.macros.button", n=i))
+            # UIR-098: one tab per macro slot, labelled "Macro <n>".
+            macro_tabs.addTab(page, tr("config.macros.macro", n=i))
         macro_layout.addWidget(macro_tabs)
         tabs.addTab(macro_page, tr("config.terminal.tab.macros"))
 
