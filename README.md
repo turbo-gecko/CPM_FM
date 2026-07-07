@@ -35,11 +35,23 @@ A cross-platform PySide6 desktop app for transferring files between a modern hos
   progress dialog and a Cancel button.
 - Manage files on both sides from a right-click context menu: transfer, rename, delete,
   and view/edit (host) or view (remote); transfer and delete act on every selected file.
-- Built-in non-modal serial terminal for issuing CP/M commands, with a remote
-  drive-selection drop-down (A:–P:).
+- **Functional VT-100 terminal:** a built-in, non-modal terminal window that interprets
+  the VT-100/ANSI escape sequences CP/M emits (cursor positioning, screen/line erase,
+  colour and text attributes, scrolling), so full-screen programs such as editors display
+  correctly rather than as raw escape codes. You type directly into the screen — each
+  keystroke, including the arrow, function, and Ctrl keys, is sent to CP/M immediately
+  (there is no separate Send box). Selectable emulation (**VT100 / VT52 / ADM-3A**), a
+  configurable session-remembered **font**, and a right-click menu (Copy, Paste, Clear,
+  Font…, Reset Size 24×80, Boot into CP/M, Terminal Type, Macros). The window reopens
+  automatically on the next launch if it was open at exit.
+- **Configurable keystroke macros:** program up to ten labelled macro buttons (via
+  **Config > Terminal**) and run them from the terminal's **Macros** submenu; each uses the
+  same scripting directives (`SEND`, `SENDRAW`, `WAIT`, `WAITFOR`) as the boot sequence.
+- **Boot into CP/M:** run a configurable boot-sequence script from the terminal to bring
+  the remote up into CP/M.
 - Separate terminal and transport serial ports (which may be the same physical port).
-- Configurable serial parameters and CP/M commands via Serial and General config
-  dialogs, saved/loaded as JSON.
+- Configurable serial parameters, terminal/macro settings, and CP/M commands via the
+  **Serial**, **Terminal**, and **General** config dialogs, saved/loaded as JSON.
 - Remembers and auto-reloads the last-used configuration on startup, shows its name in
   the title bar, and persists each window's size and position between runs.
 - Material Design theme that follows the host OS light/dark mode.
