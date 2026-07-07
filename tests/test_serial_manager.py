@@ -212,6 +212,49 @@ def test_read_timeout_falls_back_on_non_numeric_value(capture):
     assert capture.last_kwargs["timeout"] == pytest.approx(0.1)
 
 
+def test_write_timeout_defaults_to_2000ms_when_absent(capture):
+    """FR-030/FR-038: with no write-timeout setting, the port is opened with the
+    2s bounded write timeout so a write/close cannot block indefinitely.
+
+    Verifies: FR-030, FR-038.
+    """
+    mgr = SerialManager()
+    assert mgr.open_port("transport", {"transport_port": "COM1"})
+    assert capture.last_kwargs["write_timeout"] == pytest.approx(2.0)
+
+
+def test_write_timeout_is_per_port_and_converted_ms_to_seconds(capture):
+    """FR-030/FR-038: each port reads its own millisecond write-timeout setting
+    and passes it to pyserial in seconds.
+
+    Verifies: FR-030, FR-038.
+    """
+    mgr = SerialManager()
+    settings = {
+        "terminal_port": "COM1",
+        "transport_port": "COM2",
+        "terminal_write_timeout_ms": "500",
+        "transport_write_timeout_ms": "3000",
+    }
+    assert mgr.open_port("terminal", settings)
+    assert capture.last_kwargs["write_timeout"] == pytest.approx(0.5)
+    assert mgr.open_port("transport", settings)
+    assert capture.last_kwargs["write_timeout"] == pytest.approx(3.0)
+
+
+def test_write_timeout_falls_back_on_non_numeric_value(capture):
+    """FR-030: a malformed write-timeout value degrades to the 2s default rather
+    than raising.
+
+    Verifies: FR-030.
+    """
+    mgr = SerialManager()
+    assert mgr.open_port(
+        "transport", {"transport_port": "COM1", "transport_write_timeout_ms": "xyz"}
+    )
+    assert capture.last_kwargs["write_timeout"] == pytest.approx(2.0)
+
+
 def test_open_port_returns_false_on_serial_error(monkeypatch):
     """FR-030: a pyserial failure is caught and reported as False, leaving the
     connected flag clear (no half-open state).
@@ -253,18 +296,27 @@ def test_open_terminal_port_clears_flag_on_failure(monkeypatch):
 
 class _FakePort:
     """Minimal serial port double: records writes, can be opened/closed, and can
-    be told to raise on close to exercise the failure branch."""
+    be told to raise on close to exercise the failure branch. Records the order
+    of buffer purges vs. close so the flow-control-safe close can be verified."""
 
     def __init__(self, is_open=True, raise_on_close=False):
         self.is_open = is_open
         self.written = bytearray()
         self._raise_on_close = raise_on_close
+        self.events: list[str] = []
 
     def write(self, data: bytes) -> int:
         self.written += data
         return len(data)
 
+    def reset_output_buffer(self):
+        self.events.append("reset_output")
+
+    def reset_input_buffer(self):
+        self.events.append("reset_input")
+
     def close(self):
+        self.events.append("close")
         if self._raise_on_close:
             raise OSError("cannot close")
         self.is_open = False
@@ -360,6 +412,59 @@ def test_close_transport_port_returns_false_on_error():
     mgr.transport_port = _FakePort(raise_on_close=True)
     mgr.transport_connected = True
     assert mgr.close_transport_port() is False
+
+
+def test_close_terminal_port_purges_output_before_close():
+    """FR-050: the terminal close discards the queued transmit buffer BEFORE
+    closing, so a flow-control-stalled port cannot block the close.
+
+    Verifies: FR-050.
+    """
+    mgr = SerialManager()
+    port = _FakePort()
+    mgr.terminal_port = port
+    mgr.terminal_connected = True
+    assert mgr.close_terminal_port() is True
+    # The output buffer purge must precede the close.
+    assert "reset_output" in port.events
+    assert port.events.index("reset_output") < port.events.index("close")
+
+
+def test_close_transport_port_purges_output_before_close():
+    """FR-055: the transport close discards the queued transmit buffer BEFORE
+    closing (the misconfigured-port flow-control stall).
+
+    Verifies: FR-055.
+    """
+    mgr = SerialManager()
+    port = _FakePort()
+    mgr.transport_port = port
+    mgr.transport_connected = True
+    assert mgr.close_transport_port() is True
+    assert port.events.index("reset_output") < port.events.index("close")
+
+
+def test_close_succeeds_when_port_lacks_purge_methods():
+    """FR-050: purging is best-effort — a port object without reset_* methods
+    (or one that raises) must still close cleanly rather than propagate.
+
+    Verifies: FR-050.
+    """
+
+    class _NoPurgePort:
+        def __init__(self):
+            self.is_open = True
+
+        def close(self):
+            self.is_open = False
+
+    mgr = SerialManager()
+    port = _NoPurgePort()
+    mgr.terminal_port = port  # type: ignore[assignment]
+    mgr.terminal_connected = True
+    assert mgr.close_terminal_port() is True
+    assert port.is_open is False
+    assert mgr.terminal_connected is False
 
 
 # --------------------------------------------------------------------------- #

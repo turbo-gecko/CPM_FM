@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.26.0**
+**Version 2.26.3**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -232,7 +232,7 @@ Configure CP/M command templates and behavior. The remote-command fields are gat
 ### File Menu Actions
 
 - **New** — Saves the current configuration, then resets all settings to their defaults and closes any open ports.
-- **Load** — Opens a saved JSON configuration. The loaded file's name appears in the title bar, and its host directory (if stored) is restored.
+- **Load** — Opens a saved JSON configuration. The loaded file's name appears in the title bar, and its host directory (if stored) is restored. If you are connected when you load a configuration, the current ports are closed first, so you are never left "connected" on the previous configuration's ports — reconnect to use the newly loaded configuration's ports.
 - **Save** — Writes the **entire** current configuration (all serial and general settings) to a JSON file you choose. The saved configuration is remembered and reloaded automatically on the next launch.
 - **Exit** — Closes all ports and saves your window geometry and the current configuration name. It also remembers which of the **Terminal Window** and **Transfer History** window were open and reopens them on the next launch.
 
@@ -566,6 +566,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 - **The remote drive shows no files or "Drive Not Found."** Confirm you are connected (Terminal indicator green), the drive letter exists on the CP/M system, and the **List Files Cmd** matches your CP/M's directory command.
 - **Files fail with name errors on upload.** This is the 8.3 validation step — accept the suggested CP/M-compatible name in the dialog.
 - **Sharing one serial port** for both Terminal and Transport is supported; the program pauses terminal reading during transfers automatically.
+- **Connect works but the remote never lists files, or Disconnect feels slow.** Check you haven't set the **Terminal Port** and **Transport Port** back-to-front in Config → Serial — with them swapped the connection check can't reach CP/M. Disconnect (and the **Abort** button on the "Remote Filesystem Unavailable" dialog) still completes promptly in that case; if it ever seems to pause, it is bounded by the ports' write timeout (2 seconds each) and returns on its own.
 - **Need to see what's happening on the wire?** Enable **Debug Logging** and/or **Echo Transfer Data** in Config → General, and launch with `python -m cpm_fm` to view the console output.
 - **Settings didn't persist.** Use **File → Save** to write your configuration; the saved file is reloaded automatically on the next launch.
 
@@ -585,6 +586,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 | Autoscroll | ON |
 | Msec per Char / Line | 0 / 0 |
 | Terminal / Transfer Timeout | 100 ms / 100 ms |
+| Terminal / Transport Write Timeout | 2000 ms / 2000 ms |
 | List Files Cmd | `DIR` |
 | Recv from Remote | `PCPUT $1` |
 | Send to Remote | `PCGET $1` |

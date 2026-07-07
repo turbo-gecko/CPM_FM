@@ -12,10 +12,16 @@ The Transport-Port-open-failure path (MT-C16, two-port only) is tested by mockin
 ``SerialManager.open_port`` to return ``False`` for the Transport Port — the app
 shows the FR-039 error dialog and skips the probe (FR-046). The rapid-connect/
 disconnect race (MT-C17) exercises the probe-while-disconnect path to verify no
-crash from a queued signal to a deleted QObject.
+crash from a queued signal to a deleted QObject. The swapped-ports disconnect
+regression (MT-C18, two-port only) configures the Terminal/Transport ports
+back-to-front and asserts Disconnect stays prompt (the bounded write timeout,
+FR-030, plus probe-cancel-on-disconnect, FR-050) instead of stalling for tens of
+seconds.
 """
 
 from __future__ import annotations
+
+import time
 
 import pytest
 from helpers.trace import get_logger
@@ -146,3 +152,83 @@ def test_rapid_disconnect_during_probe_no_crash(gui):
     assert not gui.connected
     assert not gui.transport_connected
     log.info("rapid disconnect complete; window alive, state clean")
+
+
+@pytest.mark.hil
+@pytest.mark.two_port
+@pytest.mark.mt("MT-C18", "FR-030", "FR-050")
+def test_disconnect_prompt_with_ports_swapped(gui, monkeypatch):
+    """Disconnect stays prompt when the Terminal/Transport ports are swapped.
+
+    Regression for the misconfigured-port hang: with the two ports configured
+    back-to-front the post-connect probe cannot reach the remote, and Disconnect
+    used to stall for tens of seconds while the probe's serial I/O and the port
+    close contended and an unbounded write drained. The bounded write timeout
+    (FR-030) plus probe-cancel-on-disconnect (FR-050) keep it prompt. The Abort
+    button on the Remote Filesystem Unavailable dialog drives the same
+    ``do_disconnect`` path, so this bound covers that reported case too.
+
+    Two-port targets only (single-port targets share one port, so there is
+    nothing to swap). The probe failure would raise the modal Remote Filesystem
+    Unavailable dialog, which the offscreen harness can never dismiss, so it is
+    stubbed non-blocking (Continue).
+
+    Verifies: FR-030, FR-050.
+    """
+    from cpm_fm.gui.remote_unavailable_dialog import RemoteUnavailableDialog
+
+    monkeypatch.setattr(
+        RemoteUnavailableDialog,
+        "exec",
+        lambda self: setattr(self, "choice", RemoteUnavailableDialog.CONTINUE),
+    )
+
+    # Configure the two ports back-to-front.
+    term = gui.win.settings.get("terminal_port")
+    trans = gui.win.settings.get("transport_port")
+    assert term and trans and term != trans, "two-port target must have distinct ports"
+    gui.win.settings["terminal_port"], gui.win.settings["transport_port"] = trans, term
+
+    result = gui.connect(timeout=25.0)
+    # The probe cannot reach the remote over the swapped link (failed, or the
+    # terminal port never opened at all).
+    assert result is None or result[0] == "failed", f"probe unexpectedly ok: {result}"
+
+    start = time.time()
+    gui.win.do_disconnect()
+    elapsed = time.time() - start
+    gui.quiesce()
+
+    assert elapsed < 8.0, f"disconnect took {elapsed:.1f}s with ports swapped (expected prompt)"
+    assert not gui.connected
+    assert not gui.transport_connected
+    log.info("swapped-port disconnect completed in %.2fs; state clean", elapsed)
+
+
+@pytest.mark.hil
+@pytest.mark.mt("MT-C19", "FR-017a", "FR-050")
+def test_load_config_while_connected_closes_ports(gui):
+    """Loading a configuration while connected closes the prior config's ports.
+
+    Regression for the stale-connection bug: loading a new configuration used to
+    leave the previously opened ports open while the status flags stayed set, so
+    the app reported *connected* on ports that no longer matched the loaded
+    config. ``load_config`` now runs the Disconnect close (FR-050–FR-058) before
+    replacing the settings (FR-017a). Reloading the target's own settings file is
+    enough to exercise the path — the fix keys off *being connected*, not on the
+    ports differing.
+
+    Verifies: FR-017a, FR-050.
+    """
+    assert gui.connect()[0] == "ok"
+    assert gui.connected
+
+    # Reload the same settings file the fixture loaded (recorded as last_config).
+    gui.win.load_config(gui.win.window_state.last_config)
+    gui.quiesce()
+
+    # FR-017a: the prior configuration's ports were closed before the swap.
+    assert not gui.connected, "terminal flag still set after loading a config while connected"
+    assert not gui.transport_connected, "transport flag still set after loading a config"
+    assert gui.remote_names() == []  # FR-017: stale listing cleared
+    log.info("config load while connected closed the ports and cleared the list")

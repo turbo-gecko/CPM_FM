@@ -178,6 +178,13 @@ class MainWindow(
         # FR-120: set on the GUI thread (Cancel button) and polled by the
         # transfer worker thread to abort the in-progress transfer.
         self._transfer_cancel = threading.Event()
+        # FR-050: set on the GUI thread (Disconnect) and polled by the
+        # connect-probe worker (FR-041-FR-048) so a Disconnect during the probe
+        # wakes its capture waits promptly and the probe's serial I/O stops
+        # contending with the port close. `_probe_thread` tracks the in-flight
+        # probe worker so do_disconnect can join it (bounded) before closing.
+        self._probe_cancel = threading.Event()
+        self._probe_thread: threading.Thread | None = None
         # FR-146/FR-147: file-conflict resolution. The transfer worker thread
         # emits conflict_detected and blocks on _conflict_answered; the GUI
         # thread shows the dialog (NFR-004) and stores (action, apply_to_all) in

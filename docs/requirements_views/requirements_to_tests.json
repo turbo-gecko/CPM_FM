@@ -156,6 +156,10 @@
     "FR-017": [
       "tests/test_gui_smoke.py:test_load_config_clears_remote_list"
     ],
+    "FR-017a": [
+      "tests/test_gui_smoke.py:test_load_config_disconnects_open_ports_before_swap",
+      "tests/test_gui_smoke.py:test_load_config_skips_disconnect_when_not_connected"
+    ],
     "FR-018": [
       "tests/test_gui_smoke.py:test_menu_new_aborts_when_save_cancelled",
       "tests/test_gui_smoke.py:test_menu_new_prompts_for_file_when_none_remembered",
@@ -195,7 +199,10 @@
       "tests/test_serial_manager.py:test_numeric_defaults_applied_when_absent",
       "tests/test_serial_manager.py:test_numeric_fields_are_coerced_to_int",
       "tests/test_serial_manager.py:test_open_port_returns_false_on_serial_error",
-      "tests/test_serial_manager.py:test_parity_maps_to_pyserial_constant"
+      "tests/test_serial_manager.py:test_parity_maps_to_pyserial_constant",
+      "tests/test_serial_manager.py:test_write_timeout_defaults_to_2000ms_when_absent",
+      "tests/test_serial_manager.py:test_write_timeout_falls_back_on_non_numeric_value",
+      "tests/test_serial_manager.py:test_write_timeout_is_per_port_and_converted_ms_to_seconds"
     ],
     "FR-033": [
       "tests/test_serial_manager.py:test_open_terminal_port_clears_flag_on_failure"
@@ -206,6 +213,10 @@
     "FR-037": [
       "tests/test_gui_smoke.py:test_connect_shared_port_assigns_transport_port",
       "tests/test_serial_manager.py:test_read_loop_suspends_dispatch_while_paused"
+    ],
+    "FR-038": [
+      "tests/test_serial_manager.py:test_write_timeout_defaults_to_2000ms_when_absent",
+      "tests/test_serial_manager.py:test_write_timeout_is_per_port_and_converted_ms_to_seconds"
     ],
     "FR-041": [
       "tests/test_gui_smoke.py:test_connect_probes_when_both_ports_connected"
@@ -264,8 +275,13 @@
       "tests/test_gui_smoke.py:test_terminal_context_menu_boot_enabled_reflects_provider"
     ],
     "FR-050": [
+      "tests/test_gui_smoke.py:test_capture_terminal_response_probe_cancel_bails_early",
       "tests/test_gui_smoke.py:test_disconnect_attempts_close_when_flags_false",
-      "tests/test_serial_manager.py:test_close_terminal_port_closes_and_clears_flag"
+      "tests/test_gui_smoke.py:test_disconnect_cancels_and_joins_in_flight_probe",
+      "tests/test_gui_smoke.py:test_probe_stops_without_emitting_when_cancelled",
+      "tests/test_serial_manager.py:test_close_succeeds_when_port_lacks_purge_methods",
+      "tests/test_serial_manager.py:test_close_terminal_port_closes_and_clears_flag",
+      "tests/test_serial_manager.py:test_close_terminal_port_purges_output_before_close"
     ],
     "FR-051": [
       "tests/test_gui_smoke.py:test_disconnect_keeps_remote_list_when_close_fails"
@@ -279,7 +295,8 @@
     ],
     "FR-055": [
       "tests/test_gui_smoke.py:test_disconnect_attempts_close_when_flags_false",
-      "tests/test_serial_manager.py:test_close_transport_port_closes_and_clears_flag"
+      "tests/test_serial_manager.py:test_close_transport_port_closes_and_clears_flag",
+      "tests/test_serial_manager.py:test_close_transport_port_purges_output_before_close"
     ],
     "FR-056": [
       "tests/test_gui_smoke.py:test_disconnect_transport_close_failure_shows_error_dialog"
@@ -1178,7 +1195,6 @@
     "FR-032",
     "FR-034",
     "FR-035",
-    "FR-038",
     "FR-039",
     "FR-040",
     "FR-053",

@@ -4,7 +4,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.33 |
+| Version | 1.35 |
 | Status | Draft |
 | Date | 2026-07-07 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.25.0) |
@@ -151,6 +151,8 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 | MT-C08 [2-port] | FR-055, FR-057 | While connected on two ports, press **Disconnect**. | Both ports close; Transport flag/indicator → *not-connected*. |
 | MT-C09 | FR-058 | Connect, Update to populate the Remote list, then Disconnect (clean close). | Remote Files list is **cleared** after the successful disconnect. |
 | MT-C10 | FR-051, FR-058 | Force a close failure if you can (e.g. pull the adapter mid-session so close raises), then Disconnect. | Error dialog "Terminal port is unable to be closed"; disconnect cancelled; Remote list **not** cleared. *(May be Blocked if a close failure cannot be induced.)* |
+| MT-C18 [2-port] | FR-030, FR-050 | Configure the Terminal and Transport COM ports **back-to-front** (swapped). Press **Connect**; when the "Remote Filesystem Unavailable" dialog appears, click **Abort**. Separately, repeat and instead press **Disconnect** immediately after Connect (before the dialog). | In **both** cases the application disconnects **promptly** (within a couple of seconds) — it does **not** hang or become unresponsive for tens of seconds. Both ports end *not-connected*. |
+| MT-C19 | FR-017a, FR-050 | While **connected** (ports open), use **File → Load** to load a different configuration file. | The original ports are closed before the new config is applied: both indicators go *not-connected*, the Remote Files list clears, and the app is **not** left reporting *connected* on the old ports. (Reconnect uses the newly loaded config's ports.) |
 
 ---
 

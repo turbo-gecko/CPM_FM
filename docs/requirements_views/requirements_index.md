@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_455 requirements across 55 sections._
+_456 requirements across 55 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -41,6 +41,7 @@ _455 requirements across 55 sections._
 | FR-016 | The File > Exit menu item shall close all open dialogs and windows | app.py:closeEvent |
 | FR-168 | On exit, the application shall record which of its non-modal auxiliary windows — the Terminal… | app.py:closeEvent, app.py:_restore_open_windows, window_state.py:window_open, window_state.py:set_window_open, mw_remote.py:show_terminal, mw_history.py:show_history; tests test_gui_smoke.py, test_window_state.py |
 | FR-017 | On loading a configuration file, the application shall clear the Remote Files list… | mw_config.py:load_config |
+| FR-017a | On loading a configuration file, if any Terminal or Transport port is open, the application… | mw_config.py:load_config, mw_remote.py:do_disconnect |
 | FR-018 | The File > New menu item (presented at the top of the File menu) shall… | mw_config.py:menu_new, mw_config.py:_save_to_path |
 | FR-019 | After the current configuration has been successfully saved (FR-018), the File > New menu item… | mw_config.py:menu_new, config_handler.py:DEFAULT_SETTINGS |
 
@@ -66,7 +67,7 @@ _455 requirements across 55 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-030 | When the Connect button is pressed, the application shall open the Terminal Port serial port… | mw_remote.py:do_connect, serial_manager.py:open_port; tests test_serial_manager.py (parity map, numeric coercion, nested-key fallbacks, open-failure) |
+| FR-030 | When the Connect button is pressed, the application shall open the Terminal Port serial port… | mw_remote.py:do_connect, serial_manager.py:open_port, utils/config_handler.py; tests test_serial_manager.py (parity map, numeric coercion, nested-key fallbacks, open-failure, write-timeout) |
 | FR-031 | If the Terminal Port cannot be opened, the application shall display an error dialog containing… | mw_remote.py:do_connect |
 | FR-032 | If the Terminal Port is successfully opened, the application shall set the Terminal status flag… | mw_remote.py:do_connect, serial_manager.py:open_port |
 | FR-033 | If the Terminal Port cannot be opened, the application shall set the Terminal status flag… | serial_manager.py:open_port |
@@ -74,7 +75,7 @@ _455 requirements across 55 sections._
 | FR-035 | *Removed in v1.2.* (Was… | — |
 | FR-036 | The application shall render data received from the Terminal Port on the Receive view of… | serial_manager.py:_read_loop, app.py:_on_term_write; tests test_serial_manager.py, test_vt100_engine.py |
 | FR-037 | On connect, if the Transport Port is the same as the Terminal Port, the application… | mw_remote.py:do_connect |
-| FR-038 | On connect, if the Transport Port is different from the Terminal Port and is not… | mw_remote.py:do_connect, serial_manager.py:open_port |
+| FR-038 | On connect, if the Transport Port is different from the Terminal Port and is not… | mw_remote.py:do_connect, serial_manager.py:open_port, utils/config_handler.py |
 | FR-039 | If the Transport Port cannot be opened, the application shall display an error dialog containing… | mw_remote.py:do_connect |
 | FR-040 | If the Transport Port is successfully opened, the application shall set the Transport status flag… | mw_remote.py:do_connect, serial_manager.py:open_port |
 | FR-041 | After the Connect workflow has set both the Terminal status flag (FR-032) and the Transport… | mw_remote.py:do_connect, mw_remote.py:_do_connect_probe_logic, mw_remote.py:_capture_terminal_response, cpm_parser.py:drive_prompt_letter |
@@ -91,14 +92,14 @@ _455 requirements across 55 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-050 | When the Disconnect button is pressed, the application shall attempt to close the Terminal Port… | mw_remote.py:do_disconnect, serial_manager.py:close_terminal_port; tests test_serial_manager.py, test_gui_smoke.py |
+| FR-050 | When the Disconnect button is pressed, the application shall attempt to close the Terminal Port… | mw_remote.py:do_disconnect, mw_remote.py:do_connect, serial_manager.py:close_terminal_port, serial_manager.py:_purge_before_close; tests test_serial_manager.py, test_gui_smoke.py |
 | FR-051 | If the Terminal Port cannot be closed, the application shall display an error dialog containing… | mw_remote.py:do_disconnect |
 | FR-052 | When the Terminal Port is closed, the application shall set the Terminal status flag to… | mw_remote.py:do_disconnect, serial_manager.py:close_terminal_port; tests test_serial_manager.py |
 | FR-053 | When the Terminal Port is closed, the application shall display the text "Terminal port closed"… | mw_remote.py:do_disconnect |
 | FR-054 | On disconnect, if the Transport Port is the same as the Terminal Port, the application… | mw_remote.py:do_disconnect |
-| FR-055 | On disconnect, if the Transport Port is different from the Terminal Port, the application shall… | mw_remote.py:do_disconnect, serial_manager.py:close_transport_port; tests test_serial_manager.py |
+| FR-055 | On disconnect, if the Transport Port is different from the Terminal Port, the application shall… | mw_remote.py:do_disconnect, serial_manager.py:close_transport_port, serial_manager.py:_purge_before_close; tests test_serial_manager.py |
 | FR-056 | If the Transport Port cannot be closed, the application shall display an error dialog containing… | mw_remote.py:do_disconnect |
-| FR-057 | If the Transport Port is successfully closed, the application shall set the Transport status flag… | mw_remote.py:do_disconnect, serial_manager.py:close_transport_port; tests test_serial_manager.py |
+| FR-057 | If the Transport Port is successfully closed, the application shall set the Transport status flag… | mw_remote.py:do_disconnect, serial_manager.py:close_transport_port, serial_manager.py:_purge_before_close; tests test_serial_manager.py |
 | FR-058 | On disconnect, once the Terminal Port has been successfully closed, the application shall clear the… | mw_remote.py:do_disconnect |
 
 ## 3.7 Host file management

@@ -162,7 +162,14 @@ not stop short:
 7a. **Record the change** — bump `src/version.txt`, the SRS version field (DR-040/DR-041), and the
    `**Version X.Y.Z**` line at the top of the user manual (`src/cpm_fm/docs/cpm_fm_manual.md`) so all
    three stay locked together, and add a row to **`docs/requirements_change_history.md`** (the §11
-   companion file — *not* the SRS itself). When a requirements review resolves an ambiguity or gap, add
+   companion file — *not* the SRS itself). **Version-number rule (semantic versioning `MAJOR.MINOR.PATCH`):**
+   a **bug fix or a minor feature correction bumps only the third digit** (the PATCH digit) — e.g. a fix
+   on top of `2.26.0` is `2.26.1`, then `2.26.2`, **not** `2.27.0`. Reserve a MINOR (second-digit) bump,
+   which resets PATCH to 0, for a genuinely new feature or a substantive requirement addition; a MAJOR
+   (first-digit) bump is for a breaking/architectural change. Bug-fix/patch releases are recorded **only**
+   in `docs/requirements_change_history.md` (and, where they revise requirement text, with an in-text
+   `*(vX.Y.Z: …)*` tag); they are **not** added to the SRS §9 change-summary table, which lists
+   feature groups. When a requirements review resolves an ambiguity or gap, add
    the OI entry to **`docs/requirements_issue_log.md`** (the §10 companion file).
 7b. **Update the user manual** (`src/cpm_fm/docs/cpm_fm_manual.md`) **when the change alters
    user-visible behaviour** — revise the affected section(s), the Table of Contents, and the

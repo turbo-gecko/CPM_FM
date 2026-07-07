@@ -70,12 +70,29 @@ class SerialManager:
                 timeout_ms = int(s.get(timeout_key, 100))
             except (TypeError, ValueError):
                 timeout_ms = 100
+            # Bounded write timeout (FR-030/FR-038). Without it a write — and the
+            # port close that waits for pending output to drain — can block
+            # indefinitely when the link cannot transmit (e.g. the Terminal and
+            # Transport ports are configured back-to-front, or a configured
+            # hardware handshake line is never asserted), which used to stall
+            # Disconnect for tens of seconds. Stored in milliseconds; pyserial
+            # wants seconds. Default 2000 ms.
+            write_timeout_key = (
+                "terminal_write_timeout_ms"
+                if port_type == "terminal"
+                else "transport_write_timeout_ms"
+            )
+            try:
+                write_timeout_ms = int(s.get(write_timeout_key, 2000))
+            except (TypeError, ValueError):
+                write_timeout_ms = 2000
             params = {
                 "port": port_name,
                 "baudrate": int(s.get("speed", 115200)),
                 "bytesize": int(s.get("data", s.get("data_bits", 8))),
                 "stopbits": int(s.get("stopbits", s.get("stop_bits", 1))),
                 "timeout": max(0.01, timeout_ms / 1000.0),
+                "write_timeout": max(0.1, write_timeout_ms / 1000.0),
             }
 
             # Handle parity mapping for pyserial
@@ -120,19 +137,49 @@ class SerialManager:
             print(f"Failed to open {port_type} port: {e}")
             return False
 
+    @staticmethod
+    def _purge_before_close(port) -> None:
+        """Best-effort discard of queued I/O immediately before closing a port.
+
+        On Windows, ``CloseHandle`` on a serial port can block waiting for the
+        driver's queued transmit bytes to drain. Under hardware (RTS/CTS) or
+        software (XON/XOFF) flow control that never completes when the peer
+        stops asserting CTS / sends XOFF — e.g. the Terminal and Transport ports
+        are configured back-to-front, so bytes the connect probe queued can
+        never leave — and the close (and therefore Disconnect) stalls for tens
+        of seconds. The pyserial ``write_timeout`` bounds ``WriteFile`` calls but
+        not this close-time flush, so it is not enough on its own.
+
+        ``reset_output_buffer`` issues ``PurgeComm`` with ``PURGE_TXABORT |
+        PURGE_TXCLEAR``, aborting the pending write and discarding the queued
+        transmit bytes so ``close()`` returns promptly; the receive buffer is
+        dropped too. Best-effort: ports/stubs without these methods (or an
+        already-detached port) are ignored. This mirrors the X-Modem cancel
+        abort's flow-control-safe drain (``xmodem.py:_abort``).
+
+        Satisfies: FR-050, FR-055.
+        """
+        try:
+            port.reset_output_buffer()
+            port.reset_input_buffer()
+        except Exception:
+            pass
+
     def close_ports(self):
         """
         Closes both serial ports and stops the read thread.
 
-        Satisfies: FR-015.
+        Satisfies: FR-015, FR-050, FR-055.
         """
         self._stop_event.set()
         if self._read_thread:
             self._read_thread.join(timeout=1.0)
 
         if self.terminal_port and self.terminal_port.is_open:
+            self._purge_before_close(self.terminal_port)
             self.terminal_port.close()
         if self.transport_port and self.transport_port.is_open:
+            self._purge_before_close(self.transport_port)
             self.transport_port.close()
 
         self.terminal_connected = False
@@ -152,6 +199,7 @@ class SerialManager:
                 self._read_thread.join(timeout=1.0)
                 self._read_thread = None
             if self.terminal_port and self.terminal_port.is_open:
+                self._purge_before_close(self.terminal_port)
                 self.terminal_port.close()
             self.terminal_connected = False
             return True
@@ -168,6 +216,7 @@ class SerialManager:
         """
         try:
             if self.transport_port and self.transport_port.is_open:
+                self._purge_before_close(self.transport_port)
                 self.transport_port.close()
             self.transport_connected = False
             return True

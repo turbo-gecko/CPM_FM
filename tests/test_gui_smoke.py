@@ -410,7 +410,9 @@ def test_change_drive_success_refreshes_remote_list(qapp, monkeypatch, state):
     try:
         win.serial_mgr.terminal_connected = True
         monkeypatch.setattr(
-            win, "_capture_terminal_response", lambda cmd, cancellable=False: "B:\nB>\n"
+            win,
+            "_capture_terminal_response",
+            lambda cmd, cancellable=False, cancel_event=None: "B:\nB>\n",
         )
         calls = []
         monkeypatch.setattr(win, "_do_refresh_remote_logic", lambda: calls.append("refresh"))
@@ -428,7 +430,9 @@ def test_change_drive_not_found_clears_list_and_warns(qapp, monkeypatch, state):
         win.remote_list.addItem("STALE.TXT")
         win.serial_mgr.terminal_connected = True
         monkeypatch.setattr(
-            win, "_capture_terminal_response", lambda cmd, cancellable=False: "\nnot ready\n"
+            win,
+            "_capture_terminal_response",
+            lambda cmd, cancellable=False, cancel_event=None: "\nnot ready\n",
         )
         warned = []
         monkeypatch.setattr("cpm_fm.app.QMessageBox.warning", lambda *a, **k: warned.append(a[1:]))
@@ -541,7 +545,9 @@ def test_connect_probe_ok_sets_drive_and_refreshes(qapp, monkeypatch, state):
     win = MainWindow(state)
     try:
         monkeypatch.setattr(
-            win, "_capture_terminal_response", lambda cmd, cancellable=False: "C>\n"
+            win,
+            "_capture_terminal_response",
+            lambda cmd, cancellable=False, cancel_event=None: "C>\n",
         )
         refreshed = []
         monkeypatch.setattr(win, "refresh_remote_files", lambda: refreshed.append(True))
@@ -562,7 +568,7 @@ def test_connect_probe_retries_then_succeeds(qapp, monkeypatch, state):
         responses = iter(["not ready\n", "A>\n"])
         calls = []
 
-        def fake_capture(cmd, cancellable=False):
+        def fake_capture(cmd, cancellable=False, cancel_event=None):
             calls.append(cmd)
             return next(responses)
 
@@ -782,6 +788,78 @@ def test_disconnect_shared_port_also_clears_transport_flag(qapp, monkeypatch, st
         win.close()
 
 
+def test_disconnect_cancels_and_joins_in_flight_probe(qapp, monkeypatch, state):
+    """Verifies: FR-050."""
+    # FR-050: a Disconnect while the connect probe is still running must set the
+    # probe-cancel flag and join the probe worker BEFORE closing the port, so the
+    # probe's serial I/O cannot contend with the close (the misconfigured-port
+    # hang). A real worker thread that blocks until cancelled proves both the
+    # signal and the join actually happen.
+    import threading
+
+    win = MainWindow(state)
+    try:
+        win.settings = {"terminal_port": "COM3", "transport_port": "COM3"}
+        win.serial_mgr.terminal_connected = True
+        win.serial_mgr.transport_connected = True
+
+        closed_while_alive = []
+
+        def fake_worker():
+            # Runs until Disconnect requests cancellation (bounded so the test
+            # can never hang even if the flag is never set).
+            win._probe_cancel.wait(timeout=5.0)
+
+        win._probe_cancel.clear()
+        probe_thread = threading.Thread(target=fake_worker, daemon=True)
+        win._probe_thread = probe_thread
+        probe_thread.start()
+
+        def fake_close():
+            # Captured at close time: the probe must already have stopped, so its
+            # serial I/O cannot contend with the close.
+            closed_while_alive.append(probe_thread.is_alive())
+            return True
+
+        monkeypatch.setattr(win.serial_mgr, "close_terminal_port", fake_close)
+
+        win.do_disconnect()
+        qapp.processEvents()
+
+        assert win._probe_cancel.is_set()  # cancellation was requested
+        assert win._probe_thread is None  # worker was joined and cleared
+        assert closed_while_alive == [False]  # probe had stopped before the close
+    finally:
+        win._probe_cancel.set()
+        win.close()
+
+
+def test_probe_stops_without_emitting_when_cancelled(qapp, monkeypatch, state):
+    """Verifies: FR-050."""
+    # FR-050: if a Disconnect cancels the probe, the worker returns without
+    # emitting connect_probe_ok/failed, so neither the Remote list is refreshed
+    # nor the Remote Filesystem Unavailable dialog is shown.
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(win, "_probe_for_drive", lambda: None)
+        # Neutralise the failure dialog so an (incorrect) emit could not hang the
+        # test, and record any downstream effect of either signal firing.
+        shown = []
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_remote.RemoteUnavailableDialog.exec",
+            lambda self: shown.append(True),
+        )
+        refreshed = []
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: refreshed.append(True))
+        win._probe_cancel.set()
+        win._do_connect_probe_logic()
+        qapp.processEvents()
+        assert shown == []  # no Remote Filesystem Unavailable dialog (failed path)
+        assert refreshed == []  # no ok-path refresh either
+    finally:
+        win.close()
+
+
 def test_disconnect_transport_close_failure_shows_error_dialog(qapp, monkeypatch, state):
     """Verifies: FR-056."""
     # FR-056: when the Transport Port cannot be closed, an error dialog with
@@ -886,6 +964,65 @@ def test_load_config_clears_remote_list(qapp, state, tmp_path):
         win.load_config(str(cfg))
         qapp.processEvents()
         assert win.remote_list.count() == 0
+    finally:
+        win.close()
+
+
+def test_load_config_disconnects_open_ports_before_swap(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-017a."""
+    # FR-017a: loading a config while connected must close the PRIOR config's
+    # ports first, and the close must run while self.settings still describes
+    # them (do_disconnect reads the port names from settings) — otherwise the
+    # old ports stay open while the app "connects" to ports that don't match the
+    # newly loaded config.
+    win = MainWindow(state)
+    try:
+        cfg = tmp_path / "new.json"
+        cfg.write_text('{"terminal_port": "COM_NEW"}')
+        win.settings = {"terminal_port": "COM_OLD"}
+        win.serial_mgr.terminal_connected = True
+
+        seen = {}
+
+        def fake_disconnect():
+            # The settings visible here must still be the OLD config.
+            seen["terminal_port"] = win.settings.get("terminal_port")
+            win.serial_mgr.terminal_connected = False
+
+        monkeypatch.setattr(win, "do_disconnect", fake_disconnect)
+        monkeypatch.setattr(win, "refresh_host_files", lambda: None)
+
+        win.load_config(str(cfg))
+        qapp.processEvents()
+
+        # Disconnect ran before the swap and saw the prior config's port.
+        assert seen == {"terminal_port": "COM_OLD"}
+        # The new configuration is now loaded.
+        assert win.settings.get("terminal_port") == "COM_NEW"
+    finally:
+        win.close()
+
+
+def test_load_config_skips_disconnect_when_not_connected(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-017a."""
+    # FR-017a: with nothing open (e.g. the start-up reload of the last-used
+    # file, FR-005), the load must NOT trigger a disconnect — no spurious close,
+    # status, or indicator churn.
+    win = MainWindow(state)
+    try:
+        cfg = tmp_path / "new.json"
+        cfg.write_text('{"terminal_port": "COM_NEW"}')
+        win.serial_mgr.terminal_connected = False
+        win.serial_mgr.transport_connected = False
+
+        called = []
+        monkeypatch.setattr(win, "do_disconnect", lambda: called.append(1))
+        monkeypatch.setattr(win, "refresh_host_files", lambda: None)
+
+        win.load_config(str(cfg))
+        qapp.processEvents()
+
+        assert called == []
     finally:
         win.close()
 
@@ -2094,7 +2231,9 @@ def test_do_remote_file_cmd_refreshes_remote_list(qapp, monkeypatch, state):
     try:
         captured = []
         monkeypatch.setattr(
-            win, "_capture_terminal_response", lambda c, cancellable=False: captured.append(c) or ""
+            win,
+            "_capture_terminal_response",
+            lambda c, cancellable=False, cancel_event=None: captured.append(c) or "",
         )
         refreshed = []
         monkeypatch.setattr(win, "_do_refresh_remote_logic", lambda: refreshed.append(1))
@@ -2300,6 +2439,21 @@ def test_capture_terminal_response_cancellable_bails_early(qapp, monkeypatch, st
         # neutralise time.sleep so it still completes instantly here.
         monkeypatch.setattr("cpm_fm.gui.mw_transfers.time.sleep", lambda *a, **k: None)
         assert win._capture_terminal_response("DIR") == ""
+    finally:
+        win.close()
+
+
+def test_capture_terminal_response_probe_cancel_bails_early(qapp, monkeypatch, state):
+    """Verifies: FR-050."""
+    # FR-050: the connect probe passes _probe_cancel as the capture's cancel
+    # event, so a Disconnect during the probe wakes the capture at once instead
+    # of running out the full idle budget. Real time.sleep is kept so an
+    # unhonoured cancel would hang here.
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(win, "handle_terminal_send", lambda *a, **k: None)
+        win._probe_cancel.set()
+        assert win._capture_terminal_response("", cancel_event=win._probe_cancel) == ""
     finally:
         win.close()
 
@@ -3915,11 +4069,11 @@ def test_boot_auto_recovery_runs_sequence_then_reprobes(qapp, monkeypatch, state
             return True
 
         monkeypatch.setattr(win, "run_boot_sequence", fake_run)
-        monkeypatch.setattr(
-            win,
-            "_capture_terminal_response",
-            lambda cmd, cancellable=False: "A>\n" if booted["done"] else "junk\n",
-        )
+
+        def fake_capture(cmd, cancellable=False, cancel_event=None):
+            return "A>\n" if booted["done"] else "junk\n"
+
+        monkeypatch.setattr(win, "_capture_terminal_response", fake_capture)
         refreshed: list = []
         monkeypatch.setattr(win, "refresh_remote_files", lambda: refreshed.append(True))
         win._do_connect_probe_logic()
@@ -3943,7 +4097,9 @@ def test_boot_no_recovery_when_sequence_empty(qapp, monkeypatch, state):
         boot_calls: list = []
         monkeypatch.setattr(win, "run_boot_sequence", lambda: boot_calls.append(True) or True)
         monkeypatch.setattr(
-            win, "_capture_terminal_response", lambda cmd, cancellable=False: "junk\n"
+            win,
+            "_capture_terminal_response",
+            lambda cmd, cancellable=False, cancel_event=None: "junk\n",
         )
         shown: list = []
         monkeypatch.setattr(

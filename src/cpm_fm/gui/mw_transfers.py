@@ -231,10 +231,10 @@ class _TransfersMixin(MainWindowMixinBase):
         except (TypeError, ValueError):
             return 2.0
 
-    def _cancellable_sleep(self, seconds: float) -> bool:
-        """Sleep up to ``seconds``, waking early if a transfer cancellation is
-        requested. Returns True if the wait ended because cancellation was
-        requested, False if the full interval elapsed.
+    def _cancellable_sleep(self, seconds: float, cancel_event=None) -> bool:
+        """Sleep up to ``seconds``, waking early if a cancellation is requested.
+        Returns True if the wait ended because cancellation was requested, False
+        if the full interval elapsed.
 
         The worker-thread launch/settle waits (FR-089/FR-109) and the remote
         listing read (FR-145) are otherwise plain sleeps, so a Cancel pressed
@@ -243,18 +243,23 @@ class _TransfersMixin(MainWindowMixinBase):
         thread-safe cancel flag between them, so the cancel takes effect
         promptly (FR-120). The interval is counted in steps rather than against
         the wall clock so tests that neutralise ``time.sleep`` still run fast.
-        Runs on the transfer worker thread.
+        Runs on a worker thread.
 
-        Satisfies: FR-120.
+        ``cancel_event`` selects which flag to poll; it defaults to the transfer
+        cancel flag (FR-120). The connect-probe path passes ``_probe_cancel`` so
+        a Disconnect during the probe wakes its capture waits promptly (FR-050).
+
+        Satisfies: FR-120, FR-050.
         """
+        event = cancel_event if cancel_event is not None else self._transfer_cancel
         remaining = max(0.0, seconds)
         step = 0.05
         while remaining > 0:
-            if self._transfer_cancel.is_set():
+            if event.is_set():
                 return True
             time.sleep(min(step, remaining))
             remaining -= step
-        return self._transfer_cancel.is_set()
+        return event.is_set()
 
     def _wait_for_terminal_idle(self) -> None:
         """

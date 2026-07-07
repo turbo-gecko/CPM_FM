@@ -34,6 +34,14 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     # accumulate at the configured baud rate. Default 100 ms.
     "terminal_timeout_ms": "100",
     "transport_timeout_ms": "100",
+    # Per-port serial *write* timeouts, in milliseconds (FR-030/FR-038). Applied
+    # as the pyserial write_timeout so a write — and the port close that waits
+    # for pending output to drain — can never block indefinitely when the link
+    # cannot transmit (misconfigured ports, or a hardware handshake line that is
+    # never asserted). Default 2000 ms. Not surfaced in the config dialog; a
+    # safety bound overridable via the config file.
+    "terminal_write_timeout_ms": "2000",
+    "transport_write_timeout_ms": "2000",
     "list_files_cmd": "DIR",
     "recv_remote_cmd": "PCPUT $1",
     "send_remote_cmd": "PCGET $1",

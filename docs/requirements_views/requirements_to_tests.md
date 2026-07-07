@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_240/455 requirements have a verifying test; 215 untested; 0 stale tag(s)._
+_242/456 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -52,6 +52,7 @@ _240/455 requirements have a verifying test; 215 untested; 0 stale tag(s)._
 | FR-012 | `tests/test_config_handler.py:test_load_json_malformed_returns_empty`, `tests/test_config_handler.py:test_load_json_missing_file_returns_empty` |
 | FR-014 | `tests/test_config_handler.py:test_save_json_to_unwritable_path_returns_false`, `tests/test_config_handler.py:test_save_json_writes_loadable_file`, `tests/test_config_handler.py:test_save_then_load_round_trips` |
 | FR-017 | `tests/test_gui_smoke.py:test_load_config_clears_remote_list` |
+| FR-017a | `tests/test_gui_smoke.py:test_load_config_disconnects_open_ports_before_swap`, `tests/test_gui_smoke.py:test_load_config_skips_disconnect_when_not_connected` |
 | FR-018 | `tests/test_gui_smoke.py:test_menu_new_aborts_when_save_cancelled`, `tests/test_gui_smoke.py:test_menu_new_prompts_for_file_when_none_remembered`, `tests/test_gui_smoke.py:test_menu_new_saves_to_current_file_resets_and_closes_ports` |
 | FR-019 | `tests/test_gui_smoke.py:test_menu_new_saves_to_current_file_resets_and_closes_ports`, `tests/test_gui_smoke.py:test_window_title_cleared_by_new` |
 | FR-020a | `tests/test_gui_smoke.py:test_dialog_save_warns_and_writes_nothing_when_no_config_loaded`, `tests/test_gui_smoke.py:test_serial_config_save_persists_only_serial_to_active_file` |
@@ -60,10 +61,11 @@ _240/455 requirements have a verifying test; 215 untested; 0 stale tag(s)._
 | FR-021c | `tests/test_macros.py:test_menu_terminal_config_saves_subset_and_applies` |
 | FR-022 | `tests/test_gui_smoke.py:test_menu_about_opens_dialog` |
 | FR-023 | `tests/test_gui_smoke.py:test_help_menu_contains_manual_action`, `tests/test_gui_smoke.py:test_menu_manual_opens_dialog`, `tests/test_gui_smoke.py:test_menu_manual_reuses_open_window` |
-| FR-030 | `tests/test_gui_smoke.py:test_connect_when_terminal_already_open_notifies_and_takes_no_action`, `tests/test_serial_manager.py:test_numeric_defaults_applied_when_absent`, `tests/test_serial_manager.py:test_numeric_fields_are_coerced_to_int`, `tests/test_serial_manager.py:test_open_port_returns_false_on_serial_error`, `tests/test_serial_manager.py:test_parity_maps_to_pyserial_constant` |
+| FR-030 | `tests/test_gui_smoke.py:test_connect_when_terminal_already_open_notifies_and_takes_no_action`, `tests/test_serial_manager.py:test_numeric_defaults_applied_when_absent`, `tests/test_serial_manager.py:test_numeric_fields_are_coerced_to_int`, `tests/test_serial_manager.py:test_open_port_returns_false_on_serial_error`, `tests/test_serial_manager.py:test_parity_maps_to_pyserial_constant`, `tests/test_serial_manager.py:test_write_timeout_defaults_to_2000ms_when_absent`, `tests/test_serial_manager.py:test_write_timeout_falls_back_on_non_numeric_value`, `tests/test_serial_manager.py:test_write_timeout_is_per_port_and_converted_ms_to_seconds` |
 | FR-033 | `tests/test_serial_manager.py:test_open_terminal_port_clears_flag_on_failure` |
 | FR-036 | `tests/test_serial_manager.py:test_read_loop_dispatches_raw_bytes` |
 | FR-037 | `tests/test_gui_smoke.py:test_connect_shared_port_assigns_transport_port`, `tests/test_serial_manager.py:test_read_loop_suspends_dispatch_while_paused` |
+| FR-038 | `tests/test_serial_manager.py:test_write_timeout_defaults_to_2000ms_when_absent`, `tests/test_serial_manager.py:test_write_timeout_is_per_port_and_converted_ms_to_seconds` |
 | FR-041 | `tests/test_gui_smoke.py:test_connect_probes_when_both_ports_connected` |
 | FR-042 | `tests/test_cpm_parser.py:test_drive_prompt_letter_extracts_plain_prompt`, `tests/test_gui_smoke.py:test_connect_probe_ok_sets_drive_and_refreshes` |
 | FR-043 | `tests/test_cpm_parser.py:test_drive_prompt_letter_none_when_absent`, `tests/test_gui_smoke.py:test_connect_probe_retries_then_succeeds` |
@@ -73,11 +75,11 @@ _240/455 requirements have a verifying test; 215 untested; 0 stale tag(s)._
 | FR-047 | `tests/test_boot_sequence.py:test_comments_and_blank_lines_ignored`, `tests/test_boot_sequence.py:test_empty_script_yields_no_steps`, `tests/test_boot_sequence.py:test_full_sequence_order_preserved`, `tests/test_boot_sequence.py:test_keyword_is_case_insensitive`, `tests/test_boot_sequence.py:test_send_preserves_argument_text`, `tests/test_boot_sequence.py:test_send_with_empty_text_is_a_bare_eol`, `tests/test_boot_sequence.py:test_sendraw_parses_hex_bytes`, `tests/test_boot_sequence.py:test_sendraw_rejects_invalid_hex`, `tests/test_boot_sequence.py:test_sendraw_rejects_out_of_range_byte`, `tests/test_boot_sequence.py:test_sendraw_requires_at_least_one_byte`, `tests/test_boot_sequence.py:test_unknown_directive_rejected`, `tests/test_boot_sequence.py:test_wait_parses_decimal_seconds`, `tests/test_boot_sequence.py:test_wait_rejects_non_numeric_and_negative`, `tests/test_boot_sequence.py:test_waitfor_requires_target`, `tests/test_boot_sequence.py:test_waitfor_target_may_contain_spaces_when_no_timeout`, `tests/test_boot_sequence.py:test_waitfor_with_trailing_timeout`, `tests/test_boot_sequence.py:test_waitfor_without_timeout_uses_default`, `tests/test_gui_smoke.py:test_run_boot_sequence_empty_returns_false`, `tests/test_gui_smoke.py:test_run_boot_sequence_executes_directives` |
 | FR-048 | `tests/test_gui_smoke.py:test_boot_auto_recovery_runs_sequence_then_reprobes`, `tests/test_gui_smoke.py:test_boot_no_recovery_when_sequence_empty` |
 | FR-049 | `tests/test_gui_smoke.py:test_boot_menu_item_reflects_config`, `tests/test_gui_smoke.py:test_manual_boot_failure_sets_status_without_dialog`, `tests/test_gui_smoke.py:test_manual_boot_success_reprobes_and_sets_drive`, `tests/test_gui_smoke.py:test_terminal_context_menu_boot_enabled_reflects_provider` |
-| FR-050 | `tests/test_gui_smoke.py:test_disconnect_attempts_close_when_flags_false`, `tests/test_serial_manager.py:test_close_terminal_port_closes_and_clears_flag` |
+| FR-050 | `tests/test_gui_smoke.py:test_capture_terminal_response_probe_cancel_bails_early`, `tests/test_gui_smoke.py:test_disconnect_attempts_close_when_flags_false`, `tests/test_gui_smoke.py:test_disconnect_cancels_and_joins_in_flight_probe`, `tests/test_gui_smoke.py:test_probe_stops_without_emitting_when_cancelled`, `tests/test_serial_manager.py:test_close_succeeds_when_port_lacks_purge_methods`, `tests/test_serial_manager.py:test_close_terminal_port_closes_and_clears_flag`, `tests/test_serial_manager.py:test_close_terminal_port_purges_output_before_close` |
 | FR-051 | `tests/test_gui_smoke.py:test_disconnect_keeps_remote_list_when_close_fails` |
 | FR-052 | `tests/test_serial_manager.py:test_close_terminal_port_closes_and_clears_flag`, `tests/test_serial_manager.py:test_close_terminal_port_returns_false_on_error` |
 | FR-054 | `tests/test_gui_smoke.py:test_disconnect_shared_port_also_clears_transport_flag` |
-| FR-055 | `tests/test_gui_smoke.py:test_disconnect_attempts_close_when_flags_false`, `tests/test_serial_manager.py:test_close_transport_port_closes_and_clears_flag` |
+| FR-055 | `tests/test_gui_smoke.py:test_disconnect_attempts_close_when_flags_false`, `tests/test_serial_manager.py:test_close_transport_port_closes_and_clears_flag`, `tests/test_serial_manager.py:test_close_transport_port_purges_output_before_close` |
 | FR-056 | `tests/test_gui_smoke.py:test_disconnect_transport_close_failure_shows_error_dialog` |
 | FR-057 | `tests/test_serial_manager.py:test_close_transport_port_closes_and_clears_flag`, `tests/test_serial_manager.py:test_close_transport_port_returns_false_on_error` |
 | FR-058 | `tests/test_gui_smoke.py:test_clear_remote_files_empties_canonical_and_widget`, `tests/test_gui_smoke.py:test_disconnect_clears_remote_list`, `tests/test_gui_smoke.py:test_disconnect_keeps_remote_list_when_close_fails` |
@@ -295,7 +297,6 @@ These defined requirements have no `Verifies:` test tag:
 - FR-032
 - FR-034
 - FR-035
-- FR-038
 - FR-039
 - FR-040
 - FR-053

@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.33 |
-| Scorecard for plan version | 1.33 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.35 |
+| Scorecard for plan version | 1.35 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -82,6 +82,8 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-C08 | Two-port disconnect closes both | FR-055/057 | | | |
 | MT-C09 | Clean disconnect clears remote list | FR-058 | | | |
 | MT-C10 | Close failure cancels disconnect; list kept | FR-051/058 | | | |
+| MT-C18 | Swapped ports: Disconnect/Abort stays prompt (no hang) | FR-030/050 | | | |
+| MT-C19 | Load config while connected closes old ports | FR-017a/050 | | | |
 
 ### §6 Serial config & enumeration
 | ID | Title | Req | Result | Env | Notes |

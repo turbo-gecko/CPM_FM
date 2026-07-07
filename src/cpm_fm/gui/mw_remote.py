@@ -231,7 +231,7 @@ class _RemoteMixin(MainWindowMixinBase):
     def do_connect(self):
         """
         Satisfies: FR-030, FR-031, FR-032, FR-034, FR-037, FR-038, FR-039,
-        FR-040, FR-041, FR-046.
+        FR-040, FR-041, FR-046, FR-050.
         """
         # FR-030: do not attempt to reopen an already-open Terminal Port —
         # reopening fails (the OS won't grant a second handle), which used to
@@ -269,7 +269,12 @@ class _RemoteMixin(MainWindowMixinBase):
         # back via the connect_probe_ok / connect_probe_failed signals.
         if self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected:
             self.set_status(tr("status.checking_remote_fs"))
-            threading.Thread(target=self._do_connect_probe_logic, daemon=True).start()
+            # FR-050: clear the probe-cancel flag and track the worker so a
+            # Disconnect during the probe can signal it and join it before
+            # closing the port(s).
+            self._probe_cancel.clear()
+            self._probe_thread = threading.Thread(target=self._do_connect_probe_logic, daemon=True)
+            self._probe_thread.start()
 
     def _do_connect_probe_logic(self):
         """
@@ -282,12 +287,20 @@ class _RemoteMixin(MainWindowMixinBase):
         otherwise emit connect_probe_failed, which presents the Remote
         Filesystem Unavailable dialog (FR-044). The UI updates run on the GUI
         thread via those signals (NFR-004).
+
+        FR-050: if a Disconnect requests cancellation at any point, stop without
+        emitting either signal — the disconnect closes the port(s) and there is
+        no remote to report on.
         """
         letter = self._probe_for_drive()
+        if self._probe_cancel.is_set():
+            return
         if letter is None and self._boot_sequence_configured():
             # FR-048: attempt boot-sequence recovery, then re-probe once.
             self.run_boot_sequence()
             letter = self._probe_for_drive()
+            if self._probe_cancel.is_set():
+                return
         if letter is not None:
             self.connect_probe_ok.emit(letter)
         else:
@@ -297,14 +310,16 @@ class _RemoteMixin(MainWindowMixinBase):
         """Send a bare EOL and look for a CP/M drive prompt, with one retry.
 
         Returns the detected drive letter (DR-033a) or ``None``. Runs on a
-        worker thread; FR-043's single retry is performed here.
+        worker thread; FR-043's single retry is performed here. Each capture is
+        cancellable via ``_probe_cancel`` so a Disconnect during the probe
+        (FR-050) wakes it promptly instead of running out the full idle budget.
 
-        Satisfies: FR-041, FR-043.
+        Satisfies: FR-041, FR-043, FR-050.
         """
-        text = self._capture_terminal_response("")
+        text = self._capture_terminal_response("", cancel_event=self._probe_cancel)
         letter = CPMParser.drive_prompt_letter(text)
-        if letter is None:
-            text = self._capture_terminal_response("")
+        if letter is None and not self._probe_cancel.is_set():
+            text = self._capture_terminal_response("", cancel_event=self._probe_cancel)
             letter = CPMParser.drive_prompt_letter(text)
         return letter
 
@@ -492,7 +507,19 @@ class _RemoteMixin(MainWindowMixinBase):
         The underlying close_*_port() methods are safe to call when the port is
         already closed (they no-op and return True), so always attempting the
         close is the correct, defensive behaviour.
+
+        FR-050: first cancel any in-flight connect probe (FR-041-FR-048) and
+        wait briefly (bounded) for its worker to stop. The probe reads/writes
+        the Terminal Port, so letting it run while the port is being closed used
+        to make Disconnect stall for tens of seconds when the ports were
+        misconfigured. Combined with the bounded write timeout (FR-030) this
+        keeps Disconnect prompt and the UI responsive.
         """
+        self._probe_cancel.set()
+        if self._probe_thread is not None and self._probe_thread.is_alive():
+            self._probe_thread.join(timeout=1.0)
+        self._probe_thread = None
+
         term_port = self.settings.get("terminal_port")
         trans_port = self.settings.get("transport_port")
 
@@ -556,9 +583,11 @@ class _RemoteMixin(MainWindowMixinBase):
         drive = self.drive_combo.currentText()[0]  # 'A'..'P'
         threading.Thread(target=self._do_change_drive_logic, args=(drive,), daemon=True).start()
 
-    def _capture_terminal_response(self, command: str, cancellable: bool = False) -> str:
+    def _capture_terminal_response(
+        self, command: str, cancellable: bool = False, cancel_event=None
+    ) -> str:
         """
-        Satisfies: FR-075, FR-076, FR-101, FR-120, FR-145.
+        Satisfies: FR-075, FR-076, FR-101, FR-120, FR-145, FR-050.
 
         Send `command` (with the configured EOL appended) on the Terminal Port
         and capture the echoed output into the capture buffer until it idles
@@ -573,6 +602,11 @@ class _RemoteMixin(MainWindowMixinBase):
         partial capture so far is returned. It is left False for the standalone
         Remote-list refresh / drive-change reads, which are not part of a
         transfer and must not observe a stale transfer-cancel flag.
+
+        ``cancel_event`` lets a caller poll a different cancel flag during the
+        settle waits; the connect probe passes ``_probe_cancel`` so a Disconnect
+        during the probe wakes it promptly (FR-050). When it is supplied the
+        waits are cancellable regardless of ``cancellable``.
         """
         self._remote_capture_buffer = ""
         self._capture_active = True
@@ -581,6 +615,8 @@ class _RemoteMixin(MainWindowMixinBase):
 
         def _settle(secs: float) -> bool:
             # Returns True when the wait should stop early (cancellation).
+            if cancel_event is not None:
+                return self._cancellable_sleep(secs, cancel_event)
             if cancellable:
                 return self._cancellable_sleep(secs)
             time.sleep(secs)

@@ -30,8 +30,19 @@ class _ConfigMixin(MainWindowMixinBase):
 
     def load_config(self, filename):
         """
-        Satisfies: FR-005, FR-011, FR-012, FR-017, FR-060, FR-125.
+        Satisfies: FR-005, FR-011, FR-012, FR-017, FR-017a, FR-060, FR-125.
         """
+        # FR-017a: if a port is open under the current configuration, close it
+        # (Disconnect behaviour, FR-050-FR-058) BEFORE replacing the settings
+        # below. do_disconnect reads the port names from self.settings, so it
+        # must run while the settings still describe the ports actually open;
+        # otherwise the prior config's ports stay open while the flags/settings
+        # describe the new config, leaving the app "connected" to ports that no
+        # longer match the loaded configuration. Skipped when nothing is open, so
+        # the start-up reload of the last-used file (FR-005) is unaffected.
+        if self.serial_mgr.terminal_connected or self.serial_mgr.transport_connected:
+            self.do_disconnect()
+
         self.settings = self.config_handler.load_json(filename)
         # FR-005: remember this file so it is reloaded on the next startup.
         self.window_state.last_config = filename
