@@ -1033,5 +1033,56 @@
       "N-A": 1
     },
     "artifacts": "integration/results/rc2014/20260706T234716Z_98b210c"
+  },
+  {
+    "run_id": "20260707T045250Z_cf6bd71",
+    "timestamp": "2026-07-07T04:52:50.177905+00:00",
+    "target": "_local",
+    "app_version": "2.26.0",
+    "git_commit": "cf6bd71c861138a65923ad665ace1a6568031720",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 12
+    },
+    "artifacts": "integration/results/_local/20260707T045250Z_cf6bd71"
+  },
+  {
+    "run_id": "20260707T045250Z_cf6bd71",
+    "timestamp": "2026-07-07T04:52:50.177905+00:00",
+    "target": "elite_mini",
+    "app_version": "2.26.0",
+    "git_commit": "cf6bd71c861138a65923ad665ace1a6568031720",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 38,
+      "Skipped": 2,
+      "N-A": 1
+    },
+    "artifacts": "integration/results/elite_mini/20260707T045250Z_cf6bd71"
+  },
+  {
+    "run_id": "20260707T050405Z_cf6bd71",
+    "timestamp": "2026-07-07T05:04:05.954638+00:00",
+    "target": "_local",
+    "app_version": "2.26.0",
+    "git_commit": "cf6bd71c861138a65923ad665ace1a6568031720",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 12
+    },
+    "artifacts": "integration/results/_local/20260707T050405Z_cf6bd71"
+  },
+  {
+    "run_id": "20260707T050405Z_cf6bd71",
+    "timestamp": "2026-07-07T05:04:05.954638+00:00",
+    "target": "eZT-RCB",
+    "app_version": "2.26.0",
+    "git_commit": "cf6bd71c861138a65923ad665ace1a6568031720",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 40,
+      "N-A": 1
+    },
+    "artifacts": "integration/results/eZT-RCB/20260707T050405Z_cf6bd71"
   }
 ]

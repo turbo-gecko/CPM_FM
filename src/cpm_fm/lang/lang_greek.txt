@@ -164,7 +164,7 @@ transfer.count = Μπλοκ: {blocks}    Bytes: {bytes_done}
 
 # --- Terminal window ------------------------------------------------------------
 terminal.title = Τερματικός
-terminal.input_hint = Πληκτρολογήστε εδώ - τα πλήκτρα αποστέλλονται ζωντανά
+terminal.status_type = Προσομοίωση: {type}
 terminal.font_dialog_title = Γραμματοσειρά τερματικού
 
 # --- Terminal context menu (v2.23) ---------------------------------------------

@@ -7,7 +7,6 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
     QFontDialog,
-    QLabel,
     QMainWindow,
     QMenu,
     QVBoxLayout,
@@ -35,9 +34,10 @@ class TerminalWindow(QMainWindow):
 
     Interactive VT-100 terminal: the receive area renders the engine's screen
     and keystrokes typed into it are sent straight to the Terminal Port
-    (there is no separate transmit field).
+    (there is no separate transmit field). A status bar below the receive area
+    shows the active terminal emulation type (UIR-106).
 
-    Satisfies: UIR-060-UIR-068.
+    Satisfies: UIR-060-UIR-068, UIR-106.
     """
 
     def __init__(
@@ -85,7 +85,9 @@ class TerminalWindow(QMainWindow):
         The Terminal Window carries no on-window controls below the Receive view
         (UIR-064): Clear, Font, Boot and terminal-type/macro actions are all
         reached from the Receive-view context menu (UIR-099); Local Echo and
-        Autoscroll are set in the Terminal Config dialog (UIR-103a).
+        Autoscroll are set in the Terminal Config dialog (UIR-103a). Below the
+        Receive view sits a status bar showing the active terminal type
+        (UIR-106).
         """
         super().__init__()
         # FR-091: the VT-100 screen model this window renders.
@@ -136,17 +138,33 @@ class TerminalWindow(QMainWindow):
         """
         for setter, key in self._i18n_registry:
             setter(tr(key))
+        # UIR-106: the status text is parameterised by the active terminal type,
+        # so it is re-applied here rather than via the plain-key registry.
+        self.update_terminal_type_status()
+
+    def update_terminal_type_status(self) -> None:
+        """Show the active terminal emulation type in the status bar (UIR-106).
+
+        Reads the current ``terminal_type`` from the engine and renders it in the
+        window's status bar (e.g. ``Emulation: VT100``), in the active UI language
+        (FR-123). Called when the window is built, after each screen render (so a
+        context-menu type change is reflected, UIR-101), on retranslation, and
+        when the Terminal settings are applied while the window is open.
+
+        Satisfies: UIR-106, FR-123.
+        """
+        self.statusBar().showMessage(tr("terminal.status_type", type=self.engine.terminal_type))
 
     def create_widgets(self):
         """Build the Terminal Window widgets.
 
-        The window holds only the Receive view and an input-hint label — there
-        are no controls below the view (UIR-064). Clear, Font, Boot and the
-        terminal-type/macro actions live on the Receive-view context menu
-        (UIR-099); Local Echo and Autoscroll are Terminal Config settings
-        (UIR-103a).
+        The window holds only the Receive view; below it sits a status bar
+        showing the active terminal type (UIR-106) — there are no controls below
+        the view (UIR-064). Clear, Font, Boot and the terminal-type/macro actions
+        live on the Receive-view context menu (UIR-099); Local Echo and Autoscroll
+        are Terminal Config settings (UIR-103a).
 
-        Satisfies: UIR-061, UIR-062, UIR-064, UIR-067, UIR-099, FR-096.
+        Satisfies: UIR-061, UIR-062, UIR-064, UIR-067, UIR-099, UIR-106, FR-096.
         """
         central = QWidget()
         self.setCentralWidget(central)
@@ -163,11 +181,10 @@ class TerminalWindow(QMainWindow):
         self.receive_area.set_context_menu_callback(self._show_context_menu)
         layout.addWidget(self.receive_area)
 
-        # UIR-067: input hint. There is no transmit field — the operator types
-        # directly into the receive area and each keystroke is sent live.
-        self.lbl_hint = QLabel()
-        self._register_text(self.lbl_hint.setText, "terminal.input_hint")
-        layout.addWidget(self.lbl_hint)
+        # UIR-106: status bar below the Receive view showing the active terminal
+        # emulation type. There is no transmit field — the operator types directly
+        # into the receive area and each keystroke is sent live (UIR-067/FR-096).
+        self.update_terminal_type_status()
 
     def clear_text(self):
         """Reset the screen and clear the owner's data buffers (FR-095).
@@ -187,9 +204,13 @@ class TerminalWindow(QMainWindow):
     def render_screen(self):
         """Repaint the receive view from the engine (call after feeding it).
 
-        Satisfies: FR-091, UIR-062.
+        Also refreshes the status-bar terminal type (UIR-106) so a type change
+        made from the context menu (UIR-101) is reflected immediately.
+
+        Satisfies: FR-091, UIR-062, UIR-106.
         """
         self.receive_area.refresh()
+        self.update_terminal_type_status()
 
     def _on_boot(self):
         """Run the configured boot sequence (FR-049).

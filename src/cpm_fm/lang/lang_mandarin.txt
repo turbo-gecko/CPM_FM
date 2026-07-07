@@ -164,7 +164,7 @@ transfer.count = 块: {blocks}    字节: {bytes_done}
 
 # --- Terminal window -----------------------------------------------------------
 terminal.title = 终端
-terminal.input_hint = 在此输入 - 按键即时发送
+terminal.status_type = 仿真：{type}
 terminal.font_dialog_title = 终端字体
 
 # --- Terminal context menu (v2.23) ---------------------------------------------

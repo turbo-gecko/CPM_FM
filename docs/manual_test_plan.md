@@ -4,7 +4,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.32 |
+| Version | 1.33 |
 | Status | Draft |
 | Date | 2026-07-07 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.25.0) |
@@ -44,7 +44,7 @@ What remains for **manual** verification, and is the subject of this plan:
    Cancel/affirmative button placement across dialogs (`UIR-*`, `UIR-075`, `CR-012`/`CR-013`).
 5. **OS integration** — File dialogs, geometry persistence across real sessions, viewer/editor launch
    and OS-default fallback, and `python -m cpm_fm` debug output (`FR-004`–`FR-006`, `FR-088`, `FR-112`).
-6. **Terminal Window** interactive VT-100/VT-52/ADM-3A behaviour over a live link (`FR-090`–`FR-098`, `FR-157`, `FR-157i`, `FR-157j`, `FR-158`, `FR-158a`, `FR-158b`, `UIR-034`, `UIR-060`–`UIR-068`).
+6. **Terminal Window** interactive VT-100/VT-52/ADM-3A behaviour over a live link (`FR-090`–`FR-098`, `FR-157`, `FR-157i`, `FR-157j`, `FR-158`, `FR-158a`, `FR-158b`, `UIR-034`, `UIR-060`–`UIR-068`, `UIR-106`).
 
 Each test case lists the requirement IDs it verifies so coverage can be traced back to the SRS.
 
@@ -400,7 +400,7 @@ files** — these tests delete data by design.
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
 | MT-W01 | FR-097, UIR-060 | Press the **Terminal** toolbar button (port may be closed). | A non-modal window titled "Terminal" opens; pressing the button again when minimised restores it. |
-| MT-W02 | UIR-061, UIR-063, UIR-064, UIR-067 | Inspect the window. | A monospaced character-cell "Receive" screen (not an editable text field); **no** transmit field, Send button, or control-row buttons/checkboxes below the screen; only a hint label indicating you type directly into the screen. |
+| MT-W02 | UIR-061, UIR-063, UIR-064, UIR-067, UIR-106 | Inspect the window. | A monospaced character-cell "Receive" screen (not an editable text field); **no** transmit field, Send button, or control-row buttons/checkboxes below the screen; below the screen a **status bar** shows the active terminal emulation type (e.g. "Emulation: VT100"). There is no separate "type here" hint label. |
 | MT-W03 | FR-091, FR-096 | Connected: click into the Receive area and type a CP/M command (e.g. `DIR`) then press **Enter**. | Each keystroke is transmitted live; Enter sends the configured EOL; the remote's response is rendered in the screen. |
 | MT-W04 | UIR-103b, FR-093 | In **Config > Terminal**, tick **Local Echo**, Save, then type in the Terminal Window. Then untick it and type again. | With Local Echo on, what you type is copied into the Receive screen; with it off, only the remote echo appears. |
 | MT-W05 | UIR-103c, UIR-104, UIR-062 | In **Config > Terminal**, with **Autoscroll** on (default) produce enough output to overflow; then untick Autoscroll, Save, and scroll up. | With Autoscroll on, the view follows new output to the bottom; with it off, the view stays put in the scrollback. |
@@ -415,7 +415,7 @@ files** — these tests delete data by design.
 | MT-W16 [CP/M] | UIR-034, UIR-103a, FR-157i, FR-157j, FR-158a, FR-158b | In **Config → Terminal** set **Terminal Type** to **ADM-3A** (or **VT52**) and Save, then connect and run software written for that terminal (e.g. an ADM-3A build of WordStar, or a VT-52 program). Press the arrow keys in the Terminal Window. Then switch Terminal Type back to **VT100**. | The Terminal Type dropdown offers VT100/VT52/ADM-3A (default VT100). Under the chosen type the remote's cursor positioning and screen/line clears render correctly — no raw escape codes or garbled layout. The arrow keys transmit the terminal-specific codes (VT-52 → `ESC A`/`B`/`C`/`D`; ADM-3A → Ctrl-K/Ctrl-J/Ctrl-H/Ctrl-L). Switching back to VT100 restores VT-100 rendering/keys immediately, without reopening the window. |
 | MT-W17 [CP/M or loopback] | UIR-099, UIR-100, FR-165, FR-166 | Connected: produce some output in the Receive screen, then **click-drag** the mouse across part of it to highlight text. **Right-click** the Receive screen and choose **Copy**; paste into a text editor to check. Copy a short command (e.g. `DIR`) from elsewhere to the clipboard, right-click the Receive screen and choose **Paste**. | Dragging highlights the text (shown in the selection colour). The right-click menu shows six command items — **Copy**, **Paste**, **Clear Window**, **Font…**, **Reset Size (24×80)**, **Boot into CP/M** — with **Copy** greyed when nothing is selected. Copy places the highlighted text on the clipboard (trailing spaces trimmed per line). Paste transmits the clipboard text on the Terminal Port as if typed (newlines sent as the configured EOL); with the port closed it reports "Terminal port not connected - cannot send" and sends nothing. |
 | MT-W18 | UIR-099, FR-095, UIR-069, FR-167 | Right-click the Receive screen and use **Clear Window**, then **Font…**, then **Reset Size (24×80)** (after first resizing the window to a non-80×24 shape). | **Clear Window** resets the screen and buffers. **Font…** opens the font dialog (MT-W13). **Reset Size (24×80)** resizes the window so the character-cell grid reflows to exactly 80 columns × 24 rows. |
-| MT-W19 [CP/M] | UIR-099, UIR-101, UIR-034 | Right-click the Receive screen and open the **Terminal Type** submenu; note the tick against the active type, then choose a different type (e.g. **ADM-3A**). Reopen the submenu to confirm the tick moved. | The submenu lists **VT100**, **VT52**, **ADM-3A** with the currently active type checked. Choosing another type applies it to the running terminal immediately (matching the Config → Terminal **Terminal Type** dropdown, MT-W16) — subsequent output is interpreted and the cursor keys encoded per the new type — and the tick follows the selection. |
+| MT-W19 [CP/M] | UIR-099, UIR-101, UIR-034, UIR-106 | Right-click the Receive screen and open the **Terminal Type** submenu; note the tick against the active type, then choose a different type (e.g. **ADM-3A**). Reopen the submenu to confirm the tick moved. | The submenu lists **VT100**, **VT52**, **ADM-3A** with the currently active type checked. Choosing another type applies it to the running terminal immediately (matching the Config → Terminal **Terminal Type** dropdown, MT-W16) — subsequent output is interpreted and the cursor keys encoded per the new type — and the tick follows the selection. The bottom **status bar** updates to the newly selected type (e.g. "Emulation: ADM-3A"). |
 | MT-W20 [CP/M or loopback] | UIR-099, UIR-102, FR-162 | Configure at least one macro button (MT-G13). Right-click the Receive screen and open the **Macros** submenu; choose a macro whose script sends a command (e.g. `SENDRAW 0D`). Then clear all macro definitions and reopen the submenu. | The submenu lists one item per configured macro (label shown; empty slots omitted). Selecting one runs its keystroke script on the Terminal Port and the remote responds in the Receive screen. With no macros configured the **Macros** submenu is present but greyed (disabled). |
 | MT-W21 | FR-168 | Open the Terminal Window and the Transfer History window, then **Exit** the app and relaunch it. Then close both, Exit, and relaunch again. | First relaunch: both the Terminal Window and the Transfer History window reopen automatically (at their saved positions). Second relaunch: neither reopens (they were closed at exit). |
 
@@ -498,7 +498,7 @@ or real cross-session persistence:
 - Connect/disconnect (real ports & error paths): `FR-030`–`FR-040`, `FR-050`–`FR-058`.
 - Remote listing & drive selection (live capture/timing): `FR-074`–`FR-079`, `FR-100`–`FR-104`.
 - Transfers (live X-Modem, CP/M launch, timing, byte echo, live cancel): `FR-080`–`FR-089`, `FR-099`, `FR-105`–`FR-109`, `FR-119`, `FR-120`, `NFR-003a`–`NFR-003q` (interop + CAN abort).
-- Terminal Window (interactive VT-100/VT-52/ADM-3A over a link): `FR-090`–`FR-098`, `FR-157`, `FR-157i`, `FR-157j`, `FR-158`, `FR-158a`, `FR-158b`, `UIR-034`, `UIR-060`–`UIR-068`.
+- Terminal Window (interactive VT-100/VT-52/ADM-3A over a link): `FR-090`–`FR-098`, `FR-157`, `FR-157i`, `FR-157j`, `FR-158`, `FR-158a`, `FR-158b`, `UIR-034`, `UIR-060`–`UIR-068`, `UIR-106`.
 - File actions (real dialog/filesystem/viewer/remote cmd): `FR-112`, `FR-113`, `FR-114`–`FR-118`, `UIR-057`.
 - Interfaces (real): `IFR-001`–`IFR-004`.
 - Config dialogs (on-screen layout, field values/limits): `UIR-020`–`UIR-056`.

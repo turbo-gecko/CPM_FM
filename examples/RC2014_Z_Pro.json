@@ -48,6 +48,6 @@
     "macro_9_seq": "",
     "macro_10_label": "",
     "macro_10_seq": "",
-    "xfer_handshake_timeout": "1",
+    "xfer_handshake_timeout": "10",
     "boot_sequence": ""
 }

@@ -194,7 +194,7 @@ transfer.count = Blocks: {blocks}    Bytes: {bytes_done}
 
 # --- Terminal window -----------------------------------------------------------
 terminal.title = Terminal
-terminal.input_hint = Type here - keystrokes are sent live
+terminal.status_type = Emulation: {type}
 terminal.font_dialog_title = Terminal Font
 
 # --- Terminal context menu (v2.23) ---------------------------------------------

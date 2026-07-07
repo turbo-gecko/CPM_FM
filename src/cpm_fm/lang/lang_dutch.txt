@@ -164,7 +164,7 @@ transfer.count = Blokken: {blocks}    Bytes: {bytes_done}
 
 # --- Terminal window ---------------------------------------------------------
 terminal.title = Terminal
-terminal.input_hint = Typ hier - toetsaanslagen worden direct verzonden
+terminal.status_type = Emulatie: {type}
 terminal.font_dialog_title = Terminal-lettertype
 
 # --- Terminal context menu (v2.23) ---------------------------------------------

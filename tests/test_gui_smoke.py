@@ -1248,6 +1248,49 @@ def test_terminal_context_menu_terminal_type_submenu(qapp):
         term.deleteLater()
 
 
+def test_terminal_window_status_bar_shows_terminal_type(qapp):
+    """The status bar shows the active terminal type and refreshes on change.
+
+    Verifies: UIR-106, UIR-064.
+    """
+    from cpm_fm.terminal.term_translate import VT52
+    from cpm_fm.terminal.vt100_engine import VT100Engine
+
+    engine = VT100Engine()  # default VT100
+    term = TerminalWindow(None, engine=engine)
+    try:
+        # UIR-106: built with VT100, the status bar reads the active type.
+        assert term.statusBar().currentMessage() == i18n.tr("terminal.status_type", type="VT100")
+        # A type change (as a context-menu selection makes, UIR-101) is reflected
+        # after the next render.
+        engine.set_terminal_type(VT52)
+        term.render_screen()
+        assert term.statusBar().currentMessage() == i18n.tr("terminal.status_type", type=VT52)
+    finally:
+        term.deleteLater()
+
+
+def test_terminal_window_status_bar_follows_language(qapp):
+    """The terminal-type status text re-applies the active UI language live.
+
+    Verifies: UIR-106, FR-123.
+    """
+    from cpm_fm.terminal.vt100_engine import VT100Engine
+
+    term = TerminalWindow(None, engine=VT100Engine())
+    try:
+        i18n.set_language("french")
+        term.retranslate_ui()
+        assert term.statusBar().currentMessage() == i18n.tr("terminal.status_type", type="VT100")
+        # The French text differs from the English reference (guards against a
+        # stale, un-retranslated status bar).
+        i18n.set_language("english")
+        assert term.statusBar().currentMessage() != i18n.tr("terminal.status_type", type="VT100")
+    finally:
+        i18n.set_language("english")
+        term.deleteLater()
+
+
 def test_terminal_context_menu_macros_submenu_lists_and_runs(qapp):
     """The Macros submenu lists configured macros and runs the chosen script.
 
@@ -1346,6 +1389,32 @@ def test_apply_terminal_settings_applies_local_echo_and_autoscroll(qapp, state):
         win._apply_terminal_settings()
         assert win._local_echo is False
         assert win.terminal_win.receive_area._autoscroll is True
+    finally:
+        win.close()
+
+
+def test_apply_terminal_settings_refreshes_status_bar(qapp, state):
+    """A Terminal Config save refreshes the open window's terminal-type status.
+
+    Verifies: UIR-106, UIR-034.
+    """
+    from cpm_fm.terminal.term_translate import ADM3A
+    from cpm_fm.utils.config_handler import DEFAULT_SETTINGS
+
+    win = MainWindow(state)
+    try:
+        win.settings = dict(DEFAULT_SETTINGS)
+        win.show_terminal()
+        assert win.terminal_win.statusBar().currentMessage() == i18n.tr(
+            "terminal.status_type", type="VT100"
+        )
+        # Changing the setting and re-applying (as a Terminal Config save does)
+        # updates the open window's status bar.
+        win.settings["terminal_type"] = ADM3A
+        win._apply_terminal_settings()
+        assert win.terminal_win.statusBar().currentMessage() == i18n.tr(
+            "terminal.status_type", type=ADM3A
+        )
     finally:
         win.close()
 

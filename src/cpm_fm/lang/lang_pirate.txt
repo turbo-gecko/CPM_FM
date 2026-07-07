@@ -169,7 +169,7 @@ transfer.count = Chests: {blocks}    Gold: {bytes_done}
 
 # --- Terminal window -----------------------------------------------------------
 terminal.title = Captain's Log
-terminal.input_hint = Type here, matey - every keystroke sails at once
+terminal.status_type = Emulatin': {type}
 terminal.font_dialog_title = Terminal Letterin'
 
 # --- Terminal context menu (v2.23) ---------------------------------------------

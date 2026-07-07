@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_238/454 requirements have a verifying test; 216 untested; 0 stale tag(s)._
+_240/455 requirements have a verifying test; 215 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -126,7 +126,7 @@ _238/454 requirements have a verifying test; 216 untested; 0 stale tag(s)._
 | FR-120 | `tests/test_gui_smoke.py:test_cancel_after_partial_batch_refreshes_and_skips_rest`, `tests/test_gui_smoke.py:test_cancellable_sleep_completes_when_not_cancelled`, `tests/test_gui_smoke.py:test_cancellable_sleep_returns_immediately_when_cancelled`, `tests/test_gui_smoke.py:test_cancelled_transfer_is_not_reported_as_error`, `tests/test_gui_smoke.py:test_capture_terminal_response_cancellable_bails_early`, `tests/test_gui_smoke.py:test_progress_dialog_cancel_button_requests_cancel`, `tests/test_gui_smoke.py:test_request_transfer_cancel_sets_flag`, `tests/test_gui_smoke.py:test_wait_for_terminal_idle_returns_early_on_cancel`, `tests/test_xmodem.py:test_abort_does_not_hang_when_tx_cannot_drain`, `tests/test_xmodem.py:test_cancel_flushes_serial_in_both_directions`, `tests/test_xmodem.py:test_receive_file_cancel_aborts_and_sends_can`, `tests/test_xmodem.py:test_send_file_cancel_aborts_and_sends_can` |
 | FR-121 | `tests/test_i18n.py:test_tr_resolves_active_language` |
 | FR-122 | `tests/test_gui_smoke.py:test_language_switch_retranslates_live`, `tests/test_i18n.py:test_available_languages_discovers_shipped_files`, `tests/test_i18n.py:test_display_name_is_capitalised`, `tests/test_i18n.py:test_set_and_current_language_round_trip` |
-| FR-123 | `tests/test_gui_smoke.py:test_language_switch_retranslates_live`, `tests/test_gui_smoke.py:test_sort_combo_labels_retranslate_live`, `tests/test_i18n.py:test_set_and_current_language_round_trip` |
+| FR-123 | `tests/test_gui_smoke.py:test_language_switch_retranslates_live`, `tests/test_gui_smoke.py:test_sort_combo_labels_retranslate_live`, `tests/test_gui_smoke.py:test_terminal_window_status_bar_follows_language`, `tests/test_i18n.py:test_set_and_current_language_round_trip` |
 | FR-124 | `tests/test_gui_smoke.py:test_persisted_language_applied_on_construction`, `tests/test_i18n.py:test_tr_falls_back_to_english_for_missing_translation`, `tests/test_i18n.py:test_tr_unknown_key_falls_back_to_key` |
 | FR-125 | `tests/test_gui_smoke.py:test_window_title_cleared_by_new`, `tests/test_gui_smoke.py:test_window_title_includes_loaded_config_basename`, `tests/test_gui_smoke.py:test_window_title_plain_without_config` |
 | FR-126 | `tests/test_gui_smoke.py:test_host_group_title_includes_directory` |
@@ -211,13 +211,14 @@ _238/454 requirements have a verifying test; 216 untested; 0 stale tag(s)._
 | UIR-028 | `tests/test_serial_manager.py:test_flow_control_defaults_off_when_absent`, `tests/test_serial_manager.py:test_flow_control_flat_key` |
 | UIR-032 | `tests/test_serial_manager.py:test_read_timeout_defaults_to_100ms_when_absent`, `tests/test_serial_manager.py:test_read_timeout_is_per_port_and_converted_ms_to_seconds` |
 | UIR-033 | `tests/test_serial_manager.py:test_read_timeout_defaults_to_100ms_when_absent`, `tests/test_serial_manager.py:test_read_timeout_is_per_port_and_converted_ms_to_seconds` |
-| UIR-034 | `tests/test_config_handler.py:test_default_settings_terminal_type_is_vt100`, `tests/test_gui_smoke.py:test_set_terminal_type_from_menu_applies_and_updates_setting`, `tests/test_macros.py:test_menu_terminal_config_saves_subset_and_applies`, `tests/test_macros.py:test_terminal_config_terminal_tab_round_trips`, `tests/test_term_translate.py:test_make_translator_defaults_to_identity`, `tests/test_term_translate.py:test_make_translator_selects_type`, `tests/test_vt100_engine.py:test_adm3a_engine_clear_screen`, `tests/test_vt100_engine.py:test_set_terminal_type_switches_interpretation`, `tests/test_vt100_engine.py:test_terminal_type_defaults_to_vt100`, `tests/test_vt100_engine.py:test_vt52_engine_direct_address_and_text` |
+| UIR-034 | `tests/test_config_handler.py:test_default_settings_terminal_type_is_vt100`, `tests/test_gui_smoke.py:test_apply_terminal_settings_refreshes_status_bar`, `tests/test_gui_smoke.py:test_set_terminal_type_from_menu_applies_and_updates_setting`, `tests/test_macros.py:test_menu_terminal_config_saves_subset_and_applies`, `tests/test_macros.py:test_terminal_config_terminal_tab_round_trips`, `tests/test_term_translate.py:test_make_translator_defaults_to_identity`, `tests/test_term_translate.py:test_make_translator_selects_type`, `tests/test_vt100_engine.py:test_adm3a_engine_clear_screen`, `tests/test_vt100_engine.py:test_set_terminal_type_switches_interpretation`, `tests/test_vt100_engine.py:test_terminal_type_defaults_to_vt100`, `tests/test_vt100_engine.py:test_vt52_engine_direct_address_and_text` |
 | UIR-041 | `tests/test_gui_smoke.py:test_general_config_remote_group_first` |
 | UIR-051 | `tests/test_gui_smoke.py:test_batch_progress_dialog_shows_file_position`, `tests/test_gui_smoke.py:test_progress_dialog_cancel_button_requests_cancel`, `tests/test_gui_smoke.py:test_progress_dialog_started_and_updates`, `tests/test_gui_smoke.py:test_progress_dialog_title_for_receive` |
 | UIR-057 | `tests/test_gui_smoke.py:test_file_action_dialog_button_layout` |
 | UIR-058 | `tests/test_gui_smoke.py:test_general_config_has_echo_transfer_field`, `tests/test_gui_smoke.py:test_transfer_byte_echo_respects_setting` |
 | UIR-059 | `tests/test_gui_smoke.py:test_general_config_boot_sequence_multiline_round_trips` |
 | UIR-062 | `tests/test_terminal_view.py:test_autoscroll_toggle_moves_to_bottom`, `tests/test_terminal_view.py:test_grid_grows_with_scrollback`, `tests/test_terminal_view.py:test_row_cells_spans_scrollback_then_live_screen` |
+| UIR-064 | `tests/test_gui_smoke.py:test_terminal_window_status_bar_shows_terminal_type` |
 | UIR-066 | `tests/test_terminal_view.py:test_autoscroll_toggle_moves_to_bottom` |
 | UIR-069 | `tests/test_gui_smoke.py:test_font_dialog_lists_survive_app_theme_height`, `tests/test_terminal_view.py:test_constructor_accepts_font`, `tests/test_terminal_view.py:test_set_font_updates_cell_metrics_and_paints`, `tests/test_window_state.py:test_default_terminal_font_is_monospace`, `tests/test_window_state.py:test_terminal_font_default_when_unset`, `tests/test_window_state.py:test_terminal_font_persists_across_instances`, `tests/test_window_state.py:test_terminal_font_roundtrip` |
 | UIR-075 | `tests/test_backup_restore.py:test_on_backup_restore_confirm_button_order`, `tests/test_gui_smoke.py:test_button_row_both_cancel_left_apply_right`, `tests/test_gui_smoke.py:test_button_row_single_button_is_centered`, `tests/test_gui_smoke.py:test_dnd_confirm_dialog_button_order_and_labels`, `tests/test_gui_smoke.py:test_file_action_dialog_button_layout` |
@@ -250,6 +251,7 @@ _238/454 requirements have a verifying test; 216 untested; 0 stale tag(s)._
 | UIR-103d | `tests/test_macros.py:test_terminal_config_has_terminal_and_macros_tabs`, `tests/test_macros.py:test_terminal_config_macros_round_trip_label_and_sequence`, `tests/test_macros.py:test_terminal_config_test_button_guards_disconnected`, `tests/test_macros.py:test_terminal_config_test_button_runs_typed_script` |
 | UIR-104 | `tests/test_gui_smoke.py:test_apply_terminal_settings_applies_local_echo_and_autoscroll` |
 | UIR-105 | `tests/test_gui_smoke.py:test_boot_menu_item_reflects_config`, `tests/test_gui_smoke.py:test_terminal_context_menu_boot_enabled_reflects_provider`, `tests/test_gui_smoke.py:test_terminal_context_menu_has_six_items_and_copy_state` |
+| UIR-106 | `tests/test_gui_smoke.py:test_apply_terminal_settings_refreshes_status_bar`, `tests/test_gui_smoke.py:test_terminal_window_status_bar_follows_language`, `tests/test_gui_smoke.py:test_terminal_window_status_bar_shows_terminal_type` |
 
 ## Untested requirements
 
@@ -446,7 +448,6 @@ These defined requirements have no `Verifies:` test tag:
 - UIR-060
 - UIR-061
 - UIR-063
-- UIR-064
 - UIR-065
 - UIR-067
 - UIR-068

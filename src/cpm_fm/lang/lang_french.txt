@@ -164,7 +164,7 @@ transfer.count = Blocs : {blocks}    Octets : {bytes_done}
 
 # --- Terminal window -----------------------------------------------------------
 terminal.title = Terminal
-terminal.input_hint = Tapez ici - les touches sont envoyées en direct
+terminal.status_type = Émulation : {type}
 terminal.font_dialog_title = Police du terminal
 
 # --- Terminal context menu (v2.23) ---------------------------------------------

@@ -192,7 +192,8 @@
     "UIR-091",
     "UIR-103",
     "UIR-103a",
-    "UIR-104"
+    "UIR-104",
+    "UIR-106"
   ],
   "src/cpm_fm/gui/mw_context_menu.py": [
     "CR-010",
@@ -401,7 +402,8 @@
     "UIR-101",
     "UIR-102",
     "UIR-104",
-    "UIR-105"
+    "UIR-105",
+    "UIR-106"
   ],
   "src/cpm_fm/gui/theme.py": [
     "CR-013",

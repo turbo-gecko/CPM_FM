@@ -164,7 +164,7 @@ transfer.count = 塊: {blocks}    字節: {bytes_done}
 
 # --- Terminal window -----------------------------------------------------------
 terminal.title = 終端
-terminal.input_hint = 喺度打字 - 按鍵即時傳送
+terminal.status_type = 模擬：{type}
 terminal.font_dialog_title = 終端機字型
 
 # --- Terminal context menu (v2.23) ---------------------------------------------

@@ -164,7 +164,7 @@ transfer.count = 블록: {blocks}    바이트: {bytes_done}
 
 # --- Terminal window ----------------------------------------------------------
 terminal.title = 터미널
-terminal.input_hint = 여기에 입력하세요 - 키 입력이 즉시 전송됩니다
+terminal.status_type = 에뮬레이션: {type}
 terminal.font_dialog_title = 터미널 글꼴
 
 # --- Terminal context menu (v2.23) ---------------------------------------------

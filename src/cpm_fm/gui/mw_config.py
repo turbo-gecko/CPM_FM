@@ -79,7 +79,7 @@ class _ConfigMixin(MainWindowMixinBase):
         Terminal Window is opened, so the running terminal follows the configured
         Terminal settings (UIR-103a).
 
-        Satisfies: UIR-103a, UIR-034, FR-093, UIR-062, UIR-104.
+        Satisfies: UIR-103a, UIR-034, FR-093, UIR-062, UIR-104, UIR-106.
         """
         self._apply_terminal_type()
         # FR-093: cached so worker threads read a plain bool (NFR-004).
@@ -87,6 +87,8 @@ class _ConfigMixin(MainWindowMixinBase):
         # UIR-062/UIR-104: apply Autoscroll to the open Receive view.
         if self.terminal_win is not None:
             self.terminal_win.set_autoscroll(self.settings.get("autoscroll", "ON").upper() == "ON")
+            # UIR-106: the emulation type may have changed — refresh the status bar.
+            self.terminal_win.update_terminal_type_status()
 
     def menu_load(self):
         """

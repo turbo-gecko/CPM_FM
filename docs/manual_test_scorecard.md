@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.32 |
-| Scorecard for plan version | 1.32 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.33 |
+| Scorecard for plan version | 1.33 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -238,7 +238,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | ID | Title | Req | Result | Env | Notes |
 |----|-------|-----|:------:|:---:|-------|
 | MT-W01 | Terminal button opens/restores window | FR-097, UIR-060 | | | |
-| MT-W02 | Character-cell screen; no transmit field/Send; no control row; input hint | UIR-061/063/064/067 | | | |
+| MT-W02 | Character-cell screen; no transmit field/Send; no control row; status bar shows emulation type | UIR-061/063/064/067/106 | | | |
 | MT-W03 | Type + Enter sent live; remote responds | FR-091/096 | | | |
 | MT-W04 | Local Echo (Config → Terminal) behaviour | UIR-103b, FR-093 | | | |
 | MT-W05 | Autoscroll (Config → Terminal) + scrollback behaviour | UIR-103c/104/062 | | | |
@@ -253,7 +253,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-W16 | Terminal Type (Config → Terminal) VT52/ADM-3A renders + encodes cursor keys per type; switch back to VT100 | UIR-034, UIR-103a, FR-157i/j, FR-158a/b | | | |
 | MT-W17 | Right-click menu (6 items, Copy greyed w/o selection); drag-select + Copy → clipboard; Paste → Terminal Port (EOL-normalised) | UIR-099/100, FR-165/166 | | | |
 | MT-W18 | Right-click Clear Window / Font… / Reset Size (24×80) reflows grid to 80×24 | UIR-099, FR-095, UIR-069, FR-167 | | | |
-| MT-W19 | Terminal Type submenu (VT100/VT52/ADM-3A; active checked); selecting switches emulation live | UIR-099/101, UIR-034 | | | |
+| MT-W19 | Terminal Type submenu (VT100/VT52/ADM-3A; active checked); selecting switches emulation live; status bar updates | UIR-099/101, UIR-034, UIR-106 | | | |
 | MT-W20 | Macros submenu lists configured macros + runs script; disabled when none | UIR-099/102, FR-162 | | | |
 | MT-W21 | Terminal/History windows reopen on start-up when open at exit | FR-168 | | | |
 

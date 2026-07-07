@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_454 requirements across 55 sections._
+_455 requirements across 55 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -437,7 +437,7 @@ _454 requirements across 55 sections._
 | UIR-061 | The Terminal Window shall contain a character-cell terminal view named "Receive" that renders the VT-100… | gui/terminal_view.py:TerminalView, terminal_window.py:create_widgets |
 | UIR-062 | The Receive view shall maintain a scrollback buffer retaining at least the most recent 1000… | gui/terminal_view.py:TerminalView, gui/terminal_view.py:refresh, gui/terminal_view.py:set_autoscroll |
 | UIR-063 | The Receive view shall not be an editable text field — its content is rendered… | gui/terminal_view.py:TerminalView, gui/terminal_view.py:keyPressEvent |
-| UIR-064 | The Terminal Window shall present only the Receive view (UIR-061) and, below it, the input-hint… | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets |
+| UIR-064 | The Terminal Window shall present only the Receive view (UIR-061) and, below it, a status… | terminal_window.py:TerminalWindow, terminal_window.py:create_widgets |
 | UIR-065 | *Removed in v2.25.* (Was… | — |
 | UIR-066 | *Removed in v2.25.* (Was… | — |
 | UIR-067 | The Terminal Window shall not provide a separate transmit field or Send button… | terminal_window.py:create_widgets |
@@ -456,6 +456,7 @@ _454 requirements across 55 sections._
 | UIR-103d | The **Macros** tab shall present the ten macro-button slots (UIR-098) numbered 1..10 as a nested… | config_dialogs.py:TerminalConfigDialog.create_widgets, config_dialogs.py:TerminalConfigDialog._run_test; tests test_macros.py |
 | UIR-104 | The autoscroll setting (UIR-103c… | gui/mw_config.py:_apply_terminal_settings, gui/mw_remote.py:show_terminal, terminal_window.py:set_autoscroll, gui/terminal_view.py:TerminalView.set_autoscroll; tests test_gui_smoke.py |
 | UIR-105 | The Terminal Window context menu (UIR-099) shall include a **Boot into CP/M** action that executes… | terminal_window.py:_build_context_menu, terminal_window.py:_on_boot, mw_remote.py:show_terminal, mw_remote.py:_boot_sequence_configured; tests test_gui_smoke.py |
+| UIR-106 | The Terminal Window shall display a **status bar** along its bottom edge (below the Receive… | terminal_window.py:create_widgets, terminal_window.py:update_terminal_type_status, terminal_window.py:render_screen, terminal_window.py:retranslate_ui, gui/mw_config.py:_apply_terminal_settings; tests test_gui_smoke.py |
 
 ## 4.6 Visual theme and modern layout (v1.3)
 
