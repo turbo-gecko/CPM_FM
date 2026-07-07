@@ -1,6 +1,6 @@
 {
-    "terminal_port": "COM13",
-    "transport_port": "COM13",
+    "terminal_port": "COM18",
+    "transport_port": "COM18",
     "speed": "115200",
     "data": "8",
     "parity": "NONE",

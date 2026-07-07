@@ -1084,5 +1084,92 @@
       "N-A": 1
     },
     "artifacts": "integration/results/eZT-RCB/20260707T050405Z_cf6bd71"
+  },
+  {
+    "run_id": "20260707T075102Z_d8c8558",
+    "timestamp": "2026-07-07T07:51:02.339747+00:00",
+    "target": "_local",
+    "app_version": "2.26.2",
+    "git_commit": "d8c85588cea7ee1805bb231726a66429c2aa50b5",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 12
+    },
+    "artifacts": "integration/results/_local/20260707T075102Z_d8c8558"
+  },
+  {
+    "run_id": "20260707T075102Z_d8c8558",
+    "timestamp": "2026-07-07T07:51:02.339747+00:00",
+    "target": "eZT-RCB",
+    "app_version": "2.26.2",
+    "git_commit": "d8c85588cea7ee1805bb231726a66429c2aa50b5",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 41,
+      "Fail": 1,
+      "N-A": 1
+    },
+    "artifacts": "integration/results/eZT-RCB/20260707T075102Z_d8c8558"
+  },
+  {
+    "run_id": "20260707T080802Z_d8c8558",
+    "timestamp": "2026-07-07T08:08:02.279685+00:00",
+    "target": "eZT-RCB",
+    "app_version": "2.26.3",
+    "git_commit": "d8c85588cea7ee1805bb231726a66429c2aa50b5",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 7
+    },
+    "artifacts": "integration/results/eZT-RCB/20260707T080802Z_d8c8558"
+  },
+  {
+    "run_id": "20260707T081555Z_d8c8558",
+    "timestamp": "2026-07-07T08:15:55.989579+00:00",
+    "target": "MinZ",
+    "app_version": "2.26.3",
+    "git_commit": "d8c85588cea7ee1805bb231726a66429c2aa50b5",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 7
+    },
+    "artifacts": "integration/results/MinZ/20260707T081555Z_d8c8558"
+  },
+  {
+    "run_id": "20260707T081656Z_d8c8558",
+    "timestamp": "2026-07-07T08:16:56.627361+00:00",
+    "target": "MinZ",
+    "app_version": "2.26.3",
+    "git_commit": "d8c85588cea7ee1805bb231726a66429c2aa50b5",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 6,
+      "Error": 1
+    },
+    "artifacts": "integration/results/MinZ/20260707T081656Z_d8c8558"
+  },
+  {
+    "run_id": "20260707T081937Z_d8c8558",
+    "timestamp": "2026-07-07T08:19:37.050142+00:00",
+    "target": "MinZ",
+    "app_version": "2.26.3",
+    "git_commit": "d8c85588cea7ee1805bb231726a66429c2aa50b5",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 43
+    },
+    "artifacts": "integration/results/MinZ/20260707T081937Z_d8c8558"
+  },
+  {
+    "run_id": "20260707T081937Z_d8c8558",
+    "timestamp": "2026-07-07T08:19:37.050142+00:00",
+    "target": "_local",
+    "app_version": "2.26.3",
+    "git_commit": "d8c85588cea7ee1805bb231726a66429c2aa50b5",
+    "git_dirty": true,
+    "summary": {
+      "Pass": 12
+    },
+    "artifacts": "integration/results/_local/20260707T081937Z_d8c8558"
   }
 ]
