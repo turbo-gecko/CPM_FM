@@ -717,6 +717,11 @@
       "tests/test_backup_restore.py:test_wipe_host_dir_removes_all_files",
       "tests/test_backup_restore.py:test_wipe_remote_drive_issues_delete_per_file"
     ],
+    "FR-153e": [
+      "tests/test_backup_restore.py:test_wipe_remote_drive_empty_sequence_uses_per_file",
+      "tests/test_backup_restore.py:test_wipe_remote_drive_parse_error_falls_back_to_per_file",
+      "tests/test_backup_restore.py:test_wipe_remote_drive_runs_erase_all_sequence_once"
+    ],
     "FR-154": [
       "tests/test_backup_restore.py:test_backup_empty_source_wipes_but_skips_transfer",
       "tests/test_backup_restore.py:test_backup_order_refresh_confirm_wipe_transfer",
@@ -1157,6 +1162,9 @@
       "tests/test_gui_smoke.py:test_apply_terminal_settings_refreshes_status_bar",
       "tests/test_gui_smoke.py:test_terminal_window_status_bar_follows_language",
       "tests/test_gui_smoke.py:test_terminal_window_status_bar_shows_terminal_type"
+    ],
+    "UIR-107": [
+      "tests/test_gui_smoke.py:test_general_config_remote_group_first"
     ]
   },
   "untested": [

@@ -250,6 +250,7 @@ config.general.echo_transfer = Echo Transfer Data
 config.general.viewer = Viewer/Editor
 config.general.rename_remote = Rename
 config.general.delete_remote = Delete
+config.general.erase_all = Erase All
 config.general.host_directory = Default Host Directory
 config.general.boot_sequence = Boot Sequence
 

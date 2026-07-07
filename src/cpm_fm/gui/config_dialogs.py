@@ -370,14 +370,14 @@ class GeneralConfigDialog(ConfigDialog):
     Specialized dialog for General Configuration
     (SRS docs/cpm_fm_requirements.md, UIR-040 through UIR-048).
 
-    Satisfies: UIR-040-UIR-059, UIR-089, UIR-090, UIR-093, UIR-094, UIR-095, FR-161.
+    Satisfies: UIR-040-UIR-059, UIR-089, UIR-090, UIR-093, UIR-094, UIR-095, UIR-107, FR-161.
     """
 
     def __init__(self, parent, settings, callback, window_state=None):
         """
         Satisfies: UIR-041, UIR-042, UIR-045, UIR-046, UIR-047, UIR-048,
         UIR-049, UIR-050, UIR-052, UIR-053, UIR-054, UIR-055, UIR-056,
-        UIR-058, UIR-059, UIR-089, UIR-090, UIR-093, UIR-094, UIR-095.
+        UIR-058, UIR-059, UIR-089, UIR-090, UIR-093, UIR-094, UIR-095, UIR-107.
 
         Command text fields limited to 79 characters. UIR-041: the remote
         command fields (List Files, Receive from Remote, Send to Remote, Rename,
@@ -490,6 +490,18 @@ class GeneralConfigDialog(ConfigDialog):
                 "type": "text",
                 "default": "ERA $1",
                 "maxlength": 79,
+                "group": REMOTE,
+            },
+            # UIR-107: optional whole-drive erase macro sequence (FR-153e), run
+            # once during Restore to clear the remote drive. Multi-line, in the
+            # boot-sequence directive language; empty falls back to the per-file
+            # ERA loop (FR-153c). Placed last in the Remote group so the tall
+            # editor sits at the bottom of the boxed fields.
+            {
+                "key": "erase_all_remote_seq",
+                "label_key": "config.general.erase_all",
+                "type": "multiline",
+                "default": "",
                 "group": REMOTE,
             },
             # UIR-049: seconds to wait after launching PCPUT/PCGET before the

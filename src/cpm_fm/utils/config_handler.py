@@ -67,6 +67,11 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "viewer_cmd": "notepad $1",
     "rename_remote_cmd": "REN $2=$1",
     "delete_remote_cmd": "ERA $1",
+    # FR-153e/UIR-107: optional whole-drive erase macro sequence run once during
+    # Restore to clear the remote drive (boot-sequence directive language, e.g.
+    # "SEND ERA *.*\nWAITFOR (Y/N)\nSEND Y"). Empty falls back to the per-file
+    # ERA loop (FR-153c) that avoids the interactive ERA *.* confirmation.
+    "erase_all_remote_seq": "",
     "host_directory": "",
     # FR-047/UIR-059: optional boot-into-CP/M keystroke sequence. A newline-
     # separated script (SEND/SENDRAW/WAIT/WAITFOR directives) run to drive a

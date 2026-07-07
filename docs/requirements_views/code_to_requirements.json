@@ -118,7 +118,8 @@
     "UIR-095",
     "UIR-098",
     "UIR-103",
-    "UIR-103a"
+    "UIR-103a",
+    "UIR-107"
   ],
   "src/cpm_fm/gui/conflict_dialog.py": [
     "FR-146",
@@ -159,6 +160,7 @@
     "FR-151",
     "FR-152",
     "FR-153",
+    "FR-153e",
     "FR-154",
     "UIR-088"
   ],

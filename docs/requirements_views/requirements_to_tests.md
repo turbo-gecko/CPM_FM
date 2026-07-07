@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_242/456 requirements have a verifying test; 214 untested; 0 stale tag(s)._
+_244/458 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -157,6 +157,7 @@ _242/456 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 | FR-151 | `tests/test_backup_restore.py:test_restore_order_refresh_confirm_wipe_transfer` |
 | FR-152 | `tests/test_backup_restore.py:test_backup_cancel_stops_before_wipe`, `tests/test_backup_restore.py:test_backup_order_refresh_confirm_wipe_transfer`, `tests/test_backup_restore.py:test_backup_refreshes_host_pane_after_wipe`, `tests/test_backup_restore.py:test_on_backup_restore_confirm_records_choice`, `tests/test_backup_restore.py:test_restore_cancel_stops_before_wipe`, `tests/test_backup_restore.py:test_restore_order_refresh_confirm_wipe_transfer` |
 | FR-153 | `tests/test_backup_restore.py:test_backup_order_refresh_confirm_wipe_transfer`, `tests/test_backup_restore.py:test_restore_order_refresh_confirm_wipe_transfer`, `tests/test_backup_restore.py:test_wipe_host_dir_preserves_subdirectories`, `tests/test_backup_restore.py:test_wipe_host_dir_removes_all_files`, `tests/test_backup_restore.py:test_wipe_remote_drive_issues_delete_per_file` |
+| FR-153e | `tests/test_backup_restore.py:test_wipe_remote_drive_empty_sequence_uses_per_file`, `tests/test_backup_restore.py:test_wipe_remote_drive_parse_error_falls_back_to_per_file`, `tests/test_backup_restore.py:test_wipe_remote_drive_runs_erase_all_sequence_once` |
 | FR-154 | `tests/test_backup_restore.py:test_backup_empty_source_wipes_but_skips_transfer`, `tests/test_backup_restore.py:test_backup_order_refresh_confirm_wipe_transfer`, `tests/test_backup_restore.py:test_restore_order_refresh_confirm_wipe_transfer` |
 | FR-157 | `tests/test_term_translate.py:test_identity_translator_passes_through`, `tests/test_term_translate.py:test_make_translator_defaults_to_identity`, `tests/test_term_translate.py:test_make_translator_selects_type`, `tests/test_vt100_engine.py:test_adm3a_engine_clear_screen`, `tests/test_vt100_engine.py:test_cursor_addressing_cup`, `tests/test_vt100_engine.py:test_erase_in_display_clears_screen`, `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_set_terminal_type_switches_interpretation`, `tests/test_vt100_engine.py:test_sgr_ansi_colours`, `tests/test_vt100_engine.py:test_terminal_type_defaults_to_vt100`, `tests/test_vt100_engine.py:test_vt52_engine_direct_address_and_text` |
 | FR-157a | `tests/test_vt100_engine.py:test_cursor_addressing_cup`, `tests/test_vt100_engine.py:test_cursor_hidden_toggle`, `tests/test_vt100_engine.py:test_cursor_relative_moves` |
@@ -254,6 +255,7 @@ _242/456 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 | UIR-104 | `tests/test_gui_smoke.py:test_apply_terminal_settings_applies_local_echo_and_autoscroll` |
 | UIR-105 | `tests/test_gui_smoke.py:test_boot_menu_item_reflects_config`, `tests/test_gui_smoke.py:test_terminal_context_menu_boot_enabled_reflects_provider`, `tests/test_gui_smoke.py:test_terminal_context_menu_has_six_items_and_copy_state` |
 | UIR-106 | `tests/test_gui_smoke.py:test_apply_terminal_settings_refreshes_status_bar`, `tests/test_gui_smoke.py:test_terminal_window_status_bar_follows_language`, `tests/test_gui_smoke.py:test_terminal_window_status_bar_shows_terminal_type` |
+| UIR-107 | `tests/test_gui_smoke.py:test_general_config_remote_group_first` |
 
 ## Untested requirements
 

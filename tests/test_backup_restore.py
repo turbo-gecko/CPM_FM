@@ -5,7 +5,8 @@ ordering, and the cancel/empty short-circuits), the destination-wipe helpers,
 the connection guard, and the GUI-thread confirmation slot — all without real
 serial hardware or worker threads.
 
-Satisfies: FR-150, FR-151, FR-152, FR-153, FR-154, UIR-086, UIR-087, UIR-088.
+Satisfies: FR-150, FR-151, FR-152, FR-153, FR-153e, FR-154, UIR-086, UIR-087,
+UIR-088, UIR-107.
 """
 
 import os
@@ -248,6 +249,71 @@ def test_wipe_remote_drive_issues_delete_per_file(qapp, monkeypatch, state, tmp_
             win, "_capture_terminal_response", lambda cmd, cancellable=False: cmds.append(cmd) or ""
         )
         win._wipe_remote_drive(["A.TXT", "B.COM"])
+        assert cmds == ["ERA A.TXT", "ERA B.COM"]
+    finally:
+        win.close()
+
+
+def test_wipe_remote_drive_runs_erase_all_sequence_once(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-153e."""
+    # FR-153e: a configured erase-all macro clears the drive in ONE sequence run;
+    # the per-file ERA loop is not used.
+    win = MainWindow(state)
+    try:
+        _arm(win, monkeypatch, tmp_path)
+        win.settings["erase_all_remote_seq"] = "SEND ERA *.*\nWAIT 1\nSEND Y"
+        runs = []
+        cmds = []
+        monkeypatch.setattr(win, "_execute_sequence", lambda steps: runs.append(steps))
+        monkeypatch.setattr(
+            win, "_capture_terminal_response", lambda cmd, cancellable=False: cmds.append(cmd) or ""
+        )
+        win._wipe_remote_drive(["A.TXT", "B.COM"])
+        # The macro ran exactly once, parsed into its three directives...
+        assert len(runs) == 1
+        assert len(runs[0]) == 3
+        # ...and no per-file delete command was sent.
+        assert cmds == []
+    finally:
+        win.close()
+
+
+def test_wipe_remote_drive_empty_sequence_uses_per_file(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-153e."""
+    # FR-153e: an empty erase-all macro falls back to the per-file ERA loop.
+    win = MainWindow(state)
+    try:
+        _arm(win, monkeypatch, tmp_path)
+        win.settings["erase_all_remote_seq"] = "   "  # whitespace only -> treated as empty
+        runs = []
+        cmds = []
+        monkeypatch.setattr(win, "_execute_sequence", lambda steps: runs.append(steps))
+        monkeypatch.setattr(
+            win, "_capture_terminal_response", lambda cmd, cancellable=False: cmds.append(cmd) or ""
+        )
+        win._wipe_remote_drive(["A.TXT"])
+        assert runs == []
+        assert cmds == ["ERA A.TXT"]
+    finally:
+        win.close()
+
+
+def test_wipe_remote_drive_parse_error_falls_back_to_per_file(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-153e."""
+    # FR-153e: a malformed erase-all macro falls back to the per-file ERA loop
+    # rather than leaving the drive un-erased.
+    win = MainWindow(state)
+    try:
+        _arm(win, monkeypatch, tmp_path)
+        win.settings["erase_all_remote_seq"] = "NUKE *.*"  # unknown directive
+        runs = []
+        cmds = []
+        monkeypatch.setattr(win, "_execute_sequence", lambda steps: runs.append(steps))
+        monkeypatch.setattr(
+            win, "_capture_terminal_response", lambda cmd, cancellable=False: cmds.append(cmd) or ""
+        )
+        win._wipe_remote_drive(["A.TXT", "B.COM"])
+        assert runs == []
         assert cmds == ["ERA A.TXT", "ERA B.COM"]
     finally:
         win.close()

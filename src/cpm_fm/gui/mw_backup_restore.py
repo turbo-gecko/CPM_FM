@@ -6,6 +6,7 @@ import threading
 from PySide6.QtWidgets import QMessageBox
 
 from cpm_fm.gui.mw_base import MainWindowMixinBase
+from cpm_fm.terminal.boot_sequence import parse_boot_sequence
 from cpm_fm.terminal.cpm_parser import CPMParser
 from cpm_fm.utils.i18n import tr
 
@@ -244,14 +245,33 @@ class _BackupRestoreMixin(MainWindowMixinBase):
     def _wipe_remote_drive(self, names) -> None:
         """Delete every named remote file (Restore destination wipe).
 
-        Runs on the Restore worker thread. Sends the configured delete command
-        (``delete_remote_cmd``, default ``ERA $1``, FR-117) once per file on the
-        Terminal Port, waiting for each to go idle via the capture mechanism.
-        Deleting per file avoids the interactive ``ERA *.*`` confirmation on the
-        CP/M side.
+        Runs on the Restore worker thread. When the optional
+        ``erase_all_remote_seq`` macro (UIR-107) is configured it is run **once**
+        via the shared keystroke-sequence engine to clear the whole drive in a
+        single operation (FR-153e) — e.g. a ``SEND ERA *.*`` / ``WAITFOR`` /
+        ``SEND Y`` sequence that answers the CP/M ``ALL (Y/N)?`` prompt. When the
+        macro is empty or fails to parse, the wipe falls back to sending the
+        configured delete command (``delete_remote_cmd``, default ``ERA $1``,
+        FR-117) once per file, waiting for each to go idle via the capture
+        mechanism; deleting per file avoids the interactive ``ERA *.*``
+        confirmation on the CP/M side.
 
-        Satisfies: FR-151, FR-153.
+        Satisfies: FR-151, FR-153, FR-153e.
         """
+        # FR-153e: a configured erase-all macro clears the drive in one call.
+        seq = self.settings.get("erase_all_remote_seq", "")
+        if seq.strip():
+            try:
+                steps = parse_boot_sequence(seq)
+            except ValueError as e:
+                # Malformed sequence: fall back to the per-file wipe (FR-153e)
+                # rather than leaving the drive un-erased.
+                self._debug(f"[restore] erase-all sequence parse failed, using per-file: {e!r}")
+            else:
+                self.set_status(tr("status.wiping_destination", name="*.*"))
+                self._execute_sequence(steps)
+                return
+        # FR-153c/FR-153d: per-file deletion (default when no macro configured).
         template = self.settings.get("delete_remote_cmd", "ERA $1")
         if not template:
             return

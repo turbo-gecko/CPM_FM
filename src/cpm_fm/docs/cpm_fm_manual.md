@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.26.4**
+**Version 2.27.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -208,8 +208,19 @@ Configure CP/M command templates and behavior. The remote-command fields are gat
 | **Send to Remote (1K)** | The 1K-mode send command (blank = use the standard one) | *(blank)* |
 | **Rename** | Renames a remote file (`$1` = old, `$2` = new) | `REN $2=$1` |
 | **Delete** | Deletes a remote file | `ERA $1` |
+| **Erase All** | An optional macro that clears the whole remote drive in one step during **Restore** (see the note below and [Section 15](#15-backup-and-restore)). Blank = delete file-by-file. | *(blank)* |
 
 > **XMODEM-1K.** When **Use XMODEM-1K** is ON, host→remote transfers use 1024-byte STX frames instead of the standard 128-byte frames, which is faster over a reliable link. If your CP/M helper needs a different command for 1K mode, set it in the **(1K)** fields; a blank 1K field falls back to its standard counterpart. When enabling 1K mode, also raise the **Transfer Timeout** (see Config → Serial) — 1000 ms is a good starting point.
+
+> **Erase All (whole-drive wipe for Restore).** By default **Restore** clears the remote drive by sending the **Delete** command once per file — reliable on every CP/M, but slow on a full drive. If your system offers a faster way to erase everything, put it in the multi-line **Erase All** field and it will be run **once** at the start of a Restore instead of the per-file loop. It is written in the same keystroke-script language as the Boot Sequence and macros (`SEND`, `SENDRAW`, `WAIT`, `WAITFOR` — see [Section 9](#9-booting-the-remote-into-cpm)). A plain `ERA *.*` will not do on its own, because standard CP/M then asks `ALL (Y/N)?` and waits for a keystroke; answer it from the script, for example:
+>
+> ```
+> SEND ERA *.*
+> WAITFOR (Y/N)
+> SEND Y
+> ```
+>
+> (`WAIT 1` in place of the `WAITFOR` line also works if your system's prompt wording differs.) Leave the field **blank** to keep the safe file-by-file behaviour; a script that cannot be parsed is ignored and the file-by-file wipe is used instead. Because it clears the whole drive, develop and try your sequence with a **macro** (Config → Terminal → Macros) first — the field itself is only run as part of a Restore.
 
 > **Test button.** A **Test** button sits beside the Recv from Remote and Send to Remote fields. It requires an active connection, and sends the field's currently entered command (even if not yet saved) exactly as a real transfer would, then reports whether the remote answered within the Transfer Handshake Timeout — without transferring any file. Use it while working out a command's exact syntax, before running a real transfer.
 
@@ -543,7 +554,7 @@ These operations move an entire drive's worth of files in one step. **Both are d
 
 1. Click **Restore** on the toolbar.
 2. The program snapshots the host files and refreshes the remote list, then warns: *all files on the remote drive will be deleted and replaced.* Cancel is the safe default.
-3. On confirmation, it deletes every remote file (using the Delete command) and uploads every host file, with CP/M filename validation, conflict handling, progress, and history tracking active.
+3. On confirmation, it clears the remote drive — by default deleting every remote file with the Delete command, or, if you have configured an **Erase All** sequence (Config → General), by running that once — and uploads every host file, with CP/M filename validation, conflict handling, progress, and history tracking active.
 
 > Because these operations delete files at the destination, double-check your host directory and selected remote drive before confirming.
 
@@ -594,6 +605,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 | Recv / Send from Remote (1K) | *(blank)* |
 | Rename | `REN $2=$1` |
 | Delete | `ERA $1` |
+| Erase All | *(blank)* |
 | Transfer Launch Delay | 3 seconds |
 | Transfer Handshake Timeout | 10 seconds |
 | Inter-File Delay | 2 seconds |

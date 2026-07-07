@@ -11,7 +11,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 2.26.4 |
+| Version | 2.27.0 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
@@ -477,7 +477,8 @@ operation shows the standard progress dialog and can be cancelled.)*
 | FR-153a | The deletion shall occur on confirmation (FR-152) and before any file is transferred. | Mandatory | T | — |
 | FR-153b | For Backup the destination is the host directory: each regular file in it shall be removed from the host filesystem; subdirectories within the host directory are not removed. | Mandatory | T | — |
 | FR-153c | For Restore the destination is the remote drive: each file in the freshly-refreshed remote listing shall be removed by sending the configured delete command (`delete_remote_cmd`, default `ERA $1`, FR-117; UIR-056) once per file on the Terminal Port. | Mandatory | T | — |
-| FR-153d | The wipe shall operate on the destination listing refreshed in FR-152, deleting files individually (the per-file delete avoids the interactive `ERA *.*` confirmation on the CP/M side). | Mandatory | T | — |
+| FR-153d | The wipe shall operate on the destination listing refreshed in FR-152, deleting files individually (the per-file delete avoids the interactive `ERA *.*` confirmation on the CP/M side), unless the optional whole-drive erase sequence of FR-153e is configured. | Mandatory | T | — |
+| FR-153e | For Restore, when the optional `erase_all_remote_seq` setting (UIR-107) is non-empty, the remote-drive wipe shall instead execute that macro sequence **once** — parsed and run via the shared keystroke-sequence engine in the FR-047/FR-162 directive language (`SEND`/`SENDRAW`/`WAIT`/`WAITFOR`) — to clear the whole drive in a single operation rather than deleting file-by-file (FR-153c/FR-153d). This lets a user provide, for example, a `SEND ERA *.*` / `WAIT`/`WAITFOR` / `SEND Y` sequence that answers the CP/M `ALL (Y/N)?` prompt. When the setting is empty, or the sequence fails to parse, the wipe shall fall back to the per-file deletion of FR-153c/FR-153d. *(v2.27.)* | Mandatory | T | impl. `mw_backup_restore.py:_wipe_remote_drive`; tests `test_backup_restore.py` |
 | FR-154 | The file-copying phase of Backup and Restore shall **reuse the existing batch-transfer engine** (`_transfer_to_host_batch` / `_transfer_to_remote_batch`), so that a single modal Transfer Progress Dialog (FR-105/UIR-051) serves the whole operation, files transfer sequentially over the single Transport Port (FR-106/FR-107), the operation can be **cancelled** mid-transfer via the dialog's Cancel button (FR-120), and each file's outcome is recorded in the transfer history (FR-142). Because the destination is emptied first (FR-153), the destination-conflict handling of FR-145–FR-147 detects no conflicts during a Backup/Restore. When the source contains no files, the operation completes after the wipe with nothing to transfer and refreshes the destination pane (FR-099). *(v2.11.)* | Mandatory | T | impl. `mw_backup_restore.py:_backup_drive`, `mw_backup_restore.py:_restore_drive`, `mw_transfer_batches.py:_transfer_to_host_batch`, `mw_transfer_batches.py:_transfer_to_remote_batch`; tests `test_backup_restore.py` |
 
 ---
@@ -620,6 +621,7 @@ operation shows the standard progress dialog and can be cancelled.)*
 | UIR-059 | The General Configuration Dialog shall provide a multi-line "Boot Sequence" text field, persisted as the `boot_sequence` setting (default empty), in which the user enters the boot-sequence script (FR-047). The field shall be presented below the Remote group within the ungrouped layout (UIR-044) and rendered as a multi-line text editor. *(v2.16.)* | Mandatory | T | impl. `config_dialogs.py:GeneralConfigDialog`, `config_dialogs.py:_build_field` |
 | UIR-089 | The General Configuration Dialog shall provide, in the "Remote" group below the Send to Remote field, a "Use XMODEM-1K" checkbox (persisted as the `xmodem_1k` setting, `OFF`/`ON`, default `OFF`). When enabled, host→remote sends shall use 1024-byte STX framing (NFR-003b) and the receive handshake shall poll CRC first (NFR-003g). *(v2.13.)* | Mandatory | T | impl. `config_dialogs.py:GeneralConfigDialog`, `ConfigDialog._build_field` checkbox type; `mw_transfers.py:_xmodem_1k_enabled`; NFR-003b, NFR-003g |
 | UIR-090 | The General Configuration Dialog shall provide two text fields (limited to 79 characters, default blank) below the "Use XMODEM-1K" checkbox: "Receive from Remote (1K)" and "Send to Remote (1K)", persisted as `recv_remote_cmd_1k` and `send_remote_cmd_1k`. When XMODEM-1K mode is enabled (UIR-089), a non-blank `_1k` command shall replace the standard `recv_remote_cmd`/`send_remote_cmd` (UIR-045/UIR-046) used to launch the CP/M side of the transfer (`$1` = filename); a blank `_1k` command shall fall back to its standard counterpart. *(v2.13.)* | Mandatory | T | impl. `config_dialogs.py:GeneralConfigDialog`; `mw_transfers.py:_issue_remote_cmd` |
+| UIR-107 | The General Configuration Dialog shall provide, in the "Remote" group below the Delete field (UIR-056), a multi-line "Erase All" keystrokes editor, persisted as the `erase_all_remote_seq` setting (default empty) and rendered as a multi-line text editor (as UIR-059). It holds an optional whole-drive erase macro sequence in the boot-sequence directive language (FR-047/FR-162); when non-empty it is run once to clear the remote drive during Restore (FR-153e), and when empty Restore deletes file-by-file (FR-153c). *(v2.27.)* | Mandatory | T | impl. `config_dialogs.py:GeneralConfigDialog`, `config_dialogs.py:_build_field` |
 
 ### 4.9 Common dialog conventions
 
@@ -918,6 +920,7 @@ future refactor in the Issue Resolution Log (OI-27).
 | v2.22 selectable terminal emulation (VT-52 / ADM-3A) | FR-157i, FR-157j, FR-158a, FR-158b, UIR-034; revises FR-157, FR-158 |
 | v2.25 Terminal Config dialog, terminal-window cleanup & session window restore | FR-021c, FR-168, UIR-103, UIR-103a – UIR-103d, UIR-104, UIR-105; revises UIR-003, UIR-034, UIR-062, UIR-064, UIR-067, UIR-069, UIR-083, UIR-098, UIR-102, FR-004, FR-021b, FR-049, FR-093, FR-143, FR-162; removes UIR-065, UIR-066, UIR-068, UIR-096, UIR-097, FR-164 |
 | v2.26 Terminal Window terminal-type status bar | UIR-106; revises UIR-064, UIR-067 |
+| v2.27 configurable whole-drive erase sequence | FR-153e, UIR-107; revises FR-153d |
 
 ---
 

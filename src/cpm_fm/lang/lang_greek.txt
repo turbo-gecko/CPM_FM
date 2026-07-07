@@ -220,6 +220,7 @@ config.general.echo_transfer = Ηχώ δεδομένων μεταφοράς
 config.general.viewer = Προβολέας/Επεξεργαστής
 config.general.rename_remote = Μετονομασία
 config.general.delete_remote = Διαγραφή
+config.general.erase_all = Διαγραφή όλων
 config.general.host_directory = Προεπιλεγμένος κατάλογος ξενιστή
 config.general.boot_sequence = Ακολουθία εκκίνησης
 

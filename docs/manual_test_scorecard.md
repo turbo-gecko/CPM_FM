@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.36 |
-| Scorecard for plan version | 1.36 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.37 |
+| Scorecard for plan version | 1.37 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -235,6 +235,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-BR07 | Restore of a non-8.3 host name triggers the validation prompt | FR-151, FR-148, FR-149 | | | |
 | MT-BR08 | Backup/Restore with a port disconnected → error, no action | FR-080, CR-010 | | | |
 | MT-BR09 | Empty source still wipes; nothing transferred | FR-154 | | | |
+| MT-BR10 | Restore Erase All macro wipes drive in one call (else per-file) | FR-153e, UIR-107 | | | |
 
 ### §12 Terminal Window (live)
 | ID | Title | Req | Result | Env | Notes |

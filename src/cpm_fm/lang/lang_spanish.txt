@@ -220,6 +220,7 @@ config.general.echo_transfer = Mostrar datos de transferencia
 config.general.viewer = Visor/Editor
 config.general.rename_remote = Renombrar
 config.general.delete_remote = Eliminar
+config.general.erase_all = Borrar todo
 config.general.host_directory = Directorio del host por defecto
 config.general.boot_sequence = Secuencia de arranque
 

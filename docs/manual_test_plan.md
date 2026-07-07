@@ -4,7 +4,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.36 |
+| Version | 1.37 |
 | Status | Draft |
 | Date | 2026-07-07 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.25.0) |
@@ -394,6 +394,7 @@ files** — these tests delete data by design.
 | MT-BR07 [CP/M] | FR-151, FR-148, FR-149 | Restore a host folder containing a file whose name is **not** CP/M 8.3 (e.g. `bad name.txt`). | During the upload phase the normal **"Invalid CP/M File Name"** prompt (UIR-085) appears for that file; Rename/Skip/Cancel behave as in §11.4. |
 | MT-BR08 | FR-080, CR-010 | Press **Backup** or **Restore** with a port **disconnected**. | "Transport port not connected" error; no refresh, no deletion, no transfer. |
 | MT-BR09 [CP/M] | FR-154 | Backup with an **empty** remote drive (or Restore with an **empty** host folder). | After confirmation the destination is still wiped; nothing is transferred; status shows "Nothing to transfer"; the destination pane ends empty. |
+| MT-BR10 [CP/M] | FR-153e, UIR-107 | Set **Config → General → Erase All** to a working whole-drive erase macro for the target (e.g. `SEND ERA *.*` / `WAITFOR (Y/N)` / `SEND Y`), save, then Restore over a remote drive holding several files (press **Continue** at the warning). | The remote drive is cleared by the macro run **once** (a single `ERA *.*`-style command answered by the script) rather than one `ERA` per file; then each host file uploads as normal. On completion the remote drive contains exactly the host folder's files. Clearing the **Erase All** field and repeating falls back to the per-file `ERA` wipe (MT-BR05). |
 
 ---
 

@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_456 requirements across 55 sections._
+_458 requirements across 55 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -356,6 +356,7 @@ _456 requirements across 55 sections._
 | FR-153b | For Backup the destination is the host directory… | — |
 | FR-153c | For Restore the destination is the remote drive… | — |
 | FR-153d | The wipe shall operate on the destination listing refreshed in FR-152, deleting files individually (the… | — |
+| FR-153e | For Restore, when the optional erase_all_remote_seq setting (UIR-107) is non-empty, the remote-drive wipe shall instead… | mw_backup_restore.py:_wipe_remote_drive; tests test_backup_restore.py |
 | FR-154 | The file-copying phase of Backup and Restore shall **reuse the existing batch-transfer engine** (_transfer_to_host_batch /… | mw_backup_restore.py:_backup_drive, mw_backup_restore.py:_restore_drive, mw_transfer_batches.py:_transfer_to_host_batch, mw_transfer_batches.py:_transfer_to_remote_batch; tests test_backup_restore.py |
 
 ## 4.1 Menu bar
@@ -494,6 +495,7 @@ _456 requirements across 55 sections._
 | UIR-059 | The General Configuration Dialog shall provide a multi-line "Boot Sequence" text field, persisted as the… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:_build_field |
 | UIR-089 | The General Configuration Dialog shall provide, in the "Remote" group below the Send to Remote… | config_dialogs.py:GeneralConfigDialog, ConfigDialog._build_field checkbox type; mw_transfers.py:_xmodem_1k_enabled; NFR-003b, NFR-003g |
 | UIR-090 | The General Configuration Dialog shall provide two text fields (limited to 79 characters, default blank)… | config_dialogs.py:GeneralConfigDialog; mw_transfers.py:_issue_remote_cmd |
+| UIR-107 | The General Configuration Dialog shall provide, in the "Remote" group below the Delete field (UIR-056)… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:_build_field |
 
 ## 4.9 Common dialog conventions
 

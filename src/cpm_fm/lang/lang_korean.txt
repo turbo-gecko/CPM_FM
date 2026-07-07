@@ -220,6 +220,7 @@ config.general.echo_transfer = 전송 데이터 에코
 config.general.viewer = 뷰어/편집기
 config.general.rename_remote = 이름 바꾸기
 config.general.delete_remote = 삭제
+config.general.erase_all = 모두 지우기
 config.general.host_directory = 기본 호스트 디렉터리
 config.general.boot_sequence = 부팅 시퀀스
 

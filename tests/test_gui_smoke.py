@@ -2764,7 +2764,7 @@ def test_file_action_dialog_multi_file_shows_readonly_list(qapp):
 
 
 def test_general_config_remote_group_first(qapp, monkeypatch):
-    """Verifies: UIR-041, UIR-089, UIR-090, UIR-094, UIR-095."""
+    """Verifies: UIR-041, UIR-089, UIR-090, UIR-094, UIR-095, UIR-107."""
     # UIR-041: the General Config dialog gathers the remote command fields
     # (List Files, Receive/Send, the XMODEM-1K toggle + 1K commands, Rename,
     # Delete) into a "Remote" group placed first, with Rename/Delete labelled
@@ -2805,6 +2805,7 @@ def test_general_config_remote_group_first(qapp, monkeypatch):
             "Send to Remote (1K)",
             "Rename",
             "Delete",
+            "Erase All",  # UIR-107: multi-line erase-all macro, last in the group
         ]
         # The non-remote settings remain reachable for saving (e.g. EOL).
         assert "eol" in dlg.entries and "host_directory" in dlg.entries

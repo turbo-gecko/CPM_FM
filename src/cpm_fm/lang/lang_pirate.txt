@@ -225,6 +225,7 @@ config.general.echo_transfer = Echo the Cargo
 config.general.viewer = Spyglass/Carver
 config.general.rename_remote = Rename
 config.general.delete_remote = Delete
+config.general.erase_all = Scuttle All
 config.general.host_directory = Home Port Directory
 config.general.boot_sequence = Wakin' Orders
 

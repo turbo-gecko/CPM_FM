@@ -220,6 +220,7 @@ config.general.echo_transfer = 回顯傳輸數據
 config.general.viewer = 查看器/編輯器
 config.general.rename_remote = 重命名
 config.general.delete_remote = 刪除
+config.general.erase_all = 全部刪除
 config.general.host_directory = 預設主機目錄
 config.general.boot_sequence = 開機序列
 
