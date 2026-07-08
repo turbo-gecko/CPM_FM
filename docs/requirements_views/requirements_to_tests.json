@@ -124,6 +124,30 @@
     "DR-047": [
       "tests/test_gui_smoke.py:test_manual_dialog_handles_missing_file"
     ],
+    "DR-048": [
+      "tests/test_disk_image/test_diskdefs.py:<module>",
+      "tests/test_disk_image/test_diskdefs.py:test_bundled_diskdefs_load_and_cover_expected_names",
+      "tests/test_disk_image/test_diskdefs.py:test_bundled_diskdefs_match_romwbw_image_sizes",
+      "tests/test_disk_image/test_diskdefs.py:test_missing_required_field_raises",
+      "tests/test_disk_image/test_diskdefs.py:test_offset_with_kilobyte_suffix",
+      "tests/test_disk_image/test_diskdefs.py:test_offset_with_track_suffix_resolves_to_bytes",
+      "tests/test_disk_image/test_diskdefs.py:test_parse_single_stanza",
+      "tests/test_disk_image/test_diskdefs.py:test_unterminated_stanza_raises",
+      "tests/test_disk_image/test_geometry.py:<module>"
+    ],
+    "DR-049": [
+      "tests/test_disk_image/test_directory.py:<module>",
+      "tests/test_disk_image/test_directory.py:test_attributes_decoded",
+      "tests/test_disk_image/test_directory.py:test_list_and_read_single_extent",
+      "tests/test_disk_image/test_directory.py:test_multi_extent_file",
+      "tests/test_disk_image/test_directory.py:test_multiple_files_and_16bit_pointers",
+      "tests/test_disk_image/test_directory.py:test_record_tail_truncation",
+      "tests/test_disk_image/test_geometry.py:<module>",
+      "tests/test_disk_image/test_geometry.py:test_pointer_width_and_extent_mask",
+      "tests/test_disk_image/test_geometry.py:test_skew_table_is_a_permutation_with_no_collisions",
+      "tests/test_disk_image/test_geometry.py:test_skew_table_known_sequence",
+      "tests/test_disk_image/test_geometry.py:test_skew_zero_and_one_are_identity"
+    ],
     "FR-001": [
       "tests/test_serial_manager.py:test_status_flags_default_false_at_startup"
     ],
@@ -871,6 +895,45 @@
       "tests/test_window_state.py:test_window_open_persists_across_instances",
       "tests/test_window_state.py:test_window_open_roundtrip"
     ],
+    "FR-169": [
+      "tests/test_disk_image/test_directory.py:<module>",
+      "tests/test_disk_image/test_directory.py:test_empty_file",
+      "tests/test_disk_image/test_directory.py:test_list_and_read_single_extent",
+      "tests/test_disk_image/test_directory.py:test_multiple_files_and_16bit_pointers",
+      "tests/test_disk_image/test_image.py:<module>",
+      "tests/test_disk_image/test_image.py:test_open_image_auto_detects_and_lists",
+      "tests/test_disk_image/test_image.py:test_open_image_forced_geometry",
+      "tests/test_gui_smoke.py:test_open_disk_image_extracts_and_lists"
+    ],
+    "FR-170": [
+      "tests/test_disk_image/test_detect.py:<module>",
+      "tests/test_disk_image/test_detect.py:test_detect_ranks_correct_geometry_first",
+      "tests/test_disk_image/test_detect.py:test_detect_returns_empty_for_foreign_file",
+      "tests/test_disk_image/test_detect.py:test_detect_returns_empty_for_zero_byte_file",
+      "tests/test_disk_image/test_detect.py:test_eight_mb_images_are_ambiguous",
+      "tests/test_disk_image/test_detect.py:test_is_ambiguous_logic",
+      "tests/test_disk_image/test_image.py:<module>",
+      "tests/test_disk_image/test_image.py:test_open_image_auto_detects_and_lists"
+    ],
+    "FR-171": [
+      "tests/test_disk_image/test_directory.py:<module>",
+      "tests/test_disk_image/test_directory.py:test_empty_file",
+      "tests/test_disk_image/test_directory.py:test_list_and_read_single_extent",
+      "tests/test_disk_image/test_directory.py:test_multi_extent_file",
+      "tests/test_disk_image/test_directory.py:test_multiple_files_and_16bit_pointers",
+      "tests/test_disk_image/test_directory.py:test_record_tail_truncation",
+      "tests/test_gui_smoke.py:test_open_disk_image_cleanup_on_close",
+      "tests/test_gui_smoke.py:test_open_disk_image_extracts_and_lists"
+    ],
+    "FR-172": [
+      "tests/test_disk_image/test_detect.py:<module>",
+      "tests/test_disk_image/test_detect.py:test_detect_returns_empty_for_foreign_file",
+      "tests/test_disk_image/test_detect.py:test_detect_returns_empty_for_zero_byte_file",
+      "tests/test_disk_image/test_image.py:<module>",
+      "tests/test_disk_image/test_image.py:test_open_image_rejects_bad_input",
+      "tests/test_disk_image/test_image.py:test_open_image_rejects_foreign_sized_file",
+      "tests/test_gui_smoke.py:test_open_disk_image_rejects_bad_file"
+    ],
     "IFR-004": [
       "tests/test_config_handler.py:test_load_json_malformed_returns_empty",
       "tests/test_config_handler.py:test_load_json_reads_valid_object",
@@ -1165,6 +1228,9 @@
     ],
     "UIR-107": [
       "tests/test_gui_smoke.py:test_general_config_remote_group_first"
+    ],
+    "UIR-108": [
+      "tests/test_gui_smoke.py:test_open_disk_image_extracts_and_lists"
     ]
   },
   "untested": [

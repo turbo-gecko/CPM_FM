@@ -11,7 +11,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 2.27.1 |
+| Version | 2.28.0 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
@@ -481,6 +481,23 @@ operation shows the standard progress dialog and can be cancelled.)*
 | FR-153e | For Restore, when the optional `erase_all_remote_seq` setting (UIR-107) is non-empty, the remote-drive wipe shall instead execute that macro sequence **once** — parsed and run via the shared keystroke-sequence engine in the FR-047/FR-162 directive language (`SEND`/`SENDRAW`/`WAIT`/`WAITFOR`) — to clear the whole drive in a single operation rather than deleting file-by-file (FR-153c/FR-153d). This lets a user provide, for example, a `SEND ERA *.*` / `WAIT`/`WAITFOR` / `SEND Y` sequence that answers the CP/M `ALL (Y/N)?` prompt. When the setting is empty, or the sequence fails to parse, the wipe shall fall back to the per-file deletion of FR-153c/FR-153d. *(v2.27.)* | Mandatory | T | impl. `mw_backup_restore.py:_wipe_remote_drive`; tests `test_backup_restore.py` |
 | FR-154 | The file-copying phase of Backup and Restore shall **reuse the existing batch-transfer engine** (`_transfer_to_host_batch` / `_transfer_to_remote_batch`), so that a single modal Transfer Progress Dialog (FR-105/UIR-051) serves the whole operation, files transfer sequentially over the single Transport Port (FR-106/FR-107), the operation can be **cancelled** mid-transfer via the dialog's Cancel button (FR-120), and each file's outcome is recorded in the transfer history (FR-142). Because the destination is emptied first (FR-153), the destination-conflict handling of FR-145–FR-147 detects no conflicts during a Backup/Restore. When the source contains no files, the operation completes after the wipe with nothing to transfer and refreshes the destination pane (FR-099). *(v2.11.)* | Mandatory | T | impl. `mw_backup_restore.py:_backup_drive`, `mw_backup_restore.py:_restore_drive`, `mw_transfer_batches.py:_transfer_to_host_batch`, `mw_transfer_batches.py:_transfer_to_remote_batch`; tests `test_backup_restore.py` |
 
+### 3.19 CP/M disk image support
+
+Read-only support (v2.28) for opening a CP/M raw-sector disk image on the host and working with the
+files it contains through the existing Host pane and transfer path. Writing files back into an image is
+deferred to a later feature group. A CP/M image stores no geometry (DR-048), so the layout is selected
+from a bundled geometry database (auto-detected, FR-170) with a manual override. The files are extracted
+to a temporary host working directory (FR-171) so the whole established Copy-to-Remote / drag-and-drop /
+conflict / filename-validation / X-Modem path (FR-080–FR-086, FR-119, FR-136–FR-139, FR-145–FR-149)
+applies unchanged. The CP/M filesystem logic lives entirely in the GUI-free `utils/` layer (CR-014).
+
+| ID | Requirement | Priority | Verification | Source |
+|----|-------------|----------|--------------|--------|
+| FR-169 | The application shall provide a File > Open Disk Image… action (UIR-108) that presents a file-select dialog for a CP/M raw-sector disk image (`.img`/`.dsk`/`.cpm` and RC2014 CompactFlash images) and, on selection, opens the image, lists the files it contains, and presents them in the Host Files list (UIR-011) as the current host directory's contents. The Host pane thereafter behaves exactly as for any host directory (FR-060, FR-063, FR-130–FR-135). *(v2.28.)* | Mandatory | T | impl. `mw_disk_image.py:menu_open_image`, `utils/disk_image/__init__.py:open_image`, `utils/disk_image/filesystem.py:list_files`; tests `test_disk_image/test_image.py`, `test_gui_smoke.py` |
+| FR-170 | On opening an image (FR-169), the application shall auto-detect the disk geometry from a bundled geometry database in the cpmtools `diskdefs` format (DR-048) — covering common CP/M floppy layouts, the RomWBW floppy and hard-disk formats (fd144/fd120/fd720/fd360, hd1k, hd512), and the RC2014 CompactFlash slice — by matching the image size against each definition and scoring the resulting directory for validity. When detection is unambiguous the detected geometry is used silently; when it is ambiguous (no candidate, or the two best candidates score within a small margin — e.g. the 8 MB RomWBW hd1k and RC2014 slice share a size) the application shall prompt the user to choose a geometry. The detected or chosen geometry shall be shown in the status bar. A user-supplied `diskdefs` file shall be accepted as an override source. *(v2.28.)* | Mandatory | T | impl. `utils/disk_image/__init__.py:detect_diskdef`, `utils/disk_image/__init__.py:load_diskdefs`, `utils/disk_image/diskdefs.py:parse_diskdefs`, `mw_disk_image.py:menu_open_image`; tests `test_disk_image/test_detect.py`, `test_disk_image/test_diskdefs.py` |
+| FR-171 | On opening an image (FR-169), the application shall extract each file it contains to a temporary host working directory and point the Host Files list at that directory, so the existing Copy-to-Remote, drag-and-drop, file-conflict (FR-145–FR-147), CP/M 8.3 filename-validation (FR-148/FR-149) and X-Modem (FR-080–FR-086) transfer path applies unchanged. The temporary working directory shall be removed when another image or directory is opened, on File > New (FR-019), and on application exit (FR-016). *(v2.28.)* | Mandatory | T | impl. `mw_disk_image.py:menu_open_image`, `mw_disk_image.py:_cleanup_image_workdir`, `utils/disk_image/filesystem.py:read_file`; tests `test_gui_smoke.py`, `test_disk_image/test_directory.py` |
+| FR-172 | The image-open path shall reject an unreadable, truncated, zero-byte, or foreign (non-CP/M) file gracefully: the underlying reader shall return no image rather than raising (so the GUI cannot crash on bad input), and the application shall show an explanatory error dialog and leave the current Host pane unchanged. Corruption within an otherwise recognised geometry shall yield a best-effort listing plus a status-bar warning rather than an abort. *(v2.28.)* | Mandatory | T | impl. `utils/disk_image/__init__.py:open_image`, `utils/disk_image/image.py:CpmImage`, `mw_disk_image.py:menu_open_image`; tests `test_disk_image/test_image.py` |
+
 ---
 
 ## 4. User Interface Requirements
@@ -490,7 +507,7 @@ operation shows the standard progress dialog and can be cancelled.)*
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
 | UIR-001 | The GUI shall present a menu bar at the top of the main window. | Mandatory | I | App_Requirements §Look and Feel, §Main Program GUI; impl. `app.py:setup_menu` |
-| UIR-002 | The menu bar shall contain a File menu with the items New, Load, Save, and Exit. | Mandatory | I | App_Requirements §Look and Feel; impl. `app.py:setup_menu` |
+| UIR-002 | The menu bar shall contain a File menu with the items New, Load, Save, Open Disk Image… (UIR-108), and Exit. *(Open Disk Image added v2.28.)* | Mandatory | I | App_Requirements §Look and Feel; impl. `app.py:setup_menu` |
 | UIR-003 | The menu bar shall contain a Config menu with the items Serial, Terminal (UIR-103), General, and Language (the Language submenu, UIR-077). *(Language added v2.0; Macro Buttons added v2.21; Macro Buttons folded into Terminal and Terminal added v2.25.)* | Mandatory | I | App_Requirements §Look and Feel; impl. `app.py:setup_menu`, `_setup_language_menu` |
 | UIR-004 | The menu bar shall contain a Help menu with the items Manual (FR-023) and About (FR-022). *(v1.10; Manual added v2.13.)* | Mandatory | I | impl. `app.py:setup_menu` |
 | UIR-005 | The main window title bar shall show the application name and, when a configuration file is loaded, the loaded config's base name (no path, no extension) per FR-125. *(v2.4.)* | Mandatory | I | impl. `app.py:_update_window_title` |
@@ -694,6 +711,12 @@ operation shows the standard progress dialog and can be cancelled.)*
 |----|-------------|----------|--------------|--------|
 | UIR-098 | The ten macro-button slots (FR-162), numbered 1..10, shall be edited on the Terminal Config dialog's **Macros** tab (UIR-103d) — the specific tab/field/Test-button layout is specified there. The slot values are persisted as `macro_<n>_label`/`macro_<n>_seq` (FR-021b; all default empty). *(v2.21; the standalone Macro Buttons Config dialog became the Terminal Config dialog's Macros tab v2.25.)* | Mandatory | T | impl. `config_dialogs.py:TerminalConfigDialog.create_widgets`, `config_dialogs.py:TerminalConfigDialog._run_test` |
 
+### 4.18 Disk Image
+
+| ID | Requirement | Priority | Verification | Source |
+|----|-------------|----------|--------------|--------|
+| UIR-108 | The File menu (UIR-002) shall contain an **Open Disk Image…** item, placed after **Save** and before the separator preceding **Exit**, that invokes the image-open behaviour (FR-169). Its label follows the active language (FR-121). When the opened image's geometry is ambiguous (FR-170) the application shall present a geometry-picker dialog listing the candidate `diskdefs` names for the user to choose from; otherwise no dialog is shown. The detected or chosen geometry name shall be reflected in the status bar, and the Host Files group title shall show the temporary working directory (FR-126) like any other host directory. *(v2.28.)* | Mandatory | I | impl. `app.py:setup_menu`, `mw_disk_image.py:menu_open_image`; `lang/*.txt` (`menu.file.open_image`, `dialog.open_image.*`, `status.disk_image_loaded`) |
+
 ---
 
 ## 5. External Interface Requirements
@@ -809,6 +832,18 @@ join, whitespace/CRLF robustness, de-duplication, empty/edge inputs, and drive-p
 | DR-047b | The file shall be rendered to HTML for display (UIR-091) using the `markdown` library with the `toc`/`tables`/`fenced_code`/`attr_list`/`sane_lists` extensions and a GitHub-compatible heading slugify. | Mandatory | T | — |
 | DR-047c | A missing or unreadable file shall not block opening the Manual Window (UIR-091); the window shall instead show an explanatory message. | Mandatory | T | — |
 
+### 6.11 CP/M disk-image geometry database
+
+| ID | Requirement | Priority | Verification | Source |
+|----|-------------|----------|--------------|--------|
+| DR-048 | Disk-image geometry (FR-170) shall be described in the cpmtools **`diskdefs`** text format: a file of `diskdef <name> … end` stanzas, each defining at minimum `seclen` (bytes per sector), `tracks`, `sectrk` (sectors per track), `blocksize` (allocation block size), `maxdir` (directory entries), `skew` (physical sector interleave), `boottrk` (reserved/system tracks before the directory), and `os`; the optional fields `offset` and `libdsk:format` shall be tolerated. The `offset` value may carry a cpmtools unit suffix — `K`/`M` (kibi/mebibytes), `T` (tracks = `sectrk × seclen`), or `S` (sectors = `seclen`) — as used by the RomWBW multi-slice definitions; a bare number is bytes. Comment lines beginning with `#` and blank lines shall be ignored; a malformed stanza shall raise a clear error. The application shall ship a bundled definitions file at `src/cpm_fm/utils/disk_image/data/diskdefs` covering common CP/M floppies, the RomWBW floppy/hard-disk formats, and the RC2014 CompactFlash slice, and shall accept a user-supplied `diskdefs` file as an alternative source. The total byte size of a definition is `boottrk`-inclusive: `tracks × sectrk × seclen` (+ `offset`), used to size-match a candidate image (FR-170). *(v2.28.)* | Mandatory | T | impl. `utils/disk_image/diskdefs.py:parse_diskdefs`, `utils/disk_image/diskdefs.py:_resolve_offset`, `utils/disk_image/geometry.py:DiskDef`, `utils/disk_image/data/diskdefs`; tests `test_disk_image/test_diskdefs.py` |
+
+### 6.12 CP/M directory-entry format
+
+| ID | Requirement | Priority | Verification | Source |
+|----|-------------|----------|--------------|--------|
+| DR-049 | The application shall reconstruct files from the CP/M directory (located after `boottrk` reserved tracks, `maxdir` 32-byte entries) as follows. Each 32-byte entry is: user number (byte 0; `0x00`–`0x1F` for an in-use entry, `0xE5` for a deleted/empty entry), 8-byte file name and 3-byte type (bytes 1–11, 7-bit ASCII; the high bit of each type/name byte carries an attribute flag — read-only, system, archive — **not** a single attribute byte), the extent counters `EX`/`S1`/`S2` (bytes 12–14), the record count `RC` (byte 15), and the 16-byte allocation map `AL` (bytes 16–31; 8-bit block pointers when the block count `dsm < 256`, else 16-bit little-endian). A logical file is the set of entries sharing the same `(user, name, type)`, ordered by extent number; its contents are the concatenation of the data blocks named by each extent's `AL`, truncated to the true byte length implied by the final extent's `EX`/`RC` (records are 128 bytes). Sector addressing within a track applies the geometry's skew (DR-048). *(v2.28.)* | Mandatory | T | impl. `utils/disk_image/directory.py:parse_directory`, `utils/disk_image/directory.py:CpmDirEntry`, `utils/disk_image/geometry.py:skew_table`, `utils/disk_image/filesystem.py:read_file`; tests `test_disk_image/test_directory.py`, `test_disk_image/test_geometry.py` |
+
 ---
 
 ## 7. Design Constraints
@@ -921,6 +956,7 @@ future refactor in the Issue Resolution Log (OI-27).
 | v2.25 Terminal Config dialog, terminal-window cleanup & session window restore | FR-021c, FR-168, UIR-103, UIR-103a – UIR-103d, UIR-104, UIR-105; revises UIR-003, UIR-034, UIR-062, UIR-064, UIR-067, UIR-069, UIR-083, UIR-098, UIR-102, FR-004, FR-021b, FR-049, FR-093, FR-143, FR-162; removes UIR-065, UIR-066, UIR-068, UIR-096, UIR-097, FR-164 |
 | v2.26 Terminal Window terminal-type status bar | UIR-106; revises UIR-064, UIR-067 |
 | v2.27 configurable whole-drive erase sequence | FR-153e, UIR-107; revises FR-153d |
+| v2.28 CP/M disk image read support | FR-169 – FR-172, UIR-108, DR-048, DR-049; revises UIR-002 |
 
 ---
 

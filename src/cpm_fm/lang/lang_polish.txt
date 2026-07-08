@@ -290,3 +290,15 @@ config.macros.macro = Makro {n}
 config.macros.label = Etykieta
 config.macros.sequence = Sekwencja klawiszy
 status.macro_failed = Makro nie powiodło się - sprawdź sekwencję klawiszy
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = Otwórz obraz dysku…
+dialog.open_image.title = Otwórz obraz dysku CP/M
+dialog.open_image.filter = Obrazy dysków CP/M (*.img *.dsk *.cpm *.cf);;Wszystkie pliki (*)
+dialog.open_image.pick_title = Wybierz geometrię dysku
+dialog.open_image.pick_ambiguous = Geometria dysku jest niejednoznaczna. Wybierz format:
+dialog.open_image.pick_unknown = Nie można wykryć geometrii dysku. Wybierz format do wypróbowania:
+error.disk_image_unreadable = Nie można odczytać „{name}” jako obrazu dysku CP/M.
+error.disk_image_extract = Nie można wyodrębnić plików z obrazu dysku: {error}
+status.disk_image_loaded = Załadowano obraz dysku „{name}” ({geometry})
+status.disk_image_partial = Załadowano obraz dysku „{name}”; nie można wyodrębnić {count} plik(ów)

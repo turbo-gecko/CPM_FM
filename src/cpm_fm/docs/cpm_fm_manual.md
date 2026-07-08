@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.27.1**
+**Version 2.28.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -19,7 +19,7 @@ It works with real vintage CP/M hardware as well as emulators, provided they exp
 7. [Configuration](#7-configuration)
 8. [Connecting and Disconnecting](#8-connecting-and-disconnecting)
 9. [Booting the Remote into CP/M](#9-booting-the-remote-into-cpm)
-10. [Browsing Files](#10-browsing-files)
+10. [Browsing Files](#10-browsing-files) — including [Opening a CP/M Disk Image](#opening-a-cpm-disk-image)
 11. [Transferring Files](#11-transferring-files)
 12. [Managing Files (Rename, Delete, View/Edit)](#12-managing-files-rename-delete-viewedit)
 13. [The Terminal Window](#13-the-terminal-window)
@@ -418,6 +418,16 @@ Each pane has its own controls for navigating, filtering, and sorting.
 **Selection:** Use Ctrl+click and Shift+click to select multiple files in either pane.
 
 **Persistence:** Each pane remembers its filter text, sort field, and sort direction between sessions.
+
+### Opening a CP/M Disk Image
+
+You can browse the contents of a **CP/M disk image** — a raw-sector image of a floppy or CompactFlash card (typically `.img`, `.dsk`, `.cpm`, or `.cf`) — without any hardware connected. Choose **File → Open Disk Image…**, pick the image file, and its files appear in the **Host Files** pane.
+
+Because a CP/M image does not record its own disk layout, the program **auto-detects** the geometry by matching the file size against a built-in database of common formats — standard 8-inch and 5.25-inch floppies, the **RomWBW** floppy and hard-disk formats (fd144/fd120/fd720/fd360, hd1k, hd512), and the RC2014 CompactFlash slice. When the layout is unambiguous it is used automatically and shown in the status bar; when two formats are equally plausible — or none is recognised — a small dialog asks you to pick the format to use. (For example, an 8 MB image could be either a RomWBW *hd1k* slice or an RC2014 slice, which share the same size, so you will be asked to choose.)
+
+The image's files are extracted to a temporary working folder that becomes the Host directory, so everything you can do with an ordinary host folder works unchanged: filter and sort the list, and **Copy to Remote** (or drag-and-drop) to send files straight to a connected CP/M machine. Nothing is written back into the image — this is a read-only view. The temporary folder is discarded automatically when you open another image, choose **File → New**, or exit.
+
+If your image uses an unusual layout that is not auto-detected, you can supply your own cpmtools-format `diskdefs` file (support for selecting one is being extended). Writing files back into an image is planned for a later release.
 
 ---
 

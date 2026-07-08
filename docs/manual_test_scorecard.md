@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.38 |
-| Scorecard for plan version | 1.38 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.39 |
+| Scorecard for plan version | 1.39 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -150,6 +150,16 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-FS07 | Filter/sort persist per pane across sessions | FR-134 | | | |
 | MT-FS08 | Cleared remote list stays empty (no stale) | FR-135 | | | |
 | MT-FS09 | Sort labels/placeholder retranslate | UIR-080, FR-123 | | | |
+
+### §9.2 CP/M disk image support
+| ID | Title | Req | Result | Env | Notes |
+|----|-------|-----|:------:|:---:|-------|
+| MT-DI01 | Open Disk Image… lists image files in Host pane | FR-169, UIR-108 | | | |
+| MT-DI02 | Unambiguous image auto-detects; geometry in status | FR-170 | | | |
+| MT-DI03 | Ambiguous/unknown image shows geometry picker | FR-170 | | | |
+| MT-DI04 | Extracted files Copy to Remote over X-Modem | FR-171 | | | |
+| MT-DI05 | Foreign/corrupt file rejected gracefully (no crash) | FR-172 | | | |
+| MT-DI06 | Temp workdir discarded on New / reopen / exit | FR-171 | | | |
 
 ### §10 Remote listing & drive selection (live)
 | ID | Title | Req | Result | Env | Notes |

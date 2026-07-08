@@ -290,3 +290,15 @@ config.macros.macro = 宏 {n}
 config.macros.label = 标签
 config.macros.sequence = 按键序列
 status.macro_failed = 宏运行失败 - 请检查其按键序列
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = 打开磁盘映像…
+dialog.open_image.title = 打开 CP/M 磁盘映像
+dialog.open_image.filter = CP/M 磁盘映像 (*.img *.dsk *.cpm *.cf);;所有文件 (*)
+dialog.open_image.pick_title = 选择磁盘几何结构
+dialog.open_image.pick_ambiguous = 磁盘几何结构不明确。请选择格式：
+dialog.open_image.pick_unknown = 无法检测磁盘几何结构。请选择要尝试的格式：
+error.disk_image_unreadable = 无法将“{name}”作为 CP/M 磁盘映像读取。
+error.disk_image_extract = 无法从磁盘映像提取文件：{error}
+status.disk_image_loaded = 已加载磁盘映像“{name}”（{geometry}）
+status.disk_image_partial = 已加载磁盘映像“{name}”；{count} 个文件无法提取

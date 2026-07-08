@@ -295,3 +295,15 @@ config.macros.macro = Macro {n}
 config.macros.label = Label
 config.macros.sequence = Keystrokes
 status.macro_failed = Macro failed - check its keystroke sequence
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = Open Disk Image…
+dialog.open_image.title = Open CP/M Disk Image
+dialog.open_image.filter = CP/M disk images (*.img *.dsk *.cpm *.cf);;All files (*)
+dialog.open_image.pick_title = Select Disk Geometry
+dialog.open_image.pick_ambiguous = The disk geometry is ambiguous. Select the format:
+dialog.open_image.pick_unknown = The disk geometry could not be detected. Select a format to try:
+error.disk_image_unreadable = Could not read '{name}' as a CP/M disk image.
+error.disk_image_extract = Failed to extract files from the disk image: {error}
+status.disk_image_loaded = Disk image '{name}' loaded ({geometry})
+status.disk_image_partial = Disk image '{name}' loaded; {count} file(s) could not be extracted

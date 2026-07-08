@@ -290,3 +290,15 @@ config.macros.macro = Makro {n}
 config.macros.label = Beschriftung
 config.macros.sequence = Tastenfolge
 status.macro_failed = Makro fehlgeschlagen - Tastenfolge prüfen
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = Diskettenabbild öffnen…
+dialog.open_image.title = CP/M-Diskettenabbild öffnen
+dialog.open_image.filter = CP/M-Diskettenabbilder (*.img *.dsk *.cpm *.cf);;Alle Dateien (*)
+dialog.open_image.pick_title = Diskettengeometrie wählen
+dialog.open_image.pick_ambiguous = Die Diskettengeometrie ist mehrdeutig. Format wählen:
+dialog.open_image.pick_unknown = Die Diskettengeometrie konnte nicht erkannt werden. Format zum Versuchen wählen:
+error.disk_image_unreadable = „{name}“ konnte nicht als CP/M-Diskettenabbild gelesen werden.
+error.disk_image_extract = Dateien konnten nicht aus dem Diskettenabbild extrahiert werden: {error}
+status.disk_image_loaded = Diskettenabbild „{name}“ geladen ({geometry})
+status.disk_image_partial = Diskettenabbild „{name}“ geladen; {count} Datei(en) konnten nicht extrahiert werden

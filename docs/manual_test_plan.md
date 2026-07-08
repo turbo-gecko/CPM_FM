@@ -4,7 +4,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.38 |
+| Version | 1.39 |
 | Status | Draft |
 | Date | 2026-07-07 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.25.0) |
@@ -250,6 +250,24 @@ cases need only a populated Host Files list; the remote-pane case (MT-FS08) need
 | MT-FS07 | FR-134 | Set distinct filter text and sort settings on the **Host** and **Remote** panes. Close the app and relaunch. | Each pane reopens with its own last-used filter text, sort key, and direction restored independently. |
 | MT-FS08 [CP/M] | FR-135 | With a remote listing shown, type a filter in the **Remote** filter. Then Disconnect (or File > Load / File > New). | The remote list clears on disconnect/load/new and stays empty — changing the remote filter afterwards does **not** resurrect the old (stale) entries. |
 | MT-FS09 | UIR-080, FR-123 | Switch the GUI language (Config > Language). | The filter placeholder/tooltip and the sort drop-down options (**Name**/**Extension**) appear in the new language; the sort still works (the underlying keys are unchanged). |
+
+---
+
+## 9.2 CP/M disk image support
+
+The read/geometry/detection core is unit-tested (`tests/test_disk_image/`, `tests/test_gui_smoke.py`);
+these cases confirm the live menu wiring and on-screen behaviour. You need one real CP/M disk image
+whose size matches a bundled geometry (e.g. an IBM-3740 8-inch image of 256256 bytes, or an RC2014
+CompactFlash image), plus any non-disk file to use as the "foreign" input.
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-DI01 | FR-169, UIR-108 | Choose **File → Open Disk Image…** and select a valid CP/M image. | The File menu contains **Open Disk Image…** (after **Save**). After selecting, the Host Files list shows the files contained in the image, and the Host Files group title changes to the temporary working directory. |
+| MT-DI02 | FR-170 | Open an image whose size matches exactly one bundled geometry. | No geometry dialog appears; the status bar reports the image loaded and names the detected geometry. |
+| MT-DI03 | FR-170 | Open an image whose size matches no bundled geometry (or is genuinely ambiguous). | A **Select Disk Geometry** dialog lists candidate formats (or all formats when none matched); picking one proceeds, **Cancel** aborts with the Host pane unchanged. |
+| MT-DI04 | FR-171 | After MT-DI01, select one or more listed files and **Copy to Remote** (or drag-and-drop) to a connected CP/M machine. **[CP/M]** | The files transfer over X-Modem exactly as any host file would — the extracted files behave as ordinary files on disk. |
+| MT-DI05 | FR-172 | Choose **File → Open Disk Image…** and select a non-CP/M file (e.g. a text file or a truncated image). | An error dialog reports the file could not be read as a CP/M disk image; the current Host pane is left unchanged (no crash). |
+| MT-DI06 | FR-171 | After opening an image, choose **File → New** (or open a second image, or exit). | The previous temporary working directory is discarded; on **New** the Host pane returns to the default host directory. |
 
 ---
 
@@ -516,6 +534,7 @@ or real cross-session persistence:
 - Host→remote filename validation (live dialog render, real upload under a renamed name, inline re-validation): `FR-148`, `FR-149` (live), `UIR-085` (the 8.3 validation/suggestion logic and the rename/skip/cancel batch handling are covered automatically by `tests/test_filename_validation.py`; the manual cases confirm the on-screen dialog, that Rename really uploads the file to the remote under the new name, and that a still-invalid replacement is rejected inline).
 - Whole-drive backup and restore (live destructive round-trip, real destination wipe, on-screen confirmation): `FR-150`–`FR-154` (live), `UIR-086`–`UIR-088` (the orchestration ordering, the wipe helpers, the empty-source short-circuit, the connection guard, and the confirmation slot are covered automatically by `tests/test_backup_restore.py`; the manual cases confirm the on-screen confirmation dialog, that the destination is really emptied first, and the live transfer round-trip in both directions).
 - Boot-into-CP/M sequence (live keystroke playback into a real remote, probe-failure recovery, live re-probe): `FR-047`, `FR-048`, `FR-049` (live), `UIR-068` (the script parser in `terminal/boot_sequence.py`, the directive execution, the auto-recovery/re-probe wiring, the button enable/disable, and the multi-line config field are covered automatically by `tests/test_boot_sequence.py` and `tests/test_gui_smoke.py`; the manual cases confirm the keystrokes really drive a non-auto-booting remote into CP/M and that the failed-probe recovery and manual button behave over a real link).
+- CP/M disk image support (live menu wiring, on-screen geometry picker, real image on disk, live transfer of extracted files): `FR-169`, `UIR-108` (live) (the geometry parsing, auto-detection ranking/ambiguity, directory reconstruction, and the extract/reject/cleanup GUI orchestration in `FR-170`–`FR-172`/`DR-048`/`DR-049` are covered automatically by `tests/test_disk_image/` and `tests/test_gui_smoke.py`; the manual cases confirm the real File-menu action, the on-screen picker on ambiguity, and that files extracted from a real image transfer over a live link).
 - Non-functional (real): `NFR-001`, `NFR-004` (live), `STR-003`, `FR-088`.
 
 Purely algorithmic and headless-logic requirements (`DR-*`, the X-Modem progress/handshake internals,

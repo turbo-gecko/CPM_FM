@@ -58,6 +58,9 @@ class MainWindowMixinBase:
         _backup_confirm_result: bool
         _last_xmodem_no_response: bool
         host_dir: str
+        # Disk-image (FR-171): temp workdir of the open image and its source path.
+        _image_workdir: str | None
+        _image_source: str | None
 
         # --- file-pane widgets and their canonical (unfiltered) name lists ---
         host_list: FileListWidget
@@ -118,6 +121,8 @@ class MainWindowMixinBase:
             retry: bool,
         ) -> None: ...
         def _erase_remote_file(self, name: str) -> None: ...
+        def _cleanup_image_workdir(self) -> None: ...
+        def refresh_host_files(self) -> None: ...
         @staticmethod
         def _file_size(path: str) -> int: ...
 

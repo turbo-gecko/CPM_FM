@@ -4251,3 +4251,106 @@ def test_manual_boot_failure_sets_status_without_dialog(qapp, monkeypatch, state
         assert "Boot sequence did not reach CP/M" in statuses
     finally:
         win.close()
+
+
+# --- Disk image support (FR-169–FR-172, UIR-108) -----------------------------
+
+
+class _FakeGeom:
+    name = "ibm-3740"
+
+
+class _FakeEntry:
+    def __init__(self, name):
+        self.name = name
+
+
+class _FakeImage:
+    """Stand-in CpmImage: two files with deterministic content."""
+
+    geom = _FakeGeom()
+
+    def list_files(self):
+        return [_FakeEntry("HELLO.TXT"), _FakeEntry("GAME.COM")]
+
+    def read_file(self, name):
+        return b"content-of-" + name.encode()
+
+
+def test_open_disk_image_extracts_and_lists(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-169, FR-171, UIR-108."""
+    # FR-169/FR-171: opening an image extracts its files to a temp working dir and
+    # points the Host pane at them (auto-detected geometry, no picker).
+    win = MainWindow(state)
+    try:
+        img_path = str(tmp_path / "disk.img")
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QFileDialog.getOpenFileName",
+            lambda *a, **k: (img_path, ""),
+        )
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.is_ambiguous", lambda r: False)
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.detect_diskdef", lambda p, d: [])
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda p, dd=None: _FakeImage())
+
+        win.menu_open_image()
+        qapp.processEvents()
+
+        assert win._image_workdir is not None
+        assert win.host_dir == win._image_workdir
+        assert set(win._host_files) == {"HELLO.TXT", "GAME.COM"}
+        extracted = os.path.join(win._image_workdir, "HELLO.TXT")
+        with open(extracted, "rb") as fh:
+            assert fh.read() == b"content-of-HELLO.TXT"
+    finally:
+        win.close()
+
+
+def test_open_disk_image_rejects_bad_file(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-172."""
+    # FR-172: an unreadable/foreign image is rejected with an error dialog and the
+    # Host pane is left unchanged (no temp workdir).
+    win = MainWindow(state)
+    try:
+        before_dir = win.host_dir
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QFileDialog.getOpenFileName",
+            lambda *a, **k: (str(tmp_path / "junk.img"), ""),
+        )
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.is_ambiguous", lambda r: False)
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.detect_diskdef", lambda p, d: [])
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda p, dd=None: None)
+        errors = []
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QMessageBox.critical",
+            lambda *a, **k: errors.append(a[1:]),
+        )
+
+        win.menu_open_image()
+        qapp.processEvents()
+
+        assert len(errors) == 1
+        assert win._image_workdir is None
+        assert win.host_dir == before_dir
+    finally:
+        win.close()
+
+
+def test_open_disk_image_cleanup_on_close(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-171."""
+    # FR-171: the temp working directory is removed when the window closes.
+    win = MainWindow(state)
+    monkeypatch.setattr(
+        "cpm_fm.gui.mw_disk_image.QFileDialog.getOpenFileName",
+        lambda *a, **k: (str(tmp_path / "disk.img"), ""),
+    )
+    monkeypatch.setattr("cpm_fm.gui.mw_disk_image.is_ambiguous", lambda r: False)
+    monkeypatch.setattr("cpm_fm.gui.mw_disk_image.detect_diskdef", lambda p, d: [])
+    monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda p, dd=None: _FakeImage())
+
+    win.menu_open_image()
+    qapp.processEvents()
+    workdir = win._image_workdir
+    assert workdir and os.path.isdir(workdir)
+
+    win.close()
+    assert not os.path.isdir(workdir)

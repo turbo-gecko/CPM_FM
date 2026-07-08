@@ -290,3 +290,15 @@ config.macros.macro = Μακροεντολή {n}
 config.macros.label = Ετικέτα
 config.macros.sequence = Ακολουθία πλήκτρων
 status.macro_failed = Η μακροεντολή απέτυχε - ελέγξτε την ακολουθία πλήκτρων
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = Άνοιγμα εικόνας δίσκου…
+dialog.open_image.title = Άνοιγμα εικόνας δίσκου CP/M
+dialog.open_image.filter = Εικόνες δίσκου CP/M (*.img *.dsk *.cpm *.cf);;Όλα τα αρχεία (*)
+dialog.open_image.pick_title = Επιλογή γεωμετρίας δίσκου
+dialog.open_image.pick_ambiguous = Η γεωμετρία του δίσκου είναι ασαφής. Επιλέξτε τη μορφή:
+dialog.open_image.pick_unknown = Δεν ήταν δυνατός ο εντοπισμός της γεωμετρίας του δίσκου. Επιλέξτε μια μορφή για δοκιμή:
+error.disk_image_unreadable = Δεν ήταν δυνατή η ανάγνωση του «{name}» ως εικόνας δίσκου CP/M.
+error.disk_image_extract = Αποτυχία εξαγωγής αρχείων από την εικόνα δίσκου: {error}
+status.disk_image_loaded = Η εικόνα δίσκου «{name}» φορτώθηκε ({geometry})
+status.disk_image_partial = Η εικόνα δίσκου «{name}» φορτώθηκε· δεν ήταν δυνατή η εξαγωγή {count} αρχείου(ων)

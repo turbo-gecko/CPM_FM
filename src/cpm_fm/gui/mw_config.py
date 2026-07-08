@@ -235,6 +235,10 @@ class _ConfigMixin(MainWindowMixinBase):
         self._config_name = ""
         self._update_window_title()
 
+        # FR-019/FR-171: discard any temp working directory from an open disk
+        # image before resetting the host directory.
+        self._cleanup_image_workdir()
+
         # FR-019/FR-060: refresh the Host Files list to the default host
         # directory (empty -> current working directory).
         self.host_dir = self.settings.get("host_directory") or os.getcwd()

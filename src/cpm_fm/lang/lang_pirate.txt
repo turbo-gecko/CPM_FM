@@ -295,3 +295,15 @@ config.macros.macro = Macro {n}
 config.macros.label = Name
 config.macros.sequence = Key Volley
 status.macro_failed = The battle cry fell flat - check yer key volley
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = Open Disk Chest…
+dialog.open_image.title = Open a CP/M Disk Chest
+dialog.open_image.filter = CP/M disk chests (*.img *.dsk *.cpm *.cf);;All booty (*)
+dialog.open_image.pick_title = Choose Yer Disk Layout
+dialog.open_image.pick_ambiguous = The disk layout be unclear, matey. Choose the format:
+dialog.open_image.pick_unknown = Could not spy the disk layout. Choose a format to try:
+error.disk_image_unreadable = Could not read '{name}' as a CP/M disk chest, arr.
+error.disk_image_extract = Failed to haul files out o' the disk chest: {error}
+status.disk_image_loaded = Disk chest '{name}' aboard ({geometry})
+status.disk_image_partial = Disk chest '{name}' aboard; {count} file(s) be stuck in the hold

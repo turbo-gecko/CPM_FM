@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_458 requirements across 55 sections._
+_465 requirements across 59 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -359,12 +359,21 @@ _458 requirements across 55 sections._
 | FR-153e | For Restore, when the optional erase_all_remote_seq setting (UIR-107) is non-empty, the remote-drive wipe shall instead… | mw_backup_restore.py:_wipe_remote_drive; tests test_backup_restore.py |
 | FR-154 | The file-copying phase of Backup and Restore shall **reuse the existing batch-transfer engine** (_transfer_to_host_batch /… | mw_backup_restore.py:_backup_drive, mw_backup_restore.py:_restore_drive, mw_transfer_batches.py:_transfer_to_host_batch, mw_transfer_batches.py:_transfer_to_remote_batch; tests test_backup_restore.py |
 
+## 3.19 CP/M disk image support
+
+| ID | Summary | Impl |
+|----|---------|------|
+| FR-169 | The application shall provide a File > Open Disk Image… action (UIR-108) that presents a… | mw_disk_image.py:menu_open_image, utils/disk_image/__init__.py:open_image, utils/disk_image/filesystem.py:list_files; tests test_disk_image/test_image.py, test_gui_smoke.py |
+| FR-170 | On opening an image (FR-169), the application shall auto-detect the disk geometry from a bundled… | utils/disk_image/__init__.py:detect_diskdef, utils/disk_image/__init__.py:load_diskdefs, utils/disk_image/diskdefs.py:parse_diskdefs, mw_disk_image.py:menu_open_image; tests test_disk_image/test_detect.py, test_disk_image/test_diskdefs.py |
+| FR-171 | On opening an image (FR-169), the application shall extract each file it contains to a… | mw_disk_image.py:menu_open_image, mw_disk_image.py:_cleanup_image_workdir, utils/disk_image/filesystem.py:read_file; tests test_gui_smoke.py, test_disk_image/test_directory.py |
+| FR-172 | The image-open path shall reject an unreadable, truncated, zero-byte, or foreign (non-CP/M) file gracefully… | utils/disk_image/__init__.py:open_image, utils/disk_image/image.py:CpmImage, mw_disk_image.py:menu_open_image; tests test_disk_image/test_image.py |
+
 ## 4.1 Menu bar
 
 | ID | Summary | Impl |
 |----|---------|------|
 | UIR-001 | The GUI shall present a menu bar at the top of the main window | app.py:setup_menu |
-| UIR-002 | The menu bar shall contain a File menu with the items New, Load, Save, and… | app.py:setup_menu |
+| UIR-002 | The menu bar shall contain a File menu with the items New, Load, Save, Open… | app.py:setup_menu |
 | UIR-003 | The menu bar shall contain a Config menu with the items Serial, Terminal (UIR-103), General… | app.py:setup_menu, _setup_language_menu |
 | UIR-004 | The menu bar shall contain a Help menu with the items Manual (FR-023) and About… | app.py:setup_menu |
 | UIR-005 | The main window title bar shall show the application name and, when a configuration file… | app.py:_update_window_title |
@@ -566,6 +575,12 @@ _458 requirements across 55 sections._
 |----|---------|------|
 | UIR-098 | The ten macro-button slots (FR-162), numbered 1..10, shall be edited on the Terminal Config dialog's… | config_dialogs.py:TerminalConfigDialog.create_widgets, config_dialogs.py:TerminalConfigDialog._run_test |
 
+## 4.18 Disk Image
+
+| ID | Summary | Impl |
+|----|---------|------|
+| UIR-108 | The File menu (UIR-002) shall contain an **Open Disk Image…** item, placed after **Save** and… | app.py:setup_menu, mw_disk_image.py:menu_open_image; lang/*.txt (menu.file.open_image, dialog.open_image.*, status.disk_image_loaded) |
+
 ## 5. External Interface Requirements
 
 | ID | Summary | Impl |
@@ -667,6 +682,18 @@ _458 requirements across 55 sections._
 | DR-047a | The file shall be located inside the package at src/cpm_fm/docs/, resolved at run time relative… | — |
 | DR-047b | The file shall be rendered to HTML for display (UIR-091) using the markdown library with… | — |
 | DR-047c | A missing or unreadable file shall not block opening the Manual Window (UIR-091)… | — |
+
+## 6.11 CP/M disk-image geometry database
+
+| ID | Summary | Impl |
+|----|---------|------|
+| DR-048 | Disk-image geometry (FR-170) shall be described in the cpmtools **diskdefs** text format… | utils/disk_image/diskdefs.py:parse_diskdefs, utils/disk_image/diskdefs.py:_resolve_offset, utils/disk_image/geometry.py:DiskDef, utils/disk_image/data/diskdefs; tests test_disk_image/test_diskdefs.py |
+
+## 6.12 CP/M directory-entry format
+
+| ID | Summary | Impl |
+|----|---------|------|
+| DR-049 | The application shall reconstruct files from the CP/M directory (located after boottrk reserved tracks, maxdir… | utils/disk_image/directory.py:parse_directory, utils/disk_image/directory.py:CpmDirEntry, utils/disk_image/geometry.py:skew_table, utils/disk_image/filesystem.py:read_file; tests test_disk_image/test_directory.py, test_disk_image/test_geometry.py |
 
 ## 7. Design Constraints
 

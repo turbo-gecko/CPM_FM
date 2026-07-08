@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_244/458 requirements have a verifying test; 214 untested; 0 stale tag(s)._
+_251/465 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -43,6 +43,8 @@ _244/458 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 | DR-044 | `tests/test_gui_smoke.py:test_app_icon_resource_present_and_loadable` |
 | DR-045 | `tests/test_transfer_history.py:test_malformed_file_degrades_to_empty`, `tests/test_transfer_history.py:test_missing_file_starts_empty`, `tests/test_transfer_history.py:test_persistence_round_trip` |
 | DR-047 | `tests/test_gui_smoke.py:test_manual_dialog_handles_missing_file` |
+| DR-048 | `tests/test_disk_image/test_diskdefs.py:<module>`, `tests/test_disk_image/test_diskdefs.py:test_bundled_diskdefs_load_and_cover_expected_names`, `tests/test_disk_image/test_diskdefs.py:test_bundled_diskdefs_match_romwbw_image_sizes`, `tests/test_disk_image/test_diskdefs.py:test_missing_required_field_raises`, `tests/test_disk_image/test_diskdefs.py:test_offset_with_kilobyte_suffix`, `tests/test_disk_image/test_diskdefs.py:test_offset_with_track_suffix_resolves_to_bytes`, `tests/test_disk_image/test_diskdefs.py:test_parse_single_stanza`, `tests/test_disk_image/test_diskdefs.py:test_unterminated_stanza_raises`, `tests/test_disk_image/test_geometry.py:<module>` |
+| DR-049 | `tests/test_disk_image/test_directory.py:<module>`, `tests/test_disk_image/test_directory.py:test_attributes_decoded`, `tests/test_disk_image/test_directory.py:test_list_and_read_single_extent`, `tests/test_disk_image/test_directory.py:test_multi_extent_file`, `tests/test_disk_image/test_directory.py:test_multiple_files_and_16bit_pointers`, `tests/test_disk_image/test_directory.py:test_record_tail_truncation`, `tests/test_disk_image/test_geometry.py:<module>`, `tests/test_disk_image/test_geometry.py:test_pointer_width_and_extent_mask`, `tests/test_disk_image/test_geometry.py:test_skew_table_is_a_permutation_with_no_collisions`, `tests/test_disk_image/test_geometry.py:test_skew_table_known_sequence`, `tests/test_disk_image/test_geometry.py:test_skew_zero_and_one_are_identity` |
 | FR-001 | `tests/test_serial_manager.py:test_status_flags_default_false_at_startup` |
 | FR-002 | `tests/test_serial_manager.py:test_status_flags_default_false_at_startup` |
 | FR-004 | `tests/test_gui_smoke.py:test_geometry_and_last_config_persist_across_sessions` |
@@ -181,6 +183,10 @@ _244/458 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 | FR-166 | `tests/test_gui_smoke.py:test_handle_terminal_paste_normalises_sends_buffers_echoes`, `tests/test_gui_smoke.py:test_terminal_paste_action_reads_clipboard_and_calls_callback` |
 | FR-167 | `tests/test_gui_smoke.py:test_terminal_reset_size_reflows_to_80x24`, `tests/test_terminal_view.py:test_viewport_size_for_returns_exact_cell_extent` |
 | FR-168 | `tests/test_gui_smoke.py:test_closeevent_records_which_windows_were_open`, `tests/test_gui_smoke.py:test_open_windows_not_restored_when_none_recorded`, `tests/test_gui_smoke.py:test_open_windows_restored_on_startup`, `tests/test_window_state.py:test_window_open_defaults_false`, `tests/test_window_state.py:test_window_open_persists_across_instances`, `tests/test_window_state.py:test_window_open_roundtrip` |
+| FR-169 | `tests/test_disk_image/test_directory.py:<module>`, `tests/test_disk_image/test_directory.py:test_empty_file`, `tests/test_disk_image/test_directory.py:test_list_and_read_single_extent`, `tests/test_disk_image/test_directory.py:test_multiple_files_and_16bit_pointers`, `tests/test_disk_image/test_image.py:<module>`, `tests/test_disk_image/test_image.py:test_open_image_auto_detects_and_lists`, `tests/test_disk_image/test_image.py:test_open_image_forced_geometry`, `tests/test_gui_smoke.py:test_open_disk_image_extracts_and_lists` |
+| FR-170 | `tests/test_disk_image/test_detect.py:<module>`, `tests/test_disk_image/test_detect.py:test_detect_ranks_correct_geometry_first`, `tests/test_disk_image/test_detect.py:test_detect_returns_empty_for_foreign_file`, `tests/test_disk_image/test_detect.py:test_detect_returns_empty_for_zero_byte_file`, `tests/test_disk_image/test_detect.py:test_eight_mb_images_are_ambiguous`, `tests/test_disk_image/test_detect.py:test_is_ambiguous_logic`, `tests/test_disk_image/test_image.py:<module>`, `tests/test_disk_image/test_image.py:test_open_image_auto_detects_and_lists` |
+| FR-171 | `tests/test_disk_image/test_directory.py:<module>`, `tests/test_disk_image/test_directory.py:test_empty_file`, `tests/test_disk_image/test_directory.py:test_list_and_read_single_extent`, `tests/test_disk_image/test_directory.py:test_multi_extent_file`, `tests/test_disk_image/test_directory.py:test_multiple_files_and_16bit_pointers`, `tests/test_disk_image/test_directory.py:test_record_tail_truncation`, `tests/test_gui_smoke.py:test_open_disk_image_cleanup_on_close`, `tests/test_gui_smoke.py:test_open_disk_image_extracts_and_lists` |
+| FR-172 | `tests/test_disk_image/test_detect.py:<module>`, `tests/test_disk_image/test_detect.py:test_detect_returns_empty_for_foreign_file`, `tests/test_disk_image/test_detect.py:test_detect_returns_empty_for_zero_byte_file`, `tests/test_disk_image/test_image.py:<module>`, `tests/test_disk_image/test_image.py:test_open_image_rejects_bad_input`, `tests/test_disk_image/test_image.py:test_open_image_rejects_foreign_sized_file`, `tests/test_gui_smoke.py:test_open_disk_image_rejects_bad_file` |
 | IFR-004 | `tests/test_config_handler.py:test_load_json_malformed_returns_empty`, `tests/test_config_handler.py:test_load_json_reads_valid_object`, `tests/test_config_handler.py:test_save_json_to_unwritable_path_returns_false` |
 | NFR-001 | `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
 | NFR-002 | `tests/test_serial_manager.py:test_flow_control_nested_key`, `tests/test_serial_manager.py:test_nested_key_names_are_honoured` |
@@ -256,6 +262,7 @@ _244/458 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 | UIR-105 | `tests/test_gui_smoke.py:test_boot_menu_item_reflects_config`, `tests/test_gui_smoke.py:test_terminal_context_menu_boot_enabled_reflects_provider`, `tests/test_gui_smoke.py:test_terminal_context_menu_has_six_items_and_copy_state` |
 | UIR-106 | `tests/test_gui_smoke.py:test_apply_terminal_settings_refreshes_status_bar`, `tests/test_gui_smoke.py:test_terminal_window_status_bar_follows_language`, `tests/test_gui_smoke.py:test_terminal_window_status_bar_shows_terminal_type` |
 | UIR-107 | `tests/test_gui_smoke.py:test_general_config_remote_group_first` |
+| UIR-108 | `tests/test_gui_smoke.py:test_open_disk_image_extracts_and_lists` |
 
 ## Untested requirements
 

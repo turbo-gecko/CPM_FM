@@ -290,3 +290,15 @@ config.macros.macro = 매크로 {n}
 config.macros.label = 레이블
 config.macros.sequence = 키 입력
 status.macro_failed = 매크로 실패 - 키 입력 시퀀스를 확인하세요
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = 디스크 이미지 열기…
+dialog.open_image.title = CP/M 디스크 이미지 열기
+dialog.open_image.filter = CP/M 디스크 이미지 (*.img *.dsk *.cpm *.cf);;모든 파일 (*)
+dialog.open_image.pick_title = 디스크 지오메트리 선택
+dialog.open_image.pick_ambiguous = 디스크 지오메트리가 모호합니다. 형식을 선택하세요:
+dialog.open_image.pick_unknown = 디스크 지오메트리를 감지할 수 없습니다. 시도할 형식을 선택하세요:
+error.disk_image_unreadable = '{name}'을(를) CP/M 디스크 이미지로 읽을 수 없습니다.
+error.disk_image_extract = 디스크 이미지에서 파일을 추출하지 못했습니다: {error}
+status.disk_image_loaded = 디스크 이미지 '{name}'을(를) 불러왔습니다 ({geometry})
+status.disk_image_partial = 디스크 이미지 '{name}'을(를) 불러왔습니다; {count}개 파일을 추출하지 못했습니다

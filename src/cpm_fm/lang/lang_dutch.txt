@@ -290,3 +290,15 @@ config.macros.macro = Macro {n}
 config.macros.label = Label
 config.macros.sequence = Toetsenreeks
 status.macro_failed = Macro mislukt - controleer de toetsenreeks
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = Schijfimage openen…
+dialog.open_image.title = CP/M-schijfimage openen
+dialog.open_image.filter = CP/M-schijfimages (*.img *.dsk *.cpm *.cf);;Alle bestanden (*)
+dialog.open_image.pick_title = Schijfgeometrie selecteren
+dialog.open_image.pick_ambiguous = De schijfgeometrie is dubbelzinnig. Selecteer de indeling:
+dialog.open_image.pick_unknown = De schijfgeometrie kon niet worden gedetecteerd. Selecteer een indeling om te proberen:
+error.disk_image_unreadable = Kan '{name}' niet lezen als CP/M-schijfimage.
+error.disk_image_extract = Kan bestanden niet uit de schijfimage extraheren: {error}
+status.disk_image_loaded = Schijfimage '{name}' geladen ({geometry})
+status.disk_image_partial = Schijfimage '{name}' geladen; {count} bestand(en) konden niet worden geëxtraheerd

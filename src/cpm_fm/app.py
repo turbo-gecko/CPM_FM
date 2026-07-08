@@ -32,6 +32,7 @@ from cpm_fm.gui.file_list_widget import FileListWidget
 from cpm_fm.gui.mw_backup_restore import _BackupRestoreMixin
 from cpm_fm.gui.mw_config import _ConfigMixin
 from cpm_fm.gui.mw_context_menu import _ContextMenuMixin
+from cpm_fm.gui.mw_disk_image import _DiskImageMixin
 from cpm_fm.gui.mw_file_panes import _FilePanesMixin
 from cpm_fm.gui.mw_history import _HistoryMixin
 from cpm_fm.gui.mw_remote import _RemoteMixin
@@ -93,6 +94,7 @@ class MainWindow(
     QMainWindow,
     _FilePanesMixin,
     _ContextMenuMixin,
+    _DiskImageMixin,
     _RemoteMixin,
     _BackupRestoreMixin,
     _TransfersMixin,
@@ -210,6 +212,10 @@ class MainWindow(
         self._backup_confirm_answered = threading.Event()
         self._backup_confirm_result = False
         self.host_dir = os.getcwd()
+        # FR-171: temp working directory holding files extracted from an opened
+        # disk image (and the source image path), or None when no image is open.
+        self._image_workdir: str | None = None
+        self._image_source: str | None = None
         # FR-130/FR-133: the canonical, unfiltered file names for each pane. The
         # visible QListWidget rows are derived from these by filter_and_sort, so
         # filtering/sorting can be re-applied without re-reading the source.
@@ -445,6 +451,8 @@ class MainWindow(
         self._add_menu_action(file_menu, "menu.file.new", self.menu_new)
         self._add_menu_action(file_menu, "menu.file.load", self.menu_load)
         self._add_menu_action(file_menu, "menu.file.save", self.menu_save)
+        # UIR-108: Open Disk Image… sits after Save, before the Exit separator.
+        self._add_menu_action(file_menu, "menu.file.open_image", self.menu_open_image)
         file_menu.addSeparator()
         self._add_menu_action(file_menu, "menu.file.exit", self.close)
 
@@ -949,6 +957,8 @@ class MainWindow(
         self.window_state.set_window_open("history", history_open)
         if self._history_dialog:
             self.window_state.save_geometry("transfer_history", self._history_dialog)
+        # FR-016/FR-171: discard any temp working directory from an open image.
+        self._cleanup_image_workdir()
         # FR-015: close any open COM ports. FR-016: close all open windows.
         self.serial_mgr.close_ports()
         if self.terminal_win:

@@ -35,8 +35,10 @@ where = ["src"]
 # data so the branded icon (UIR-078) is present in an installed wheel.
 # DR-047: and ship the user manual (docs/cpm_fm_manual.md) so Help > Manual
 # (UIR-091) works from an installed wheel.
+# DR-048: and ship the bundled CP/M disk-image geometry database (diskdefs) so
+# disk-image auto-detection (FR-170) works from an installed wheel.
 [tool.setuptools.package-data]
-cpm_fm = ["lang/*.txt", "icons/*.png", "docs/*.md"]
+cpm_fm = ["lang/*.txt", "icons/*.png", "docs/*.md", "utils/disk_image/data/diskdefs"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -290,3 +290,15 @@ config.macros.macro = Macro {n}
 config.macros.label = Libellé
 config.macros.sequence = Séquence de touches
 status.macro_failed = Échec de la macro - vérifiez sa séquence de touches
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = Ouvrir une image disque…
+dialog.open_image.title = Ouvrir une image disque CP/M
+dialog.open_image.filter = Images disque CP/M (*.img *.dsk *.cpm *.cf);;Tous les fichiers (*)
+dialog.open_image.pick_title = Choisir la géométrie du disque
+dialog.open_image.pick_ambiguous = La géométrie du disque est ambiguë. Choisissez le format :
+dialog.open_image.pick_unknown = Impossible de détecter la géométrie du disque. Choisissez un format à essayer :
+error.disk_image_unreadable = Impossible de lire « {name} » comme image disque CP/M.
+error.disk_image_extract = Échec de l'extraction des fichiers de l'image disque : {error}
+status.disk_image_loaded = Image disque « {name} » chargée ({geometry})
+status.disk_image_partial = Image disque « {name} » chargée ; {count} fichier(s) n'ont pas pu être extraits

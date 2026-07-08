@@ -290,3 +290,15 @@ config.macros.macro = 巨集 {n}
 config.macros.label = 標籤
 config.macros.sequence = 按鍵序列
 status.macro_failed = 巨集執行失敗 - 請檢查其按鍵序列
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = 開啟磁碟映像…
+dialog.open_image.title = 開啟 CP/M 磁碟映像
+dialog.open_image.filter = CP/M 磁碟映像 (*.img *.dsk *.cpm *.cf);;所有檔案 (*)
+dialog.open_image.pick_title = 選擇磁碟幾何結構
+dialog.open_image.pick_ambiguous = 磁碟幾何結構唔明確。請選擇格式：
+dialog.open_image.pick_unknown = 無法偵測磁碟幾何結構。請選擇要試嘅格式：
+error.disk_image_unreadable = 無法將「{name}」作為 CP/M 磁碟映像讀取。
+error.disk_image_extract = 無法從磁碟映像擷取檔案：{error}
+status.disk_image_loaded = 已載入磁碟映像「{name}」（{geometry}）
+status.disk_image_partial = 已載入磁碟映像「{name}」；有 {count} 個檔案無法擷取
