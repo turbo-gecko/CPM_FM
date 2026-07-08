@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import shutil
-import tempfile
 from typing import TYPE_CHECKING, cast
 
 from PySide6.QtWidgets import QFileDialog, QInputDialog, QMessageBox
@@ -19,6 +18,7 @@ from cpm_fm.utils.disk_image import (
     open_image,
 )
 from cpm_fm.utils.i18n import tr
+from cpm_fm.utils.temp_cleanup import make_temp_dir
 
 
 class _DiskImageMixin(MainWindowMixinBase):
@@ -70,7 +70,7 @@ class _DiskImageMixin(MainWindowMixinBase):
             return
 
         try:
-            workdir = tempfile.mkdtemp(prefix="cpm_fm_img_")
+            workdir = make_temp_dir("img_")
             failed = self._extract_files(img, workdir)
         except OSError as exc:
             QMessageBox.critical(

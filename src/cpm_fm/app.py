@@ -54,6 +54,7 @@ from cpm_fm.utils.i18n import (
     set_language,
     tr,
 )
+from cpm_fm.utils.temp_cleanup import sweep_temp_dirs
 from cpm_fm.utils.transfer_history import TransferHistory
 
 if TYPE_CHECKING:
@@ -975,6 +976,11 @@ class MainWindow(
             self.window_state.save_geometry("transfer_history", self._history_dialog)
         # FR-016/FR-171: discard any temp working directory from an open image.
         self._cleanup_image_workdir()
+        # FR-016: sweep the OS temp directory for every ``cpm_fm_*`` working
+        # directory — this session's remote-view downloads (FR-113a) and image
+        # workdir (FR-171), plus any orphaned by a previous session that did not
+        # exit cleanly — so the host is not left accumulating temp folders.
+        sweep_temp_dirs()
         # FR-015: close any open COM ports. FR-016: close all open windows.
         self.serial_mgr.close_ports()
         if self.terminal_win:
@@ -986,9 +992,13 @@ class MainWindow(
 
 def main() -> None:
     """
-    Satisfies: STR-002, CR-002, CR-012, CR-013, UIR-078.
+    Satisfies: STR-002, CR-002, CR-012, CR-013, UIR-078, FR-016.
     """
     app = cast(QApplication, QApplication.instance() or QApplication(sys.argv))
+    # FR-016: sweep any temp working directories left by a previous session that
+    # did not exit cleanly (a crash/kill bypasses closeEvent) before this session
+    # creates its own, so orphaned cpm_fm_* folders never accumulate on the host.
+    sweep_temp_dirs()
     # FR-004/FR-005: identity for QSettings-backed persistence (see WindowState).
     app.setOrganizationName(ORG)
     app.setApplicationName(APP)

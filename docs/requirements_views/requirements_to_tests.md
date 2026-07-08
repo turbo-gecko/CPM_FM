@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_253/467 requirements have a verifying test; 214 untested; 0 stale tag(s)._
+_254/467 requirements have a verifying test; 213 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -53,6 +53,7 @@ _253/467 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 | FR-011 | `tests/test_config_handler.py:test_load_json_reads_valid_object`, `tests/test_config_handler.py:test_save_then_load_round_trips` |
 | FR-012 | `tests/test_config_handler.py:test_load_json_malformed_returns_empty`, `tests/test_config_handler.py:test_load_json_missing_file_returns_empty` |
 | FR-014 | `tests/test_config_handler.py:test_save_json_to_unwritable_path_returns_false`, `tests/test_config_handler.py:test_save_json_writes_loadable_file`, `tests/test_config_handler.py:test_save_then_load_round_trips` |
+| FR-016 | `tests/test_temp_cleanup.py:test_sweep_leaves_unrelated_entries`, `tests/test_temp_cleanup.py:test_sweep_removes_current_and_historical_dirs`, `tests/test_temp_cleanup.py:test_sweep_tolerates_unremovable_dir` |
 | FR-017 | `tests/test_gui_smoke.py:test_load_config_clears_remote_list` |
 | FR-017a | `tests/test_gui_smoke.py:test_load_config_disconnects_open_ports_before_swap`, `tests/test_gui_smoke.py:test_load_config_skips_disconnect_when_not_connected` |
 | FR-018 | `tests/test_gui_smoke.py:test_menu_new_aborts_when_save_cancelled`, `tests/test_gui_smoke.py:test_menu_new_prompts_for_file_when_none_remembered`, `tests/test_gui_smoke.py:test_menu_new_saves_to_current_file_resets_and_closes_ports` |
@@ -119,7 +120,7 @@ _253/467 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 | FR-111 | `tests/test_gui_smoke.py:test_remote_delete_sends_command_per_selected_file` |
 | FR-112 | `tests/test_gui_smoke.py:test_build_viewer_args_substitutes_token`, `tests/test_gui_smoke.py:test_host_view_launches_viewer`, `tests/test_gui_smoke.py:test_remote_view_downloads_then_opens` |
 | FR-113 | `tests/test_gui_smoke.py:test_remote_view_downloads_then_opens`, `tests/test_gui_smoke.py:test_remote_view_requires_both_flags` |
-| FR-113a | `tests/test_gui_smoke.py:test_remote_view_downloads_then_opens` |
+| FR-113a | `tests/test_gui_smoke.py:test_remote_view_downloads_then_opens`, `tests/test_temp_cleanup.py:test_make_temp_dir_uses_shared_prefix` |
 | FR-113b | `tests/test_gui_smoke.py:test_remote_view_requires_both_flags` |
 | FR-114 | `tests/test_gui_smoke.py:test_host_rename_cancelled_makes_no_change`, `tests/test_gui_smoke.py:test_host_rename_renames_file` |
 | FR-115 | `tests/test_gui_smoke.py:test_file_action_dialog_multi_file_shows_readonly_list`, `tests/test_gui_smoke.py:test_host_delete_removes_file` |
@@ -185,7 +186,7 @@ _253/467 requirements have a verifying test; 214 untested; 0 stale tag(s)._
 | FR-168 | `tests/test_gui_smoke.py:test_closeevent_records_which_windows_were_open`, `tests/test_gui_smoke.py:test_open_windows_not_restored_when_none_recorded`, `tests/test_gui_smoke.py:test_open_windows_restored_on_startup`, `tests/test_window_state.py:test_window_open_defaults_false`, `tests/test_window_state.py:test_window_open_persists_across_instances`, `tests/test_window_state.py:test_window_open_roundtrip` |
 | FR-169 | `tests/test_disk_image/test_directory.py:<module>`, `tests/test_disk_image/test_directory.py:test_empty_file`, `tests/test_disk_image/test_directory.py:test_list_and_read_single_extent`, `tests/test_disk_image/test_directory.py:test_multiple_files_and_16bit_pointers`, `tests/test_disk_image/test_image.py:<module>`, `tests/test_disk_image/test_image.py:test_open_image_auto_detects_and_lists`, `tests/test_disk_image/test_image.py:test_open_image_forced_geometry`, `tests/test_gui_smoke.py:test_open_disk_image_extracts_and_lists` |
 | FR-170 | `tests/test_disk_image/test_detect.py:<module>`, `tests/test_disk_image/test_detect.py:test_detect_ranks_correct_geometry_first`, `tests/test_disk_image/test_detect.py:test_detect_returns_empty_for_foreign_file`, `tests/test_disk_image/test_detect.py:test_detect_returns_empty_for_zero_byte_file`, `tests/test_disk_image/test_detect.py:test_eight_mb_images_are_ambiguous`, `tests/test_disk_image/test_detect.py:test_is_ambiguous_logic`, `tests/test_disk_image/test_detect.py:test_out_of_range_allocation_pointers_reject_geometry`, `tests/test_disk_image/test_image.py:<module>`, `tests/test_disk_image/test_image.py:test_open_image_auto_detects_and_lists` |
-| FR-171 | `tests/test_disk_image/test_directory.py:<module>`, `tests/test_disk_image/test_directory.py:test_empty_file`, `tests/test_disk_image/test_directory.py:test_list_and_read_single_extent`, `tests/test_disk_image/test_directory.py:test_multi_extent_file`, `tests/test_disk_image/test_directory.py:test_multiple_files_and_16bit_pointers`, `tests/test_disk_image/test_directory.py:test_record_tail_truncation`, `tests/test_gui_smoke.py:test_change_dir_discards_open_image`, `tests/test_gui_smoke.py:test_load_config_discards_open_image`, `tests/test_gui_smoke.py:test_open_disk_image_cleanup_on_close`, `tests/test_gui_smoke.py:test_open_disk_image_extracts_and_lists` |
+| FR-171 | `tests/test_disk_image/test_directory.py:<module>`, `tests/test_disk_image/test_directory.py:test_empty_file`, `tests/test_disk_image/test_directory.py:test_list_and_read_single_extent`, `tests/test_disk_image/test_directory.py:test_multi_extent_file`, `tests/test_disk_image/test_directory.py:test_multiple_files_and_16bit_pointers`, `tests/test_disk_image/test_directory.py:test_record_tail_truncation`, `tests/test_gui_smoke.py:test_change_dir_discards_open_image`, `tests/test_gui_smoke.py:test_load_config_discards_open_image`, `tests/test_gui_smoke.py:test_open_disk_image_cleanup_on_close`, `tests/test_gui_smoke.py:test_open_disk_image_extracts_and_lists`, `tests/test_temp_cleanup.py:test_make_temp_dir_folds_in_tag`, `tests/test_temp_cleanup.py:test_make_temp_dir_uses_shared_prefix` |
 | FR-172 | `tests/test_disk_image/test_detect.py:<module>`, `tests/test_disk_image/test_detect.py:test_detect_returns_empty_for_foreign_file`, `tests/test_disk_image/test_detect.py:test_detect_returns_empty_for_zero_byte_file`, `tests/test_disk_image/test_image.py:<module>`, `tests/test_disk_image/test_image.py:test_open_image_rejects_bad_input`, `tests/test_disk_image/test_image.py:test_open_image_rejects_foreign_sized_file`, `tests/test_gui_smoke.py:test_open_disk_image_rejects_bad_file` |
 | FR-173 | `tests/test_gui_smoke.py:test_image_details_action_enabled_only_when_image_open`, `tests/test_gui_smoke.py:test_image_details_dialog_lists_metadata`, `tests/test_gui_smoke.py:test_image_details_noop_when_no_image` |
 | IFR-004 | `tests/test_config_handler.py:test_load_json_malformed_returns_empty`, `tests/test_config_handler.py:test_load_json_reads_valid_object`, `tests/test_config_handler.py:test_save_json_to_unwritable_path_returns_false` |
@@ -301,7 +302,6 @@ These defined requirements have no `Verifies:` test tag:
 - FR-010
 - FR-013
 - FR-015
-- FR-016
 - FR-020
 - FR-021
 - FR-031

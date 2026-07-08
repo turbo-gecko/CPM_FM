@@ -4,7 +4,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.40 |
+| Version | 1.41 |
 | Status | Draft |
 | Date | 2026-07-07 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.25.0) |
@@ -498,6 +498,7 @@ persistence of the language choice.
 | MT-V09 | UIR-075 | Open Config > Serial, Config > General, and a File Action dialog (right-click a host file → Rename); also glance at a transfer progress dialog (MT-T05). | In every two-button dialog the **Cancel** button is at the **far left** and the affirmative button (**Save** for the config dialogs, **Apply** for the File Action dialog) at the **far right**, with space between; the progress dialog's single **Cancel** button is **centred**. |
 | MT-V10 | FR-022, UIR-076, UIR-075, DR-040, DR-041 | Choose **Help > About**. Read the dialog, then click the GitHub link, then click **OK**. | A modal dialog titled "About" shows: the program name **CP/M File Manager**; **Version `<x.y.z>`** matching `src/version.txt` and the SRS version field (both `2.5.2`); a clickable hyperlink to `https://github.com/turbo-gecko/CPM_FM`. Clicking the link opens that page in the host's default browser. A single **OK** button (centred) closes the dialog. |
 | MT-V11 | UIR-078, DR-044 | Launch the app and inspect the window's title-bar icon and the OS taskbar/dock entry; open the Terminal Window and a dialog (e.g. Config > Serial) and check their icons too. | All windows and dialogs and the taskbar/dock show the branded **CP/M File Manager** icon (the blue monitor artwork), not the generic Qt/Python default. The same icon should appear at small (title-bar) and larger (taskbar/alt-tab) sizes without distortion. |
+| MT-V12 | FR-016, FR-113a, FR-171 | Note your OS temp folder (e.g. `%TEMP%` / `$TMPDIR`). Open a CP/M disk image (creates a `cpm_fm_img_*` folder) and right-click → **View** a remote file (creates a `cpm_fm_*` folder). Confirm both folders exist. Then choose **File > Exit** and re-check the temp folder. Next, to simulate an unclean shutdown, create a dummy `cpm_fm_leftover` folder in the temp folder by hand and **relaunch** the app. | After Exit, **no** `cpm_fm*` folder created by the session remains in the temp folder. After the relaunch, the hand-made `cpm_fm_leftover` folder has been swept away too (start-up cleanup). A folder still held open by an external viewer is left in place and cleared on a later exit/launch. |
 
 ---
 
@@ -517,7 +518,7 @@ The cases above target requirements that are **not** fully exercised by `pytest`
 real serial hardware, a live CP/M peer, on-screen rendering, real OS dialogs/associations, real timing,
 or real cross-session persistence:
 
-- Lifecycle / persistence (real): `FR-004` (windows/dialogs), `FR-005`, `FR-006`, `FR-015`, `FR-016`.
+- Lifecycle / persistence (real): `FR-004` (windows/dialogs), `FR-005`, `FR-006`, `FR-015`, `FR-016` (the temp-directory sweep logic in `utils/temp_cleanup.py` is covered automatically by `tests/test_temp_cleanup.py`; MT-V12 confirms real folders are removed on exit and start-up end-to-end).
 - Connect/disconnect (real ports & error paths): `FR-030`–`FR-040`, `FR-050`–`FR-058`.
 - Remote listing & drive selection (live capture/timing): `FR-074`–`FR-079`, `FR-100`–`FR-104`.
 - Transfers (live X-Modem, CP/M launch, timing, byte echo, live cancel): `FR-080`–`FR-089`, `FR-099`, `FR-105`–`FR-109`, `FR-119`, `FR-120`, `NFR-003a`–`NFR-003q` (interop + CAN abort).

@@ -178,6 +178,11 @@
       "tests/test_config_handler.py:test_save_json_writes_loadable_file",
       "tests/test_config_handler.py:test_save_then_load_round_trips"
     ],
+    "FR-016": [
+      "tests/test_temp_cleanup.py:test_sweep_leaves_unrelated_entries",
+      "tests/test_temp_cleanup.py:test_sweep_removes_current_and_historical_dirs",
+      "tests/test_temp_cleanup.py:test_sweep_tolerates_unremovable_dir"
+    ],
     "FR-017": [
       "tests/test_gui_smoke.py:test_load_config_clears_remote_list"
     ],
@@ -523,7 +528,8 @@
       "tests/test_gui_smoke.py:test_remote_view_requires_both_flags"
     ],
     "FR-113a": [
-      "tests/test_gui_smoke.py:test_remote_view_downloads_then_opens"
+      "tests/test_gui_smoke.py:test_remote_view_downloads_then_opens",
+      "tests/test_temp_cleanup.py:test_make_temp_dir_uses_shared_prefix"
     ],
     "FR-113b": [
       "tests/test_gui_smoke.py:test_remote_view_requires_both_flags"
@@ -927,7 +933,9 @@
       "tests/test_gui_smoke.py:test_change_dir_discards_open_image",
       "tests/test_gui_smoke.py:test_load_config_discards_open_image",
       "tests/test_gui_smoke.py:test_open_disk_image_cleanup_on_close",
-      "tests/test_gui_smoke.py:test_open_disk_image_extracts_and_lists"
+      "tests/test_gui_smoke.py:test_open_disk_image_extracts_and_lists",
+      "tests/test_temp_cleanup.py:test_make_temp_dir_folds_in_tag",
+      "tests/test_temp_cleanup.py:test_make_temp_dir_uses_shared_prefix"
     ],
     "FR-172": [
       "tests/test_disk_image/test_detect.py:<module>",
@@ -1279,7 +1287,6 @@
     "FR-010",
     "FR-013",
     "FR-015",
-    "FR-016",
     "FR-020",
     "FR-021",
     "FR-031",

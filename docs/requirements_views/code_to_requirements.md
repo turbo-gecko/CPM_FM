@@ -6,7 +6,7 @@
 Maps each source file to the requirement IDs it implements, derived from `Satisfies:` docstring tags in the code.
 Use this for **targeted work**: find the file you're editing, then read just those IDs in `requirements_index.md` or the full SRS — instead of loading the whole specification.
 
-_44 source files; 559 file→requirement links._
+_45 source files; 563 file→requirement links._
 
 | Source file | Requirement IDs |
 |-------------|-----------------|
@@ -52,5 +52,6 @@ _44 source files; 559 file→requirement links._
 | src/cpm_fm/utils/disk_image/image.py | CR-014, DR-049, FR-169, FR-171, FR-172 |
 | src/cpm_fm/utils/file_filter.py | CR-014, FR-130, FR-131, FR-132, FR-133 |
 | src/cpm_fm/utils/i18n.py | CR-014, DR-042, DR-043, FR-121, FR-122, FR-123, FR-124, NFR-005, UIR-077 |
+| src/cpm_fm/utils/temp_cleanup.py | CR-014, FR-016, FR-113a, FR-171 |
 | src/cpm_fm/utils/transfer_history.py | CR-014, DR-045, FR-140, FR-141, FR-142, FR-143, FR-144 |
 | src/cpm_fm/version.py | DR-040, DR-041 |

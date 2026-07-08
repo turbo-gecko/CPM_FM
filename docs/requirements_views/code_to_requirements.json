@@ -633,6 +633,12 @@
     "NFR-005",
     "UIR-077"
   ],
+  "src/cpm_fm/utils/temp_cleanup.py": [
+    "CR-014",
+    "FR-016",
+    "FR-113a",
+    "FR-171"
+  ],
   "src/cpm_fm/utils/transfer_history.py": [
     "CR-014",
     "DR-045",

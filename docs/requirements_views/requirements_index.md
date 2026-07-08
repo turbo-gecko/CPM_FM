@@ -38,7 +38,7 @@ _467 requirements across 59 sections._
 | FR-013 | The File > Save menu item shall present a file-select dialog defaulting to the JSON… | mw_config.py:menu_save |
 | FR-014 | On saving, the application shall write the **entire** internal settings store — both serial configuration… | mw_config.py:menu_save, config_handler.py:save_json; tests test_config_handler.py, test_gui_smoke.py |
 | FR-015 | The File > Exit menu item shall close any open COM ports | app.py:closeEvent, serial_manager.py:close_ports |
-| FR-016 | The File > Exit menu item shall close all open dialogs and windows | app.py:closeEvent |
+| FR-016 | The File > Exit menu item shall close all open dialogs and windows, and shall… | app.py:closeEvent, app.py:main, utils/temp_cleanup.py:sweep_temp_dirs, utils/temp_cleanup.py:make_temp_dir; tests test_temp_cleanup.py |
 | FR-168 | On exit, the application shall record which of its non-modal auxiliary windows — the Terminal… | app.py:closeEvent, app.py:_restore_open_windows, window_state.py:window_open, window_state.py:set_window_open, mw_remote.py:show_terminal, mw_history.py:show_history; tests test_gui_smoke.py, test_window_state.py |
 | FR-017 | On loading a configuration file, the application shall clear the Remote Files list… | mw_config.py:load_config |
 | FR-017a | On loading a configuration file, if any Terminal or Transport port is open, the application… | mw_config.py:load_config, mw_remote.py:do_disconnect |
@@ -213,7 +213,7 @@ _467 requirements across 59 sections._
 | FR-111 | The Remote Files list (UIR-012) shall provide a right-click context menu (UIR-019) offering the actions… | mw_context_menu.py:_remote_context_menu, mw_context_menu.py:_remote_to_host, mw_context_menu.py:_remote_view, mw_context_menu.py:_remote_rename, mw_context_menu.py:_remote_delete |
 | FR-112 | The View/Edit action (host, FR-110) and the View action (remote, FR-111) shall open the target… | app.py:_open_in_viewer, build_viewer_args, _os_open |
 | FR-113 | For a remote View (FR-111), the application shall download the file and open it… | mw_context_menu.py:_remote_view, mw_context_menu.py:_download_and_view, mw_context_menu.py:_on_view_file_ready, view_file_ready signal |
-| FR-113a | A remote View shall first download the selected file over X-Modem into a temporary folder… | — |
+| FR-113a | A remote View shall first download the selected file over X-Modem into a temporary folder… | mw_context_menu.py:_download_and_view, utils/temp_cleanup.py:make_temp_dir |
 | FR-113b | A remote View shall be permitted only when both the Terminal and Transport status flags… | — |
 | FR-114 | The Rename action (host FR-110, remote FR-111) shall present a modal File Action Dialog (UIR-057)… | mw_context_menu.py:_host_rename, mw_context_menu.py:_remote_rename, file_action_dialog.py:FileActionDialog |
 | FR-115 | The Delete action (host FR-110, remote FR-111) shall present a modal File Action Dialog (UIR-057)… | mw_context_menu.py:_host_delete, mw_context_menu.py:_remote_delete, file_action_dialog.py:FileActionDialog |

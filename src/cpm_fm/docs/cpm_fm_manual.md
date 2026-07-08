@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.29.0**
+**Version 2.29.1**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -245,7 +245,7 @@ Configure CP/M command templates and behavior. The remote-command fields are gat
 - **New** — Saves the current configuration, then resets all settings to their defaults and closes any open ports.
 - **Load** — Opens a saved JSON configuration. The loaded file's name appears in the title bar, and its host directory (if stored) is restored. If you are connected when you load a configuration, the current ports are closed first, so you are never left "connected" on the previous configuration's ports — reconnect to use the newly loaded configuration's ports.
 - **Save** — Writes the **entire** current configuration (all serial and general settings) to a JSON file you choose. The saved configuration is remembered and reloaded automatically on the next launch.
-- **Exit** — Closes all ports and saves your window geometry and the current configuration name. It also remembers which of the **Terminal Window** and **Transfer History** window were open and reopens them on the next launch.
+- **Exit** — Closes all ports and saves your window geometry and the current configuration name. It also remembers which of the **Terminal Window** and **Transfer History** window were open and reopens them on the next launch. On exit the program **cleans up its temporary working folders** — the folders it creates when you open a disk image or **View** a remote file (named `cpm_fm…` in your system temp directory). To recover from an unclean shutdown (a crash or forced quit), it also sweeps away any such leftover folders from previous sessions the next time it starts, so they never pile up on your PC.
 
 ---
 

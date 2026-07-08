@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.40 |
-| Scorecard for plan version | 1.40 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.41 |
+| Scorecard for plan version | 1.41 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -312,6 +312,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-V09 | Dialog button layout (Cancel left / affirmative right; lone centred) | UIR-075 | | | |
 | MT-V10 | About dialog (name/version/GitHub link/OK; version matches) | FR-022, UIR-076, DR-040/041 | | | |
 | MT-V11 | Branded app icon on all windows + taskbar/dock | UIR-078, DR-044 | | | |
+| MT-V12 | Temp `cpm_fm*` folders removed on exit + swept at start-up | FR-016, FR-113a, FR-171 | | | |
 
 ### §16 Cross-cutting / non-functional
 | ID | Title | Req | Result | Env | Notes |
