@@ -141,3 +141,119 @@ diskdef rc2014
   boottrk 1
   os 2.2
 end
+
+# --- RomWBW ROM disks --------------------------------------------------------
+# Taken verbatim from RomWBW v3.6 Source/Images/diskdefs. Single-slice, no
+# offset — the standalone ROM-disk images cpm-fm can open directly.
+
+# RomWBW 128KB ROM Disk.
+diskdef wbw_rom128
+  seclen 512
+  tracks 4
+  sectrk 64
+  blocksize 2048
+  maxdir 256
+  skew 0
+  boottrk 0
+  os 2.2
+end
+
+# RomWBW 256KB ROM Disk.
+diskdef wbw_rom256
+  seclen 512
+  tracks 8
+  sectrk 64
+  blocksize 2048
+  maxdir 256
+  skew 0
+  boottrk 0
+  os 2.2
+end
+
+# RomWBW 384KB ROM Disk.
+diskdef wbw_rom384
+  seclen 512
+  tracks 12
+  sectrk 64
+  blocksize 2048
+  maxdir 256
+  skew 0
+  boottrk 0
+  os 2.2
+end
+
+# RomWBW 896KB ROM Disk.
+diskdef wbw_rom896
+  seclen 512
+  tracks 28
+  sectrk 64
+  blocksize 2048
+  maxdir 256
+  skew 0
+  boottrk 0
+  os 2.2
+end
+
+# --- Other classic single-slice layouts --------------------------------------
+# Verbatim from the cpmtools / RomWBW diskdefs. Standard-skew, single-slice
+# layouts whose sizes do not collide with the definitions above.
+
+# Generic 4 MB hard disk (128-byte sectors).
+diskdef 4mb-hd
+  seclen 128
+  tracks 1024
+  sectrk 32
+  blocksize 2048
+  maxdir 256
+  skew 1
+  boottrk 0
+  os p2dos
+end
+
+# Amstrad PCW / CF2 3" disk (180 KiB).
+diskdef pcw
+  seclen 512
+  tracks 40
+  sectrk 9
+  blocksize 1024
+  maxdir 64
+  skew 1
+  boottrk 1
+  os 3
+end
+
+# Epson QX-10 5.25" (400 KiB).
+diskdef epsqx10
+  seclen 512
+  tracks 40
+  sectrk 20
+  blocksize 2048
+  maxdir 128
+  skew 0
+  boottrk 2
+  os 2.2
+end
+
+# Royal Alphatronic (320 KiB).
+diskdef alpha
+  seclen 256
+  tracks 40
+  sectrk 32
+  blocksize 2048
+  maxdir 128
+  skew 1
+  boottrk 2
+  os 2.2
+end
+
+# Interak 5.25" DSDD (800 KiB).
+diskdef interak
+  seclen 512
+  tracks 80
+  sectrk 20
+  blocksize 4096
+  maxdir 256
+  skew 0
+  boottrk 2
+  os 2.2
+end

@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.39 |
-| Scorecard for plan version | 1.39 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.40 |
+| Scorecard for plan version | 1.40 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -160,6 +160,8 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-DI04 | Extracted files Copy to Remote over X-Modem | FR-171 | | | |
 | MT-DI05 | Foreign/corrupt file rejected gracefully (no crash) | FR-172 | | | |
 | MT-DI06 | Temp workdir discarded on New / reopen / exit | FR-171 | | | |
+| MT-DI07 | Image Details… shows read-only name/size/user/attrs table | FR-173, UIR-109 | | | |
+| MT-DI08 | Image Details… disabled when no image open | FR-173, UIR-109 | | | |
 
 ### §10 Remote listing & drive selection (live)
 | ID | Title | Req | Result | Env | Notes |

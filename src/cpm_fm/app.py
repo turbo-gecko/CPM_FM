@@ -5,7 +5,7 @@ import shlex
 import subprocess
 import sys
 import threading
-from typing import Callable, cast
+from typing import TYPE_CHECKING, Callable, cast
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QActionGroup, QFontMetrics
@@ -55,6 +55,9 @@ from cpm_fm.utils.i18n import (
     tr,
 )
 from cpm_fm.utils.transfer_history import TransferHistory
+
+if TYPE_CHECKING:
+    from cpm_fm.utils.disk_image import CpmFileEntry
 
 
 def build_viewer_args(template: str, path: str) -> list[str]:
@@ -216,6 +219,13 @@ class MainWindow(
         # disk image (and the source image path), or None when no image is open.
         self._image_workdir: str | None = None
         self._image_source: str | None = None
+        # FR-173: the CP/M file metadata of the currently open image, captured at
+        # open time for the read-only Image Details view (empty when none open).
+        self._image_files: list[CpmFileEntry] = []
+        # UIR-109: the Image Details… menu action, enabled only while an image is
+        # open. Created in setup_menu; held here so the open/cleanup paths can
+        # toggle it.
+        self._image_details_action: QAction | None = None
         # FR-130/FR-133: the canonical, unfiltered file names for each pane. The
         # visible QListWidget rows are derived from these by filter_and_sort, so
         # filtering/sorting can be re-applied without re-reading the source.
@@ -442,7 +452,7 @@ class MainWindow(
 
     def setup_menu(self):
         """
-        Satisfies: UIR-001, UIR-002, UIR-003, UIR-004, FR-018, FR-019, FR-022, FR-122.
+        Satisfies: UIR-001, UIR-002, UIR-003, UIR-004, UIR-109, FR-018, FR-019, FR-022, FR-122.
         """
         menubar = self.menuBar()
 
@@ -453,6 +463,12 @@ class MainWindow(
         self._add_menu_action(file_menu, "menu.file.save", self.menu_save)
         # UIR-108: Open Disk Image… sits after Save, before the Exit separator.
         self._add_menu_action(file_menu, "menu.file.open_image", self.menu_open_image)
+        # UIR-109: Image Details… sits immediately after Open Disk Image…, disabled
+        # until an image is open.
+        self._image_details_action = self._add_menu_action(
+            file_menu, "menu.file.image_details", self.menu_image_details
+        )
+        self._image_details_action.setEnabled(False)
         file_menu.addSeparator()
         self._add_menu_action(file_menu, "menu.file.exit", self.close)
 

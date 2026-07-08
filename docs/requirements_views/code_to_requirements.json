@@ -55,7 +55,8 @@
     "UIR-078",
     "UIR-082",
     "UIR-086",
-    "UIR-087"
+    "UIR-087",
+    "UIR-109"
   ],
   "src/cpm_fm/gui/about_dialog.py": [
     "FR-022",
@@ -129,6 +130,11 @@
   "src/cpm_fm/gui/dialog_buttons.py": [
     "UIR-075"
   ],
+  "src/cpm_fm/gui/disk_image_details_dialog.py": [
+    "FR-121",
+    "FR-173",
+    "UIR-109"
+  ],
   "src/cpm_fm/gui/file_action_dialog.py": [
     "FR-114",
     "FR-115",
@@ -188,6 +194,7 @@
     "FR-093",
     "FR-125",
     "FR-157",
+    "FR-171",
     "IFR-003",
     "UIR-034",
     "UIR-062",
@@ -221,7 +228,9 @@
     "FR-170",
     "FR-171",
     "FR-172",
-    "UIR-108"
+    "FR-173",
+    "UIR-108",
+    "UIR-109"
   ],
   "src/cpm_fm/gui/mw_file_panes.py": [
     "FR-017",
@@ -239,6 +248,7 @@
     "FR-133",
     "FR-134",
     "FR-135",
+    "FR-171",
     "UIR-079",
     "UIR-080"
   ],

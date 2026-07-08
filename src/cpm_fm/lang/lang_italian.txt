@@ -302,3 +302,12 @@ error.disk_image_unreadable = Impossibile leggere «{name}» come immagine disco
 error.disk_image_extract = Impossibile estrarre i file dall'immagine disco: {error}
 status.disk_image_loaded = Immagine disco «{name}» caricata ({geometry})
 status.disk_image_partial = Immagine disco «{name}» caricata; impossibile estrarre {count} file
+
+# --- Disk image details (v2.29) --------------------------------------------------
+menu.file.image_details = Dettagli immagine…
+dialog.image_details.title = Dettagli immagine disco
+dialog.image_details.col.name = Nome
+dialog.image_details.col.size = Dimensione
+dialog.image_details.col.user = Utente
+dialog.image_details.col.attrs = Attributi
+dialog.image_details.close = Chiudi

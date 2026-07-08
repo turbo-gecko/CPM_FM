@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_465 requirements across 59 sections._
+_467 requirements across 59 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -365,8 +365,9 @@ _465 requirements across 59 sections._
 |----|---------|------|
 | FR-169 | The application shall provide a File > Open Disk Image… action (UIR-108) that presents a… | mw_disk_image.py:menu_open_image, utils/disk_image/__init__.py:open_image, utils/disk_image/filesystem.py:list_files; tests test_disk_image/test_image.py, test_gui_smoke.py |
 | FR-170 | On opening an image (FR-169), the application shall auto-detect the disk geometry from a bundled… | utils/disk_image/__init__.py:detect_diskdef, utils/disk_image/__init__.py:load_diskdefs, utils/disk_image/diskdefs.py:parse_diskdefs, mw_disk_image.py:menu_open_image; tests test_disk_image/test_detect.py, test_disk_image/test_diskdefs.py |
-| FR-171 | On opening an image (FR-169), the application shall extract each file it contains to a… | mw_disk_image.py:menu_open_image, mw_disk_image.py:_cleanup_image_workdir, utils/disk_image/filesystem.py:read_file; tests test_gui_smoke.py, test_disk_image/test_directory.py |
+| FR-171 | On opening an image (FR-169), the application shall extract each file it contains to a… | mw_disk_image.py:menu_open_image, mw_disk_image.py:_cleanup_image_workdir, mw_config.py:load_config, mw_config.py:menu_general_config, mw_file_panes.py:change_host_dir, utils/disk_image/filesystem.py:read_file; tests test_gui_smoke.py, test_disk_image/test_directory.py |
 | FR-172 | The image-open path shall reject an unreadable, truncated, zero-byte, or foreign (non-CP/M) file gracefully… | utils/disk_image/__init__.py:open_image, utils/disk_image/image.py:CpmImage, mw_disk_image.py:menu_open_image; tests test_disk_image/test_image.py |
+| FR-173 | While a disk image is open (FR-169), the application shall provide a File > Image… | mw_disk_image.py:menu_image_details, gui/disk_image_details_dialog.py:DiskImageDetailsDialog; tests test_gui_smoke.py |
 
 ## 4.1 Menu bar
 
@@ -579,6 +580,7 @@ _465 requirements across 59 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
+| UIR-109 | The File menu (UIR-002) shall contain an **Image Details…** item, placed immediately after **Open Disk… | app.py:setup_menu, mw_disk_image.py:menu_image_details, gui/disk_image_details_dialog.py:DiskImageDetailsDialog; lang/*.txt (menu.file.image_details, dialog.image_details.*) |
 | UIR-108 | The File menu (UIR-002) shall contain an **Open Disk Image…** item, placed after **Save** and… | app.py:setup_menu, mw_disk_image.py:menu_open_image; lang/*.txt (menu.file.open_image, dialog.open_image.*, status.disk_image_loaded) |
 
 ## 5. External Interface Requirements

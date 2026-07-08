@@ -4253,7 +4253,7 @@ def test_manual_boot_failure_sets_status_without_dialog(qapp, monkeypatch, state
         win.close()
 
 
-# --- Disk image support (FR-169–FR-172, UIR-108) -----------------------------
+# --- Disk image support (FR-169–FR-173, UIR-108, UIR-109) --------------------
 
 
 class _FakeGeom:
@@ -4261,8 +4261,15 @@ class _FakeGeom:
 
 
 class _FakeEntry:
-    def __init__(self, name):
+    """Stand-in CpmFileEntry: name plus the metadata the details view shows."""
+
+    def __init__(self, name, size_bytes=128, user=0, read_only=False, system=False, archive=False):
         self.name = name
+        self.size_bytes = size_bytes
+        self.user = user
+        self.read_only = read_only
+        self.system = system
+        self.archive = archive
 
 
 class _FakeImage:
@@ -4271,7 +4278,10 @@ class _FakeImage:
     geom = _FakeGeom()
 
     def list_files(self):
-        return [_FakeEntry("HELLO.TXT"), _FakeEntry("GAME.COM")]
+        return [
+            _FakeEntry("HELLO.TXT", size_bytes=384, user=0, archive=True),
+            _FakeEntry("GAME.COM", size_bytes=128, user=3, read_only=True, system=True),
+        ]
 
     def read_file(self, name):
         return b"content-of-" + name.encode()
@@ -4354,3 +4364,142 @@ def test_open_disk_image_cleanup_on_close(qapp, monkeypatch, state, tmp_path):
 
     win.close()
     assert not os.path.isdir(workdir)
+
+
+def test_image_details_dialog_lists_metadata(qapp):
+    """Verifies: FR-173, UIR-109."""
+    # FR-173: the details dialog renders name/size/user/attributes for each file.
+    from PySide6.QtWidgets import QTableWidget
+
+    from cpm_fm.gui.disk_image_details_dialog import DiskImageDetailsDialog
+
+    files = [
+        _FakeEntry("HELLO.TXT", size_bytes=384, user=0, archive=True),
+        _FakeEntry("GAME.COM", size_bytes=128, user=3, read_only=True, system=True),
+    ]
+    dlg = DiskImageDetailsDialog(None, files)
+    try:
+        table = dlg.findChild(QTableWidget)
+        assert table.rowCount() == 2
+        assert table.item(0, 0).text() == "HELLO.TXT"
+        assert table.item(0, 1).text() == "384"
+        assert table.item(0, 2).text() == "0"
+        assert table.item(0, 3).text() == "A"
+        assert table.item(1, 2).text() == "3"
+        assert table.item(1, 3).text() == "R S"  # read-only + system
+    finally:
+        dlg.close()
+
+
+def test_image_details_action_enabled_only_when_image_open(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-173, UIR-109."""
+    # UIR-109: the Image Details… action is disabled until an image is open and is
+    # re-disabled (and its metadata cleared) when the image is closed.
+    win = MainWindow(state)
+    try:
+        assert win._image_details_action is not None
+        assert not win._image_details_action.isEnabled()
+
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QFileDialog.getOpenFileName",
+            lambda *a, **k: (str(tmp_path / "disk.img"), ""),
+        )
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.is_ambiguous", lambda r: False)
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.detect_diskdef", lambda p, d: [])
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda p, dd=None: _FakeImage())
+
+        win.menu_open_image()
+        qapp.processEvents()
+        assert win._image_details_action.isEnabled()
+        assert [e.name for e in win._image_files] == ["HELLO.TXT", "GAME.COM"]
+
+        win._cleanup_image_workdir()
+        assert not win._image_details_action.isEnabled()
+        assert win._image_files == []
+    finally:
+        win.close()
+
+
+def test_image_details_noop_when_no_image(qapp, monkeypatch, state):
+    """Verifies: FR-173, UIR-109."""
+    # UIR-109: invoking the handler with no image open must not build a dialog.
+    win = MainWindow(state)
+    try:
+        built = []
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.DiskImageDetailsDialog",
+            lambda *a, **k: built.append(1),
+        )
+        win.menu_image_details()
+        assert built == []
+    finally:
+        win.close()
+
+
+def _open_fake_image(win, qapp, monkeypatch, tmp_path):
+    """Open a fake disk image in ``win`` and return its temp working directory."""
+    monkeypatch.setattr(
+        "cpm_fm.gui.mw_disk_image.QFileDialog.getOpenFileName",
+        lambda *a, **k: (str(tmp_path / "disk.img"), ""),
+    )
+    monkeypatch.setattr("cpm_fm.gui.mw_disk_image.is_ambiguous", lambda r: False)
+    monkeypatch.setattr("cpm_fm.gui.mw_disk_image.detect_diskdef", lambda p, d: [])
+    monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda p, dd=None: _FakeImage())
+    win.menu_open_image()
+    qapp.processEvents()
+    return win._image_workdir
+
+
+def test_load_config_discards_open_image(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-171."""
+    # FR-171: loading a configuration discards any open disk image — the temp
+    # working directory is removed and the Image Details view is no longer
+    # available — rather than leaving stale image contents viewable.
+    import json
+
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path)
+        assert workdir and os.path.isdir(workdir)
+        assert win._image_details_action.isEnabled()
+
+        cfg_dir = tmp_path / "cfgdir"
+        cfg_dir.mkdir()
+        cfg = tmp_path / "s.json"
+        cfg.write_text(json.dumps({"host_directory": str(cfg_dir)}))
+        win.load_config(str(cfg))
+        qapp.processEvents()
+
+        assert win._image_workdir is None
+        assert win._image_files == []
+        assert not win._image_details_action.isEnabled()
+        assert not os.path.isdir(workdir)  # temp dir removed, no leak
+        assert win.host_dir == str(cfg_dir)
+    finally:
+        win.close()
+
+
+def test_change_dir_discards_open_image(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-171."""
+    # FR-171: Change Directory to another folder discards the open image too.
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path)
+        assert workdir and os.path.isdir(workdir)
+
+        newdir = tmp_path / "plain"
+        newdir.mkdir()
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_file_panes.QFileDialog.getExistingDirectory",
+            lambda *a, **k: str(newdir),
+        )
+        win.change_host_dir()
+        qapp.processEvents()
+
+        assert win._image_workdir is None
+        assert win._image_files == []
+        assert not win._image_details_action.isEnabled()
+        assert not os.path.isdir(workdir)
+        assert win.host_dir == str(newdir)
+    finally:
+        win.close()

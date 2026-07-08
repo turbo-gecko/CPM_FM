@@ -302,3 +302,12 @@ error.disk_image_unreadable = 无法将“{name}”作为 CP/M 磁盘映像读�
 error.disk_image_extract = 无法从磁盘映像提取文件：{error}
 status.disk_image_loaded = 已加载磁盘映像“{name}”（{geometry}）
 status.disk_image_partial = 已加载磁盘映像“{name}”；{count} 个文件无法提取
+
+# --- Disk image details (v2.29) --------------------------------------------------
+menu.file.image_details = 映像详情…
+dialog.image_details.title = 磁盘映像详情
+dialog.image_details.col.name = 名称
+dialog.image_details.col.size = 大小
+dialog.image_details.col.user = 用户
+dialog.image_details.col.attrs = 属性
+dialog.image_details.close = 关闭

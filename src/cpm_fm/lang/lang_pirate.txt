@@ -307,3 +307,12 @@ error.disk_image_unreadable = Could not read '{name}' as a CP/M disk chest, arr.
 error.disk_image_extract = Failed to haul files out o' the disk chest: {error}
 status.disk_image_loaded = Disk chest '{name}' aboard ({geometry})
 status.disk_image_partial = Disk chest '{name}' aboard; {count} file(s) be stuck in the hold
+
+# --- Disk image details (v2.29) --------------------------------------------------
+menu.file.image_details = Booty Manifest…
+dialog.image_details.title = Treasure Chest Manifest
+dialog.image_details.col.name = Name
+dialog.image_details.col.size = Heft
+dialog.image_details.col.user = Swab
+dialog.image_details.col.attrs = Markings
+dialog.image_details.close = Batten Down

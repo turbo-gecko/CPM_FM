@@ -214,11 +214,14 @@ class _FilePanesMixin(MainWindowMixinBase):
 
     def change_host_dir(self):
         """
-        Satisfies: FR-062.
+        Satisfies: FR-062, FR-171.
         """
         path = QFileDialog.getExistingDirectory(
             self, tr("dialog.change_directory.title"), self.host_dir
         )
         if path:
+            # FR-171: navigating to another directory discards any open disk
+            # image (temp working dir, metadata, Image Details action).
+            self._cleanup_image_workdir()
             self.host_dir = path
             self.refresh_host_files()

@@ -30,7 +30,7 @@ class _ConfigMixin(MainWindowMixinBase):
 
     def load_config(self, filename):
         """
-        Satisfies: FR-005, FR-011, FR-012, FR-017, FR-017a, FR-060, FR-125.
+        Satisfies: FR-005, FR-011, FR-012, FR-017, FR-017a, FR-060, FR-125, FR-171.
         """
         # FR-017a: if a port is open under the current configuration, close it
         # (Disconnect behaviour, FR-050-FR-058) BEFORE replacing the settings
@@ -52,10 +52,23 @@ class _ConfigMixin(MainWindowMixinBase):
         self._config_name = os.path.splitext(os.path.basename(filename))[0]
         self._update_window_title()
 
+        # FR-171: loading a configuration replaces the host context, so discard
+        # any open disk image (its temp working directory, captured metadata, and
+        # the Image Details action), exactly as File > New does — otherwise the
+        # Host pane repaints to the config's directory while the stale image
+        # contents remain viewable.
+        had_image = self._image_workdir is not None
+        self._cleanup_image_workdir()
+
         # Restore host directory if specified in config
         host_dir = self.settings.get("host_directory")
         if host_dir:
             self.host_dir = host_dir
+            self.refresh_host_files()
+        elif had_image:
+            # We were pointing at the now-removed image temp directory; fall back
+            # to the working directory rather than a deleted path.
+            self.host_dir = os.getcwd()
             self.refresh_host_files()
 
         # UIR-034/UIR-103a: apply the loaded terminal settings — emulation type
@@ -268,7 +281,7 @@ class _ConfigMixin(MainWindowMixinBase):
 
     def menu_general_config(self):
         """
-        Satisfies: FR-021.
+        Satisfies: FR-021, FR-171.
         """
 
         def update_settings(new_set):
@@ -287,6 +300,8 @@ class _ConfigMixin(MainWindowMixinBase):
             # general settings must not revert it.
             new_host_dir = new_set.get("host_directory", old_host_dir)
             if new_host_dir and new_host_dir != old_host_dir:
+                # FR-171: moving the Host pane off an open image discards it.
+                self._cleanup_image_workdir()
                 self.host_dir = new_host_dir
                 self.refresh_host_files()
 

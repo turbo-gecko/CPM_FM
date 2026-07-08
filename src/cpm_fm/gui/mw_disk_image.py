@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, cast
 
 from PySide6.QtWidgets import QFileDialog, QInputDialog, QMessageBox
 
+from cpm_fm.gui.disk_image_details_dialog import DiskImageDetailsDialog
 from cpm_fm.gui.mw_base import MainWindowMixinBase
 
 if TYPE_CHECKING:
@@ -21,15 +22,16 @@ from cpm_fm.utils.i18n import tr
 
 
 class _DiskImageMixin(MainWindowMixinBase):
-    """File > Open Disk Image… handler for MainWindow (mixin).
+    """File > Open Disk Image… / Image Details… handlers for MainWindow (mixin).
 
     Opens a CP/M raw-sector disk image, auto-detects its geometry, extracts the
     files it contains to a temporary host working directory, and points the Host
     pane at that directory so the entire existing Copy-to-Remote / drag-and-drop /
     conflict / filename-validation / X-Modem path applies unchanged (FR-169–FR-172,
-    UIR-108). All CP/M-filesystem logic lives in the GUI-free
-    :mod:`cpm_fm.utils.disk_image` package (CR-014); this mixin holds only UI
-    state and handlers.
+    UIR-108). A read-only details view exposes the CP/M metadata (user number,
+    attributes) captured at open time (FR-173, UIR-109). All CP/M-filesystem logic
+    lives in the GUI-free :mod:`cpm_fm.utils.disk_image` package (CR-014); this
+    mixin holds only UI state and handlers.
     """
 
     def menu_open_image(self) -> None:
@@ -78,11 +80,18 @@ class _DiskImageMixin(MainWindowMixinBase):
             )
             return
 
+        # Capture the CP/M file metadata for the read-only details view before the
+        # files become plain host files that no longer carry it (FR-173).
+        image_files = img.list_files()
+
         # Success: swap the temp workdir in as the host directory. Only remove the
         # previous image workdir once the new one is ready (FR-171).
         self._cleanup_image_workdir()
         self._image_workdir = workdir
         self._image_source = path
+        self._image_files = image_files
+        if self._image_details_action is not None:
+            self._image_details_action.setEnabled(True)
         self.host_dir = workdir
         self.refresh_host_files()
 
@@ -98,6 +107,19 @@ class _DiskImageMixin(MainWindowMixinBase):
                     geometry=img.geom.name,
                 )
             )
+
+    def menu_image_details(self) -> None:
+        """Show a read-only table of the open image's files and CP/M metadata.
+
+        Presents the name, size, user number and R/S/A attributes captured at open
+        time (FR-173). A no-op when no image is currently open (the menu action is
+        disabled in that state, UIR-109).
+
+        Satisfies: FR-173, UIR-109.
+        """
+        if not self._image_files:
+            return
+        DiskImageDetailsDialog(cast("QWidget", self), self._image_files).exec()
 
     def _resolve_geometry(self, path: str):
         """Return the geometry to use: ``None`` (auto), a name, or ``False`` if cancelled.
@@ -161,3 +183,8 @@ class _DiskImageMixin(MainWindowMixinBase):
             shutil.rmtree(self._image_workdir, ignore_errors=True)
         self._image_workdir = None
         self._image_source = None
+        # FR-173/UIR-109: no image open → clear its metadata and disable the
+        # Image Details… action.
+        self._image_files = []
+        if self._image_details_action is not None:
+            self._image_details_action.setEnabled(False)

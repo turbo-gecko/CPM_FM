@@ -126,6 +126,7 @@
     ],
     "DR-048": [
       "tests/test_disk_image/test_diskdefs.py:<module>",
+      "tests/test_disk_image/test_diskdefs.py:test_bundled_diskdefs_include_v29_additions",
       "tests/test_disk_image/test_diskdefs.py:test_bundled_diskdefs_load_and_cover_expected_names",
       "tests/test_disk_image/test_diskdefs.py:test_bundled_diskdefs_match_romwbw_image_sizes",
       "tests/test_disk_image/test_diskdefs.py:test_missing_required_field_raises",
@@ -912,6 +913,7 @@
       "tests/test_disk_image/test_detect.py:test_detect_returns_empty_for_zero_byte_file",
       "tests/test_disk_image/test_detect.py:test_eight_mb_images_are_ambiguous",
       "tests/test_disk_image/test_detect.py:test_is_ambiguous_logic",
+      "tests/test_disk_image/test_detect.py:test_out_of_range_allocation_pointers_reject_geometry",
       "tests/test_disk_image/test_image.py:<module>",
       "tests/test_disk_image/test_image.py:test_open_image_auto_detects_and_lists"
     ],
@@ -922,6 +924,8 @@
       "tests/test_disk_image/test_directory.py:test_multi_extent_file",
       "tests/test_disk_image/test_directory.py:test_multiple_files_and_16bit_pointers",
       "tests/test_disk_image/test_directory.py:test_record_tail_truncation",
+      "tests/test_gui_smoke.py:test_change_dir_discards_open_image",
+      "tests/test_gui_smoke.py:test_load_config_discards_open_image",
       "tests/test_gui_smoke.py:test_open_disk_image_cleanup_on_close",
       "tests/test_gui_smoke.py:test_open_disk_image_extracts_and_lists"
     ],
@@ -933,6 +937,11 @@
       "tests/test_disk_image/test_image.py:test_open_image_rejects_bad_input",
       "tests/test_disk_image/test_image.py:test_open_image_rejects_foreign_sized_file",
       "tests/test_gui_smoke.py:test_open_disk_image_rejects_bad_file"
+    ],
+    "FR-173": [
+      "tests/test_gui_smoke.py:test_image_details_action_enabled_only_when_image_open",
+      "tests/test_gui_smoke.py:test_image_details_dialog_lists_metadata",
+      "tests/test_gui_smoke.py:test_image_details_noop_when_no_image"
     ],
     "IFR-004": [
       "tests/test_config_handler.py:test_load_json_malformed_returns_empty",
@@ -1231,6 +1240,11 @@
     ],
     "UIR-108": [
       "tests/test_gui_smoke.py:test_open_disk_image_extracts_and_lists"
+    ],
+    "UIR-109": [
+      "tests/test_gui_smoke.py:test_image_details_action_enabled_only_when_image_open",
+      "tests/test_gui_smoke.py:test_image_details_dialog_lists_metadata",
+      "tests/test_gui_smoke.py:test_image_details_noop_when_no_image"
     ]
   },
   "untested": [

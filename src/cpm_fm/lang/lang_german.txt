@@ -302,3 +302,12 @@ error.disk_image_unreadable = „{name}“ konnte nicht als CP/M-Diskettenabbild
 error.disk_image_extract = Dateien konnten nicht aus dem Diskettenabbild extrahiert werden: {error}
 status.disk_image_loaded = Diskettenabbild „{name}“ geladen ({geometry})
 status.disk_image_partial = Diskettenabbild „{name}“ geladen; {count} Datei(en) konnten nicht extrahiert werden
+
+# --- Disk image details (v2.29) --------------------------------------------------
+menu.file.image_details = Abbilddetails…
+dialog.image_details.title = Details des Disk-Abbilds
+dialog.image_details.col.name = Name
+dialog.image_details.col.size = Größe
+dialog.image_details.col.user = Benutzer
+dialog.image_details.col.attrs = Attribute
+dialog.image_details.close = Schließen

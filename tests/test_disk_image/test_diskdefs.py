@@ -69,6 +69,29 @@ def test_bundled_diskdefs_match_romwbw_image_sizes():
     assert defs.get("wbw_hd1k").total_bytes == 8388608
 
 
+def test_bundled_diskdefs_include_v29_additions():
+    """The v2.29 broadened coverage is present with correct sizes.
+
+    Verifies: DR-048.
+    """
+    defs = load_diskdefs()
+    names = set(defs.names())
+    assert {
+        "wbw_rom128",
+        "wbw_rom256",
+        "wbw_rom384",
+        "wbw_rom896",
+        "4mb-hd",
+        "pcw",
+        "epsqx10",
+        "alpha",
+        "interak",
+    } <= names
+    assert defs.get("wbw_rom128").total_bytes == 4 * 64 * 512
+    assert defs.get("4mb-hd").total_bytes == 1024 * 32 * 128
+    assert defs.get("pcw").total_bytes == 40 * 9 * 512
+
+
 def test_offset_with_track_suffix_resolves_to_bytes():
     """A cpmtools ``offset`` with a ``T`` (tracks) suffix resolves to bytes.
 

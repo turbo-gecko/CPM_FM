@@ -88,8 +88,11 @@ def _score_directory(raw: bytes, geom: DiskDef) -> float:
     """Fraction of the directory region that looks like valid CP/M entries (FR-170).
 
     Every 32-byte slot counts as valid when it is empty (``0xE5``) or an in-use
-    entry with a plausible user number, 7-bit printable name/type bytes and a
-    record count ≤ 128. Garbage data scores near zero.
+    entry with a plausible user number, 7-bit printable name/type bytes, a record
+    count ≤ 128, **and** allocation-map block pointers that all reference real data
+    blocks (≤ ``dsm``, DR-049). The allocation-pointer check rejects a same-size
+    foreign or corrupt file whose directory region holds impossible block
+    pointers. Garbage data scores near zero.
 
     Satisfies: FR-170.
     """
@@ -101,6 +104,8 @@ def _score_directory(raw: bytes, geom: DiskDef) -> float:
     slots = len(directory) // DIR_ENTRY_SIZE
     if slots == 0:
         return 0.0
+    dsm = geom.dsm
+    ptr16 = geom.ptr16
     valid = 0
     for off in range(0, slots * DIR_ENTRY_SIZE, DIR_ENTRY_SIZE):
         rec = directory[off : off + DIR_ENTRY_SIZE]
@@ -111,8 +116,16 @@ def _score_directory(raw: bytes, geom: DiskDef) -> float:
         if user > MAX_USER:
             continue
         name_type = rec[1:12]
-        if all(0x20 <= (b & 0x7F) <= 0x7E for b in name_type) and rec[15] <= 0x80:
-            valid += 1
+        if not (all(0x20 <= (b & 0x7F) <= 0x7E for b in name_type) and rec[15] <= 0x80):
+            continue
+        al = rec[16:32]
+        if ptr16:
+            ptrs = [al[i] | (al[i + 1] << 8) for i in range(0, 16, 2)]
+        else:
+            ptrs = list(al)
+        if any(p > dsm for p in ptrs):
+            continue
+        valid += 1
     return valid / slots
 
 
@@ -155,8 +168,11 @@ def detect_diskdef(path: str | Path, defs: DiskDefs) -> list[DetectResult]:
 
     # A file that is exactly one known disk size *is* that disk; the multi-slice
     # (CF) interpretation is only a fallback used when no single-disk size fits.
+    # Within an equal score, prefer the more capacious geometry (larger maxdir)
+    # so the auto-selected default never silently truncates the directory of an
+    # otherwise-indistinguishable same-size volume, e.g. hd1k over rc2014 (FR-170).
     results = exact if exact else multi
-    results.sort(key=lambda r: (-r.score, r.slices))
+    results.sort(key=lambda r: (-r.score, r.slices, -r.diskdef.maxdir))
     return results
 
 

@@ -302,3 +302,12 @@ error.disk_image_unreadable = Nie można odczytać „{name}” jako obrazu dysk
 error.disk_image_extract = Nie można wyodrębnić plików z obrazu dysku: {error}
 status.disk_image_loaded = Załadowano obraz dysku „{name}” ({geometry})
 status.disk_image_partial = Załadowano obraz dysku „{name}”; nie można wyodrębnić {count} plik(ów)
+
+# --- Disk image details (v2.29) --------------------------------------------------
+menu.file.image_details = Szczegóły obrazu…
+dialog.image_details.title = Szczegóły obrazu dysku
+dialog.image_details.col.name = Nazwa
+dialog.image_details.col.size = Rozmiar
+dialog.image_details.col.user = Użytkownik
+dialog.image_details.col.attrs = Atrybuty
+dialog.image_details.close = Zamknij

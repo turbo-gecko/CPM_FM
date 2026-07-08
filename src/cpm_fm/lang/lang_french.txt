@@ -302,3 +302,12 @@ error.disk_image_unreadable = Impossible de lire « {name} » comme image disque
 error.disk_image_extract = Échec de l'extraction des fichiers de l'image disque : {error}
 status.disk_image_loaded = Image disque « {name} » chargée ({geometry})
 status.disk_image_partial = Image disque « {name} » chargée ; {count} fichier(s) n'ont pas pu être extraits
+
+# --- Disk image details (v2.29) --------------------------------------------------
+menu.file.image_details = Détails de l'image…
+dialog.image_details.title = Détails de l'image disque
+dialog.image_details.col.name = Nom
+dialog.image_details.col.size = Taille
+dialog.image_details.col.user = Utilisateur
+dialog.image_details.col.attrs = Attributs
+dialog.image_details.close = Fermer

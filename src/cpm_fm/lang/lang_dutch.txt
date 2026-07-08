@@ -302,3 +302,12 @@ error.disk_image_unreadable = Kan '{name}' niet lezen als CP/M-schijfimage.
 error.disk_image_extract = Kan bestanden niet uit de schijfimage extraheren: {error}
 status.disk_image_loaded = Schijfimage '{name}' geladen ({geometry})
 status.disk_image_partial = Schijfimage '{name}' geladen; {count} bestand(en) konden niet worden geëxtraheerd
+
+# --- Disk image details (v2.29) --------------------------------------------------
+menu.file.image_details = Schijfkopiedetails…
+dialog.image_details.title = Details schijfkopie
+dialog.image_details.col.name = Naam
+dialog.image_details.col.size = Grootte
+dialog.image_details.col.user = Gebruiker
+dialog.image_details.col.attrs = Kenmerken
+dialog.image_details.close = Sluiten

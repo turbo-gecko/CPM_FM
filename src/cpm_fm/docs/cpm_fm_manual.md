@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.28.0**
+**Version 2.29.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -19,7 +19,7 @@ It works with real vintage CP/M hardware as well as emulators, provided they exp
 7. [Configuration](#7-configuration)
 8. [Connecting and Disconnecting](#8-connecting-and-disconnecting)
 9. [Booting the Remote into CP/M](#9-booting-the-remote-into-cpm)
-10. [Browsing Files](#10-browsing-files) — including [Opening a CP/M Disk Image](#opening-a-cpm-disk-image)
+10. [Browsing Files](#10-browsing-files) — including [Opening a CP/M Disk Image](#opening-a-cpm-disk-image) and [Viewing CP/M File Details](#viewing-cpm-file-details)
 11. [Transferring Files](#11-transferring-files)
 12. [Managing Files (Rename, Delete, View/Edit)](#12-managing-files-rename-delete-viewedit)
 13. [The Terminal Window](#13-the-terminal-window)
@@ -428,6 +428,12 @@ Because a CP/M image does not record its own disk layout, the program **auto-det
 The image's files are extracted to a temporary working folder that becomes the Host directory, so everything you can do with an ordinary host folder works unchanged: filter and sort the list, and **Copy to Remote** (or drag-and-drop) to send files straight to a connected CP/M machine. Nothing is written back into the image — this is a read-only view. The temporary folder is discarded automatically when you open another image, choose **File → New**, or exit.
 
 If your image uses an unusual layout that is not auto-detected, you can supply your own cpmtools-format `diskdefs` file (support for selecting one is being extended). Writing files back into an image is planned for a later release.
+
+The built-in format database also covers the RomWBW ROM-disk images, a generic 4 MB hard disk, and several classic-machine floppy formats (Amstrad PCW, Epson QX-10, Royal Alphatronic, Interak) in addition to the layouts listed above.
+
+### Viewing CP/M File Details
+
+Once an image is open, choose **File → Image Details…** to see the CP/M-specific information for each file that the extracted host files no longer carry. A read-only table lists every file with its **Name**, **Size** in bytes, CP/M **User** number, and **Attributes** — the read-only (R), system (S) and archive (A) flags, shown as those letters for each file that has them set, or a dash when none are. Close the dialog to return; it does not change anything. **Image Details…** is greyed out until an image is open.
 
 ---
 

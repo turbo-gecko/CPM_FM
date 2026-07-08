@@ -307,3 +307,12 @@ error.disk_image_unreadable = Could not read '{name}' as a CP/M disk image.
 error.disk_image_extract = Failed to extract files from the disk image: {error}
 status.disk_image_loaded = Disk image '{name}' loaded ({geometry})
 status.disk_image_partial = Disk image '{name}' loaded; {count} file(s) could not be extracted
+
+# --- Disk image details (v2.29) --------------------------------------------------
+menu.file.image_details = Image Details…
+dialog.image_details.title = Disk Image Details
+dialog.image_details.col.name = Name
+dialog.image_details.col.size = Size
+dialog.image_details.col.user = User
+dialog.image_details.col.attrs = Attributes
+dialog.image_details.close = Close
