@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 from cpm_fm.gui.about_dialog import AboutDialog
 from cpm_fm.gui.config_dialogs import (
     GeneralConfigDialog,
+    RemoteConfigDialog,
     SerialConfigDialog,
     TerminalConfigDialog,
 )
@@ -30,8 +31,14 @@ class _ConfigMixin(MainWindowMixinBase):
 
     def load_config(self, filename):
         """
-        Satisfies: FR-005, FR-011, FR-012, FR-017, FR-017a, FR-060, FR-125.
+        Satisfies: FR-005, FR-011, FR-012, FR-017, FR-017a, FR-060, FR-125, FR-171, FR-175.
         """
+        # FR-175: loading a configuration discards any open image's working
+        # directory; offer to save unsaved staged changes first (evaluated
+        # against the current settings, before they are replaced below). Cancel
+        # aborts the load. No-op when no image is open.
+        if not self._maybe_prompt_save_image():
+            return
         # FR-017a: if a port is open under the current configuration, close it
         # (Disconnect behaviour, FR-050-FR-058) BEFORE replacing the settings
         # below. do_disconnect reads the port names from self.settings, so it
@@ -52,11 +59,28 @@ class _ConfigMixin(MainWindowMixinBase):
         self._config_name = os.path.splitext(os.path.basename(filename))[0]
         self._update_window_title()
 
+        # FR-171: loading a configuration replaces the host context, so discard
+        # any open disk image (its temp working directory, captured metadata, and
+        # the Image Details action), exactly as File > New does — otherwise the
+        # Host pane repaints to the config's directory while the stale image
+        # contents remain viewable.
+        had_image = self._image_workdir is not None
+        self._cleanup_image_workdir()
+
         # Restore host directory if specified in config
         host_dir = self.settings.get("host_directory")
         if host_dir:
             self.host_dir = host_dir
             self.refresh_host_files()
+        elif had_image:
+            # We were pointing at the now-removed image temp directory; fall back
+            # to the working directory rather than a deleted path.
+            self.host_dir = os.getcwd()
+            self.refresh_host_files()
+
+        # FR-179: adopt the configured disk-image folder (falls back to the host
+        # directory), tracked independently of the host directory.
+        self.image_dir = self.settings.get("image_directory") or self.host_dir
 
         # UIR-034/UIR-103a: apply the loaded terminal settings — emulation type
         # (so received bytes are interpreted per FR-157 and cursor keys encoded
@@ -145,6 +169,8 @@ class _ConfigMixin(MainWindowMixinBase):
 
         # Persist the current host directory in the settings before saving
         self.settings["host_directory"] = self.host_dir
+        # FR-179: remember the last-used disk-image folder on Save Config.
+        self.settings["image_directory"] = self.image_dir
 
         if self.config_handler.save_json(path, self.settings):
             # FR-005: the saved file becomes the last-used config to reload.
@@ -194,14 +220,19 @@ class _ConfigMixin(MainWindowMixinBase):
 
     def menu_new(self):
         """
-        Satisfies: FR-018, FR-019.
-
         FR-018: save the current configuration first (to the last-used file if
         known, otherwise via the Save dialog); abort if the save is cancelled or
         fails so nothing is lost. FR-019: on a successful save, close any open
         ports, clear the Remote Files list, and replace the settings with the
         default configuration.
+
+        Satisfies: FR-018, FR-019, FR-175.
         """
+        # FR-175: File > New discards any open image's working directory; offer
+        # to save unsaved staged changes first and abort New on Cancel. No-op
+        # when no image is open.
+        if not self._maybe_prompt_save_image():
+            return
         # FR-018: save the current configuration. Save silently to the
         # currently-loaded file if there is one, otherwise prompt with the Save
         # dialog. Abort New on cancel/failure.
@@ -235,6 +266,10 @@ class _ConfigMixin(MainWindowMixinBase):
         self._config_name = ""
         self._update_window_title()
 
+        # FR-019/FR-171: discard any temp working directory from an open disk
+        # image before resetting the host directory.
+        self._cleanup_image_workdir()
+
         # FR-019/FR-060: refresh the Host Files list to the default host
         # directory (empty -> current working directory).
         self.host_dir = self.settings.get("host_directory") or os.getcwd()
@@ -264,15 +299,16 @@ class _ConfigMixin(MainWindowMixinBase):
 
     def menu_general_config(self):
         """
-        Satisfies: FR-021.
+        Satisfies: FR-021, FR-171, FR-175, FR-176, FR-179, UIR-115.
         """
 
         def update_settings(new_set):
-            # The dialog seeds its host-directory field from the value stored in
-            # settings and returns every field on save, so an unchanged field
-            # carries the stored value back unchanged. Capture the stored value
-            # before updating to tell an actual edit from an untouched field.
+            # The dialog seeds its host/image-directory fields from the values
+            # stored in settings and returns every field on save, so an unchanged
+            # field carries the stored value back unchanged. Capture the stored
+            # values before updating to tell an actual edit from an untouched field.
             old_host_dir = self.settings.get("host_directory", "")
+            old_image_dir = self.settings.get("image_directory", "")
 
             self.settings.update(new_set)
 
@@ -283,8 +319,29 @@ class _ConfigMixin(MainWindowMixinBase):
             # general settings must not revert it.
             new_host_dir = new_set.get("host_directory", old_host_dir)
             if new_host_dir and new_host_dir != old_host_dir:
-                self.host_dir = new_host_dir
-                self.refresh_host_files()
+                # FR-176: only a Host-side image is tied to the host folder; a
+                # Remote-mounted image is independent and must not be disturbed by
+                # a host-directory change (v2.35).
+                if self._image_pane == "host" and self._image_workdir is not None:
+                    # FR-175: moving the Host pane off an open image discards it and
+                    # may lose unsaved staged changes; offer to save first. On
+                    # Cancel, keep the image open and leave the host directory
+                    # unchanged (the other general settings the user saved apply).
+                    if self._maybe_prompt_save_image():
+                        self._cleanup_image_workdir()
+                        self.host_dir = new_host_dir
+                        self.refresh_host_files()
+                else:
+                    self.host_dir = new_host_dir
+                    self.refresh_host_files()
+
+            # FR-179: follow an edited default image directory.
+            new_image_dir = new_set.get("image_directory", old_image_dir)
+            if new_image_dir and new_image_dir != old_image_dir:
+                self.image_dir = new_image_dir
+
+            # Re-evaluate the Save Image… action (enabled iff an image is open).
+            self._update_save_image_action()
 
             # FR-021a: persist only the general settings to the active config
             # file, leaving the serial settings in that file untouched. If no
@@ -293,6 +350,22 @@ class _ConfigMixin(MainWindowMixinBase):
                 self.set_status(tr("status.general_settings_updated"))
 
         GeneralConfigDialog(self, self.settings, update_settings, self.window_state)
+
+    def menu_remote_config(self):
+        """Present the Remote Config dialog (remote commands + transfer timing).
+
+        Satisfies: FR-021d, FR-161, UIR-116.
+        """
+
+        def update_settings(new_set):
+            self.settings.update(new_set)
+            # FR-021d: persist only the remote settings to the active config
+            # file, leaving the serial/general/terminal settings untouched. If no
+            # file is loaded the helper warns and the change stays session-only.
+            if not self._save_subset_to_active_config(new_set, "status.remote_settings_saved"):
+                self.set_status(tr("status.remote_settings_updated"))
+
+        RemoteConfigDialog(self, self.settings, update_settings, self.window_state)
 
     def menu_terminal_config(self):
         """Present the Terminal Config dialog (terminal settings + macros).

@@ -13,13 +13,14 @@ app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = 文件
-menu.file.new = 新建
-menu.file.load = 加载
-menu.file.save = 保存
+menu.file.new = 新建配置
+menu.file.load = 加载配置
+menu.file.save = 保存配置
 menu.file.exit = 退出
 menu.config = 配置
 menu.config.serial = 串口
 menu.config.general = 常规
+menu.config.remote = 远程
 menu.config.language = 语言
 menu.help = 帮助
 menu.help.manual = 手册
@@ -143,7 +144,7 @@ error.transfer_no_response_send = {name} 传输时远程无响应——请检查
 error.transfer_no_response_recv = {name} 传输时远程无响应——请检查"配置 > 通用"中的"从远程接收"命令
 warning.select_upload = 请选择一个或多个要发送的文件
 warning.select_download = 请选择一个或多个要下载的文件
-warning.no_config_loaded = 未加载配置文件。设置仅应用于当前会话。请使用“文件 > 保存”将其写入配置文件。
+warning.no_config_loaded = 未加载配置文件。设置仅应用于当前会话。请使用“配置 > 保存配置”将其写入配置文件。
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = 应用
@@ -204,25 +205,26 @@ status.terminal_settings_updated = 终端设置已更新
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = 常规配置
-config.general.remote_group = 远程
-config.general.list_files = 列出文件
-config.general.recv_remote = 从设备接收
-config.general.send_remote = 发送到设备
-config.general.xmodem_1k = 使用 XMODEM-1K
-config.general.recv_remote_1k = 从设备接收 (1K)
-config.general.send_remote_1k = 发送到设备 (1K)
-config.general.xfer_launch_delay = 启动延迟 (s)
-config.general.xfer_handshake_timeout = 握手超时 (s)
-config.general.xfer_interfile_delay = 文件间隔延迟 (s)
-config.general.eol = 换行符
+config.remote.title = 远程配置
+config.remote.list_files = 列出文件
+config.remote.recv_remote = 从设备接收
+config.remote.send_remote = 发送到设备
+config.remote.xmodem_1k = 使用 XMODEM-1K
+config.remote.recv_remote_1k = 从设备接收 (1K)
+config.remote.send_remote_1k = 发送到设备 (1K)
+config.remote.xfer_launch_delay = 启动延迟 (s)
+config.remote.xfer_handshake_timeout = 握手超时 (s)
+config.remote.xfer_interfile_delay = 文件间隔延迟 (s)
+config.terminal.eol = 换行符
 config.general.debug_logging = 调试日志
-config.general.echo_transfer = 回显传输数据
+config.terminal.echo_transfer = 回显传输数据
 config.general.viewer = 查看器/编辑器
-config.general.rename_remote = 重命名
-config.general.delete_remote = 删除
-config.general.erase_all = 全部删除
+config.general.image_directory = 默认映像目录
+config.remote.rename_remote = 重命名
+config.remote.delete_remote = 删除
+config.remote.erase_all = 全部删除
 config.general.host_directory = 默认主机目录
-config.general.boot_sequence = 启动序列
+config.remote.boot_sequence = 启动序列
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = 历史
@@ -290,3 +292,61 @@ config.macros.macro = 宏 {n}
 config.macros.label = 标签
 config.macros.sequence = 按键序列
 status.macro_failed = 宏运行失败 - 请检查其按键序列
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = 打开磁盘映像…
+dialog.open_image.title = 打开 CP/M 磁盘映像
+dialog.open_image.filter = CP/M 磁盘映像 (*.img *.dsk *.cpm *.cf);;所有文件 (*)
+dialog.open_image.pick_title = 选择磁盘几何结构
+dialog.open_image.pick_ambiguous = 磁盘几何结构不明确。请选择格式：
+dialog.open_image.pick_unknown = 无法检测磁盘几何结构。请选择要尝试的格式：
+error.disk_image_unreadable = 无法将“{name}”作为 CP/M 磁盘映像读取。
+error.disk_image_extract = 无法从磁盘映像提取文件：{error}
+status.disk_image_loaded = 已加载磁盘映像“{name}”（{geometry}）
+status.disk_image_partial = 已加载磁盘映像“{name}”；{count} 个文件无法提取
+
+# --- Disk image details (v2.29) --------------------------------------------------
+menu.file.image_details = 映像详情…
+dialog.image_details.title = 磁盘映像详情
+dialog.image_details.col.name = 名称
+dialog.image_details.col.size = 大小
+dialog.image_details.col.user = 用户
+dialog.image_details.col.attrs = 属性
+dialog.image_details.close = 关闭
+
+# --- Disk image write (v2.30) ----------------------------------------------------
+menu.file.save_image = 保存映像…
+dialog.save_image.title = 保存 CP/M 磁盘映像
+dialog.save_image.filter = CP/M 磁盘映像 (*.img *.dsk *.cpm);;所有文件 (*)
+status.disk_image_saved = 磁盘映像已保存到 '{name}'（{count} 个文件）
+error.disk_image_write = 无法写入磁盘映像：{error}
+error.disk_image_overwrite_source = 保存映像会创建新文件 — 请选择与源映像不同的名称。
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [映像：{name}]
+button.discard = 放弃
+dialog.image_dirty.title = 磁盘映像有未保存的更改
+dialog.image_dirty.message = 打开的磁盘映像“{name}”有未保存的更改。放弃前是否保存到新的映像文件？
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [映像：{name}]
+dialog.mount_side.title = 打开磁盘映像
+dialog.mount_side.message = 应将映像挂载到哪个面板？
+dialog.mount_side.host = 主机面板（与 CP/M 设备互传）
+dialog.mount_side.remote = 远程面板（与主机文件夹互传）
+error.image_remote_needs_disconnect = 在远程面板挂载映像之前，请先断开与 CP/M 设备的连接。
+error.image_remote_blocks_connect = 连接 CP/M 设备之前，请先关闭磁盘映像（文件 ▸ 新建）。
+error.image_copy = 无法复制文件：{error}
+status.image_copy_in = 已将 {count} 个文件复制到映像
+status.image_copy_out = 已将 {count} 个文件复制到主机文件夹
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = 关闭磁盘映像…
+status.disk_image_closed = 已关闭磁盘映像
+
+# --- New empty disk image (v2.34) -----------------------------------------------
+menu.file.new_image = 新建磁盘映像…
+dialog.new_image.pick_title = 新建磁盘映像
+dialog.new_image.pick_label = 为新映像选择磁盘格式：
+main.image_unsaved = （新映像）
+status.new_image_created = 已创建新磁盘映像（{geometry}）

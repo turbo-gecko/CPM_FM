@@ -18,13 +18,14 @@ app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = Charts
-menu.file.new = New Voyage
-menu.file.load = Uncover
-menu.file.save = Stash
+menu.file.new = New Charter
+menu.file.load = Load Charter
+menu.file.save = Stash Charter
 menu.file.exit = Abandon Ship
 menu.config = Ship's Orders
 menu.config.serial = Signal Flags
 menu.config.general = General Orders
+menu.config.remote = Foreign Lands
 menu.config.language = Pirate Tongue
 menu.help = Scallywag's Guide
 menu.help.manual = The Logbook
@@ -148,7 +149,7 @@ error.transfer_no_response_send = No word from the far shore for {name} - check 
 error.transfer_no_response_recv = No word from the far shore for {name} - check yer Receive from Remote command in Config > General
 warning.select_upload = Hand over one or more loot items to upload!
 warning.select_download = Pick one or more treasures to bring home!
-warning.no_config_loaded = No chart be loaded, matey. Yer orders be set for this voyage only. Use File > Save to commit 'em to a chart.
+warning.no_config_loaded = No chart be loaded, matey. Yer orders be set for this voyage only. Use Ship's Orders > Stash Charter to commit 'em to a chart.
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = Aye
@@ -209,25 +210,26 @@ status.terminal_settings_updated = Captain's Log updated
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = Ship's Orders
-config.general.remote_group = Foreign Lands
-config.general.list_files = Scour Charts
-config.general.recv_remote = Drag in from Far Shore
-config.general.send_remote = Send to Far Shore
-config.general.xmodem_1k = Hoist XMODEM-1K
-config.general.recv_remote_1k = Drag in from Far Shore (1K)
-config.general.send_remote_1k = Send to Far Shore (1K)
-config.general.xfer_launch_delay = Delay Before Launch (s)
-config.general.xfer_handshake_timeout = Handshake Wait Time (s)
-config.general.xfer_interfile_delay = Delay Between Loot (s)
-config.general.eol = End o' the Line
+config.remote.title = Foreign Lands Config
+config.remote.list_files = Scour Charts
+config.remote.recv_remote = Drag in from Far Shore
+config.remote.send_remote = Send to Far Shore
+config.remote.xmodem_1k = Hoist XMODEM-1K
+config.remote.recv_remote_1k = Drag in from Far Shore (1K)
+config.remote.send_remote_1k = Send to Far Shore (1K)
+config.remote.xfer_launch_delay = Delay Before Launch (s)
+config.remote.xfer_handshake_timeout = Handshake Wait Time (s)
+config.remote.xfer_interfile_delay = Delay Between Loot (s)
+config.terminal.eol = End o' the Line
 config.general.debug_logging = Secret Loggin'
-config.general.echo_transfer = Echo the Cargo
+config.terminal.echo_transfer = Echo the Cargo
 config.general.viewer = Spyglass/Carver
-config.general.rename_remote = Rename
-config.general.delete_remote = Delete
-config.general.erase_all = Scuttle All
+config.general.image_directory = Default Booty Chest Locker
+config.remote.rename_remote = Rename
+config.remote.delete_remote = Delete
+config.remote.erase_all = Scuttle All
 config.general.host_directory = Home Port Directory
-config.general.boot_sequence = Wakin' Orders
+config.remote.boot_sequence = Wakin' Orders
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = Logbook
@@ -295,3 +297,61 @@ config.macros.macro = Macro {n}
 config.macros.label = Name
 config.macros.sequence = Key Volley
 status.macro_failed = The battle cry fell flat - check yer key volley
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = Open Disk Chest…
+dialog.open_image.title = Open a CP/M Disk Chest
+dialog.open_image.filter = CP/M disk chests (*.img *.dsk *.cpm *.cf);;All booty (*)
+dialog.open_image.pick_title = Choose Yer Disk Layout
+dialog.open_image.pick_ambiguous = The disk layout be unclear, matey. Choose the format:
+dialog.open_image.pick_unknown = Could not spy the disk layout. Choose a format to try:
+error.disk_image_unreadable = Could not read '{name}' as a CP/M disk chest, arr.
+error.disk_image_extract = Failed to haul files out o' the disk chest: {error}
+status.disk_image_loaded = Disk chest '{name}' aboard ({geometry})
+status.disk_image_partial = Disk chest '{name}' aboard; {count} file(s) be stuck in the hold
+
+# --- Disk image details (v2.29) --------------------------------------------------
+menu.file.image_details = Booty Manifest…
+dialog.image_details.title = Treasure Chest Manifest
+dialog.image_details.col.name = Name
+dialog.image_details.col.size = Heft
+dialog.image_details.col.user = Swab
+dialog.image_details.col.attrs = Markings
+dialog.image_details.close = Batten Down
+
+# --- Disk image write (v2.30) ----------------------------------------------------
+menu.file.save_image = Stow Booty Chest…
+dialog.save_image.title = Stow yer CP/M Booty Chest
+dialog.save_image.filter = CP/M booty chests (*.img *.dsk *.cpm);;All plunder (*)
+status.disk_image_saved = Booty chest stowed at '{name}' ({count} treasure(s))
+error.disk_image_write = Could not stow the booty chest: {error}
+error.disk_image_overwrite_source = Stowin' a chest carves a fresh one — pick a name unlike the source chest, matey.
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [booty chest: {name}]
+button.discard = Toss Overboard
+dialog.image_dirty.title = Unsaved Booty in the Disk Chest
+dialog.image_dirty.message = The open disk chest '{name}' be holdin' unsaved booty. Stow it in a fresh image chest afore ye toss it overboard?
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [booty chest: {name}]
+dialog.mount_side.title = Open a Disk Chest
+dialog.mount_side.message = In which hold should the chest be lashed?
+dialog.mount_side.host = Host hold (haul to/from the CP/M vessel)
+dialog.mount_side.remote = Far hold (haul to/from a host locker)
+error.image_remote_needs_disconnect = Cast off from the CP/M vessel afore ye lash a chest in the far hold, matey.
+error.image_remote_blocks_connect = Batten down the disk chest (File ▸ New) afore ye hail the CP/M vessel.
+error.image_copy = Could not haul the file across: {error}
+status.image_copy_in = Hauled {count} file(s) into the chest
+status.image_copy_out = Hauled {count} file(s) to the host locker
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = Batten the Disk Chest…
+status.disk_image_closed = Disk chest battened down
+
+# --- New empty disk image (v2.34) -----------------------------------------------
+menu.file.new_image = Forge a New Disk Chest…
+dialog.new_image.pick_title = New Disk Chest
+dialog.new_image.pick_label = Pick the disk format for yer new chest:
+main.image_unsaved = (fresh chest)
+status.new_image_created = New disk chest forged ({geometry})

@@ -39,6 +39,19 @@ def _english_language():
     i18n.set_language(i18n.DEFAULT_LANGUAGE)
 
 
+@pytest.fixture(autouse=True)
+def _default_image_discard(monkeypatch):
+    # Disk-image writing is always available (v2.35), so closing a window while a
+    # disk image has unsaved changes raises the modal Save/Discard/Cancel prompt
+    # (FR-175) — which would hang a headless test. Default it to "discard" for
+    # every test so teardown proceeds; tests that exercise the prompt override it
+    # on the instance (which shadows this class-level default).
+    from cpm_fm.gui.mw_disk_image import _DiskImageMixin
+
+    monkeypatch.setattr(_DiskImageMixin, "_prompt_save_discard_cancel", lambda self: "discard")
+    yield
+
+
 @pytest.fixture(scope="module")
 def qapp():
     app = QApplication.instance() or QApplication([])
@@ -2763,33 +2776,39 @@ def test_file_action_dialog_multi_file_shows_readonly_list(qapp):
         dlg.deleteLater()
 
 
-def test_general_config_remote_group_first(qapp, monkeypatch):
-    """Verifies: UIR-041, UIR-089, UIR-090, UIR-094, UIR-095, UIR-107."""
-    # UIR-041: the General Config dialog gathers the remote command fields
-    # (List Files, Receive/Send, the XMODEM-1K toggle + 1K commands, Rename,
-    # Delete) into a "Remote" group placed first, with Rename/Delete labelled
-    # without the "Remote" suffix. UIR-089/UIR-090: the 1K toggle and its two
-    # command fields sit directly below Send to Remote. UIR-094/UIR-095: a
-    # label-less Test button row sits directly below each of Receive/Send.
-    from PySide6.QtWidgets import QFormLayout, QGroupBox
+def _ungrouped_form(dlg):
+    """Return the single ungrouped QFormLayout of a base ConfigDialog.
 
-    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+    The dialog layout is [QScrollArea, button-row] (UIR-117); the scroll area's
+    content widget holds the ungrouped form as its first layout item.
+    """
+    scroll = dlg.layout().itemAt(0).widget()
+    content = scroll.widget()
+    return content.layout().itemAt(0).layout()
+
+
+def test_remote_config_fields_ungrouped(qapp, monkeypatch):
+    """Verifies: UIR-116, UIR-042, UIR-045, UIR-046, UIR-049, UIR-052, UIR-055,
+    UIR-056, UIR-059, UIR-089, UIR-090, UIR-094, UIR-095, UIR-107, UIR-117."""
+    # UIR-116: the Remote Config dialog presents its fields ungrouped (no group
+    # box) in field-list order, with a label-less Test button row directly below
+    # each of Receive/Send (UIR-094/UIR-095), the XMODEM-1K toggle + 1K commands
+    # below Send (UIR-089/UIR-090), then Rename/Delete/Erase All, the three Xfer
+    # timing fields, and Boot Sequence last.
+    from PySide6.QtWidgets import QFormLayout, QGroupBox, QScrollArea
+
+    from cpm_fm.gui.config_dialogs import ConfigDialog, RemoteConfigDialog
 
     # The base dialog calls exec() in __init__; neutralise it so the modal does
     # not block this headless test.
     monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
-    dlg = GeneralConfigDialog(None, {}, lambda s: None)
+    dlg = RemoteConfigDialog(None, {}, lambda s: None)
     try:
-        layout = dlg.layout()
-        # The first laid-out section is the Remote group box.
-        first = layout.itemAt(0).widget()
-        assert isinstance(first, QGroupBox)
-        assert first.title() == "Remote"
-        # Its rows hold the remote command fields, in order, with the XMODEM-1K
-        # toggle and its 1K command fields directly below Send to Remote. A
-        # Test button row has no label item at all (empty label), not an
-        # empty-text QLabel.
-        form = first.layout()
+        # UIR-117: the field area is inside a vertical scroll area, and the
+        # dialog carries no group boxes (UIR-116).
+        assert isinstance(dlg.layout().itemAt(0).widget(), QScrollArea)
+        assert not dlg.findChildren(QGroupBox)
+        form = _ungrouped_form(dlg)
         labels = []
         for i in range(form.rowCount()):
             item = form.itemAt(i, QFormLayout.ItemRole.LabelRole)
@@ -2805,10 +2824,54 @@ def test_general_config_remote_group_first(qapp, monkeypatch):
             "Send to Remote (1K)",
             "Rename",
             "Delete",
-            "Erase All",  # UIR-107: multi-line erase-all macro, last in the group
+            "Erase All",  # UIR-107: multi-line erase-all macro
+            "Xfer Launch Delay (s)",
+            "Xfer Handshake Timeout (s)",
+            "Xfer Inter-file Delay (s)",
+            "Boot Sequence",  # UIR-059: multi-line, last
         ]
-        # The non-remote settings remain reachable for saving (e.g. EOL).
-        assert "eol" in dlg.entries and "host_directory" in dlg.entries
+        # eol/echo_transfer_data moved to the Terminal dialog; not here.
+        assert "eol" not in dlg.entries
+        assert "echo_transfer_data" not in dlg.entries
+    finally:
+        dlg.deleteLater()
+
+
+def test_general_config_trimmed_fields(qapp, monkeypatch):
+    """Verifies: UIR-040, UIR-041, UIR-044, UIR-115, UIR-117."""
+    # UIR-041/UIR-044: after v2.36 the General dialog holds only Debug Logging,
+    # Viewer/Editor, Default Host Directory and Default Image Directory, ungrouped
+    # (no group boxes). The remote/transfer/boot fields moved to the Remote
+    # dialog and EOL/Echo Transfer Data to the Terminal dialog.
+    from PySide6.QtWidgets import QFormLayout, QGroupBox, QScrollArea
+
+    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+
+    monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
+    dlg = GeneralConfigDialog(None, {}, lambda s: None)
+    try:
+        assert isinstance(dlg.layout().itemAt(0).widget(), QScrollArea)  # UIR-117
+        assert not dlg.findChildren(QGroupBox)  # UIR-041: ungrouped
+        form = _ungrouped_form(dlg)
+        labels = []
+        for i in range(form.rowCount()):
+            item = form.itemAt(i, QFormLayout.ItemRole.LabelRole)
+            labels.append(item.widget().text() if item is not None else "")
+        assert labels == [
+            "Debug Logging",
+            "Viewer/Editor",
+            "Default Host Directory",
+            "Default Image Directory",  # UIR-115
+        ]
+        assert set(dlg.entries) == {
+            "debug_logging",
+            "viewer_cmd",
+            "host_directory",
+            "image_directory",
+        }
+        # The moved fields are gone from the General dialog.
+        for moved in ("list_files_cmd", "eol", "echo_transfer_data", "boot_sequence"):
+            assert moved not in dlg.entries
     finally:
         dlg.deleteLater()
 
@@ -2829,11 +2892,11 @@ class _SilentSerial:
         pass
 
 
-def _open_general_config_for_test(win, monkeypatch):
-    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+def _open_remote_config_for_test(win, monkeypatch):
+    from cpm_fm.gui.config_dialogs import ConfigDialog, RemoteConfigDialog
 
     monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
-    return GeneralConfigDialog(win, win.settings, lambda s: None)
+    return RemoteConfigDialog(win, win.settings, lambda s: None)
 
 
 def test_config_test_button_requires_connection(qapp, monkeypatch, state):
@@ -2850,7 +2913,7 @@ def test_config_test_button_requires_connection(qapp, monkeypatch, state):
             "cpm_fm.gui.config_dialogs.QMessageBox.critical",
             lambda *a, **k: criticals.append(a[1:]),
         )
-        dlg = _open_general_config_for_test(win, monkeypatch)
+        dlg = _open_remote_config_for_test(win, monkeypatch)
         try:
             dlg._test_send_remote_cmd()
             assert sent == []
@@ -2882,7 +2945,7 @@ def test_config_test_button_reports_success_when_remote_responds(qapp, monkeypat
             "cpm_fm.gui.config_dialogs.QMessageBox.information",
             lambda *a, **k: infos.append(a[1:]),
         )
-        dlg = _open_general_config_for_test(win, monkeypatch)
+        dlg = _open_remote_config_for_test(win, monkeypatch)
         try:
             dlg.entries["send_remote_cmd"].setText("PCGET $1")
             dlg._test_send_remote_cmd()
@@ -2921,7 +2984,7 @@ def test_config_test_button_reports_no_response(qapp, monkeypatch, state):
             "cpm_fm.gui.config_dialogs.QMessageBox.warning",
             lambda *a, **k: warnings.append(a[1:]),
         )
-        dlg = _open_general_config_for_test(win, monkeypatch)
+        dlg = _open_remote_config_for_test(win, monkeypatch)
         try:
             dlg.entries["recv_remote_cmd"].setText("PCPUT $1")
             dlg._test_recv_remote_cmd()
@@ -2975,10 +3038,10 @@ def test_general_config_save_keeps_current_host_dir(qapp, state, monkeypatch):
 
         # Save with the host-directory field unchanged (it carries the stored
         # config value back) plus an unrelated edit.
-        callback({"host_directory": "/path/A", "eol": "LF"})
+        callback({"host_directory": "/path/A", "viewer_cmd": "vi $1"})
         assert win.host_dir == "/path/B"  # current selection preserved
         assert win.settings["host_directory"] == "/path/A"  # config preserved
-        assert win.settings["eol"] == "LF"  # unrelated edit applied
+        assert win.settings["viewer_cmd"] == "vi $1"  # unrelated edit applied
 
         # Editing the field to a new value does follow it.
         callback({"host_directory": "/path/C"})
@@ -3057,8 +3120,8 @@ def test_general_config_save_persists_general_only(qapp, state, monkeypatch, tmp
                 {
                     "terminal_port": "COM1",
                     "speed": "9600",
-                    "eol": "CR",
-                    "list_files_cmd": "DIR",
+                    "debug_logging": "OFF",
+                    "viewer_cmd": "notepad $1",
                 }
             ),
             encoding="utf-8",
@@ -3078,15 +3141,67 @@ def test_general_config_save_persists_general_only(qapp, state, monkeypatch, tmp
         monkeypatch.setattr("cpm_fm.gui.mw_config.QFileDialog.getSaveFileName", _no_dialog)
 
         win.menu_general_config()
-        captured["callback"]({"eol": "LF", "list_files_cmd": "LS"})
+        captured["callback"]({"debug_logging": "ON", "viewer_cmd": "vi $1"})
 
         on_disk = json.loads(cfg.read_text(encoding="utf-8"))
         # General settings persisted...
-        assert on_disk["eol"] == "LF"
-        assert on_disk["list_files_cmd"] == "LS"
+        assert on_disk["debug_logging"] == "ON"
+        assert on_disk["viewer_cmd"] == "vi $1"
         # ...and the serial settings in the file left untouched.
         assert on_disk["terminal_port"] == "COM1"
         assert on_disk["speed"] == "9600"
+    finally:
+        win.close()
+
+
+def test_remote_config_save_persists_remote_only(qapp, state, monkeypatch, tmp_path):
+    """Verifies: FR-021d."""
+    # FR-021d: the Remote dialog Save writes only the remote settings to the
+    # currently loaded config file, leaving serial/general/terminal untouched,
+    # and never presents a Save dialog.
+    import json
+
+    win = MainWindow(state)
+    try:
+        cfg = tmp_path / "active.json"
+        cfg.write_text(
+            json.dumps(
+                {
+                    "terminal_port": "COM1",
+                    "eol": "CR",
+                    "list_files_cmd": "DIR",
+                    "viewer_cmd": "notepad $1",
+                }
+            ),
+            encoding="utf-8",
+        )
+        win.window_state.last_config = str(cfg)
+
+        captured = {}
+
+        def fake_dialog(parent, settings, callback, window_state):
+            captured["callback"] = callback
+
+        monkeypatch.setattr("cpm_fm.gui.mw_config.RemoteConfigDialog", fake_dialog)
+
+        def _no_dialog(*a, **k):
+            raise AssertionError("Save dialog must not be presented")
+
+        monkeypatch.setattr("cpm_fm.gui.mw_config.QFileDialog.getSaveFileName", _no_dialog)
+
+        win.menu_remote_config()
+        captured["callback"]({"list_files_cmd": "LS", "recv_remote_cmd": "PCPUT $1"})
+
+        on_disk = json.loads(cfg.read_text(encoding="utf-8"))
+        # Remote settings persisted...
+        assert on_disk["list_files_cmd"] == "LS"
+        assert on_disk["recv_remote_cmd"] == "PCPUT $1"
+        # ...and every other setting in the file left untouched.
+        assert on_disk["terminal_port"] == "COM1"
+        assert on_disk["eol"] == "CR"
+        assert on_disk["viewer_cmd"] == "notepad $1"
+        # The running session also reflects the change.
+        assert win.settings["list_files_cmd"] == "LS"
     finally:
         win.close()
 
@@ -3236,40 +3351,46 @@ def test_handle_terminal_recv_capture_buffer_byte_identical(qapp, state):
         win.close()
 
 
-def test_general_config_has_echo_transfer_field(qapp, monkeypatch):
-    """Verifies: UIR-058."""
-    # UIR-058: the General Config dialog exposes an "Echo Transfer Data"
-    # OFF/ON dropdown persisted as echo_transfer_data, defaulting to OFF.
+def test_terminal_config_has_eol_and_echo_transfer_fields(qapp, monkeypatch):
+    """Verifies: UIR-047, UIR-048, UIR-058."""
+    # UIR-047/UIR-048: the Terminal Config dialog exposes an "End of Line"
+    # dropdown (CR/LF/CRLF, default CR). UIR-058: it also exposes an "Echo
+    # Transfer Data" OFF/ON dropdown persisted as echo_transfer_data, default OFF.
+    # Both moved here from the General Config dialog in v2.36.
     from PySide6.QtWidgets import QComboBox
 
-    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+    from cpm_fm.gui.config_dialogs import ConfigDialog, TerminalConfigDialog
 
     monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
-    dlg = GeneralConfigDialog(None, {}, lambda s: None)
+    dlg = TerminalConfigDialog(None, {}, lambda s: None)
     try:
-        combo = dlg.entries["echo_transfer_data"]
-        assert isinstance(combo, QComboBox)
-        items = [combo.itemText(i) for i in range(combo.count())]
-        assert items == ["OFF", "ON"]
-        assert combo.currentText() == "OFF"  # default
+        eol = dlg.entries["eol"]
+        assert isinstance(eol, QComboBox)
+        assert [eol.itemText(i) for i in range(eol.count())] == ["CR", "LF", "CRLF"]
+        assert eol.currentText() == "CR"  # UIR-048 default
+
+        echo = dlg.entries["echo_transfer_data"]
+        assert isinstance(echo, QComboBox)
+        assert [echo.itemText(i) for i in range(echo.count())] == ["OFF", "ON"]
+        assert echo.currentText() == "OFF"  # default
     finally:
         dlg.deleteLater()
 
 
-def test_general_config_xmodem_1k_checkbox_round_trips(qapp, monkeypatch):
+def test_remote_config_xmodem_1k_checkbox_round_trips(qapp, monkeypatch):
     """Verifies: UIR-089, UIR-090."""
-    # UIR-089/UIR-090: the dialog exposes a "Use XMODEM-1K" checkbox persisted as
-    # xmodem_1k ("OFF"/"ON") plus two blank-by-default 1K command fields. The
-    # checkbox reflects the current setting and saves back as "ON"/"OFF".
+    # UIR-089/UIR-090: the Remote Config dialog exposes a "Use XMODEM-1K" checkbox
+    # persisted as xmodem_1k ("OFF"/"ON") plus two blank-by-default 1K command
+    # fields. The checkbox reflects the current setting and saves back as ON/OFF.
     from PySide6.QtWidgets import QCheckBox
 
-    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+    from cpm_fm.gui.config_dialogs import ConfigDialog, RemoteConfigDialog
 
     monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
 
     # Default (no setting): unchecked, blank 1K command fields.
     saved: dict = {}
-    dlg = GeneralConfigDialog(None, {}, saved.update)
+    dlg = RemoteConfigDialog(None, {}, saved.update)
     try:
         chk = dlg.entries["xmodem_1k"]
         assert isinstance(chk, QCheckBox)
@@ -3283,25 +3404,25 @@ def test_general_config_xmodem_1k_checkbox_round_trips(qapp, monkeypatch):
         dlg.deleteLater()
 
     # An existing "ON" setting renders the checkbox checked.
-    dlg2 = GeneralConfigDialog(None, {"xmodem_1k": "ON"}, lambda s: None)
+    dlg2 = RemoteConfigDialog(None, {"xmodem_1k": "ON"}, lambda s: None)
     try:
         assert dlg2.entries["xmodem_1k"].isChecked() is True
     finally:
         dlg2.deleteLater()
 
 
-def test_general_config_boot_sequence_multiline_round_trips(qapp, monkeypatch):
+def test_remote_config_boot_sequence_multiline_round_trips(qapp, monkeypatch):
     """Verifies: UIR-059."""
-    # UIR-059: the dialog exposes a multi-line "Boot Sequence" editor persisted
-    # as boot_sequence (default empty), preserving newlines on save.
+    # UIR-059: the Remote Config dialog exposes a multi-line "Boot Sequence"
+    # editor persisted as boot_sequence (default empty), preserving newlines.
     from PySide6.QtWidgets import QPlainTextEdit
 
-    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+    from cpm_fm.gui.config_dialogs import ConfigDialog, RemoteConfigDialog
 
     monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
 
     saved: dict = {}
-    dlg = GeneralConfigDialog(None, {}, saved.update)
+    dlg = RemoteConfigDialog(None, {}, saved.update)
     try:
         editor = dlg.entries["boot_sequence"]
         assert isinstance(editor, QPlainTextEdit)
@@ -3313,7 +3434,7 @@ def test_general_config_boot_sequence_multiline_round_trips(qapp, monkeypatch):
         dlg.deleteLater()
 
     # An existing value is rendered verbatim, newlines included.
-    dlg2 = GeneralConfigDialog(None, {"boot_sequence": "SEND A\nWAIT 1"}, lambda s: None)
+    dlg2 = RemoteConfigDialog(None, {"boot_sequence": "SEND A\nWAIT 1"}, lambda s: None)
     try:
         assert dlg2.entries["boot_sequence"].toPlainText() == "SEND A\nWAIT 1"
     finally:
@@ -4249,5 +4370,1040 @@ def test_manual_boot_failure_sets_status_without_dialog(qapp, monkeypatch, state
         win._do_boot_sequence_logic()
         qapp.processEvents()
         assert "Boot sequence did not reach CP/M" in statuses
+    finally:
+        win.close()
+
+
+# --- Disk image support (FR-169–FR-173, UIR-108, UIR-109) --------------------
+
+
+class _FakeGeom:
+    name = "ibm-3740"
+
+
+class _FakeEntry:
+    """Stand-in CpmFileEntry: name plus the metadata the details view shows."""
+
+    def __init__(self, name, size_bytes=128, user=0, read_only=False, system=False, archive=False):
+        self.name = name
+        self.size_bytes = size_bytes
+        self.user = user
+        self.read_only = read_only
+        self.system = system
+        self.archive = archive
+
+
+class _FakeImage:
+    """Stand-in CpmImage: two files with deterministic content."""
+
+    geom = _FakeGeom()
+
+    def list_files(self):
+        return [
+            _FakeEntry("HELLO.TXT", size_bytes=384, user=0, archive=True),
+            _FakeEntry("GAME.COM", size_bytes=128, user=3, read_only=True, system=True),
+        ]
+
+    def read_file(self, name):
+        return b"content-of-" + name.encode()
+
+
+def test_open_disk_image_extracts_and_lists(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-169, FR-171, UIR-108."""
+    # FR-169/FR-171: opening an image extracts its files to a temp working dir and
+    # points the Host pane at them (auto-detected geometry, no picker).
+    win = MainWindow(state)
+    try:
+        img_path = str(tmp_path / "disk.img")
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QFileDialog.getOpenFileName",
+            lambda *a, **k: (img_path, ""),
+        )
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.is_ambiguous", lambda r: False)
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.detect_diskdef", lambda p, d: [])
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda p, dd=None: _FakeImage())
+        monkeypatch.setattr(win, "_prompt_mount_side", lambda: "host")
+
+        win.menu_open_image()
+        qapp.processEvents()
+
+        assert win._image_workdir is not None
+        assert win.host_dir == win._image_workdir
+        assert set(win._host_files) == {"HELLO.TXT", "GAME.COM"}
+        extracted = os.path.join(win._image_workdir, "HELLO.TXT")
+        with open(extracted, "rb") as fh:
+            assert fh.read() == b"content-of-HELLO.TXT"
+    finally:
+        win.close()
+
+
+def test_open_disk_image_rejects_bad_file(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-172."""
+    # FR-172: an unreadable/foreign image is rejected with an error dialog and the
+    # Host pane is left unchanged (no temp workdir).
+    win = MainWindow(state)
+    try:
+        before_dir = win.host_dir
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QFileDialog.getOpenFileName",
+            lambda *a, **k: (str(tmp_path / "junk.img"), ""),
+        )
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.is_ambiguous", lambda r: False)
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.detect_diskdef", lambda p, d: [])
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda p, dd=None: None)
+        errors = []
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QMessageBox.critical",
+            lambda *a, **k: errors.append(a[1:]),
+        )
+
+        monkeypatch.setattr(win, "_prompt_mount_side", lambda: "host")
+        win.menu_open_image()
+        qapp.processEvents()
+
+        assert len(errors) == 1
+        assert win._image_workdir is None
+        assert win.host_dir == before_dir
+    finally:
+        win.close()
+
+
+def test_open_disk_image_cleanup_on_close(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-171."""
+    # FR-171: the temp working directory is removed when the window closes.
+    win = MainWindow(state)
+    monkeypatch.setattr(
+        "cpm_fm.gui.mw_disk_image.QFileDialog.getOpenFileName",
+        lambda *a, **k: (str(tmp_path / "disk.img"), ""),
+    )
+    monkeypatch.setattr("cpm_fm.gui.mw_disk_image.is_ambiguous", lambda r: False)
+    monkeypatch.setattr("cpm_fm.gui.mw_disk_image.detect_diskdef", lambda p, d: [])
+    monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda p, dd=None: _FakeImage())
+    monkeypatch.setattr(win, "_prompt_mount_side", lambda: "host")
+
+    win.menu_open_image()
+    qapp.processEvents()
+    workdir = win._image_workdir
+    assert workdir and os.path.isdir(workdir)
+
+    win.close()
+    assert not os.path.isdir(workdir)
+
+
+def test_image_details_dialog_lists_metadata(qapp):
+    """Verifies: FR-173, UIR-109."""
+    # FR-173: the details dialog renders name/size/user/attributes for each file.
+    from PySide6.QtWidgets import QTableWidget
+
+    from cpm_fm.gui.disk_image_details_dialog import DiskImageDetailsDialog
+
+    files = [
+        _FakeEntry("HELLO.TXT", size_bytes=384, user=0, archive=True),
+        _FakeEntry("GAME.COM", size_bytes=128, user=3, read_only=True, system=True),
+    ]
+    dlg = DiskImageDetailsDialog(None, files)
+    try:
+        table = dlg.findChild(QTableWidget)
+        assert table.rowCount() == 2
+        assert table.item(0, 0).text() == "HELLO.TXT"
+        assert table.item(0, 1).text() == "384"
+        assert table.item(0, 2).text() == "0"
+        assert table.item(0, 3).text() == "A"
+        assert table.item(1, 2).text() == "3"
+        assert table.item(1, 3).text() == "R S"  # read-only + system
+    finally:
+        dlg.close()
+
+
+def test_image_details_action_enabled_only_when_image_open(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-173, UIR-109."""
+    # UIR-109: the Image Details… action is disabled until an image is open and is
+    # re-disabled (and its metadata cleared) when the image is closed.
+    win = MainWindow(state)
+    try:
+        assert win._image_details_action is not None
+        assert not win._image_details_action.isEnabled()
+
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QFileDialog.getOpenFileName",
+            lambda *a, **k: (str(tmp_path / "disk.img"), ""),
+        )
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.is_ambiguous", lambda r: False)
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.detect_diskdef", lambda p, d: [])
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda p, dd=None: _FakeImage())
+        monkeypatch.setattr(win, "_prompt_mount_side", lambda: "host")
+
+        win.menu_open_image()
+        qapp.processEvents()
+        assert win._image_details_action.isEnabled()
+        assert [e.name for e in win._image_files] == ["HELLO.TXT", "GAME.COM"]
+
+        win._cleanup_image_workdir()
+        assert not win._image_details_action.isEnabled()
+        assert win._image_files == []
+    finally:
+        win.close()
+
+
+def test_image_details_noop_when_no_image(qapp, monkeypatch, state):
+    """Verifies: FR-173, UIR-109."""
+    # UIR-109: invoking the handler with no image open must not build a dialog.
+    win = MainWindow(state)
+    try:
+        built = []
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.DiskImageDetailsDialog",
+            lambda *a, **k: built.append(1),
+        )
+        win.menu_image_details()
+        assert built == []
+    finally:
+        win.close()
+
+
+def _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="host"):
+    """Open a fake disk image in ``win`` and return its temp working directory.
+
+    ``mount`` selects the pane the image is mounted into (FR-176); the mount-side
+    dialog is bypassed by patching ``_prompt_mount_side`` so the modal never runs.
+    """
+    monkeypatch.setattr(
+        "cpm_fm.gui.mw_disk_image.QFileDialog.getOpenFileName",
+        lambda *a, **k: (str(tmp_path / "disk.img"), ""),
+    )
+    monkeypatch.setattr("cpm_fm.gui.mw_disk_image.is_ambiguous", lambda r: False)
+    monkeypatch.setattr("cpm_fm.gui.mw_disk_image.detect_diskdef", lambda p, d: [])
+    monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda p, dd=None: _FakeImage())
+    monkeypatch.setattr(win, "_prompt_mount_side", lambda: mount)
+    win.menu_open_image()
+    qapp.processEvents()
+    return win._image_workdir
+
+
+def test_load_config_discards_open_image(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-171."""
+    # FR-171: loading a configuration discards any open disk image — the temp
+    # working directory is removed and the Image Details view is no longer
+    # available — rather than leaving stale image contents viewable.
+    import json
+
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path)
+        assert workdir and os.path.isdir(workdir)
+        assert win._image_details_action.isEnabled()
+
+        cfg_dir = tmp_path / "cfgdir"
+        cfg_dir.mkdir()
+        cfg = tmp_path / "s.json"
+        cfg.write_text(json.dumps({"host_directory": str(cfg_dir)}))
+        win.load_config(str(cfg))
+        qapp.processEvents()
+
+        assert win._image_workdir is None
+        assert win._image_files == []
+        assert not win._image_details_action.isEnabled()
+        assert not os.path.isdir(workdir)  # temp dir removed, no leak
+        assert win.host_dir == str(cfg_dir)
+    finally:
+        win.close()
+
+
+def test_change_dir_discards_open_image(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-171."""
+    # FR-171: Change Directory to another folder discards the open image too.
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path)
+        assert workdir and os.path.isdir(workdir)
+
+        newdir = tmp_path / "plain"
+        newdir.mkdir()
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_file_panes.QFileDialog.getExistingDirectory",
+            lambda *a, **k: str(newdir),
+        )
+        win.change_host_dir()
+        qapp.processEvents()
+
+        assert win._image_workdir is None
+        assert win._image_files == []
+        assert not win._image_details_action.isEnabled()
+        assert not os.path.isdir(workdir)
+        assert win.host_dir == str(newdir)
+    finally:
+        win.close()
+
+
+def test_save_image_action_enabled_when_image_open(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-174, UIR-110."""
+    # UIR-110 (v2.35): Save Image… is enabled whenever an image is open — disk-image
+    # writing is no longer opt-in — and re-disables when the image is closed.
+    win = MainWindow(state)
+    try:
+        assert win._save_image_action is not None
+        assert not win._save_image_action.isEnabled()  # no image
+
+        _open_fake_image(win, qapp, monkeypatch, tmp_path)
+        assert win._save_image_action.isEnabled()  # image open → enabled
+
+        win._cleanup_image_workdir()
+        assert not win._save_image_action.isEnabled()
+    finally:
+        win.close()
+
+
+def test_save_image_overwrites_current_file_in_place(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-174, DR-050."""
+    # FR-174 (v2.35, KISS): Save Image on an image that has a file overwrites that
+    # file in place — no Save-As dialog, no new-file suffix — repacking the working
+    # directory; re-opening the same file lists those files.
+    from cpm_fm.utils.disk_image import load_diskdefs
+    from cpm_fm.utils.disk_image.image import CpmImage
+
+    win = MainWindow(state)
+    try:
+        geom = load_diskdefs().get("ibm-3740")
+        src = tmp_path / "src.img"
+        src.write_bytes(bytes([0xE5]) * geom.total_bytes)
+        workdir = tmp_path / "wd"
+        workdir.mkdir()
+        (workdir / "A.TXT").write_bytes(b"a" * 128)
+        (workdir / "B.TXT").write_bytes(b"b" * 256)
+
+        win._image_source = str(src)
+        win._image_geom = geom
+        win._image_workdir = str(workdir)
+        win._update_save_image_action()
+
+        # A Save-As dialog must NOT appear for an image that already has a file.
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QFileDialog.getSaveFileName",
+            lambda *a, **k: (_ for _ in ()).throw(AssertionError("no Save-As for a named image")),
+        )
+        assert win.menu_save_image() is True
+        qapp.processEvents()
+
+        reopened = CpmImage(bytearray(src.read_bytes()), geom)  # source overwritten in place
+        assert {f.name for f in reopened.list_files()} == {"A.TXT", "B.TXT"}
+        assert reopened.read_file("A.TXT") == b"a" * 128
+        assert reopened.read_file("B.TXT") == b"b" * 256
+    finally:
+        win.close()
+
+
+def test_copy_to_image_file_included_on_save(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-175."""
+    # FR-175: a file received while an image is open lands in the working
+    # directory (which IS the Host pane) and is therefore included when the
+    # image is saved — copy-to-image needs no separate transfer path.
+    from cpm_fm.utils.disk_image import load_diskdefs
+    from cpm_fm.utils.disk_image.image import CpmImage
+
+    win = MainWindow(state)
+    try:
+        geom = load_diskdefs().get("ibm-3740")
+        src = tmp_path / "src.img"
+        src.write_bytes(bytes([0xE5]) * geom.total_bytes)
+        workdir = tmp_path / "wd"
+        workdir.mkdir()
+        (workdir / "EXISTING.TXT").write_bytes(b"x" * 128)
+
+        win._image_source = str(src)
+        win._image_geom = geom
+        win._image_workdir = str(workdir)
+        win.host_dir = str(workdir)  # Copy-to-Host writes to os.path.join(host_dir, name)
+        win._update_save_image_action()
+
+        # Simulate a file received from the remote landing in the Host pane.
+        # (CP/M storage is 128-byte-record granular, so use a record multiple.)
+        with open(os.path.join(win.host_dir, "GOTFROM.CPM"), "wb") as fh:
+            fh.write(b"y" * 256)
+
+        # v2.35 KISS: Save overwrites the image's own file in place.
+        assert win.menu_save_image() is True
+
+        reopened = CpmImage(bytearray(src.read_bytes()), geom)
+        assert {f.name for f in reopened.list_files()} == {"EXISTING.TXT", "GOTFROM.CPM"}
+        assert reopened.read_file("GOTFROM.CPM") == b"y" * 256
+    finally:
+        win.close()
+
+
+def test_maybe_prompt_save_image_routing(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-175."""
+    # FR-175: the unsaved-changes guard prompts only when an image is open AND
+    # there are staged changes; and it maps Save/Discard/Cancel to
+    # proceed-if-saved / proceed / abort. (v2.35: no longer gated on a writing
+    # setting.)
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path)
+
+        # Freshly opened → not dirty → proceed, never prompt.
+        prompted = []
+        monkeypatch.setattr(
+            win, "_prompt_save_discard_cancel", lambda: prompted.append(1) or "cancel"
+        )
+        assert win._maybe_prompt_save_image() is True
+        assert prompted == []
+
+        # Stage a change → now dirty.
+        with open(os.path.join(workdir, "NEW.TXT"), "wb") as fh:
+            fh.write(b"z")
+        assert win._image_is_dirty()
+
+        # Cancel aborts (False); the prompt is shown.
+        assert win._maybe_prompt_save_image() is False
+        assert prompted == [1]
+
+        # Discard proceeds (True).
+        monkeypatch.setattr(win, "_prompt_save_discard_cancel", lambda: "discard")
+        assert win._maybe_prompt_save_image() is True
+
+        # Save routes through menu_save_image and proceeds only if it saved.
+        monkeypatch.setattr(win, "_prompt_save_discard_cancel", lambda: "save")
+        monkeypatch.setattr(win, "menu_save_image", lambda: True)
+        assert win._maybe_prompt_save_image() is True
+        monkeypatch.setattr(win, "menu_save_image", lambda: False)  # Save-As cancelled
+        assert win._maybe_prompt_save_image() is False
+    finally:
+        win._prompt_save_discard_cancel = lambda: "discard"  # let the real close proceed
+        win.close()
+
+
+def test_new_aborts_when_dirty_and_cancelled(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-175."""
+    # FR-175: File > New on a dirty open image prompts; Cancel leaves the image
+    # open and does not create a new configuration.
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path)
+        win.settings["image_write_enabled"] = "ON"
+        with open(os.path.join(workdir, "NEW.TXT"), "wb") as fh:
+            fh.write(b"z")
+
+        saved = []
+        monkeypatch.setattr(win, "_save_to_path", lambda *a, **k: saved.append(1) or True)
+        monkeypatch.setattr(win, "_prompt_save_discard_cancel", lambda: "cancel")
+
+        win.menu_new()
+
+        assert win._image_workdir == workdir  # image still open — New aborted
+        assert os.path.isdir(workdir)
+        assert saved == []  # never reached the config-save step
+    finally:
+        win._prompt_save_discard_cancel = lambda: "discard"  # let the real close proceed
+        win.close()
+
+
+def test_change_dir_saves_when_dirty_and_save_chosen(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-175."""
+    # FR-175: Change Directory on a dirty open image prompts; choosing Save
+    # routes through Save Image… and then proceeds with the directory change.
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path)
+        win.settings["image_write_enabled"] = "ON"
+        with open(os.path.join(workdir, "NEW.TXT"), "wb") as fh:
+            fh.write(b"z")
+
+        saved = []
+        monkeypatch.setattr(win, "_prompt_save_discard_cancel", lambda: "save")
+        monkeypatch.setattr(win, "menu_save_image", lambda: saved.append(1) or True)
+
+        newdir = tmp_path / "plain"
+        newdir.mkdir()
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_file_panes.QFileDialog.getExistingDirectory",
+            lambda *a, **k: str(newdir),
+        )
+
+        win.change_host_dir()
+        qapp.processEvents()
+
+        assert saved == [1]  # routed through Save Image
+        assert win._image_workdir is None  # discard proceeded after the save
+        assert win.host_dir == str(newdir)
+    finally:
+        win.close()
+
+
+def test_close_event_cancel_keeps_image_open(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-175."""
+    # FR-175: exiting with a dirty open image prompts; Cancel ignores the close
+    # event and keeps the image open.
+    from PySide6.QtGui import QCloseEvent
+
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path)
+        win.settings["image_write_enabled"] = "ON"
+        with open(os.path.join(workdir, "NEW.TXT"), "wb") as fh:
+            fh.write(b"z")
+
+        monkeypatch.setattr(win, "_prompt_save_discard_cancel", lambda: "cancel")
+        evt = QCloseEvent()
+        win.closeEvent(evt)
+
+        assert not evt.isAccepted()  # close aborted
+        assert win._image_workdir == workdir  # image still open
+    finally:
+        # Let the real close proceed (the "cancel" override above would block it).
+        win._prompt_save_discard_cancel = lambda: "discard"
+        win.close()
+
+
+def test_host_group_title_shows_open_image(qapp, monkeypatch, state, tmp_path):
+    """Verifies: UIR-111."""
+    # UIR-111: while an image is open the Host group title names the image file;
+    # after it is closed the title reverts to a plain directory path.
+    win = MainWindow(state)
+    try:
+        _open_fake_image(win, qapp, monkeypatch, tmp_path)
+        win._update_host_group_title()
+        assert "disk.img" in win.host_group.title()
+
+        win._cleanup_image_workdir()
+        win.host_dir = str(tmp_path)
+        win._update_host_group_title()
+        assert "disk.img" not in win.host_group.title()
+    finally:
+        win.close()
+
+
+def test_remote_mount_lists_image_in_remote_pane(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176, UIR-112."""
+    # FR-176: a Remote-side mount lists the image in the Remote pane, leaves the
+    # Host pane on its real directory, and disables the drive drop-down.
+    win = MainWindow(state)
+    try:
+        before_host = win.host_dir
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+        assert workdir is not None
+        assert win._remote_is_image()
+        assert win.host_dir == before_host  # Host pane unchanged
+        assert set(win._remote_files) == {"HELLO.TXT", "GAME.COM"}
+        assert not win.drive_combo.isEnabled()
+    finally:
+        win.close()
+
+
+def test_copy_to_remote_stages_into_remote_mounted_image(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176."""
+    # FR-176: Copy to Remote with a Remote-mounted image is a local copy of the
+    # selected Host files into the image working directory (no serial connection).
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+        hostdir = tmp_path / "host"
+        hostdir.mkdir()
+        (hostdir / "NOTES.TXT").write_bytes(b"hello")
+        win.host_dir = str(hostdir)
+
+        monkeypatch.setattr(win, "_selected_filenames", lambda w: ["NOTES.TXT"])
+        monkeypatch.setattr(win, "_record_history", lambda *a, **k: None)
+
+        win.do_copy_to_remote()
+        qapp.processEvents()
+
+        staged = os.path.join(workdir, "NOTES.TXT")
+        assert os.path.isfile(staged)
+        with open(staged, "rb") as fh:
+            assert fh.read() == b"hello"
+        assert "NOTES.TXT" in win._remote_files  # Remote pane re-listed from image
+        assert not win.serial_mgr.terminal_connected  # purely local, no serial
+    finally:
+        win.close()
+
+
+def test_copy_to_remote_image_validates_8_3(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176, FR-148, FR-149."""
+    # FR-176: the into-image direction still applies CP/M 8.3 name validation.
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+        hostdir = tmp_path / "host"
+        hostdir.mkdir()
+        (hostdir / "longname.text").write_bytes(b"x")  # not a valid CP/M 8.3 name
+        win.host_dir = str(hostdir)
+
+        monkeypatch.setattr(win, "_selected_filenames", lambda w: ["longname.text"])
+        monkeypatch.setattr(win, "_record_history", lambda *a, **k: None)
+        prompted = []
+        monkeypatch.setattr(
+            win,
+            "_prompt_invalid_name_local",
+            lambda name: prompted.append(name) or ("rename", "GOOD.TXT"),
+        )
+
+        win.do_copy_to_remote()
+        qapp.processEvents()
+
+        assert prompted == ["longname.text"]  # validation prompt fired
+        assert os.path.isfile(os.path.join(workdir, "GOOD.TXT"))  # copied under the fixed name
+    finally:
+        win.close()
+
+
+def test_copy_to_host_copies_out_of_remote_image(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176."""
+    # FR-176: Copy to Host with a Remote-mounted image is a local copy out to the
+    # host directory, with NO 8.3 validation on the outbound files.
+    win = MainWindow(state)
+    try:
+        _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+        hostdir = tmp_path / "host"
+        hostdir.mkdir()
+        win.host_dir = str(hostdir)
+
+        monkeypatch.setattr(win, "_selected_filenames", lambda w: ["HELLO.TXT"])
+        monkeypatch.setattr(win, "_record_history", lambda *a, **k: None)
+
+        def _no_83(name):
+            raise AssertionError("8.3 validation must not run on the outbound copy")
+
+        monkeypatch.setattr(win, "_prompt_invalid_name_local", _no_83)
+
+        win.do_copy_to_host()
+        qapp.processEvents()
+
+        out = hostdir / "HELLO.TXT"
+        assert out.is_file()
+        assert out.read_bytes() == b"content-of-HELLO.TXT"
+    finally:
+        win.close()
+
+
+def test_remote_mount_refused_while_connected(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176."""
+    # FR-176: a Remote-side mount is refused while the Terminal Port is connected.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QFileDialog.getOpenFileName",
+            lambda *a, **k: (str(tmp_path / "disk.img"), ""),
+        )
+        monkeypatch.setattr(win, "_prompt_mount_side", lambda: "remote")
+        warned = []
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QMessageBox.warning",
+            lambda *a, **k: warned.append(a[1:]),
+        )
+        opened = []
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda *a, **k: opened.append(1))
+
+        win.menu_open_image()
+
+        assert warned  # refused with an explanatory message
+        assert win._image_workdir is None
+        assert opened == []  # never reached the image open
+    finally:
+        win.serial_mgr.terminal_connected = False
+        win.close()
+
+
+def test_connect_refused_while_remote_image_mounted(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176."""
+    # FR-176: a Connect is refused while a Remote-side image is mounted.
+    win = MainWindow(state)
+    try:
+        _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+        warned = []
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_remote.QMessageBox.warning",
+            lambda *a, **k: warned.append(a[1:]),
+        )
+        opened = []
+        monkeypatch.setattr(win.serial_mgr, "open_port", lambda *a, **k: opened.append(1) or True)
+
+        win.do_connect()
+
+        assert warned
+        assert opened == []  # never attempted to open a port
+        assert not win.serial_mgr.terminal_connected
+    finally:
+        win.close()
+
+
+def test_remote_group_title_and_drive_combo_reflect_image(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176, UIR-112."""
+    # UIR-112: the Remote group title names a Remote-mounted image and the drive
+    # drop-down is disabled; both revert (and the stale listing clears) on close.
+    win = MainWindow(state)
+    try:
+        _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+        assert "disk.img" in win.remote_group.title()
+        assert not win.drive_combo.isEnabled()
+
+        win._cleanup_image_workdir()
+        assert "disk.img" not in win.remote_group.title()
+        assert win.drive_combo.isEnabled()
+        assert win._remote_files == []  # stale image listing cleared
+    finally:
+        win.close()
+
+
+def test_close_image_action_enabled_only_when_image_open(qapp, monkeypatch, state, tmp_path):
+    """Verifies: UIR-113."""
+    # UIR-113: Close Disk Image… is disabled until an image is open and is
+    # re-disabled once it is closed.
+    win = MainWindow(state)
+    try:
+        assert win._close_image_action is not None
+        assert not win._close_image_action.isEnabled()
+
+        _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="host")
+        assert win._close_image_action.isEnabled()
+
+        win.menu_close_image()
+        qapp.processEvents()
+        assert not win._close_image_action.isEnabled()
+    finally:
+        win.close()
+
+
+def test_close_image_restores_host_pane(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-177."""
+    # FR-177: closing a Host-mounted image discards the working directory and
+    # restores the Host pane to the directory active before the image was opened.
+    win = MainWindow(state)
+    try:
+        realdir = tmp_path / "real"
+        realdir.mkdir()
+        (realdir / "A.TXT").write_bytes(b"a")
+        win.host_dir = str(realdir)
+        win.refresh_host_files()
+
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="host")
+        assert win.host_dir == workdir
+
+        win.menu_close_image()
+        qapp.processEvents()
+
+        assert win._image_workdir is None
+        assert not os.path.isdir(workdir)  # temp working dir removed
+        assert win.host_dir == str(realdir)  # restored to the pre-open directory
+        assert "A.TXT" in win._host_files  # Host pane re-listed
+    finally:
+        win.close()
+
+
+def test_close_image_resets_remote_pane(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-177, FR-176."""
+    # FR-177: closing a Remote-mounted image resets the Remote pane (listing
+    # cleared, drive drop-down re-enabled, title restored) and leaves the Host
+    # pane untouched.
+    win = MainWindow(state)
+    try:
+        realdir = tmp_path / "real"
+        realdir.mkdir()
+        win.host_dir = str(realdir)
+        _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+        assert win._remote_files  # image listed in the Remote pane
+        assert not win.drive_combo.isEnabled()
+        assert "disk.img" in win.remote_group.title()
+
+        win.menu_close_image()
+        qapp.processEvents()
+
+        assert win._image_workdir is None
+        assert win._remote_files == []  # Remote listing cleared
+        assert win.drive_combo.isEnabled()  # drive drop-down restored
+        assert "disk.img" not in win.remote_group.title()
+        assert win.host_dir == str(realdir)  # Host pane untouched
+    finally:
+        win.close()
+
+
+def test_close_image_cancel_keeps_image_open(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-177, FR-175."""
+    # FR-177/FR-175: closing a dirty image with writing on prompts; Cancel aborts
+    # the close and keeps the image open.
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="host")
+        win.settings["image_write_enabled"] = "ON"
+        with open(os.path.join(workdir, "NEW.TXT"), "wb") as fh:
+            fh.write(b"z")
+
+        monkeypatch.setattr(win, "_prompt_save_discard_cancel", lambda: "cancel")
+        win.menu_close_image()
+
+        assert win._image_workdir == workdir  # still open — close aborted
+        assert os.path.isdir(workdir)
+    finally:
+        win.settings["image_write_enabled"] = "OFF"
+        win.close()
+
+
+def test_open_remote_after_host_restores_host_pane(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176."""
+    # v2.33.1: opening a Remote-side image directly after a Host-side image must
+    # not leave the Host pane on the previous image's (deleted) working directory.
+    win = MainWindow(state)
+    try:
+        realdir = tmp_path / "real"
+        realdir.mkdir()
+        (realdir / "A.TXT").write_bytes(b"a")
+        win.host_dir = str(realdir)
+        win.refresh_host_files()
+
+        host_wd = _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="host")
+        assert win.host_dir == host_wd
+
+        _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+
+        assert not os.path.isdir(host_wd)  # previous Host workdir removed
+        assert win.host_dir == str(realdir)  # Host pane restored to a real folder
+        assert os.path.isdir(win.host_dir)
+        assert "A.TXT" in win._host_files
+    finally:
+        win.close()
+
+
+def _new_fake_image(win, monkeypatch, mount="host"):
+    """Create a new empty image in ``win``, bypassing the geometry/mount dialogs."""
+    from cpm_fm.utils.disk_image import load_diskdefs
+
+    geom = load_diskdefs().get("ibm-3740")
+    monkeypatch.setattr(win, "_prompt_mount_side", lambda: mount)
+    monkeypatch.setattr(win, "_prompt_new_geometry", lambda: geom)
+    win.menu_new_image()
+    return win._image_workdir
+
+
+def test_new_image_action_always_enabled(qapp, state):
+    """Verifies: UIR-114."""
+    # UIR-114 (v2.35): New Disk Image… is always available — disk-image writing is
+    # no longer opt-in, so it does not depend on any setting or an open image.
+    win = MainWindow(state)
+    try:
+        assert win._new_image_action is not None
+        assert win._new_image_action.isEnabled()
+    finally:
+        win.close()
+
+
+def test_new_image_creates_empty_open_image(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-178."""
+    # FR-178: New Disk Image… opens a source-less, empty image mounted Host-side.
+    win = MainWindow(state)
+    try:
+        realdir = tmp_path / "real"
+        realdir.mkdir()
+        win.host_dir = str(realdir)
+        win.refresh_host_files()
+
+        workdir = _new_fake_image(win, monkeypatch, mount="host")
+        qapp.processEvents()
+
+        assert workdir is not None and os.path.isdir(workdir)
+        assert win._image_source is None  # unnamed until first Save Image…
+        assert win._image_files == []
+        assert win._host_files == []  # empty image
+        assert win.host_dir == workdir
+        assert win._close_image_action.isEnabled()
+    finally:
+        win.settings["image_write_enabled"] = "OFF"
+        win.close()
+
+
+def test_new_image_group_title_placeholder(qapp, monkeypatch, state, tmp_path):
+    """Verifies: UIR-114."""
+    # UIR-114: an unsaved new image shows a placeholder in the group title.
+    win = MainWindow(state)
+    try:
+        realdir = tmp_path / "real"
+        realdir.mkdir()
+        win.host_dir = str(realdir)
+        win.refresh_host_files()
+
+        _new_fake_image(win, monkeypatch, mount="host")
+        win._update_host_group_title()
+        assert "(new image)" in win.host_group.title()
+    finally:
+        win.settings["image_write_enabled"] = "OFF"
+        win.close()
+
+
+def test_new_image_save_adopts_source(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-178."""
+    # FR-178: saving a new image writes it and adopts the written path as source.
+    from cpm_fm.utils.disk_image import load_diskdefs
+    from cpm_fm.utils.disk_image.image import CpmImage
+
+    win = MainWindow(state)
+    try:
+        realdir = tmp_path / "real"
+        realdir.mkdir()
+        win.host_dir = str(realdir)
+        win.refresh_host_files()
+
+        workdir = _new_fake_image(win, monkeypatch, mount="host")
+        with open(os.path.join(workdir, "HI.TXT"), "wb") as fh:
+            fh.write(b"x" * 128)
+
+        dest = tmp_path / "made.img"
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QFileDialog.getSaveFileName",
+            lambda *a, **k: (str(dest), ""),
+        )
+        assert win.menu_save_image() is True
+        assert win._image_source == str(dest)  # adopted as the source
+
+        geom = load_diskdefs().get("ibm-3740")
+        reopened = CpmImage(bytearray(dest.read_bytes()), geom)
+        assert {f.name for f in reopened.list_files()} == {"HI.TXT"}
+    finally:
+        win.settings["image_write_enabled"] = "OFF"
+        win.close()
+
+
+def test_new_image_remote_mount_accepts_copies(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-178, FR-176."""
+    # FR-178 + FR-176: a new image mounted Remote-side starts empty and accepts a
+    # local copy of a Host file.
+    win = MainWindow(state)
+    try:
+        realdir = tmp_path / "real"
+        realdir.mkdir()
+        (realdir / "DATA.BIN").write_bytes(b"d" * 64)
+        win.host_dir = str(realdir)
+        win.refresh_host_files()
+
+        workdir = _new_fake_image(win, monkeypatch, mount="remote")
+        assert win._remote_is_image()
+        assert win._remote_files == []  # empty new image
+
+        monkeypatch.setattr(win, "_selected_filenames", lambda w: ["DATA.BIN"])
+        monkeypatch.setattr(win, "_record_history", lambda *a, **k: None)
+        win.do_copy_to_remote()
+        qapp.processEvents()
+
+        assert os.path.isfile(os.path.join(workdir, "DATA.BIN"))
+        assert "DATA.BIN" in win._remote_files
+    finally:
+        win.close()
+
+
+def test_change_dir_keeps_remote_mounted_image(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176, FR-171."""
+    # FR-176 (v2.35): changing the host directory must NOT disturb an image mounted
+    # in the Remote pane — only the Host pane moves.
+    win = MainWindow(state)
+    try:
+        realdir = tmp_path / "real"
+        realdir.mkdir()
+        win.host_dir = str(realdir)
+        win.refresh_host_files()
+        _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+        workdir = win._image_workdir
+        assert win._remote_is_image()
+
+        newdir = tmp_path / "other"
+        newdir.mkdir()
+        (newdir / "Z.TXT").write_bytes(b"z")
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_file_panes.QFileDialog.getExistingDirectory",
+            lambda *a, **k: str(newdir),
+        )
+        win.change_host_dir()
+        qapp.processEvents()
+
+        assert win.host_dir == str(newdir)  # Host pane moved
+        assert "Z.TXT" in win._host_files
+        assert win._image_workdir == workdir  # image untouched
+        assert win._remote_is_image()  # still mounted in the Remote pane
+        assert set(win._remote_files) == {"HELLO.TXT", "GAME.COM"}
+    finally:
+        win.close()
+
+
+def test_image_directory_tracked_and_persisted(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-179."""
+    # FR-179: the image directory is tracked separately from the host directory,
+    # persisted on Save Config, and restored (independently) on load.
+    import json
+
+    win = MainWindow(state)
+    try:
+        imgdir = tmp_path / "images"
+        imgdir.mkdir()
+        win.image_dir = str(imgdir)
+        win.host_dir = str(tmp_path / "host")  # different from the image dir
+
+        cfg = tmp_path / "cfg.json"
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_config.QFileDialog.getSaveFileName",
+            lambda *a, **k: (str(cfg), ""),
+        )
+        win.menu_save()
+        on_disk = json.loads(cfg.read_text())
+        assert on_disk["image_directory"] == str(imgdir)  # persisted on Save Config
+
+        other = tmp_path / "other_images"
+        other.mkdir()
+        cfg2 = tmp_path / "cfg2.json"
+        cfg2.write_text(
+            json.dumps({"image_directory": str(other), "host_directory": str(tmp_path)})
+        )
+        win.load_config(str(cfg2))
+        assert win.image_dir == str(other)  # loaded independently
+        assert win.host_dir == str(tmp_path)  # host tracked separately
+    finally:
+        win.close()
+
+
+def test_backup_image_to_host_local(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-180."""
+    # FR-180: Backup with a Remote-mounted image is a local bulk copy image→host
+    # (wipe host, then copy every image file out), no serial.
+    win = MainWindow(state)
+    try:
+        realdir = tmp_path / "host"
+        realdir.mkdir()
+        (realdir / "OLD.TXT").write_bytes(b"old")  # to be wiped
+        win.host_dir = str(realdir)
+        win.refresh_host_files()
+        _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+
+        monkeypatch.setattr(win, "_record_history", lambda *a, **k: None)
+        monkeypatch.setattr(win, "_confirm_dialog", lambda *a, **k: True)
+
+        win.do_backup()
+        qapp.processEvents()
+
+        assert set(os.listdir(realdir)) == {"HELLO.TXT", "GAME.COM"}  # mirrors the image
+        assert not (realdir / "OLD.TXT").exists()  # host wiped first
+        assert not win.serial_mgr.terminal_connected  # purely local
+    finally:
+        win.close()
+
+
+def test_restore_host_to_image_local(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-180."""
+    # FR-180: Restore with a Remote-mounted image is a local bulk copy host→image
+    # (wipe image, then copy every host file in), no serial.
+    win = MainWindow(state)
+    try:
+        realdir = tmp_path / "host"
+        realdir.mkdir()
+        (realdir / "NEW1.TXT").write_bytes(b"1" * 128)
+        (realdir / "NEW2.TXT").write_bytes(b"2" * 128)
+        win.host_dir = str(realdir)
+        win.refresh_host_files()
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+
+        monkeypatch.setattr(win, "_record_history", lambda *a, **k: None)
+        monkeypatch.setattr(win, "_confirm_dialog", lambda *a, **k: True)
+
+        win.do_restore()
+        qapp.processEvents()
+
+        names = {f for f in os.listdir(workdir) if os.path.isfile(os.path.join(workdir, f))}
+        assert names == {"NEW1.TXT", "NEW2.TXT"}  # image mirrors the host
+        assert set(win._remote_files) == {"NEW1.TXT", "NEW2.TXT"}
     finally:
         win.close()

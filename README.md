@@ -3,10 +3,12 @@
 A cross-platform PySide6 desktop app for transferring files between a modern host and legacy
 [CP/M](https://en.wikipedia.org/wiki/CP/M) systems over a serial link, using the X-Modem protocol.
 
->## Note (2026-06-27)
->From version 2.14.2, major code, document and test refactoring occured to improve the
->ability to make sure that requirements, code and tests are able to be kept in sync. If
->you have cloned from an earlier version, expect a large number of changes to the project.
+>## Note (2026-07-09)
+>From version 2.36.0, a new major feature change occured involving the addition of being
+>able to work with disk images. As part of this effort, there were several UI changes
+>from the last major release of 2.27.1. In the package folder there is an archived
+>version of the Windows 2.27.1 if people prefer the older app functionality and there
+>is a 2.27.1 branch for Linux and Mac users to build their own version from.
 
 ## Features
 
@@ -50,8 +52,9 @@ A cross-platform PySide6 desktop app for transferring files between a modern hos
 - **Boot into CP/M:** run a configurable boot-sequence script from the terminal to bring
   the remote up into CP/M.
 - Separate terminal and transport serial ports (which may be the same physical port).
-- Configurable serial parameters, terminal/macro settings, and CP/M commands via the
-  **Serial**, **Terminal**, and **General** config dialogs, saved/loaded as JSON.
+- Configurable serial parameters, terminal/macro settings, general host settings, and
+  CP/M remote commands via the **Serial**, **Terminal**, **General**, and **Remote**
+  config dialogs (each with a vertical scrollbar), saved/loaded as JSON.
 - Remembers and auto-reloads the last-used configuration on startup, shows its name in
   the title bar, and persists each window's size and position between runs.
 - Material Design theme that follows the host OS light/dark mode.
@@ -88,9 +91,9 @@ python -m cpm_fm # equivalent, keeps a console for debugging output
 ```
 
 The app starts unconfigured (unless it can reload the last-used configuration). Use
-**File > Load** to load a settings file — see the samples in [`examples/`](examples/) — or set
-parameters via the **Config** menu and **File > Save** them. **File > New** resets to defaults.
-The loaded configuration's name is shown in the title bar.
+**Config > Load Config** to load a settings file — see the samples in [`examples/`](examples/) — or set
+parameters via the **Config** menu dialogs and save them with **Config > Save Config**. **Config > New
+Config** resets to defaults. The loaded configuration's name is shown in the title bar.
 
 Connect, disconnect, open the terminal, view the transfer history, and run a whole-drive **Backup**
 or **Restore** from the toolbar. Right-click a file in either pane for transfer, rename, delete, and
@@ -278,6 +281,38 @@ flowchart LR
 > diagrammed in [`docs/cpm_fm_architecture.md`](docs/cpm_fm_architecture.md) §A2.
 
 ## Developer Workflow (AI Assisted)
+
+>## Personal note on the use of AI
+>This project has been an exercise in how to incorporate AI into my home project workflow.
+>It uses AI to write the Python code and to maintain the documentation, requirements,
+>testing etc. My input is in the architecture, the requirements specification and the
+>integration/manual testing.
+>
+>I appreciate and respect that some people have an adverse view of AI. I also respect
+>your decision to not use this project based on that viewpoint. There was a time when
+>I also felt the same way. I have since come to the conclusion that there are ways in
+>which AI can be used that doesn't generate slop and unmaintainable code, and this project
+>has helped me determine how to do that.
+>
+>I have forced the AI to follow strict guidelines on how it produces the code, and to
+>keep the requirements and documentation in step with the code base. My belief is that
+>the quality of an application is not just in the code, but in having clear, unambiguous
+>requirements and architecture. The theory is that the requirements in this project
+>are detailed enough for the app to be re-written without AI or using AI to re-write
+>the app in a different language entirely.
+>
+>We the humans, supply the creativity, the decision making, and the soul of an application
+>that AI is just not capable of doing. AI is just a tool, no more, no less. It can't
+>think, it can't reason like a human, but it is good at performing repetitive,
+>boring tasks, and is good at tracking down bugs and issues. It is not perfect, it
+>also makes mistakes and does require review of its work.
+>
+>If you want to learn how to make the AI follow instructions and give repeatable output,
+>then this project may help to give you some ideas on how I tackled these issues. There
+>are probably better ways of doing this, however this is the way that seems to work for
+>me.
+>
+>Enjoy!
 
 The repository is set up so AI coding assistants can do real work without loading the
 whole (large) SRS into context, and so their changes stay traceable. The same build and

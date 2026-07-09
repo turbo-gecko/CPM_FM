@@ -13,13 +13,14 @@ app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = Datei
-menu.file.new = Neu
-menu.file.load = Laden
-menu.file.save = Speichern
+menu.file.new = Neue Konfiguration
+menu.file.load = Konfiguration laden
+menu.file.save = Konfiguration speichern
 menu.file.exit = Beenden
 menu.config = Konfiguration
 menu.config.serial = Seriell
 menu.config.general = Allgemein
+menu.config.remote = Gerät
 menu.config.language = Sprache
 menu.help = Hilfe
 menu.help.manual = Handbuch
@@ -143,7 +144,7 @@ error.transfer_no_response_send = Keine Antwort vom Remote-Rechner für {name} -
 error.transfer_no_response_recv = Keine Antwort vom Remote-Rechner für {name} - prüfen Sie den Befehl "Von Remote empfangen" unter Konfiguration > Allgemein
 warning.select_upload = Bitte eine oder mehrere Dateien zum Hochladen auswählen
 warning.select_download = Bitte eine oder mehrere Dateien zum Herunterladen auswählen
-warning.no_config_loaded = Es ist keine Konfigurationsdatei geladen. Die Einstellungen wurden nur auf die aktuelle Sitzung angewendet. Verwenden Sie Datei > Speichern, um sie in eine Konfigurationsdatei zu schreiben.
+warning.no_config_loaded = Es ist keine Konfigurationsdatei geladen. Die Einstellungen wurden nur auf die aktuelle Sitzung angewendet. Verwenden Sie Konfiguration > Konfiguration speichern, um sie in eine Konfigurationsdatei zu schreiben.
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = Anwenden
@@ -204,25 +205,26 @@ status.terminal_settings_updated = Terminal-Einstellungen aktualisiert
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = Allgemeine Konfiguration
-config.general.remote_group = Gerät
-config.general.list_files = Dateien auflisten
-config.general.recv_remote = Vom Gerät empfangen
-config.general.send_remote = An Gerät senden
-config.general.xmodem_1k = XMODEM-1K verwenden
-config.general.recv_remote_1k = Vom Gerät empfangen (1K)
-config.general.send_remote_1k = An Gerät senden (1K)
-config.general.xfer_launch_delay = Startverzögerung (s)
-config.general.xfer_handshake_timeout = Handshake-Timeout (s)
-config.general.xfer_interfile_delay = Verzögerung zwischen Dateien (s)
-config.general.eol = Zeilenende
+config.remote.title = Fernkonfiguration
+config.remote.list_files = Dateien auflisten
+config.remote.recv_remote = Vom Gerät empfangen
+config.remote.send_remote = An Gerät senden
+config.remote.xmodem_1k = XMODEM-1K verwenden
+config.remote.recv_remote_1k = Vom Gerät empfangen (1K)
+config.remote.send_remote_1k = An Gerät senden (1K)
+config.remote.xfer_launch_delay = Startverzögerung (s)
+config.remote.xfer_handshake_timeout = Handshake-Timeout (s)
+config.remote.xfer_interfile_delay = Verzögerung zwischen Dateien (s)
+config.terminal.eol = Zeilenende
 config.general.debug_logging = Debug-Protokollierung
-config.general.echo_transfer = Übertragungsdaten anzeigen
+config.terminal.echo_transfer = Übertragungsdaten anzeigen
 config.general.viewer = Betrachter/Editor
-config.general.rename_remote = Umbenennen
-config.general.delete_remote = Löschen
-config.general.erase_all = Alles löschen
+config.general.image_directory = Standard-Abbildverzeichnis
+config.remote.rename_remote = Umbenennen
+config.remote.delete_remote = Löschen
+config.remote.erase_all = Alles löschen
 config.general.host_directory = Standard-Host-Verzeichnis
-config.general.boot_sequence = Startsequenz
+config.remote.boot_sequence = Startsequenz
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = Verlauf
@@ -290,3 +292,61 @@ config.macros.macro = Makro {n}
 config.macros.label = Beschriftung
 config.macros.sequence = Tastenfolge
 status.macro_failed = Makro fehlgeschlagen - Tastenfolge prüfen
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = Diskettenabbild öffnen…
+dialog.open_image.title = CP/M-Diskettenabbild öffnen
+dialog.open_image.filter = CP/M-Diskettenabbilder (*.img *.dsk *.cpm *.cf);;Alle Dateien (*)
+dialog.open_image.pick_title = Diskettengeometrie wählen
+dialog.open_image.pick_ambiguous = Die Diskettengeometrie ist mehrdeutig. Format wählen:
+dialog.open_image.pick_unknown = Die Diskettengeometrie konnte nicht erkannt werden. Format zum Versuchen wählen:
+error.disk_image_unreadable = „{name}“ konnte nicht als CP/M-Diskettenabbild gelesen werden.
+error.disk_image_extract = Dateien konnten nicht aus dem Diskettenabbild extrahiert werden: {error}
+status.disk_image_loaded = Diskettenabbild „{name}“ geladen ({geometry})
+status.disk_image_partial = Diskettenabbild „{name}“ geladen; {count} Datei(en) konnten nicht extrahiert werden
+
+# --- Disk image details (v2.29) --------------------------------------------------
+menu.file.image_details = Abbilddetails…
+dialog.image_details.title = Details des Disk-Abbilds
+dialog.image_details.col.name = Name
+dialog.image_details.col.size = Größe
+dialog.image_details.col.user = Benutzer
+dialog.image_details.col.attrs = Attribute
+dialog.image_details.close = Schließen
+
+# --- Disk image write (v2.30) ----------------------------------------------------
+menu.file.save_image = Abbild speichern…
+dialog.save_image.title = CP/M-Diskettenabbild speichern
+dialog.save_image.filter = CP/M-Diskettenabbilder (*.img *.dsk *.cpm);;Alle Dateien (*)
+status.disk_image_saved = Diskettenabbild gespeichert unter '{name}' ({count} Datei(en))
+error.disk_image_write = Das Diskettenabbild konnte nicht geschrieben werden: {error}
+error.disk_image_overwrite_source = „Abbild speichern“ erstellt eine neue Datei – wählen Sie einen anderen Namen als das Quellabbild.
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [Abbild: {name}]
+button.discard = Verwerfen
+dialog.image_dirty.title = Nicht gespeicherte Änderungen am Disk-Abbild
+dialog.image_dirty.message = Das geöffnete Disk-Abbild „{name}“ enthält nicht gespeicherte Änderungen. Vor dem Verwerfen in einer neuen Abbilddatei speichern?
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [Abbild: {name}]
+dialog.mount_side.title = Disk-Abbild öffnen
+dialog.mount_side.message = In welchem Bereich soll das Abbild eingebunden werden?
+dialog.mount_side.host = Host-Bereich (Übertragung zum/vom CP/M-Gerät)
+dialog.mount_side.remote = Remote-Bereich (Übertragung zu/von einem Host-Ordner)
+error.image_remote_needs_disconnect = Trennen Sie die Verbindung zum CP/M-Gerät, bevor Sie ein Abbild im Remote-Bereich einbinden.
+error.image_remote_blocks_connect = Schließen Sie das Disk-Abbild (Datei ▸ Neu), bevor Sie sich mit dem CP/M-Gerät verbinden.
+error.image_copy = Die Datei konnte nicht kopiert werden: {error}
+status.image_copy_in = {count} Datei(en) in das Abbild kopiert
+status.image_copy_out = {count} Datei(en) in den Host-Ordner kopiert
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = Disk-Abbild schließen…
+status.disk_image_closed = Disk-Abbild geschlossen
+
+# --- New empty disk image (v2.34) -----------------------------------------------
+menu.file.new_image = Neues Disk-Abbild…
+dialog.new_image.pick_title = Neues Disk-Abbild
+dialog.new_image.pick_label = Wählen Sie das Disk-Format für das neue Abbild:
+main.image_unsaved = (neues Abbild)
+status.new_image_created = Neues Disk-Abbild erstellt ({geometry})

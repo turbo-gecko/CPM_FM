@@ -64,22 +64,25 @@ def test_restore_erase_all_sequence_wipes_scratch(gui, scratch_drive, monkeypatc
     FR-153e: when ``erase_all_remote_seq`` is configured the wipe runs that macro
     once (a single ``ERA *.*``-style command answered by the script) instead of
     one ``ERA`` per file. The observable end state matches MT-BR05: the leftover
-    is gone and the drive holds exactly the host payload. The macro is taken from
-    the target config when it defines one, else a standard CP/M form that answers
-    the ``ALL (Y/N)?`` prompt.
+    is gone and the drive holds exactly the host payload.
+
+    The erase-all macro is opt-in and **target-specific** — the ``ERA *.*`` prompt
+    wording/echo/timing varies across CP/M builds, so there is no reliable generic
+    sequence. This test therefore runs only on a target that actually configures
+    ``erase_all_remote_seq`` and skips otherwise (an unconfigured target uses the
+    per-file wipe covered by MT-BR05).
 
     Verifies: FR-153e, UIR-107.
     """
+    # Opt-in feature: skip unless the target defines its own erase-all macro.
+    if not gui.win.settings.get("erase_all_remote_seq", "").strip():
+        pytest.skip("target defines no erase_all_remote_seq; FR-153e is opt-in (see MT-BR05)")
+
     silence_message_boxes(monkeypatch)
     answer_confirm(monkeypatch, gui.win, accept=True)
     assert gui.connect()[0] == "ok"
     gui.set_drive(scratch_drive)
     assert gui.win.drive_combo.currentText() == f"{scratch_drive}:"  # safety: on scratch
-
-    # Use the target's configured erase-all macro if present, else a standard
-    # CP/M sequence that answers the interactive ALL (Y/N)? prompt.
-    if not gui.win.settings.get("erase_all_remote_seq", "").strip():
-        gui.win.settings["erase_all_remote_seq"] = "SEND ERA *.*\nWAITFOR (Y/N)\nSEND Y"
 
     host = tmp_path / "host"
     payload = {"ERA1.TXT": b"erase-all one\r\n", "ERA2.TXT": b"erase-all two\r\n"}

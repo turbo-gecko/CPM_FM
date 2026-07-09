@@ -73,6 +73,10 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     # ERA loop (FR-153c) that avoids the interactive ERA *.* confirmation.
     "erase_all_remote_seq": "",
     "host_directory": "",
+    # FR-179/UIR-115: the folder where CP/M disk-image files live — the browse root
+    # for Open/New/Save Image, tracked separately from the host directory and
+    # remembered on File > Save Config. Empty falls back to the host directory.
+    "image_directory": "",
     # FR-047/UIR-059: optional boot-into-CP/M keystroke sequence. A newline-
     # separated script (SEND/SENDRAW/WAIT/WAITFOR directives) run to drive a
     # remote that does not boot straight into CP/M. Empty disables the feature.

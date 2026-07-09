@@ -13,13 +13,14 @@ app.title_with_config = {app} — {config}
 
 # --- Menu bar -----------------------------------------------------------------
 menu.file = File
-menu.file.new = Nuovo
-menu.file.load = Carica
-menu.file.save = Salva
+menu.file.new = Nuova configurazione
+menu.file.load = Carica configurazione
+menu.file.save = Salva configurazione
 menu.file.exit = Esci
 menu.config = Configurazione
 menu.config.serial = Seriale
 menu.config.general = Generale
+menu.config.remote = Remoto
 menu.config.language = Lingua
 menu.help = Aiuto
 menu.help.manual = Manuale
@@ -143,7 +144,7 @@ error.transfer_no_response_send = Nessuna risposta dal remoto per {name} - contr
 error.transfer_no_response_recv = Nessuna risposta dal remoto per {name} - controlla il comando Ricevi dal remoto in Config > Generale
 warning.select_upload = Selezionare uno o più file da inviare
 warning.select_download = Selezionare uno o più file da scaricare
-warning.no_config_loaded = Nessun file di configurazione caricato. Le impostazioni sono state applicate solo alla sessione corrente. Usare File > Salva per scriverle in un file di configurazione.
+warning.no_config_loaded = Nessun file di configurazione caricato. Le impostazioni sono state applicate solo alla sessione corrente. Usare Configurazione > Salva configurazione per scriverle in un file di configurazione.
 
 # --- Common buttons -----------------------------------------------------------
 button.apply = Applica
@@ -204,25 +205,26 @@ status.terminal_settings_updated = Impostazioni terminale aggiornate
 
 # --- General Configuration dialog ---------------------------------------------
 config.general.title = Configurazione Generale
-config.general.remote_group = Remoto
-config.general.list_files = Elenca file
-config.general.recv_remote = Ricevi dal dispositivo
-config.general.send_remote = Invia al dispositivo
-config.general.xmodem_1k = Usa XMODEM-1K
-config.general.recv_remote_1k = Ricevi dal dispositivo (1K)
-config.general.send_remote_1k = Invia al dispositivo (1K)
-config.general.xfer_launch_delay = Ritardo avvio (s)
-config.general.xfer_handshake_timeout = Timeout di handshake (s)
-config.general.xfer_interfile_delay = Ritardo tra file (s)
-config.general.eol = Fine linea
+config.remote.title = Configurazione Remota
+config.remote.list_files = Elenca file
+config.remote.recv_remote = Ricevi dal dispositivo
+config.remote.send_remote = Invia al dispositivo
+config.remote.xmodem_1k = Usa XMODEM-1K
+config.remote.recv_remote_1k = Ricevi dal dispositivo (1K)
+config.remote.send_remote_1k = Invia al dispositivo (1K)
+config.remote.xfer_launch_delay = Ritardo avvio (s)
+config.remote.xfer_handshake_timeout = Timeout di handshake (s)
+config.remote.xfer_interfile_delay = Ritardo tra file (s)
+config.terminal.eol = Fine linea
 config.general.debug_logging = Log di debug
-config.general.echo_transfer = Eco dei dati di trasferimento
+config.terminal.echo_transfer = Eco dei dati di trasferimento
 config.general.viewer = Visualizzatore/Editor
-config.general.rename_remote = Rinomina
-config.general.delete_remote = Elimina
-config.general.erase_all = Cancella tutto
+config.general.image_directory = Directory immagini predefinita
+config.remote.rename_remote = Rinomina
+config.remote.delete_remote = Elimina
+config.remote.erase_all = Cancella tutto
 config.general.host_directory = Directory host predefinita
-config.general.boot_sequence = Sequenza di avvio
+config.remote.boot_sequence = Sequenza di avvio
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = Cronologia
@@ -290,3 +292,61 @@ config.macros.macro = Macro {n}
 config.macros.label = Etichetta
 config.macros.sequence = Sequenza di tasti
 status.macro_failed = Macro non riuscita - controlla la sequenza di tasti
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = Apri immagine disco…
+dialog.open_image.title = Apri immagine disco CP/M
+dialog.open_image.filter = Immagini disco CP/M (*.img *.dsk *.cpm *.cf);;Tutti i file (*)
+dialog.open_image.pick_title = Seleziona geometria del disco
+dialog.open_image.pick_ambiguous = La geometria del disco è ambigua. Seleziona il formato:
+dialog.open_image.pick_unknown = Impossibile rilevare la geometria del disco. Seleziona un formato da provare:
+error.disk_image_unreadable = Impossibile leggere «{name}» come immagine disco CP/M.
+error.disk_image_extract = Impossibile estrarre i file dall'immagine disco: {error}
+status.disk_image_loaded = Immagine disco «{name}» caricata ({geometry})
+status.disk_image_partial = Immagine disco «{name}» caricata; impossibile estrarre {count} file
+
+# --- Disk image details (v2.29) --------------------------------------------------
+menu.file.image_details = Dettagli immagine…
+dialog.image_details.title = Dettagli immagine disco
+dialog.image_details.col.name = Nome
+dialog.image_details.col.size = Dimensione
+dialog.image_details.col.user = Utente
+dialog.image_details.col.attrs = Attributi
+dialog.image_details.close = Chiudi
+
+# --- Disk image write (v2.30) ----------------------------------------------------
+menu.file.save_image = Salva immagine…
+dialog.save_image.title = Salva immagine disco CP/M
+dialog.save_image.filter = Immagini disco CP/M (*.img *.dsk *.cpm);;Tutti i file (*)
+status.disk_image_saved = Immagine disco salvata in '{name}' ({count} file)
+error.disk_image_write = Impossibile scrivere l'immagine disco: {error}
+error.disk_image_overwrite_source = Salva immagine crea un nuovo file: scegli un nome diverso da quello dell'immagine di origine.
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [immagine: {name}]
+button.discard = Ignora
+dialog.image_dirty.title = Modifiche non salvate all'immagine disco
+dialog.image_dirty.message = L'immagine disco aperta '{name}' contiene modifiche non salvate. Salvarle in un nuovo file immagine prima di annullare?
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [immagine: {name}]
+dialog.mount_side.title = Apri immagine disco
+dialog.mount_side.message = In quale riquadro montare l'immagine?
+dialog.mount_side.host = Riquadro host (trasferimento da/verso il dispositivo CP/M)
+dialog.mount_side.remote = Riquadro remoto (trasferimento da/verso una cartella host)
+error.image_remote_needs_disconnect = Disconnetti dal dispositivo CP/M prima di montare un'immagine nel riquadro remoto.
+error.image_remote_blocks_connect = Chiudi l'immagine disco (File ▸ Nuovo) prima di connetterti al dispositivo CP/M.
+error.image_copy = Impossibile copiare il file: {error}
+status.image_copy_in = Copiati {count} file nell'immagine
+status.image_copy_out = Copiati {count} file nella cartella host
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = Chiudi immagine disco…
+status.disk_image_closed = Immagine disco chiusa
+
+# --- New empty disk image (v2.34) -----------------------------------------------
+menu.file.new_image = Nuova immagine disco…
+dialog.new_image.pick_title = Nuova immagine disco
+dialog.new_image.pick_label = Seleziona il formato del disco per la nuova immagine:
+main.image_unsaved = (nuova immagine)
+status.new_image_created = Nuova immagine disco creata ({geometry})

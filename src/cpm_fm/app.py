@@ -5,7 +5,7 @@ import shlex
 import subprocess
 import sys
 import threading
-from typing import Callable, cast
+from typing import TYPE_CHECKING, Callable, cast
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QActionGroup, QFontMetrics
@@ -32,6 +32,7 @@ from cpm_fm.gui.file_list_widget import FileListWidget
 from cpm_fm.gui.mw_backup_restore import _BackupRestoreMixin
 from cpm_fm.gui.mw_config import _ConfigMixin
 from cpm_fm.gui.mw_context_menu import _ContextMenuMixin
+from cpm_fm.gui.mw_disk_image import _DiskImageMixin
 from cpm_fm.gui.mw_file_panes import _FilePanesMixin
 from cpm_fm.gui.mw_history import _HistoryMixin
 from cpm_fm.gui.mw_remote import _RemoteMixin
@@ -53,7 +54,11 @@ from cpm_fm.utils.i18n import (
     set_language,
     tr,
 )
+from cpm_fm.utils.temp_cleanup import sweep_temp_dirs
 from cpm_fm.utils.transfer_history import TransferHistory
+
+if TYPE_CHECKING:
+    from cpm_fm.utils.disk_image import CpmFileEntry, DiskDef
 
 
 def build_viewer_args(template: str, path: str) -> list[str]:
@@ -93,6 +98,7 @@ class MainWindow(
     QMainWindow,
     _FilePanesMixin,
     _ContextMenuMixin,
+    _DiskImageMixin,
     _RemoteMixin,
     _BackupRestoreMixin,
     _TransfersMixin,
@@ -210,6 +216,43 @@ class MainWindow(
         self._backup_confirm_answered = threading.Event()
         self._backup_confirm_result = False
         self.host_dir = os.getcwd()
+        # FR-179: the folder where CP/M disk-image files live — the browse root for
+        # Open/New/Save Image, tracked independently of host_dir and set from the
+        # image_directory setting on config load (falls back to the host dir).
+        self.image_dir = os.getcwd()
+        # FR-171: temp working directory holding files extracted from an opened
+        # disk image (and the source image path), or None when no image is open.
+        self._image_workdir: str | None = None
+        self._image_source: str | None = None
+        # FR-174: the geometry the open image was decoded with, so Save Image… can
+        # re-open the source with the same geometry when re-packing (None when no
+        # image is open).
+        self._image_geom: DiskDef | None = None
+        # FR-173: the CP/M file metadata of the currently open image, captured at
+        # open time for the read-only Image Details view (empty when none open).
+        self._image_files: list[CpmFileEntry] = []
+        # UIR-109: the Image Details… menu action, enabled only while an image is
+        # open. Created in setup_menu; held here so the open/cleanup paths can
+        # toggle it.
+        self._image_details_action: QAction | None = None
+        # UIR-110: the Save Image… menu action, enabled only while an image is open
+        # and the opt-in image_write_enabled setting is on.
+        self._save_image_action: QAction | None = None
+        # FR-175: signature of the working directory as opened / last saved, used
+        # to detect unsaved copy-to-image changes (None when no image is open).
+        self._image_baseline: set[tuple[str, int, int]] | None = None
+        # FR-176: which pane the open image is mounted into — "host" (default) or
+        # "remote". Meaningful only while an image is open (_image_workdir set).
+        self._image_pane: str = "host"
+        # FR-177: the real host directory active just before a Host-side image was
+        # opened, restored by Close Disk Image… (None when none recorded).
+        self._pre_image_host_dir: str | None = None
+        # UIR-113: the Close Disk Image… menu action, enabled only while an image
+        # is open. Created in setup_menu; held here so open/cleanup can toggle it.
+        self._close_image_action: QAction | None = None
+        # UIR-114: the New Disk Image… menu action (FR-178). Always available since
+        # disk-image writing is no longer opt-in (v2.35); held for completeness.
+        self._new_image_action: QAction | None = None
         # FR-130/FR-133: the canonical, unfiltered file names for each pane. The
         # visible QListWidget rows are derived from these by filter_and_sort, so
         # filtering/sorting can be re-applied without re-reading the source.
@@ -323,6 +366,7 @@ class MainWindow(
         # the connection indicators above.
         self._update_window_title()
         self._update_host_group_title()
+        self._update_remote_group_title()
         if self.terminal_win is not None:
             self.terminal_win.retranslate_ui()
 
@@ -354,12 +398,29 @@ class MainWindow(
         Safe to call before the group box exists (during early construction) —
         it simply does nothing.
 
-        Satisfies: FR-126, UIR-011.
+        While a Host-mounted disk image is open (FR-169/FR-176) the title shows the
+        image file name — or a placeholder for an unsaved new image (FR-178) —
+        instead of the temporary working-directory path, so the staged image is
+        not mistaken for an ordinary host folder (UIR-111). A Remote-mounted image
+        leaves the Host pane on a real directory, so the normal path title is used.
+
+        Satisfies: FR-126, UIR-011, UIR-111, UIR-114.
         """
         group = getattr(self, "host_group", None)
         if group is None:
             return
         label = tr("main.host_files")
+        # UIR-111/UIR-114: a Host-mounted image shows its file name (or a "(new
+        # image)" placeholder when it has no source file yet) rather than the temp
+        # path.
+        if self._image_workdir is not None and self._image_pane == "host":
+            name = (
+                os.path.basename(self._image_source)
+                if self._image_source is not None
+                else tr("main.image_unsaved")
+            )
+            group.setTitle(tr("main.host_files_image", label=label, name=name))
+            return
         metrics = QFontMetrics(group.font())
         # Width consumed by the fixed prefix ("Host Files — ") plus a margin for
         # the group-box frame and title indent, leaving the rest for the path.
@@ -367,6 +428,32 @@ class MainWindow(
         avail = group.width() - metrics.horizontalAdvance(prefix) - 24
         elided = metrics.elidedText(self.host_dir, Qt.TextElideMode.ElideLeft, max(0, avail))
         group.setTitle(tr("main.host_files_dir", label=label, dir=elided))
+
+    def _update_remote_group_title(self) -> None:
+        """Set the Remote Files group title, naming an image mounted here.
+
+        Normally the title is the plain translated "Remote Files" label. While a
+        disk image is mounted in the Remote pane (FR-176) the title instead shows
+        the image file's name — or a placeholder for an unsaved new image (FR-178)
+        — so the local virtual device is not mistaken for the live CP/M device
+        (UIR-112). Re-applied on language change (``retranslate_ui``) and safe to
+        call before the group box exists.
+
+        Satisfies: FR-176, UIR-112, UIR-114.
+        """
+        group = getattr(self, "remote_group", None)
+        if group is None:
+            return
+        label = tr("main.remote_files")
+        if self._remote_is_image():
+            name = (
+                os.path.basename(self._image_source)
+                if self._image_source is not None
+                else tr("main.image_unsaved")
+            )
+            group.setTitle(tr("main.remote_files_image", label=label, name=name))
+            return
+        group.setTitle(label)
 
     # ------------------------------------------------------------------ setup
 
@@ -436,23 +523,55 @@ class MainWindow(
 
     def setup_menu(self):
         """
-        Satisfies: UIR-001, UIR-002, UIR-003, UIR-004, FR-018, FR-019, FR-022, FR-122.
+        Satisfies: UIR-001, UIR-002, UIR-003, UIR-004, UIR-109, UIR-110, UIR-116, FR-018,
+        FR-019, FR-021d, FR-022, FR-122.
         """
         menubar = self.menuBar()
 
         file_menu = menubar.addMenu("")
         self._register_text(file_menu.setTitle, "menu.file")
-        self._add_menu_action(file_menu, "menu.file.new", self.menu_new)
-        self._add_menu_action(file_menu, "menu.file.load", self.menu_load)
-        self._add_menu_action(file_menu, "menu.file.save", self.menu_save)
+        # UIR-002/UIR-108: Open Disk Image… is the first File-menu item — New/Load/
+        # Save Config moved to the Config menu (UIR-003) in v2.36.
+        self._add_menu_action(file_menu, "menu.file.open_image", self.menu_open_image)
+        # UIR-114: New Disk Image… sits immediately after Open Disk Image…. It is
+        # always available (FR-178; disk-image writing is no longer opt-in, v2.35).
+        self._new_image_action = self._add_menu_action(
+            file_menu, "menu.file.new_image", self.menu_new_image
+        )
+        # UIR-109: Image Details… sits immediately after Open Disk Image…, disabled
+        # until an image is open.
+        self._image_details_action = self._add_menu_action(
+            file_menu, "menu.file.image_details", self.menu_image_details
+        )
+        self._image_details_action.setEnabled(False)
+        # UIR-110: Save Image… sits immediately after Image Details…, disabled
+        # until an image is open and disk-image writing is enabled (FR-174).
+        self._save_image_action = self._add_menu_action(
+            file_menu, "menu.file.save_image", self.menu_save_image
+        )
+        self._save_image_action.setEnabled(False)
+        # UIR-113: Close Disk Image… sits immediately after Save Image…, disabled
+        # until an image is open (FR-177).
+        self._close_image_action = self._add_menu_action(
+            file_menu, "menu.file.close_image", self.menu_close_image
+        )
+        self._close_image_action.setEnabled(False)
         file_menu.addSeparator()
         self._add_menu_action(file_menu, "menu.file.exit", self.close)
 
         config_menu = menubar.addMenu("")
         self._register_text(config_menu.setTitle, "menu.config")
+        # UIR-003: New/Load/Save Config sit at the top of the Config menu (moved
+        # from the File menu in v2.36), separated from the dialog items below.
+        self._add_menu_action(config_menu, "menu.file.new", self.menu_new)
+        self._add_menu_action(config_menu, "menu.file.load", self.menu_load)
+        self._add_menu_action(config_menu, "menu.file.save", self.menu_save)
+        config_menu.addSeparator()
         self._add_menu_action(config_menu, "menu.config.serial", self.menu_serial_config)
         self._add_menu_action(config_menu, "menu.config.terminal", self.menu_terminal_config)
         self._add_menu_action(config_menu, "menu.config.general", self.menu_general_config)
+        # UIR-003/UIR-116: the Remote Config dialog (FR-021d).
+        self._add_menu_action(config_menu, "menu.config.remote", self.menu_remote_config)
         self._setup_language_menu(config_menu)
 
         # UIR-004: Help menu with Manual (FR-023) and About (FR-022) items.
@@ -601,8 +720,14 @@ class MainWindow(
         splitter.addWidget(host_group)
 
         # Right Side: Remote Files
+        # FR-176/UIR-112: kept as an attribute so the title can indicate an open
+        # image when one is mounted in the Remote pane (set via
+        # _update_remote_group_title). Like the Host group title, it is not put in
+        # the i18n registry — retranslate_ui re-applies it directly — because its
+        # text is composite when an image is mounted.
         remote_group = QGroupBox()
-        self._register_text(remote_group.setTitle, "main.remote_files")
+        self.remote_group = remote_group
+        self._update_remote_group_title()
         remote_layout = QVBoxLayout(remote_group)
 
         # UIR-012/UIR-017: a drive-selection drop-down (A:–P:) followed by the
@@ -928,14 +1053,19 @@ class MainWindow(
 
     def closeEvent(self, event):
         """
-        Satisfies: FR-004, FR-015, FR-016, FR-168.
-
         FR-004: persist window geometry on exit. The Terminal Window persists
         in the background when the user closes it (it hides rather than
         destroys), so it still exists here and its current geometry is saved.
         FR-168: record which auxiliary windows are open now, so the next start-up
         can reopen them.
+
+        Satisfies: FR-004, FR-015, FR-016, FR-168, FR-175.
         """
+        # FR-175: exiting discards any open image's working directory; offer to
+        # save unsaved staged changes first. Cancel aborts the close.
+        if not self._maybe_prompt_save_image():
+            event.ignore()
+            return
         self._disconnect_signals()  # prevent orphaned slot accumulation (NFR-004)
         self.window_state.save_geometry("main", self)
         # FR-168: remember whether the Terminal Window and Transfer History window
@@ -949,6 +1079,13 @@ class MainWindow(
         self.window_state.set_window_open("history", history_open)
         if self._history_dialog:
             self.window_state.save_geometry("transfer_history", self._history_dialog)
+        # FR-016/FR-171: discard any temp working directory from an open image.
+        self._cleanup_image_workdir()
+        # FR-016: sweep the OS temp directory for every ``cpm_fm_*`` working
+        # directory — this session's remote-view downloads (FR-113a) and image
+        # workdir (FR-171), plus any orphaned by a previous session that did not
+        # exit cleanly — so the host is not left accumulating temp folders.
+        sweep_temp_dirs()
         # FR-015: close any open COM ports. FR-016: close all open windows.
         self.serial_mgr.close_ports()
         if self.terminal_win:
@@ -960,9 +1097,13 @@ class MainWindow(
 
 def main() -> None:
     """
-    Satisfies: STR-002, CR-002, CR-012, CR-013, UIR-078.
+    Satisfies: STR-002, CR-002, CR-012, CR-013, UIR-078, FR-016.
     """
     app = cast(QApplication, QApplication.instance() or QApplication(sys.argv))
+    # FR-016: sweep any temp working directories left by a previous session that
+    # did not exit cleanly (a crash/kill bypasses closeEvent) before this session
+    # creates its own, so orphaned cpm_fm_* folders never accumulate on the host.
+    sweep_temp_dirs()
     # FR-004/FR-005: identity for QSettings-backed persistence (see WindowState).
     app.setOrganizationName(ORG)
     app.setApplicationName(APP)

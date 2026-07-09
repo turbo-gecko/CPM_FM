@@ -18,13 +18,14 @@ app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = File
-menu.file.new = New
-menu.file.load = Load
-menu.file.save = Save
+menu.file.new = New Config
+menu.file.load = Load Config
+menu.file.save = Save Config
 menu.file.exit = Exit
 menu.config = Config
 menu.config.serial = Serial
 menu.config.general = General
+menu.config.remote = Remote
 menu.config.language = Language
 menu.help = Help
 menu.help.manual = Manual
@@ -168,7 +169,7 @@ error.transfer_no_response_send = No response from remote for {name} - check the
 error.transfer_no_response_recv = No response from remote for {name} - check the Receive from Remote command in Config > General
 warning.select_upload = Please select one or more files to upload
 warning.select_download = Please select one or more files to download
-warning.no_config_loaded = No configuration file is loaded. The settings have been applied to the current session only. Use File > Save to write them to a configuration file.
+warning.no_config_loaded = No configuration file is loaded. The settings have been applied to the current session only. Use Config > Save Config to write them to a configuration file.
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = Apply
@@ -234,25 +235,26 @@ status.terminal_settings_updated = Terminal settings updated
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = General Config
-config.general.remote_group = Remote
-config.general.list_files = List Files
-config.general.recv_remote = Receive from Remote
-config.general.send_remote = Send to Remote
-config.general.xmodem_1k = Use XMODEM-1K
-config.general.recv_remote_1k = Receive from Remote (1K)
-config.general.send_remote_1k = Send to Remote (1K)
-config.general.xfer_launch_delay = Xfer Launch Delay (s)
-config.general.xfer_handshake_timeout = Xfer Handshake Timeout (s)
-config.general.xfer_interfile_delay = Xfer Inter-file Delay (s)
-config.general.eol = End of Line
+config.remote.title = Remote Config
+config.remote.list_files = List Files
+config.remote.recv_remote = Receive from Remote
+config.remote.send_remote = Send to Remote
+config.remote.xmodem_1k = Use XMODEM-1K
+config.remote.recv_remote_1k = Receive from Remote (1K)
+config.remote.send_remote_1k = Send to Remote (1K)
+config.remote.xfer_launch_delay = Xfer Launch Delay (s)
+config.remote.xfer_handshake_timeout = Xfer Handshake Timeout (s)
+config.remote.xfer_interfile_delay = Xfer Inter-file Delay (s)
+config.terminal.eol = End of Line
 config.general.debug_logging = Debug Logging
-config.general.echo_transfer = Echo Transfer Data
+config.terminal.echo_transfer = Echo Transfer Data
 config.general.viewer = Viewer/Editor
-config.general.rename_remote = Rename
-config.general.delete_remote = Delete
-config.general.erase_all = Erase All
+config.general.image_directory = Default Image Directory
+config.remote.rename_remote = Rename
+config.remote.delete_remote = Delete
+config.remote.erase_all = Erase All
 config.general.host_directory = Default Host Directory
-config.general.boot_sequence = Boot Sequence
+config.remote.boot_sequence = Boot Sequence
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 history.title = Transfer History
@@ -295,3 +297,61 @@ config.macros.macro = Macro {n}
 config.macros.label = Label
 config.macros.sequence = Keystrokes
 status.macro_failed = Macro failed - check its keystroke sequence
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = Open Disk Image…
+dialog.open_image.title = Open CP/M Disk Image
+dialog.open_image.filter = CP/M disk images (*.img *.dsk *.cpm *.cf);;All files (*)
+dialog.open_image.pick_title = Select Disk Geometry
+dialog.open_image.pick_ambiguous = The disk geometry is ambiguous. Select the format:
+dialog.open_image.pick_unknown = The disk geometry could not be detected. Select a format to try:
+error.disk_image_unreadable = Could not read '{name}' as a CP/M disk image.
+error.disk_image_extract = Failed to extract files from the disk image: {error}
+status.disk_image_loaded = Disk image '{name}' loaded ({geometry})
+status.disk_image_partial = Disk image '{name}' loaded; {count} file(s) could not be extracted
+
+# --- Disk image details (v2.29) --------------------------------------------------
+menu.file.image_details = Image Details…
+dialog.image_details.title = Disk Image Details
+dialog.image_details.col.name = Name
+dialog.image_details.col.size = Size
+dialog.image_details.col.user = User
+dialog.image_details.col.attrs = Attributes
+dialog.image_details.close = Close
+
+# --- Disk image write (v2.30) ----------------------------------------------------
+menu.file.save_image = Save Image…
+dialog.save_image.title = Save CP/M Disk Image
+dialog.save_image.filter = CP/M disk images (*.img *.dsk *.cpm);;All files (*)
+status.disk_image_saved = Disk image saved to '{name}' ({count} file(s))
+error.disk_image_write = Could not write the disk image: {error}
+error.disk_image_overwrite_source = Save Image creates a new file — choose a name different from the source image.
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [image: {name}]
+button.discard = Discard
+dialog.image_dirty.title = Unsaved Disk Image Changes
+dialog.image_dirty.message = The open disk image '{name}' has unsaved changes. Save them to a new image file before discarding?
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [image: {name}]
+dialog.mount_side.title = Open Disk Image
+dialog.mount_side.message = Which pane should the image be mounted in?
+dialog.mount_side.host = Host pane (transfer to/from the CP/M device)
+dialog.mount_side.remote = Remote pane (transfer to/from a host folder)
+error.image_remote_needs_disconnect = Disconnect from the CP/M device before mounting an image in the Remote pane.
+error.image_remote_blocks_connect = Close the disk image (File ▸ New) before connecting to the CP/M device.
+error.image_copy = Could not copy the file: {error}
+status.image_copy_in = Copied {count} file(s) into the image
+status.image_copy_out = Copied {count} file(s) to the host folder
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = Close Disk Image…
+status.disk_image_closed = Disk image closed
+
+# --- New empty disk image (v2.34) -----------------------------------------------
+menu.file.new_image = New Disk Image…
+dialog.new_image.pick_title = New Disk Image
+dialog.new_image.pick_label = Select the disk format for the new image:
+main.image_unsaved = (new image)
+status.new_image_created = New disk image created ({geometry})

@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_458 requirements across 55 sections._
+_484 requirements across 61 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -32,18 +32,18 @@ _458 requirements across 55 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| FR-010 | The File > Load menu item shall present a file-select dialog defaulting to the JSON… | mw_config.py:menu_load |
+| FR-010 | The Load Config menu item (Config menu, UIR-003) shall present a file-select dialog defaulting to… | mw_config.py:menu_load |
 | FR-011 | On loading a configuration file, the application shall replace its entire internal settings store with… | mw_config.py:load_config, config_handler.py:load_json; tests test_config_handler.py |
 | FR-012 | Settings keys present in a loaded file that are not consumed by the application shall… | mw_config.py:load_config, config_handler.py:load_json; tests test_config_handler.py |
-| FR-013 | The File > Save menu item shall present a file-select dialog defaulting to the JSON… | mw_config.py:menu_save |
+| FR-013 | The Save Config menu item (Config menu, UIR-003) shall present a file-select dialog defaulting to… | mw_config.py:menu_save |
 | FR-014 | On saving, the application shall write the **entire** internal settings store — both serial configuration… | mw_config.py:menu_save, config_handler.py:save_json; tests test_config_handler.py, test_gui_smoke.py |
 | FR-015 | The File > Exit menu item shall close any open COM ports | app.py:closeEvent, serial_manager.py:close_ports |
-| FR-016 | The File > Exit menu item shall close all open dialogs and windows | app.py:closeEvent |
+| FR-016 | The File > Exit menu item shall close all open dialogs and windows, and shall… | app.py:closeEvent, app.py:main, utils/temp_cleanup.py:sweep_temp_dirs, utils/temp_cleanup.py:make_temp_dir; tests test_temp_cleanup.py |
 | FR-168 | On exit, the application shall record which of its non-modal auxiliary windows — the Terminal… | app.py:closeEvent, app.py:_restore_open_windows, window_state.py:window_open, window_state.py:set_window_open, mw_remote.py:show_terminal, mw_history.py:show_history; tests test_gui_smoke.py, test_window_state.py |
 | FR-017 | On loading a configuration file, the application shall clear the Remote Files list… | mw_config.py:load_config |
 | FR-017a | On loading a configuration file, if any Terminal or Transport port is open, the application… | mw_config.py:load_config, mw_remote.py:do_disconnect |
-| FR-018 | The File > New menu item (presented at the top of the File menu) shall… | mw_config.py:menu_new, mw_config.py:_save_to_path |
-| FR-019 | After the current configuration has been successfully saved (FR-018), the File > New menu item… | mw_config.py:menu_new, config_handler.py:DEFAULT_SETTINGS |
+| FR-018 | The New Config menu item (Config menu, UIR-003, presented at the top of the Config… | mw_config.py:menu_new, mw_config.py:_save_to_path |
+| FR-019 | After the current configuration has been successfully saved (FR-018), the New Config menu item shall… | mw_config.py:menu_new, config_handler.py:DEFAULT_SETTINGS |
 
 ## 3.3 Config menu
 
@@ -55,6 +55,7 @@ _458 requirements across 55 sections._
 | FR-021a | When the General Configuration Dialog's Save button is pressed, the application shall update the running… | mw_config.py:menu_general_config, mw_config.py:_save_subset_to_active_config, config_dialogs.py:save; tests test_gui_smoke.py |
 | FR-021b | The macro-button settings (macro_<n>_label/macro_<n>_seq, FR-162… | config_dialogs.py:TerminalConfigDialog, config_dialogs.py:TerminalConfigDialog.create_widgets; tests test_gui_smoke.py, test_macros.py |
 | FR-021c | When the Config > Terminal menu option is selected, the application shall present the Terminal… | mw_config.py:menu_terminal_config, mw_config.py:_apply_terminal_settings, mw_config.py:_save_subset_to_active_config, config_dialogs.py:TerminalConfigDialog; tests test_gui_smoke.py, test_macros.py |
+| FR-021d | When the Config > Remote menu option is selected, the application shall present the Remote… | mw_config.py:menu_remote_config, mw_config.py:_save_subset_to_active_config, config_dialogs.py:save; tests test_gui_smoke.py |
 
 ## 3.4 Help menu
 
@@ -118,8 +119,8 @@ _458 requirements across 55 sections._
 | FR-070 | The Remote Files list shall be empty (unpopulated) at startup | app.py:__init__, app.py:setup_layout |
 | FR-071 | The Update button shall be enabled at startup | app.py:setup_layout |
 | FR-072 | The Update button (Host Files group — UIR-011) shall be enabled at startup | app.py:setup_layout |
-| FR-073 | When the Update button (in the Remote Files group) is pressed, the application shall switch… | mw_remote.py:refresh_remote_files, mw_remote.py:_do_change_drive_logic |
-| FR-074 | If the Terminal Port is not open when populating the remote file list, the application… | mw_remote.py:refresh_remote_files |
+| FR-073 | When the Update button (in the Remote Files group) is pressed, the application shall switch… | mw_remote.py:refresh_remote_files, mw_remote.py:_do_change_drive_logic, mw_disk_image.py:_list_image_remote |
+| FR-074 | If the Terminal Port is not open when populating the remote file list, the application… | mw_remote.py:refresh_remote_files, mw_disk_image.py:_list_image_remote |
 | FR-075 | If the Terminal status flag is true, the application shall send the configured List Files… | mw_remote.py:_capture_terminal_response |
 | FR-076 | After sending the List Files command, the application shall wait at least one second for… | mw_remote.py:_capture_terminal_response |
 | FR-077 | The application shall process the captured remote output into a dictionary of filenames using the… | mw_remote.py:_do_refresh_remote_logic, cpm_parser.py:parse_dir_output; tests test_cpm_parser.py |
@@ -152,7 +153,7 @@ _458 requirements across 55 sections._
 | FR-089 | After launching the CP/M side of a transfer (FR-087), the application shall wait xfer_launch_delay seconds… | mw_transfers.py:_launch_delay; UIR-049 |
 | FR-159 | If the initial X-Modem handshake (the wait for the remote's start character, immediately following FR-087/FR-089)… | xmodem.py:send_file, xmodem.py:receive_file (no_response flag); mw_transfer_batches.py:_transfer_to_remote_batch, _transfer_to_host_batch; tests test_xmodem.py, test_gui_smoke.py |
 | FR-160 | The initial X-Modem handshake wait — the time spent waiting for the very first response… | xmodem.py:XModem.__init__, send_file, receive_file; mw_transfers.py:_handshake_timeout; UIR-093; tests test_xmodem.py |
-| FR-161 | The General Configuration dialog shall provide a "Test" button beside each of the Receive from… | config_dialogs.py:GeneralConfigDialog; UIR-094, UIR-095; tests test_gui_smoke.py |
+| FR-161 | The Remote Configuration Dialog (UIR-116) shall provide a "Test" button beside each of the Receive… | config_dialogs.py:RemoteConfigDialog; UIR-094, UIR-095; tests test_gui_smoke.py |
 | FR-099 | On a **successful** file transfer the application shall automatically refresh the destination file list so… | app.py:_on_transfer_completed, transfer_completed signal, _transfer_to_remote, _transfer_to_host |
 | FR-099a | After a successful Copy to Host the application shall refresh the Host Files list (per… | — |
 | FR-099b | A failed transfer shall not trigger a refresh | — |
@@ -213,7 +214,7 @@ _458 requirements across 55 sections._
 | FR-111 | The Remote Files list (UIR-012) shall provide a right-click context menu (UIR-019) offering the actions… | mw_context_menu.py:_remote_context_menu, mw_context_menu.py:_remote_to_host, mw_context_menu.py:_remote_view, mw_context_menu.py:_remote_rename, mw_context_menu.py:_remote_delete |
 | FR-112 | The View/Edit action (host, FR-110) and the View action (remote, FR-111) shall open the target… | app.py:_open_in_viewer, build_viewer_args, _os_open |
 | FR-113 | For a remote View (FR-111), the application shall download the file and open it… | mw_context_menu.py:_remote_view, mw_context_menu.py:_download_and_view, mw_context_menu.py:_on_view_file_ready, view_file_ready signal |
-| FR-113a | A remote View shall first download the selected file over X-Modem into a temporary folder… | — |
+| FR-113a | A remote View shall first download the selected file over X-Modem into a temporary folder… | mw_context_menu.py:_download_and_view, utils/temp_cleanup.py:make_temp_dir |
 | FR-113b | A remote View shall be permitted only when both the Terminal and Transport status flags… | — |
 | FR-114 | The Rename action (host FR-110, remote FR-111) shall present a modal File Action Dialog (UIR-057)… | mw_context_menu.py:_host_rename, mw_context_menu.py:_remote_rename, file_action_dialog.py:FileActionDialog |
 | FR-115 | The Delete action (host FR-110, remote FR-111) shall present a modal File Action Dialog (UIR-057)… | mw_context_menu.py:_host_delete, mw_context_menu.py:_remote_delete, file_action_dialog.py:FileActionDialog |
@@ -251,7 +252,7 @@ _458 requirements across 55 sections._
 | FR-125 | The main window title bar (UIR-005) shall display the currently-loaded configuration name… | app.py:_update_window_title, _config_name, mw_config.py:load_config, mw_config.py:menu_new, retranslate_ui |
 | FR-125a | The title bar shall display the application name followed by the base name of the… | — |
 | FR-125b | When no configuration file is loaded (at first start with no remembered config, or after… | — |
-| FR-125c | The configuration name shall update whenever a config is loaded (File > Load or startup… | — |
+| FR-125c | The configuration name shall update whenever a config is loaded (Config > Load Config or… | — |
 | FR-126 | The Host Files group title (UIR-011) shall display the current host directory… | app.py:_update_host_group_title, mw_file_panes.py:refresh_host_files, resizeEvent, setup_layout, retranslate_ui |
 | FR-126a | The group title shall display the translated "Host Files" label followed by the current host… | — |
 | FR-126b | When the directory text is wider than the space available in the group box, the… | — |
@@ -359,13 +360,30 @@ _458 requirements across 55 sections._
 | FR-153e | For Restore, when the optional erase_all_remote_seq setting (UIR-107) is non-empty, the remote-drive wipe shall instead… | mw_backup_restore.py:_wipe_remote_drive; tests test_backup_restore.py |
 | FR-154 | The file-copying phase of Backup and Restore shall **reuse the existing batch-transfer engine** (_transfer_to_host_batch /… | mw_backup_restore.py:_backup_drive, mw_backup_restore.py:_restore_drive, mw_transfer_batches.py:_transfer_to_host_batch, mw_transfer_batches.py:_transfer_to_remote_batch; tests test_backup_restore.py |
 
+## 3.19 CP/M disk image support
+
+| ID | Summary | Impl |
+|----|---------|------|
+| FR-169 | The application shall provide a File > Open Disk Image… action (UIR-108) that presents a… | mw_disk_image.py:menu_open_image, utils/disk_image/__init__.py:open_image, utils/disk_image/filesystem.py:list_files; tests test_disk_image/test_image.py, test_gui_smoke.py |
+| FR-170 | On opening an image (FR-169), the application shall auto-detect the disk geometry from a bundled… | utils/disk_image/__init__.py:detect_diskdef, utils/disk_image/__init__.py:load_diskdefs, utils/disk_image/diskdefs.py:parse_diskdefs, mw_disk_image.py:menu_open_image; tests test_disk_image/test_detect.py, test_disk_image/test_diskdefs.py |
+| FR-171 | On opening an image (FR-169), the application shall extract each file it contains to a… | mw_disk_image.py:menu_open_image, mw_disk_image.py:_cleanup_image_workdir, mw_disk_image.py:_list_image_remote, mw_config.py:load_config, mw_config.py:menu_general_config, mw_file_panes.py:change_host_dir, utils/disk_image/filesystem.py:read_file; tests test_gui_smoke.py, test_disk_image/test_directory.py |
+| FR-172 | The image-open path shall reject an unreadable, truncated, zero-byte, or foreign (non-CP/M) file gracefully… | utils/disk_image/__init__.py:open_image, utils/disk_image/image.py:CpmImage, mw_disk_image.py:menu_open_image; tests test_disk_image/test_image.py |
+| FR-173 | While a disk image is open (FR-169), the application shall provide a File > Image… | mw_disk_image.py:menu_image_details, gui/disk_image_details_dialog.py:DiskImageDetailsDialog; tests test_gui_smoke.py |
+| FR-174 | While a disk image is open (FR-169), the application shall provide a File > Save… | mw_disk_image.py:menu_save_image, mw_disk_image.py:_repack_workdir, utils/disk_image/__init__.py:create_image, utils/disk_image/image.py:CpmImage.write_file, utils/disk_image/image.py:CpmImage.delete_file, utils/disk_image/image.py:CpmImage.save, utils/disk_image/filesystem.py:build_dir_entries, utils/disk_image/filesystem.py:split_83; tests test_disk_image/test_write.py, test_gui_smoke.py |
+| FR-175 | While a disk image is open (FR-169), files received from the remote through the existing… | mw_disk_image.py:_maybe_prompt_save_image, mw_disk_image.py:_prompt_save_discard_cancel, mw_disk_image.py:_image_is_dirty, mw_disk_image.py:_capture_image_baseline, mw_disk_image.py:menu_save_image, mw_disk_image.py:menu_open_image, mw_file_panes.py:change_host_dir, mw_config.py:load_config, mw_config.py:menu_new, mw_config.py:menu_general_config, app.py:closeEvent; tests test_gui_smoke.py |
+| FR-176 | On opening an image (FR-169) the application shall let the user choose, via a modal… | mw_disk_image.py:menu_open_image, mw_disk_image.py:_prompt_mount_side, mw_disk_image.py:_remote_is_image, mw_disk_image.py:_list_image_remote, mw_disk_image.py:_copy_host_to_image, mw_disk_image.py:_copy_image_to_host, mw_transfer_batches.py:do_copy_to_remote, mw_transfer_batches.py:do_copy_to_host, mw_transfers.py:_on_files_dropped, mw_remote.py:refresh_remote_files, mw_remote.py:do_connect, mw_file_panes.py:change_host_dir, mw_config.py:menu_general_config, app.py:_update_remote_group_title; tests test_gui_smoke.py |
+| FR-177 | While a disk image is open (FR-169), the application shall provide a **File > Close… | mw_disk_image.py:menu_close_image, mw_disk_image.py:menu_open_image, mw_disk_image.py:_cleanup_image_workdir, app.py:setup_menu; tests test_gui_smoke.py |
+| FR-178 | The application shall provide a **File > New Disk Image…** action (UIR-114) that creates a… | mw_disk_image.py:menu_new_image, mw_disk_image.py:_prompt_new_geometry, utils/disk_image/__init__.py:create_image, app.py:setup_menu; tests test_disk_image/test_write.py, test_gui_smoke.py |
+| FR-179 | The application shall track a **disk-image directory** — the folder browsed by Open Disk Image…… | app.py, mw_disk_image.py:menu_open_image, mw_disk_image.py:menu_save_image, mw_config.py:load_config, mw_config.py:_save_to_path, mw_config.py:menu_general_config, utils/config_handler.py; tests test_gui_smoke.py |
+| FR-180 | Whole-drive **Backup** (FR-150) and **Restore** (FR-151) shall also operate on a Remote-mounted disk image (FR-176)… | mw_backup_restore.py:do_backup, mw_backup_restore.py:do_restore, mw_backup_restore.py:_backup_image_to_host, mw_backup_restore.py:_restore_host_to_image; tests test_gui_smoke.py |
+
 ## 4.1 Menu bar
 
 | ID | Summary | Impl |
 |----|---------|------|
 | UIR-001 | The GUI shall present a menu bar at the top of the main window | app.py:setup_menu |
-| UIR-002 | The menu bar shall contain a File menu with the items New, Load, Save, and… | app.py:setup_menu |
-| UIR-003 | The menu bar shall contain a Config menu with the items Serial, Terminal (UIR-103), General… | app.py:setup_menu, _setup_language_menu |
+| UIR-002 | The menu bar shall contain a File menu with the items Open Disk Image… (UIR-108)… | app.py:setup_menu |
+| UIR-003 | The menu bar shall contain a Config menu with the items New Config (FR-018), Load… | app.py:setup_menu, _setup_language_menu |
 | UIR-004 | The menu bar shall contain a Help menu with the items Manual (FR-023) and About… | app.py:setup_menu |
 | UIR-005 | The main window title bar shall show the application name and, when a configuration file… | app.py:_update_window_title |
 
@@ -412,24 +430,33 @@ _458 requirements across 55 sections._
 | ID | Summary | Impl |
 |----|---------|------|
 | UIR-040 | The General Configuration Dialog shall be a modal dialog titled "General Config" | config_dialogs.py:__init__, config_dialogs.py:GeneralConfigDialog |
-| UIR-041 | The dialog shall present a "Remote" group, laid out in two columns as in UIR-021… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:create_widgets, config_dialogs.py:_build_field |
-| UIR-042 | The dialog shall provide a "List Files" text field limited to 79 characters with a… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:__init__ |
+| UIR-041 | The General Configuration Dialog shall present its fields **ungrouped** in a two-column layout (UIR-021), with… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:create_widgets |
 | UIR-043 | *Withdrawn.* Formerly a "Change Disk" text field persisted as change_disk_cmd… | config_dialogs.py:GeneralConfigDialog |
-| UIR-044 | The remaining general settings — "Xfer Launch Delay (s)" (UIR-049), "Xfer Inter-file Delay (s)" (UIR-052)… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:create_widgets |
-| UIR-045 | The dialog shall provide a "Receive from Remote" text field limited to 79 characters with… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:__init__ |
-| UIR-094 | The dialog shall provide a "Test" button beside the Receive from Remote field (UIR-045), behaving… | config_dialogs.py:GeneralConfigDialog; FR-161 |
-| UIR-046 | The dialog shall provide a "Send to Remote" text field limited to 79 characters with… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:__init__ |
-| UIR-095 | The dialog shall provide a "Test" button beside the Send to Remote field (UIR-046), behaving… | config_dialogs.py:GeneralConfigDialog; FR-161 |
-| UIR-047 | The dialog shall provide an "End of Line" drop-down offering the mutually exclusive values Carriage… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:create_widgets |
-| UIR-048 | The Carriage Return (CR) value shall be the default selection… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:__init__ |
-| UIR-049 | The dialog shall provide an "Xfer Launch Delay (s)" integer field (0..60 inclusive) with a… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:__init__ |
-| UIR-093 | The dialog shall provide an "Xfer Handshake Timeout (s)" integer field (1..60 inclusive) with a… | config_dialogs.py:GeneralConfigDialog, mw_transfers.py:_handshake_timeout |
+| UIR-044 | The General Configuration Dialog's fields, ungrouped in a two-column layout (UIR-021/UIR-041), shall be, in order… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:create_widgets |
 | UIR-050 | The dialog shall provide a "Debug Logging" dropdown (OFF/ON, default OFF) controlling the verbose transfer… | config_dialogs.py:GeneralConfigDialog |
-| UIR-052 | The dialog shall provide an "Xfer Inter-file Delay (s)" integer field (0..60 inclusive) with a… | config_dialogs.py:GeneralConfigDialog |
 | UIR-053 | The dialog shall provide a "Default Host Directory" text field and an associated browse button… | config_dialogs.py:create_widgets, config_dialogs.py:on_browse, config_dialogs.py:GeneralConfigDialog, mw_config.py:menu_general_config |
 | UIR-054 | The dialog shall provide a "Viewer/Editor" text field with a default value of notepad $1… | config_dialogs.py:GeneralConfigDialog |
-| UIR-055 | The dialog shall provide a "Rename" text field (within the Remote group, UIR-041) limited to… | config_dialogs.py:GeneralConfigDialog |
-| UIR-056 | The dialog shall provide a "Delete" text field (within the Remote group, UIR-041) limited to… | config_dialogs.py:GeneralConfigDialog |
+
+## 4.4a Remote Configuration Dialog
+
+| ID | Summary | Impl |
+|----|---------|------|
+| UIR-116 | The Remote Configuration Dialog shall be a modal dialog titled "Remote Config", opened from Config… | config_dialogs.py:RemoteConfigDialog, config_dialogs.py:create_widgets, mw_config.py:menu_remote_config, app.py:setup_menu |
+| UIR-117 | Each configuration dialog — Serial (UIR-020), General (UIR-040), Terminal (UIR-103) and Remote (UIR-116) — shall… | config_dialogs.py:ConfigDialog.create_widgets, config_dialogs.py:TerminalConfigDialog.create_widgets |
+| UIR-042 | The Remote Configuration Dialog shall provide a "List Files" text field limited to 79 characters… | config_dialogs.py:RemoteConfigDialog, config_dialogs.py:__init__ |
+| UIR-045 | The Remote Configuration Dialog shall provide a "Receive from Remote" text field limited to 79… | config_dialogs.py:RemoteConfigDialog, config_dialogs.py:__init__ |
+| UIR-094 | The Remote Configuration Dialog shall provide a "Test" button beside the Receive from Remote field… | config_dialogs.py:RemoteConfigDialog; FR-161 |
+| UIR-046 | The Remote Configuration Dialog shall provide a "Send to Remote" text field limited to 79… | config_dialogs.py:RemoteConfigDialog, config_dialogs.py:__init__ |
+| UIR-095 | The Remote Configuration Dialog shall provide a "Test" button beside the Send to Remote field… | config_dialogs.py:RemoteConfigDialog; FR-161 |
+| UIR-089 | The Remote Configuration Dialog shall provide, below the Send to Remote field, a "Use XMODEM-1K"… | config_dialogs.py:RemoteConfigDialog, ConfigDialog._build_field checkbox type; mw_transfers.py:_xmodem_1k_enabled; NFR-003b, NFR-003g |
+| UIR-090 | The Remote Configuration Dialog shall provide two text fields (limited to 79 characters, default blank)… | config_dialogs.py:RemoteConfigDialog; mw_transfers.py:_issue_remote_cmd |
+| UIR-055 | The Remote Configuration Dialog shall provide a "Rename" text field limited to 79 characters with… | config_dialogs.py:RemoteConfigDialog |
+| UIR-056 | The Remote Configuration Dialog shall provide a "Delete" text field limited to 79 characters with… | config_dialogs.py:RemoteConfigDialog |
+| UIR-107 | The Remote Configuration Dialog shall provide, below the Delete field (UIR-056), a multi-line "Erase All"… | config_dialogs.py:RemoteConfigDialog, config_dialogs.py:_build_field |
+| UIR-049 | The Remote Configuration Dialog shall provide an "Xfer Launch Delay (s)" integer field (0..60 inclusive)… | config_dialogs.py:RemoteConfigDialog, config_dialogs.py:__init__ |
+| UIR-093 | The Remote Configuration Dialog shall provide an "Xfer Handshake Timeout (s)" integer field (1..60 inclusive)… | config_dialogs.py:RemoteConfigDialog, mw_transfers.py:_handshake_timeout |
+| UIR-052 | The Remote Configuration Dialog shall provide an "Xfer Inter-file Delay (s)" integer field (0..60 inclusive)… | config_dialogs.py:RemoteConfigDialog |
+| UIR-059 | The Remote Configuration Dialog shall provide a multi-line "Boot Sequence" text field, persisted as the… | config_dialogs.py:RemoteConfigDialog, config_dialogs.py:_build_field |
 
 ## 4.5 Terminal Window
 
@@ -453,6 +480,9 @@ _458 requirements across 55 sections._
 | UIR-102 | The Terminal Window context menu (UIR-099) shall include a **Macros** submenu listing the configured macro… | terminal_window.py:_build_context_menu, mw_remote.py:_configured_macros, mw_remote.py:run_macro_script; tests test_gui_smoke.py |
 | UIR-103 | The Terminal Config dialog (Config > Terminal, FR-021c) shall be a modal, resizable dialog titled… | config_dialogs.py:TerminalConfigDialog, config_dialogs.py:TerminalConfigDialog.create_widgets; tests test_macros.py, test_gui_smoke.py |
 | UIR-103a | The **Terminal** tab shall present, in a two-column form (as UIR-021), the Terminal Type dropdown… | config_dialogs.py:TerminalConfigDialog.create_widgets; tests test_gui_smoke.py |
+| UIR-047 | The Terminal Config dialog's Terminal tab (UIR-103a) shall provide an "End of Line" drop-down offering… | config_dialogs.py:TerminalConfigDialog, config_dialogs.py:create_widgets |
+| UIR-048 | The Carriage Return (CR) value shall be the default selection… | config_dialogs.py:TerminalConfigDialog, config_dialogs.py:__init__ |
+| UIR-058 | The Terminal Config dialog's Terminal tab (UIR-103a) shall provide an "Echo Transfer Data" dropdown (OFF/ON… | config_dialogs.py:TerminalConfigDialog; FR-086 |
 | UIR-103b | The Terminal tab shall provide a "Local Echo" checkbox, persisted as the local_echo setting (ON/OFF)… | config_dialogs.py:TerminalConfigDialog, utils/config_handler.py, gui/mw_config.py:_apply_terminal_settings; tests test_config_handler.py, test_gui_smoke.py |
 | UIR-103c | The Terminal tab shall provide an "Autoscroll" checkbox, persisted as the autoscroll setting (ON/OFF), checked… | config_dialogs.py:TerminalConfigDialog, utils/config_handler.py, gui/mw_config.py:_apply_terminal_settings; tests test_config_handler.py, test_gui_smoke.py |
 | UIR-103d | The **Macros** tab shall present the ten macro-button slots (UIR-098) numbered 1..10 as a nested… | config_dialogs.py:TerminalConfigDialog.create_widgets, config_dialogs.py:TerminalConfigDialog._run_test; tests test_macros.py |
@@ -491,11 +521,6 @@ _458 requirements across 55 sections._
 | UIR-057a | The dialog shall contain a single-line filename text field, an **Apply** button, and a **Cancel**… | — |
 | UIR-057b | For the Rename action the field shall be editable and pre-populated with the file's name… | — |
 | UIR-057c | The dialog title shall name the action and target (e.g… | — |
-| UIR-058 | The General Configuration Dialog shall provide an "Echo Transfer Data" dropdown (OFF/ON, default OFF), persisted… | config_dialogs.py:GeneralConfigDialog; FR-086 |
-| UIR-059 | The General Configuration Dialog shall provide a multi-line "Boot Sequence" text field, persisted as the… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:_build_field |
-| UIR-089 | The General Configuration Dialog shall provide, in the "Remote" group below the Send to Remote… | config_dialogs.py:GeneralConfigDialog, ConfigDialog._build_field checkbox type; mw_transfers.py:_xmodem_1k_enabled; NFR-003b, NFR-003g |
-| UIR-090 | The General Configuration Dialog shall provide two text fields (limited to 79 characters, default blank)… | config_dialogs.py:GeneralConfigDialog; mw_transfers.py:_issue_remote_cmd |
-| UIR-107 | The General Configuration Dialog shall provide, in the "Remote" group below the Delete field (UIR-056)… | config_dialogs.py:GeneralConfigDialog, config_dialogs.py:_build_field |
 
 ## 4.9 Common dialog conventions
 
@@ -565,6 +590,19 @@ _458 requirements across 55 sections._
 | ID | Summary | Impl |
 |----|---------|------|
 | UIR-098 | The ten macro-button slots (FR-162), numbered 1..10, shall be edited on the Terminal Config dialog's… | config_dialogs.py:TerminalConfigDialog.create_widgets, config_dialogs.py:TerminalConfigDialog._run_test |
+
+## 4.18 Disk Image
+
+| ID | Summary | Impl |
+|----|---------|------|
+| UIR-109 | The File menu (UIR-002) shall contain an **Image Details…** item, placed immediately after **Open Disk… | app.py:setup_menu, mw_disk_image.py:menu_image_details, gui/disk_image_details_dialog.py:DiskImageDetailsDialog; lang/*.txt (menu.file.image_details, dialog.image_details.*) |
+| UIR-108 | The File menu (UIR-002) shall contain an **Open Disk Image…** item, placed at the top… | app.py:setup_menu, mw_disk_image.py:menu_open_image; lang/*.txt (menu.file.open_image, dialog.open_image.*, status.disk_image_loaded) |
+| UIR-110 | The File menu (UIR-002) shall contain a **Save Image…** item, placed immediately after **Image Details…**… | app.py:setup_menu, mw_disk_image.py:menu_save_image, mw_disk_image.py:_update_save_image_action; lang/*.txt (menu.file.save_image, dialog.save_image.*, status.disk_image_saved, error.disk_image_write) |
+| UIR-111 | While a disk image is open (FR-169) the Host Files group title (FR-126/UIR-011) shall indicate… | app.py:_update_host_group_title, mw_disk_image.py:_prompt_save_discard_cancel; lang/*.txt (main.host_files_image, dialog.image_dirty.title, dialog.image_dirty.message, button.discard) |
+| UIR-112 | When opening a disk image (FR-169) the application shall present a modal **mount-side** dialog offering… | mw_disk_image.py:_prompt_mount_side, app.py:_update_remote_group_title, mw_disk_image.py:menu_open_image; lang/*.txt (dialog.mount_side.title, dialog.mount_side.message, dialog.mount_side.host, dialog.mount_side.remote, main.remote_files_image) |
+| UIR-113 | The File menu (UIR-002) shall contain a **Close Disk Image…** item, placed immediately after **Save… | app.py:setup_menu, mw_disk_image.py:menu_close_image; lang/*.txt (menu.file.close_image, status.disk_image_closed) |
+| UIR-114 | The File menu (UIR-002) shall contain a **New Disk Image…** item, placed immediately after **Open… | app.py:setup_menu, app.py:_update_host_group_title, app.py:_update_remote_group_title, mw_disk_image.py:menu_new_image, mw_disk_image.py:_prompt_new_geometry; lang/*.txt (menu.file.new_image, dialog.new_image.pick_title, dialog.new_image.pick_label, main.image_unsaved, status.new_image_created) |
+| UIR-115 | The General Config dialog (UIR-040) shall contain a **Default Image Directory** field (a directory chooser)… | gui/config_dialogs.py:GeneralConfigDialog, mw_config.py:menu_general_config; lang/*.txt (config.general.image_directory) |
 
 ## 5. External Interface Requirements
 
@@ -667,6 +705,24 @@ _458 requirements across 55 sections._
 | DR-047a | The file shall be located inside the package at src/cpm_fm/docs/, resolved at run time relative… | — |
 | DR-047b | The file shall be rendered to HTML for display (UIR-091) using the markdown library with… | — |
 | DR-047c | A missing or unreadable file shall not block opening the Manual Window (UIR-091)… | — |
+
+## 6.11 CP/M disk-image geometry database
+
+| ID | Summary | Impl |
+|----|---------|------|
+| DR-048 | Disk-image geometry (FR-170) shall be described in the cpmtools **diskdefs** text format… | utils/disk_image/diskdefs.py:parse_diskdefs, utils/disk_image/diskdefs.py:_resolve_offset, utils/disk_image/geometry.py:DiskDef, utils/disk_image/data/diskdefs; tests test_disk_image/test_diskdefs.py |
+
+## 6.12 CP/M directory-entry format
+
+| ID | Summary | Impl |
+|----|---------|------|
+| DR-049 | The application shall reconstruct files from the CP/M directory (located after boottrk reserved tracks, maxdir… | utils/disk_image/directory.py:parse_directory, utils/disk_image/directory.py:CpmDirEntry, utils/disk_image/geometry.py:skew_table, utils/disk_image/filesystem.py:read_file; tests test_disk_image/test_directory.py, test_disk_image/test_geometry.py |
+
+## 6.13 CP/M image write / re-pack format
+
+| ID | Summary | Impl |
+|----|---------|------|
+| DR-050 | Writing a CP/M image (FR-174) shall invert the read format (DR-049) into the same on-disk… | utils/disk_image/filesystem.py:build_dir_entries, utils/disk_image/filesystem.py:split_83, utils/disk_image/image.py:CpmImage.write_file, utils/disk_image/image.py:CpmImage.delete_file, utils/disk_image/image.py:CpmImage.save, utils/disk_image/image.py:CpmImage._write_data; tests test_disk_image/test_write.py |
 
 ## 7. Design Constraints
 

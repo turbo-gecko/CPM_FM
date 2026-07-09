@@ -13,13 +13,14 @@ app.title_with_config = {app} — {config}
 
 # --- Menu bar ----------------------------------------------------------------
 menu.file = Bestand
-menu.file.new = Nieuw
-menu.file.load = Laden
-menu.file.save = Opslaan
+menu.file.new = Nieuwe configuratie
+menu.file.load = Configuratie laden
+menu.file.save = Configuratie opslaan
 menu.file.exit = Afsluiten
 menu.config = Configuratie
 menu.config.serial = Serieel
 menu.config.general = Algemeen
+menu.config.remote = Afstand
 menu.config.language = Taal
 menu.help = Help
 menu.help.manual = Handleiding
@@ -143,7 +144,7 @@ error.transfer_no_response_send = Geen reactie van extern voor {name} - controle
 error.transfer_no_response_recv = Geen reactie van extern voor {name} - controleer het commando Ontvangen van extern in Config > General
 warning.select_upload = Selecteer een of meer bestanden om te uploaden
 warning.select_download = Selecteer een of meer bestanden om te downloaden
-warning.no_config_loaded = Er is geen configuratiebestand geladen. De instellingen zijn alleen op de huidige sessie toegepast. Gebruik Bestand > Opslaan om ze naar een configuratiebestand te schrijven.
+warning.no_config_loaded = Er is geen configuratiebestand geladen. De instellingen zijn alleen op de huidige sessie toegepast. Gebruik Configuratie > Configuratie opslaan om ze naar een configuratiebestand te schrijven.
 
 # --- Common buttons ----------------------------------------------------------
 button.apply = Toepassen
@@ -204,25 +205,26 @@ status.terminal_settings_updated = Terminal instellingen bijgewerkt
 
 # --- General Configuration dialog --------------------------------------------
 config.general.title = Algemene Configuratie
-config.general.remote_group = Afstand
-config.general.list_files = Bestanden listen
-config.general.recv_remote = Ontvangen van apparaat
-config.general.send_remote = Verzenden naar apparaat
-config.general.xmodem_1k = XMODEM-1K gebruiken
-config.general.recv_remote_1k = Ontvangen van apparaat (1K)
-config.general.send_remote_1k = Verzenden naar apparaat (1K)
-config.general.xfer_launch_delay = Startvertraging (s)
-config.general.xfer_handshake_timeout = Handshake-timeout (s)
-config.general.xfer_interfile_delay = Vertraging tussen bestanden (s)
-config.general.eol = Einde regel
+config.remote.title = Configuratie op afstand
+config.remote.list_files = Bestanden listen
+config.remote.recv_remote = Ontvangen van apparaat
+config.remote.send_remote = Verzenden naar apparaat
+config.remote.xmodem_1k = XMODEM-1K gebruiken
+config.remote.recv_remote_1k = Ontvangen van apparaat (1K)
+config.remote.send_remote_1k = Verzenden naar apparaat (1K)
+config.remote.xfer_launch_delay = Startvertraging (s)
+config.remote.xfer_handshake_timeout = Handshake-timeout (s)
+config.remote.xfer_interfile_delay = Vertraging tussen bestanden (s)
+config.terminal.eol = Einde regel
 config.general.debug_logging = Debug logging
-config.general.echo_transfer = Overdrachtsdata echoën
+config.terminal.echo_transfer = Overdrachtsdata echoën
 config.general.viewer = Viewer/Editor
-config.general.rename_remote = Hernoemen
-config.general.delete_remote = Verwijderen
-config.general.erase_all = Alles wissen
+config.general.image_directory = Standaard imagemap
+config.remote.rename_remote = Hernoemen
+config.remote.delete_remote = Verwijderen
+config.remote.erase_all = Alles wissen
 config.general.host_directory = Standaard hostmap
-config.general.boot_sequence = Opstartreeks
+config.remote.boot_sequence = Opstartreeks
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = Geschiedenis
@@ -290,3 +292,61 @@ config.macros.macro = Macro {n}
 config.macros.label = Label
 config.macros.sequence = Toetsenreeks
 status.macro_failed = Macro mislukt - controleer de toetsenreeks
+
+# --- Disk image support (v2.28) ------------------------------------------------
+menu.file.open_image = Schijfimage openen…
+dialog.open_image.title = CP/M-schijfimage openen
+dialog.open_image.filter = CP/M-schijfimages (*.img *.dsk *.cpm *.cf);;Alle bestanden (*)
+dialog.open_image.pick_title = Schijfgeometrie selecteren
+dialog.open_image.pick_ambiguous = De schijfgeometrie is dubbelzinnig. Selecteer de indeling:
+dialog.open_image.pick_unknown = De schijfgeometrie kon niet worden gedetecteerd. Selecteer een indeling om te proberen:
+error.disk_image_unreadable = Kan '{name}' niet lezen als CP/M-schijfimage.
+error.disk_image_extract = Kan bestanden niet uit de schijfimage extraheren: {error}
+status.disk_image_loaded = Schijfimage '{name}' geladen ({geometry})
+status.disk_image_partial = Schijfimage '{name}' geladen; {count} bestand(en) konden niet worden geëxtraheerd
+
+# --- Disk image details (v2.29) --------------------------------------------------
+menu.file.image_details = Schijfkopiedetails…
+dialog.image_details.title = Details schijfkopie
+dialog.image_details.col.name = Naam
+dialog.image_details.col.size = Grootte
+dialog.image_details.col.user = Gebruiker
+dialog.image_details.col.attrs = Kenmerken
+dialog.image_details.close = Sluiten
+
+# --- Disk image write (v2.30) ----------------------------------------------------
+menu.file.save_image = Image opslaan…
+dialog.save_image.title = CP/M-schijfimage opslaan
+dialog.save_image.filter = CP/M-schijfimages (*.img *.dsk *.cpm);;Alle bestanden (*)
+status.disk_image_saved = Schijfimage opgeslagen als '{name}' ({count} bestand(en))
+error.disk_image_write = Kan de schijfimage niet schrijven: {error}
+error.disk_image_overwrite_source = Image opslaan maakt een nieuw bestand — kies een andere naam dan de bronimage.
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [image: {name}]
+button.discard = Verwerpen
+dialog.image_dirty.title = Niet-opgeslagen wijzigingen in schijfimage
+dialog.image_dirty.message = De geopende schijfimage '{name}' heeft niet-opgeslagen wijzigingen. Opslaan in een nieuw imagebestand voordat u ze verwerpt?
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [image: {name}]
+dialog.mount_side.title = Schijfimage openen
+dialog.mount_side.message = In welk venster moet de image worden gekoppeld?
+dialog.mount_side.host = Host-venster (overdracht naar/van het CP/M-apparaat)
+dialog.mount_side.remote = Extern venster (overdracht naar/van een hostmap)
+error.image_remote_needs_disconnect = Verbreek de verbinding met het CP/M-apparaat voordat u een image in het externe venster koppelt.
+error.image_remote_blocks_connect = Sluit de schijfimage (Bestand ▸ Nieuw) voordat u verbinding maakt met het CP/M-apparaat.
+error.image_copy = Kan het bestand niet kopiëren: {error}
+status.image_copy_in = {count} bestand(en) naar de image gekopieerd
+status.image_copy_out = {count} bestand(en) naar de hostmap gekopieerd
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = Schijfimage sluiten…
+status.disk_image_closed = Schijfimage gesloten
+
+# --- New empty disk image (v2.34) -----------------------------------------------
+menu.file.new_image = Nieuwe schijfimage…
+dialog.new_image.pick_title = Nieuwe schijfimage
+dialog.new_image.pick_label = Kies de schijfindeling voor de nieuwe image:
+main.image_unsaved = (nieuwe image)
+status.new_image_created = Nieuwe schijfimage gemaakt ({geometry})

@@ -91,6 +91,12 @@ def build_datas() -> list[tuple[str, str]]:
     if os.path.isfile(manual):
         datas.append((manual, os.path.join("cpm_fm", "docs")))
 
+    # DR-048: bundled CP/M disk-image geometry database -> cpm_fm/utils/disk_image/data,
+    # matching disk_image/__init__.py's __file__-relative lookup (_BUNDLED_DISKDEFS).
+    diskdefs = os.path.join(ROOT, "src", "cpm_fm", "utils", "disk_image", "data", "diskdefs")
+    if os.path.isfile(diskdefs):
+        datas.append((diskdefs, os.path.join("cpm_fm", "utils", "disk_image", "data")))
+
     # qt-material ships its own QSS templates / icon resources that are loaded at
     # runtime; PyInstaller's static analysis won't find them, so collect them.
     datas += collect_data_files("qt_material")

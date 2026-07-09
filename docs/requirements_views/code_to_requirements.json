@@ -10,6 +10,7 @@
     "FR-016",
     "FR-018",
     "FR-019",
+    "FR-021d",
     "FR-022",
     "FR-061",
     "FR-070",
@@ -32,6 +33,8 @@
     "FR-126",
     "FR-141",
     "FR-168",
+    "FR-175",
+    "FR-176",
     "NFR-004",
     "STR-002",
     "UIR-001",
@@ -55,7 +58,13 @@
     "UIR-078",
     "UIR-082",
     "UIR-086",
-    "UIR-087"
+    "UIR-087",
+    "UIR-109",
+    "UIR-110",
+    "UIR-111",
+    "UIR-112",
+    "UIR-114",
+    "UIR-116"
   ],
   "src/cpm_fm/gui/about_dialog.py": [
     "FR-022",
@@ -67,7 +76,9 @@
     "FR-004",
     "FR-020",
     "FR-021",
+    "FR-021a",
     "FR-021b",
+    "FR-021d",
     "FR-093",
     "FR-121",
     "FR-159",
@@ -93,7 +104,6 @@
     "UIR-040",
     "UIR-041",
     "UIR-042",
-    "UIR-043",
     "UIR-044",
     "UIR-045",
     "UIR-046",
@@ -101,13 +111,11 @@
     "UIR-048",
     "UIR-049",
     "UIR-050",
-    "UIR-051",
     "UIR-052",
     "UIR-053",
     "UIR-054",
     "UIR-055",
     "UIR-056",
-    "UIR-057",
     "UIR-058",
     "UIR-059",
     "UIR-075",
@@ -119,7 +127,10 @@
     "UIR-098",
     "UIR-103",
     "UIR-103a",
-    "UIR-107"
+    "UIR-107",
+    "UIR-115",
+    "UIR-116",
+    "UIR-117"
   ],
   "src/cpm_fm/gui/conflict_dialog.py": [
     "FR-146",
@@ -128,6 +139,11 @@
   ],
   "src/cpm_fm/gui/dialog_buttons.py": [
     "UIR-075"
+  ],
+  "src/cpm_fm/gui/disk_image_details_dialog.py": [
+    "FR-121",
+    "FR-173",
+    "UIR-109"
   ],
   "src/cpm_fm/gui/file_action_dialog.py": [
     "FR-114",
@@ -162,6 +178,7 @@
     "FR-153",
     "FR-153e",
     "FR-154",
+    "FR-180",
     "UIR-088"
   ],
   "src/cpm_fm/gui/mw_config.py": [
@@ -182,12 +199,18 @@
     "FR-021a",
     "FR-021b",
     "FR-021c",
+    "FR-021d",
     "FR-022",
     "FR-023",
     "FR-060",
     "FR-093",
     "FR-125",
     "FR-157",
+    "FR-161",
+    "FR-171",
+    "FR-175",
+    "FR-176",
+    "FR-179",
     "IFR-003",
     "UIR-034",
     "UIR-062",
@@ -196,7 +219,9 @@
     "UIR-103",
     "UIR-103a",
     "UIR-104",
-    "UIR-106"
+    "UIR-106",
+    "UIR-115",
+    "UIR-116"
   ],
   "src/cpm_fm/gui/mw_context_menu.py": [
     "CR-010",
@@ -216,6 +241,31 @@
     "UIR-018",
     "UIR-019"
   ],
+  "src/cpm_fm/gui/mw_disk_image.py": [
+    "DR-050",
+    "FR-146",
+    "FR-147",
+    "FR-148",
+    "FR-149",
+    "FR-169",
+    "FR-170",
+    "FR-171",
+    "FR-172",
+    "FR-173",
+    "FR-174",
+    "FR-175",
+    "FR-176",
+    "FR-177",
+    "FR-178",
+    "FR-179",
+    "UIR-108",
+    "UIR-109",
+    "UIR-110",
+    "UIR-111",
+    "UIR-112",
+    "UIR-113",
+    "UIR-114"
+  ],
   "src/cpm_fm/gui/mw_file_panes.py": [
     "FR-017",
     "FR-058",
@@ -232,6 +282,9 @@
     "FR-133",
     "FR-134",
     "FR-135",
+    "FR-171",
+    "FR-175",
+    "FR-176",
     "UIR-079",
     "UIR-080"
   ],
@@ -299,6 +352,7 @@
     "FR-157",
     "FR-162",
     "FR-166",
+    "FR-176",
     "NFR-004",
     "UIR-034",
     "UIR-069",
@@ -325,7 +379,8 @@
     "FR-142",
     "FR-149",
     "FR-159",
-    "FR-160"
+    "FR-160",
+    "FR-176"
   ],
   "src/cpm_fm/gui/mw_transfer_guards.py": [
     "FR-145",
@@ -352,6 +407,7 @@
     "FR-137",
     "FR-138",
     "FR-160",
+    "FR-176",
     "UIR-089",
     "UIR-090"
   ],
@@ -563,6 +619,47 @@
     "FR-014",
     "IFR-004"
   ],
+  "src/cpm_fm/utils/disk_image/__init__.py": [
+    "CR-014",
+    "DR-048",
+    "DR-049",
+    "DR-050",
+    "FR-169",
+    "FR-170",
+    "FR-171",
+    "FR-172",
+    "FR-178"
+  ],
+  "src/cpm_fm/utils/disk_image/directory.py": [
+    "CR-014",
+    "DR-049"
+  ],
+  "src/cpm_fm/utils/disk_image/diskdefs.py": [
+    "CR-014",
+    "DR-048"
+  ],
+  "src/cpm_fm/utils/disk_image/filesystem.py": [
+    "CR-014",
+    "DR-049",
+    "DR-050",
+    "FR-169",
+    "FR-171",
+    "FR-174"
+  ],
+  "src/cpm_fm/utils/disk_image/geometry.py": [
+    "CR-014",
+    "DR-048",
+    "DR-049"
+  ],
+  "src/cpm_fm/utils/disk_image/image.py": [
+    "CR-014",
+    "DR-049",
+    "DR-050",
+    "FR-169",
+    "FR-171",
+    "FR-172",
+    "FR-174"
+  ],
   "src/cpm_fm/utils/file_filter.py": [
     "CR-014",
     "FR-130",
@@ -580,6 +677,12 @@
     "FR-124",
     "NFR-005",
     "UIR-077"
+  ],
+  "src/cpm_fm/utils/temp_cleanup.py": [
+    "CR-014",
+    "FR-016",
+    "FR-113a",
+    "FR-171"
   ],
   "src/cpm_fm/utils/transfer_history.py": [
     "CR-014",

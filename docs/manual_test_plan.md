@@ -4,9 +4,9 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.38 |
+| Version | 1.49 |
 | Status | Draft |
-| Date | 2026-07-07 |
+| Date | 2026-07-09 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.25.0) |
 
 ---
@@ -23,7 +23,7 @@ must be verified by hand. The automated suite (`pytest`) already covers:
   `FR-120`, `NFR-003a`–`NFR-003q` (`tests/test_xmodem.py`), using an in-memory fake port.
 - Headless GUI logic under the `offscreen` Qt platform — transfer/batch orchestration, progress-dialog
   state, transfer cancellation wiring, dialog button layout, drive-change logic, list-clearing on
-  load/disconnect, geometry/last-config persistence, File > New, the context-menu file actions, and
+  load/disconnect, geometry/last-config persistence, Config > New Config, the context-menu file actions, and
   transfer-history recording/dialog/re-transfer (`tests/test_gui_smoke.py`), all with serial I/O,
   sleeps, threads, and modal dialogs stubbed out.
 - The persistent transfer-history store — entry schema, JSON persistence, retention (count + age),
@@ -128,7 +128,7 @@ that need two physical ports are marked **[2-port]**; visual-only cases are mark
 
 ## 5. Serial connect / disconnect (real ports)
 
-Preconditions: a valid serial configuration is loaded (File > Load `examples/RC2014_Z_Pro.json`,
+Preconditions: a valid serial configuration is loaded (Config > Load Config `examples/RC2014_Z_Pro.json`,
 then edit ports via Config > Serial to match your hardware), unless a case says otherwise.
 
 | ID | Req | Steps | Expected |
@@ -152,7 +152,7 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 | MT-C09 | FR-058 | Connect, Update to populate the Remote list, then Disconnect (clean close). | Remote Files list is **cleared** after the successful disconnect. |
 | MT-C10 | FR-051, FR-058 | Force a close failure if you can (e.g. pull the adapter mid-session so close raises), then Disconnect. | Error dialog "Terminal port is unable to be closed"; disconnect cancelled; Remote list **not** cleared. *(May be Blocked if a close failure cannot be induced.)* |
 | MT-C18 [2-port] | FR-030, FR-050 | Configure the Terminal and Transport COM ports **back-to-front** (swapped). Press **Connect**; when the "Remote Filesystem Unavailable" dialog appears, click **Abort**. Separately, repeat and instead press **Disconnect** immediately after Connect (before the dialog). | In **both** cases the application disconnects **promptly** (within a couple of seconds) — it does **not** hang or become unresponsive for tens of seconds. Both ports end *not-connected*. |
-| MT-C19 | FR-017a, FR-050 | While **connected** (ports open), use **File → Load** to load a different configuration file. | The original ports are closed before the new config is applied: both indicators go *not-connected*, the Remote Files list clears, and the app is **not** left reporting *connected* on the old ports. (Reconnect uses the newly loaded config's ports.) |
+| MT-C19 | FR-017a, FR-050 | While **connected** (ports open), use **Config → Load Config** to load a different configuration file. | The original ports are closed before the new config is applied: both indicators go *not-connected*, the Remote Files list clears, and the app is **not** left reporting *connected* on the old ports. (Reconnect uses the newly loaded config's ports.) |
 
 ---
 
@@ -173,17 +173,12 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
-| MT-G01 [visual] | FR-021, UIR-040, UIR-041, UIR-044 | Open Config > General. | Modal dialog titled "General Config". A **"Remote"** group is the **first** section, containing (in order) List Files, Receive from Remote, Send to Remote, Rename, Delete. The remaining settings (Xfer Launch Delay, Xfer Inter-file Delay, End of Line, Debug Logging, Echo Transfer Data, Viewer/Editor, Default Host Directory) appear below it, ungrouped. Two-column layout throughout. |
-| MT-G02 | UIR-042, UIR-045, UIR-046 | Inspect defaults / length limits of List Files, Receive from Remote, Send to Remote (in the Remote group). | List Files default "DIR"; Receive default "PCPUT $1"; Send default "PCGET $1"; each limited to 79 characters. |
-| MT-G03 | UIR-047, UIR-048 | Inspect the End of Line drop-down. | Drop-down offering the mutually exclusive values CR / LF / CRLF; **CR** selected by default. |
-| MT-G04 | UIR-049, UIR-052, UIR-093 | Inspect Xfer Launch Delay, Xfer Handshake Timeout, and Xfer Inter-file Delay fields. | Launch Delay integer 0–60 default 3; Handshake Timeout integer 1–60 default 10; Inter-file Delay integer 0–60 default 2. |
-| MT-G11 | UIR-094, UIR-095, FR-161 | Connected, with a deliberately wrong Send to Remote command (e.g. "NOSUCHCMD $1") typed but **not yet saved**. Click the **Test** button beside it. Repeat with the correct default command. | Wrong command: after the handshake timeout, a dialog reports no response from the remote. Correct command: a dialog reports the remote responded. Neither run actually transfers a file (no new file appears on either side). Repeat both for the **Receive from Remote** Test button. |
+| MT-G01 [visual] | FR-021, UIR-040, UIR-041, UIR-044, UIR-117 | Open Config → General. | Modal dialog titled "General Config". The fields are **ungrouped** (no group boxes) in a two-column form: Debug Logging, Viewer/Editor, Default Host Directory, Default Image Directory. The form sits in a **scrollable area** with the Save/Cancel row fixed below (a vertical scrollbar appears if the dialog is too short). |
 | MT-G05 | UIR-050 | Inspect Debug Logging control. | Dropdown OFF/ON, default OFF. |
-| MT-G09 | UIR-058 | Inspect Echo Transfer Data control. | Dropdown OFF/ON, default OFF. |
 | MT-G06 | UIR-053 | Click the Default Host Directory browse button, pick a folder. | A folder-select dialog appears; the chosen path populates the field. |
-| MT-G07 | UIR-054, UIR-055, UIR-056 | Inspect the Viewer/Editor field, and the "Rename" and "Delete" fields (in the Remote group). | Defaults `notepad $1`, `REN $2=$1`, `ERA $1`; the Rename/Delete fields are labelled just "Rename"/"Delete" (no "Remote" suffix) and limited to 79 chars. |
+| MT-G07 | UIR-054 | Inspect the Viewer/Editor field. | Default `notepad $1`. |
+| MT-G15 | UIR-115 | Click the Default Image Directory browse button, pick a folder. | A folder-select dialog appears; the chosen path populates the field. |
 | MT-G08 | UIR-043 | Confirm there is **no** "Change Disk" field. | The withdrawn field is absent. |
-| MT-G10 | UIR-059 | Inspect the "Boot Sequence" field (below the ungrouped settings). Type a multi-line script (e.g. `WAITFOR Boot:` then `SEND ` then `WAIT 1`), Save, reopen the dialog. | A multi-line text editor labelled "Boot Sequence", empty by default, accepting several lines. After Save and reopen the entered text (newlines included) is shown verbatim. |
 
 ---
 
@@ -191,10 +186,27 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
-| MT-G12 [visual] | FR-021c, UIR-003, UIR-103, UIR-103a, UIR-103d | Open **Config > Terminal**. | The Config menu contains a **Terminal** item (between Serial and General; there is **no** Macro Buttons item). It opens a modal, resizable dialog titled "Terminal Config" with two tabs — **Terminal** and **Macros**. The Terminal tab shows **Terminal Type** (VT100/VT52/ADM-3A, default VT100), **Local Echo** (default off), and **Autoscroll** (default on). The Macros tab has a **tab per macro**, labelled **Macro 1 … Macro 10**; each has a **Label** field, a multi-line **Keystrokes** editor, and a **Test** button. |
-| MT-G12a | FR-021c, UIR-034, UIR-103b, UIR-103c | On the Terminal tab set Terminal Type = ADM-3A, tick Local Echo, untick Autoscroll; Save. Reopen the dialog. | The three values round-trip. With a config file loaded, only the terminal + macro settings are written to it (serial/general settings unchanged); with no file loaded a warning is shown and the change applies to the session only. |
+| MT-G12 [visual] | FR-021c, UIR-003, UIR-103, UIR-103a, UIR-103d | Open **Config → Terminal**. | The Config menu lists, from the top, **New Config / Load Config / Save Config**, then a separator, then **Serial / Terminal / General / Remote / Language**. The Terminal item opens a modal, resizable dialog titled "Terminal Config" with two tabs — **Terminal** and **Macros**. The Terminal tab shows **Terminal Type** (VT100/VT52/ADM-3A, default VT100), **Local Echo** (default off), **Autoscroll** (default on), **End of Line**, and **Echo Transfer Data**. The Macros tab has a **tab per macro**, labelled **Macro 1 … Macro 10**; each has a **Label** field, a multi-line **Keystrokes** editor, and a **Test** button. |
+| MT-G03 | UIR-047, UIR-048 | On the Terminal tab, inspect the **End of Line** drop-down. | Drop-down offering the mutually exclusive values CR / LF / CRLF; **CR** selected by default. |
+| MT-G09 | UIR-058 | On the Terminal tab, inspect the **Echo Transfer Data** control. | Dropdown OFF/ON, default OFF. |
+| MT-G12a | FR-021c, UIR-034, UIR-103b, UIR-103c | On the Terminal tab set Terminal Type = ADM-3A, tick Local Echo, untick Autoscroll; Save. Reopen the dialog. | The three values round-trip. With a config file loaded, only the terminal + macro settings (including End of Line and Echo Transfer Data) are written to it (serial/general/remote settings unchanged); with no file loaded a warning is shown and the change applies to the session only. |
 | MT-G13 | FR-021b, FR-021c, UIR-098, UIR-103d | On the Macros tab, in Macro 1 set Label `Dir` and Keystrokes `SEND DIR`; in Macro 2 set Label `Reset` and Keystrokes `SENDRAW 03`. Save. Reopen the dialog. | The entered labels and keystroke scripts are shown verbatim after reopen and are written to the loaded config file along with the terminal settings. |
 | MT-G14 [CP/M] | FR-162, UIR-098, UIR-103d | Connected, on the Macros tab type a script (e.g. `SENDRAW 0D`) into a slot's Keystrokes editor (need not be saved) and press its **Test** button. Then repeat with the Terminal Port **closed**. | Connected: the script runs on the Terminal Port (the remote responds — e.g. the drive prompt appears in the Terminal Window). Disconnected: a "Terminal port not connected" error dialog is shown and nothing is sent. |
+
+---
+
+## 7.2 Remote configuration dialog
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-G20 [visual] | FR-021d, UIR-003, UIR-116, UIR-117 | Open **Config → Remote**. | Modal dialog titled "Remote Config". The fields are **ungrouped** (no group boxes) in a two-column form, in order: List Files, Receive from Remote (+ Test), Send to Remote (+ Test), Use XMODEM-1K, Receive from Remote (1K), Send to Remote (1K), Rename, Delete, Erase All, Xfer Launch Delay, Xfer Handshake Timeout, Xfer Inter-file Delay, Boot Sequence. The form sits in a **scrollable area** with the Save/Cancel row fixed below. |
+| MT-G02 | UIR-042, UIR-045, UIR-046 | Inspect defaults / length limits of List Files, Receive from Remote, Send to Remote. | List Files default "DIR"; Receive default "PCPUT $1"; Send default "PCGET $1"; each limited to 79 characters. |
+| MT-G21 | UIR-055, UIR-056 | Inspect the "Rename" and "Delete" fields. | Defaults `REN $2=$1` and `ERA $1`; labelled just "Rename"/"Delete" (no "Remote" suffix) and limited to 79 characters. |
+| MT-G22 | UIR-089, UIR-090 | Inspect the **Use XMODEM-1K** checkbox and the two **(1K)** command fields. | Checkbox default OFF; "Receive from Remote (1K)" and "Send to Remote (1K)" both blank by default and limited to 79 characters. Ticking the box and reopening the dialog (after Save) shows it ticked. |
+| MT-G04 | UIR-049, UIR-052, UIR-093 | Inspect Xfer Launch Delay, Xfer Handshake Timeout, and Xfer Inter-file Delay fields. | Launch Delay integer 0–60 default 3; Handshake Timeout integer 1–60 default 10; Inter-file Delay integer 0–60 default 2. |
+| MT-G10 | UIR-059 | Inspect the "Boot Sequence" field (last in the dialog). Type a multi-line script (e.g. `WAITFOR Boot:` then `SEND ` then `WAIT 1`), Save, reopen the dialog. | A multi-line text editor labelled "Boot Sequence", empty by default, accepting several lines. After Save and reopen the entered text (newlines included) is shown verbatim. |
+| MT-G11 [CP/M] | UIR-094, UIR-095, FR-161 | Connected, with a deliberately wrong Send to Remote command (e.g. "NOSUCHCMD $1") typed but **not yet saved**. Click the **Test** button beside it. Repeat with the correct default command. | Wrong command: after the handshake timeout, a dialog reports no response from the remote. Correct command: a dialog reports the remote responded. Neither run actually transfers a file (no new file appears on either side). Repeat both for the **Receive from Remote** Test button. |
+| MT-G23 | FR-021d | With a configuration file loaded, change a remote field (e.g. List Files) and Save. Inspect the file. Then repeat with **no** file loaded. | With a file loaded, only the remote settings are written to it (serial/general/terminal settings unchanged); no file picker appears. With no file loaded a warning is shown and the change applies to the session only. |
 
 ---
 
@@ -202,21 +214,21 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
-| MT-L01 | FR-010, IFR-004 | File > Load. | A file-select dialog defaulting to JSON appears. |
+| MT-L01 | FR-010, IFR-004 | Config > Load Config. | A file-select dialog defaulting to JSON appears. |
 | MT-L02 | FR-011, NFR-002 | Load `examples/RC2014_Z_Pro.json` (flat). Then hand-create a nested variant — wrap its serial keys in a `{"serial": {…}}` object, renaming `transport_port`→`transfer_port`, `data`→`data_bits`, `stopbits`→`stop_bits` — and load that. | Each load **fully replaces** the settings store; both shapes are accepted; serial settings normalise (Connect works with either). |
 | MT-L03 | FR-012 | Hand-edit a config to add an unknown key (e.g. `"foo": 123`), load it, then Save to a new file. | App accepts the file (no rejection); the unknown key survives verbatim in the saved output and does not change behaviour. |
-| MT-L04 | FR-017 | Update to populate the Remote list, then File > Load any config. | Remote Files list is **cleared** on load. |
-| MT-L05 | FR-013, FR-014 | File > Save to a new path; reopen the file in a text editor. | JSON file written with the **entire** settings store — all current serial + general settings (the full-store save, as opposed to the per-group dialog saves MT-L13/MT-L14). |
-| MT-L06 | FR-006, FR-010, FR-013 | Save into folder X; then File > Load. | The Load dialog opens in folder X (the last-used **config** folder), independent of the Host directory. |
+| MT-L04 | FR-017 | Update to populate the Remote list, then Config > Load Config any config. | Remote Files list is **cleared** on load. |
+| MT-L05 | FR-013, FR-014 | Config > Save Config to a new path; reopen the file in a text editor. | JSON file written with the **entire** settings store — all current serial + general settings (the full-store save, as opposed to the per-group dialog saves MT-L13/MT-L14). |
+| MT-L06 | FR-006, FR-010, FR-013 | Save into folder X; then Config > Load Config. | The Load dialog opens in folder X (the last-used **config** folder), independent of the Host directory. |
 | MT-L07 | FR-005 | Load a config, then fully quit and relaunch (`cpm-fm`). | On next start the app auto-reloads and applies that same config file. |
 | MT-L08 | FR-005, FR-003 | After MT-L07, delete or rename the remembered config file, relaunch. | App starts **unconfigured** (no crash) because the remembered file no longer parses/exists. |
 | MT-L09 | FR-018, FR-019 | Load a config (so a file is remembered), connect, Update, then File > **New**. | Current config is saved to the remembered file; ports closed (disconnect behaviour); Remote list cleared; settings replaced with defaults; remembered path forgotten; Host list refreshed to the default directory. |
-| MT-L10 | FR-018 | With **no** remembered file, File > New. | A Save dialog appears first; choosing a file then resets to defaults; **cancelling** the Save dialog cancels New entirely (config, ports, lists retained). |
-| MT-L11 | FR-125, UIR-005 | Launch unconfigured, then File > Load `examples/RC2014_Z_Pro.json`. | Before loading, the title bar reads **CP/M File Manager** alone; after loading it reads **CP/M File Manager — RC2014_Z_Pro** (file base name only — no path, no `.json`). |
+| MT-L10 | FR-018 | With **no** remembered file, Config > New Config. | A Save dialog appears first; choosing a file then resets to defaults; **cancelling** the Save dialog cancels New entirely (config, ports, lists retained). |
+| MT-L11 | FR-125, UIR-005 | Launch unconfigured, then Config > Load Config `examples/RC2014_Z_Pro.json`. | Before loading, the title bar reads **CP/M File Manager** alone; after loading it reads **CP/M File Manager — RC2014_Z_Pro** (file base name only — no path, no `.json`). |
 | MT-L12 | FR-125 | After MT-L11, File > **New**. | The title bar reverts to **CP/M File Manager** alone (the config name is dropped). |
 | MT-L13 | FR-020a | Load a config file. Open Config > **Serial**, change a serial value (e.g. Speed), and press **Save**. Reopen the loaded file in a text editor. | **No** Save dialog appears. The serial value is updated in the file; every general setting in the file (List Files, EOL, Host Directory, etc.) is **unchanged**. Status bar confirms the serial settings were saved. |
 | MT-L14 | FR-021a | Load a config file. Open Config > **General**, change a general value (e.g. EOL), and press **Save**. Reopen the loaded file in a text editor. | **No** Save dialog appears. The general value is updated in the file; every serial setting in the file (ports, speed, parity, etc.) is **unchanged**. Status bar confirms the general settings were saved. |
-| MT-L15 | FR-020a, FR-021a | Launch **unconfigured** (or File > New so no file is loaded). Open Config > Serial (or General), change a value, and press **Save**. | A **warning** dialog states no configuration file is loaded and that File > Save must be used to persist; **no file is written**. The change still takes effect for the running session (e.g. Connect uses the new serial value). |
+| MT-L15 | FR-020a, FR-021a | Launch **unconfigured** (or Config > New Config so no file is loaded). Open Config > Serial (or General), change a value, and press **Save**. | A **warning** dialog states no configuration file is loaded and that Config > Save Config must be used to persist; **no file is written**. The change still takes effect for the running session (e.g. Connect uses the new serial value). |
 
 ---
 
@@ -248,8 +260,38 @@ cases need only a populated Host Files list; the remote-pane case (MT-FS08) need
 | MT-FS05 | FR-133 | Set a filter (e.g. `*.COM`) **and** a sort (Extension, descending). | The displayed files are the filtered subset, shown in the chosen sort order — filter applied first, then sort. |
 | MT-FS06 | FR-135, UIR-079 | Type any non-empty filter, then clear it. | A clear visual indicator (coloured border on the field) shows while the filter is active; it disappears when the field is empty. |
 | MT-FS07 | FR-134 | Set distinct filter text and sort settings on the **Host** and **Remote** panes. Close the app and relaunch. | Each pane reopens with its own last-used filter text, sort key, and direction restored independently. |
-| MT-FS08 [CP/M] | FR-135 | With a remote listing shown, type a filter in the **Remote** filter. Then Disconnect (or File > Load / File > New). | The remote list clears on disconnect/load/new and stays empty — changing the remote filter afterwards does **not** resurrect the old (stale) entries. |
+| MT-FS08 [CP/M] | FR-135 | With a remote listing shown, type a filter in the **Remote** filter. Then Disconnect (or Config > Load Config / Config > New Config). | The remote list clears on disconnect/load/new and stays empty — changing the remote filter afterwards does **not** resurrect the old (stale) entries. |
 | MT-FS09 | UIR-080, FR-123 | Switch the GUI language (Config > Language). | The filter placeholder/tooltip and the sort drop-down options (**Name**/**Extension**) appear in the new language; the sort still works (the underlying keys are unchanged). |
+
+---
+
+## 9.2 CP/M disk image support
+
+The read/geometry/detection core is unit-tested (`tests/test_disk_image/`, `tests/test_gui_smoke.py`);
+these cases confirm the live menu wiring and on-screen behaviour. You need one real CP/M disk image
+whose size matches a bundled geometry (e.g. an IBM-3740 8-inch image of 256256 bytes, or an RC2014
+CompactFlash image), plus any non-disk file to use as the "foreign" input.
+
+| ID | Req | Steps | Expected |
+|----|-----|-------|----------|
+| MT-DI01 | FR-169, UIR-108 | Choose **File → Open Disk Image…** and select a valid CP/M image. | The File menu contains **Open Disk Image…** (after **Save**). After selecting, the Host Files list shows the files contained in the image, and the Host Files group title changes to the temporary working directory. |
+| MT-DI02 | FR-170 | Open an image whose size matches exactly one bundled geometry. | No geometry dialog appears; the status bar reports the image loaded and names the detected geometry. |
+| MT-DI03 | FR-170 | Open an image whose size matches no bundled geometry (or is genuinely ambiguous). | A **Select Disk Geometry** dialog lists candidate formats (or all formats when none matched); picking one proceeds, **Cancel** aborts with the Host pane unchanged. |
+| MT-DI04 | FR-171 | After MT-DI01, select one or more listed files and **Copy to Remote** (or drag-and-drop) to a connected CP/M machine. **[CP/M]** | The files transfer over X-Modem exactly as any host file would — the extracted files behave as ordinary files on disk. |
+| MT-DI05 | FR-172 | Choose **File → Open Disk Image…** and select a non-CP/M file (e.g. a text file or a truncated image). | An error dialog reports the file could not be read as a CP/M disk image; the current Host pane is left unchanged (no crash). |
+| MT-DI06 | FR-171 | After opening an image, move the Host pane off it: choose **Config → New Config**, **Load** a different configuration, use **Change Directory**, open a second image, or exit. | The previous temporary working directory is discarded each time and no stale image contents remain — **Image Details…** greys out again — while the Host pane repaints to the new directory. |
+| MT-DI07 | FR-173, UIR-109 | After MT-DI01, choose **File → Image Details…**. | A read-only dialog opens with one row per file and the columns **Name**, **Size**, **User**, **Attributes** (R/S/A shown for flagged files, a dash otherwise). Closing it leaves the Host pane unchanged. |
+| MT-DI08 | FR-173, UIR-109 | With no image open (e.g. right after **Config → New Config**), inspect the File menu. | **Image Details…** is present but greyed out (disabled); it becomes enabled only after an image is opened. |
+| MT-DI10 | FR-174, DR-050 | With writing enabled and an image open (MT-DI01), optionally add or delete files in the Host working directory, then choose **File → Save Image…** and save to a **new** file name. Re-open that new file with **Open Disk Image…**. **[CP/M]** | A new image file is written (the source image is untouched — choosing the source path is refused with a warning). Re-opening it lists exactly the working-directory files with their content intact. If used on real hardware, the written image mounts and boots as the original did (boot tracks preserved). A too-full working directory (more/larger files than the geometry holds) or an invalid CP/M name aborts with an explanatory error and writes nothing. |
+| MT-DI11 | FR-175 | With writing enabled and an image open (MT-DI01), **Copy to Host** one or more files from a connected CP/M machine into the Host pane, then **File → Save Image…** to a new file and re-open it. **[CP/M]** | The Host Files list shows the received files alongside the image's originals; the saved (and re-opened) new image contains both the originals and the received files — a file copied back from the remote is staged into the image and written on save (copy-to-image). |
+| MT-DI12 | FR-175, UIR-111 | With writing enabled, open an image and make a change to the Host working directory (copy a file in, or add/delete one). Then try to leave it: **Config → New Config**, **Load** another config, **Change Directory**, open a second image, or exit the app. Try **Cancel**, **Discard** and **Save** on the prompt. | While an image is open the Host Files group title names the image file (not a temp path). Each leave attempt raises a **Save / Discard / Cancel** dialog. **Cancel** keeps the image open and aborts the action; **Discard** proceeds and drops the changes; **Save** opens the Save-As dialog and, once saved to a new file, proceeds. With writing off, or with no unsaved changes, no prompt appears. |
+| MT-DI13 | FR-176, UIR-112 | Choose **File → Open Disk Image…**; in the mount-side dialog pick **Remote pane** and open an image. With writing enabled, select Host files and press **Copy to Remote**; then select image files and press **Copy to Host** (also try drag-and-drop each way). Save the image and re-open to confirm. **[no CP/M needed]** | The mount-side dialog offers Host/Remote (default Host). With Remote chosen: the image's files appear in the **Remote** pane (the drive drop-down is disabled and the Remote group title names the image), while the Host pane stays on its real folder. Copy to Remote stages the selected Host files into the image (a non-8.3 name prompts to rename; an existing name prompts Overwrite/Skip/Cancel); Copy to Host writes the selected image files into the host folder (no 8.3 prompt). Copies are instant (no serial progress dialog). Saving and re-opening shows the staged files. If you open a Remote-side image immediately after a Host-side image (without closing it first), the Host pane returns to a real folder rather than being left on a stale temporary path (v2.33.1). |
+| MT-DI14 | FR-176 | While connected to a CP/M machine, open an image and choose **Remote pane**. Separately, mount an image Remote-side while disconnected, then press **Connect**. **[CP/M]** | Choosing Remote-pane while connected is refused with a message (disconnect first). Pressing Connect while a Remote-pane image is mounted is refused with a message (close the image first). Closing the image (Config → New Config, etc.) restores the Remote pane to the live device, re-enables the drive drop-down, and clears the image listing. |
+| MT-DI16 | FR-178, UIR-114 | Choose **File → New Disk Image…**; pick a geometry and a mount pane (try both Host and Remote). Copy some files in (Copy to Remote for a Remote-side new image, or drag/Copy to Host from a device for a Host-side one), then **File → Save Image…** and re-open the saved file. **[no CP/M needed for the Remote-side path]** | **New Disk Image…** is always available (no enable step). Creating one asks for a disk format then the mount pane, and opens an **empty** image (the pane shows no files; the group title reads "(new image)"). Files copied in appear; the first **Save Image…** asks where to save, and from then on the image is named after that file (the title shows the file name and the unsaved-changes prompt no longer says "(new image)"). Re-opening the saved file lists the copied files. |
+| MT-DI17 | FR-176, FR-179 | Set a **Default Image Directory** distinct from the host directory in **Config → General** and **Save Config**; reopen the app / reload the config. Open an image in the **Remote** pane, then use **Change Directory** to move the Host pane elsewhere. **[no CP/M needed]** | Open/New/Save Image dialogs browse the image directory, not the host folder; the two are tracked independently, and the image directory is remembered across Save Config/reload. Changing the host directory while an image is mounted in the Remote pane moves only the Host pane — the image stays in the Remote pane. |
+| MT-DI18 | FR-174 | Rename check: the **Config** menu's first three items read **New Config / Load Config / Save Config**. Open an image, change a file, and **File → Save Image…**. Then create a new image and Save it. **[no CP/M needed]** | The menu items are relabelled. Saving an image that already has a file overwrites that file in place with no dialog (like any document save); saving a brand-new image asks once for a filename. There is no "enable disk image writing" setting anywhere. |
+| MT-DI19 | FR-180 | Open an image in the **Remote** pane. Press **Backup** (remote→host), then **Restore** (host→remote), confirming each prompt. **[no CP/M needed]** | Backup copies every file from the image into the host folder (emptying the host folder first); Restore copies every host file into the image (emptying the image first). Both are instant local copies with the usual destructive-operation confirmation and no serial activity. (Host-side image + a connected CP/M machine still backs up/restores over serial as before.) |
+| MT-DI15 | FR-177, UIR-113 | With an image open, choose **File → Close Disk Image…**. Try it (a) with a Host-side mount after **Change Directory** to a folder of your choice then opening the image; (b) with a Remote-side mount; and (c) with writing enabled and unsaved changes staged. **[no CP/M needed]** | **Close Disk Image…** is greyed out until an image is open. Closing a Host-side image discards the temporary folder and returns the Host pane to the directory that was showing **before** the image was opened. Closing a Remote-side image clears the Remote list, re-enables the drive drop-down, and restores the Remote group title (the Host pane is unaffected). With unsaved changes it first shows the **Save / Discard / Cancel** prompt; **Cancel** leaves the image open. After closing, the item is greyed out again. |
 
 ---
 
@@ -478,6 +520,7 @@ persistence of the language choice.
 | MT-V09 | UIR-075 | Open Config > Serial, Config > General, and a File Action dialog (right-click a host file → Rename); also glance at a transfer progress dialog (MT-T05). | In every two-button dialog the **Cancel** button is at the **far left** and the affirmative button (**Save** for the config dialogs, **Apply** for the File Action dialog) at the **far right**, with space between; the progress dialog's single **Cancel** button is **centred**. |
 | MT-V10 | FR-022, UIR-076, UIR-075, DR-040, DR-041 | Choose **Help > About**. Read the dialog, then click the GitHub link, then click **OK**. | A modal dialog titled "About" shows: the program name **CP/M File Manager**; **Version `<x.y.z>`** matching `src/version.txt` and the SRS version field (both `2.5.2`); a clickable hyperlink to `https://github.com/turbo-gecko/CPM_FM`. Clicking the link opens that page in the host's default browser. A single **OK** button (centred) closes the dialog. |
 | MT-V11 | UIR-078, DR-044 | Launch the app and inspect the window's title-bar icon and the OS taskbar/dock entry; open the Terminal Window and a dialog (e.g. Config > Serial) and check their icons too. | All windows and dialogs and the taskbar/dock show the branded **CP/M File Manager** icon (the blue monitor artwork), not the generic Qt/Python default. The same icon should appear at small (title-bar) and larger (taskbar/alt-tab) sizes without distortion. |
+| MT-V12 | FR-016, FR-113a, FR-171 | Note your OS temp folder (e.g. `%TEMP%` / `$TMPDIR`). Open a CP/M disk image (creates a `cpm_fm_img_*` folder) and right-click → **View** a remote file (creates a `cpm_fm_*` folder). Confirm both folders exist. Then choose **File > Exit** and re-check the temp folder. Next, to simulate an unclean shutdown, create a dummy `cpm_fm_leftover` folder in the temp folder by hand and **relaunch** the app. | After Exit, **no** `cpm_fm*` folder created by the session remains in the temp folder. After the relaunch, the hand-made `cpm_fm_leftover` folder has been swept away too (start-up cleanup). A folder still held open by an external viewer is left in place and cleared on a later exit/launch. |
 
 ---
 
@@ -497,7 +540,7 @@ The cases above target requirements that are **not** fully exercised by `pytest`
 real serial hardware, a live CP/M peer, on-screen rendering, real OS dialogs/associations, real timing,
 or real cross-session persistence:
 
-- Lifecycle / persistence (real): `FR-004` (windows/dialogs), `FR-005`, `FR-006`, `FR-015`, `FR-016`.
+- Lifecycle / persistence (real): `FR-004` (windows/dialogs), `FR-005`, `FR-006`, `FR-015`, `FR-016` (the temp-directory sweep logic in `utils/temp_cleanup.py` is covered automatically by `tests/test_temp_cleanup.py`; MT-V12 confirms real folders are removed on exit and start-up end-to-end).
 - Connect/disconnect (real ports & error paths): `FR-030`–`FR-040`, `FR-050`–`FR-058`.
 - Remote listing & drive selection (live capture/timing): `FR-074`–`FR-079`, `FR-100`–`FR-104`.
 - Transfers (live X-Modem, CP/M launch, timing, byte echo, live cancel): `FR-080`–`FR-089`, `FR-099`, `FR-105`–`FR-109`, `FR-119`, `FR-120`, `NFR-003a`–`NFR-003q` (interop + CAN abort).
@@ -516,6 +559,7 @@ or real cross-session persistence:
 - Host→remote filename validation (live dialog render, real upload under a renamed name, inline re-validation): `FR-148`, `FR-149` (live), `UIR-085` (the 8.3 validation/suggestion logic and the rename/skip/cancel batch handling are covered automatically by `tests/test_filename_validation.py`; the manual cases confirm the on-screen dialog, that Rename really uploads the file to the remote under the new name, and that a still-invalid replacement is rejected inline).
 - Whole-drive backup and restore (live destructive round-trip, real destination wipe, on-screen confirmation): `FR-150`–`FR-154` (live), `UIR-086`–`UIR-088` (the orchestration ordering, the wipe helpers, the empty-source short-circuit, the connection guard, and the confirmation slot are covered automatically by `tests/test_backup_restore.py`; the manual cases confirm the on-screen confirmation dialog, that the destination is really emptied first, and the live transfer round-trip in both directions).
 - Boot-into-CP/M sequence (live keystroke playback into a real remote, probe-failure recovery, live re-probe): `FR-047`, `FR-048`, `FR-049` (live), `UIR-068` (the script parser in `terminal/boot_sequence.py`, the directive execution, the auto-recovery/re-probe wiring, the button enable/disable, and the multi-line config field are covered automatically by `tests/test_boot_sequence.py` and `tests/test_gui_smoke.py`; the manual cases confirm the keystrokes really drive a non-auto-booting remote into CP/M and that the failed-probe recovery and manual button behave over a real link).
+- CP/M disk image support (live menu wiring, on-screen geometry picker, real image on disk, live transfer of extracted files, on-screen details view): `FR-169`, `UIR-108`, `UIR-109` (live) (the geometry parsing, auto-detection ranking/ambiguity/allocation-pointer check, directory reconstruction, and the extract/reject/cleanup/details GUI orchestration in `FR-170`–`FR-173`/`DR-048`/`DR-049` are covered automatically by `tests/test_disk_image/` and `tests/test_gui_smoke.py`; the manual cases confirm the real File-menu actions, the on-screen picker on ambiguity, the read-only Image Details dialog, and that files extracted from a real image transfer over a live link).
 - Non-functional (real): `NFR-001`, `NFR-004` (live), `STR-003`, `FR-088`.
 
 Purely algorithmic and headless-logic requirements (`DR-*`, the X-Modem progress/handshake internals,

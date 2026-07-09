@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.38 |
-| Scorecard for plan version | 1.38 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.48 |
+| Scorecard for plan version | 1.43 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -150,6 +150,28 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-FS07 | Filter/sort persist per pane across sessions | FR-134 | | | |
 | MT-FS08 | Cleared remote list stays empty (no stale) | FR-135 | | | |
 | MT-FS09 | Sort labels/placeholder retranslate | UIR-080, FR-123 | | | |
+
+### §9.2 CP/M disk image support
+| ID | Title | Req | Result | Env | Notes |
+|----|-------|-----|:------:|:---:|-------|
+| MT-DI01 | Open Disk Image… lists image files in Host pane | FR-169, UIR-108 | | | |
+| MT-DI02 | Unambiguous image auto-detects; geometry in status | FR-170 | | | |
+| MT-DI03 | Ambiguous/unknown image shows geometry picker | FR-170 | | | |
+| MT-DI04 | Extracted files Copy to Remote over X-Modem | FR-171 | | | |
+| MT-DI05 | Foreign/corrupt file rejected gracefully (no crash) | FR-172 | | | |
+| MT-DI06 | Temp workdir discarded on New / reopen / exit | FR-171 | | | |
+| MT-DI07 | Image Details… shows read-only name/size/user/attrs table | FR-173, UIR-109 | | | |
+| MT-DI08 | Image Details… disabled when no image open | FR-173, UIR-109 | | | |
+| MT-DI10 | Save Image… re-packs workdir to a new image; source untouched | FR-174, DR-050 | | | |
+| MT-DI11 | Copy-to-image: file received into the Host pane is written on save | FR-175 | | | |
+| MT-DI12 | Unsaved-changes Save/Discard/Cancel prompt + image-name group title | FR-175, UIR-111 | | | |
+| MT-DI13 | Remote-pane mount: local host↔image copy (both directions) + affordance | FR-176, UIR-112 | | | |
+| MT-DI14 | Remote-pane mount mutual exclusion with a live serial session | FR-176 | | | |
+| MT-DI15 | Close Disk Image restores Host/Remote panes; save prompt on close | FR-177, UIR-113 | | | |
+| MT-DI16 | New Disk Image creates empty image; copy in, save, adopt source | FR-178, UIR-114 | | | |
+| MT-DI17 | Separate image directory; host-dir change keeps a Remote-mounted image | FR-176, FR-179 | | | |
+| MT-DI18 | Menu items "… Config"; Save Image overwrites in place (KISS, no enable) | FR-174 | | | |
+| MT-DI19 | Backup/Restore mirror host↔image locally for a Remote-mounted image | FR-180 | | | |
 
 ### §10 Remote listing & drive selection (live)
 | ID | Title | Req | Result | Env | Notes |
@@ -300,6 +322,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-V09 | Dialog button layout (Cancel left / affirmative right; lone centred) | UIR-075 | | | |
 | MT-V10 | About dialog (name/version/GitHub link/OK; version matches) | FR-022, UIR-076, DR-040/041 | | | |
 | MT-V11 | Branded app icon on all windows + taskbar/dock | UIR-078, DR-044 | | | |
+| MT-V12 | Temp `cpm_fm*` folders removed on exit + swept at start-up | FR-016, FR-113a, FR-171 | | | |
 
 ### §16 Cross-cutting / non-functional
 | ID | Title | Req | Result | Env | Notes |

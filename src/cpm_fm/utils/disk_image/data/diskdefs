@@ -1,0 +1,259 @@
+# CP/M disk-image geometry database (cpmtools `diskdefs` format) — DR-048.
+#
+# Bundled with cpm-fm for auto-detecting the geometry of a raw-sector CP/M image
+# (FR-170). Each `diskdef <name> ... end` stanza gives the sector size, track and
+# sector counts, allocation block size, directory size, sector skew, and number
+# of reserved/boot tracks. Users may point cpm-fm at their own diskdefs file.
+#
+# The RomWBW (wbw_*) and RC2014 definitions below are taken verbatim from the
+# RomWBW v3.6 `Source/Images/diskdefs` so cpm-fm recognises the standard RomWBW
+# floppy and hard-disk images (fd144/fd120/fd720/fd360, hd1k, hd512) and the
+# Grant Searle RC2014 CompactFlash slice. The generic floppies are the canonical
+# cpmtools layouts.
+
+# --- Generic CP/M floppies ---------------------------------------------------
+
+# IBM 3740 8" SSSD — the reference CP/M floppy (250 KiB).
+diskdef ibm-3740
+  seclen 128
+  tracks 77
+  sectrk 26
+  blocksize 1024
+  maxdir 64
+  skew 6
+  boottrk 2
+  os 2.2
+end
+
+# Osborne 1 5.25" SSDD (100 KiB).
+diskdef osborne1
+  seclen 256
+  tracks 40
+  sectrk 10
+  blocksize 1024
+  maxdir 64
+  skew 2
+  boottrk 3
+  os 2.2
+end
+
+# Kaypro II 5.25" SSDD (200 KiB).
+diskdef kaypro2
+  seclen 512
+  tracks 40
+  sectrk 10
+  blocksize 1024
+  maxdir 64
+  skew 0
+  boottrk 1
+  os 2.2
+end
+
+# --- RomWBW floppy media -----------------------------------------------------
+
+# RomWBW 1.44M floppy media.
+diskdef wbw_fd144
+  seclen 512
+  tracks 160
+  sectrk 18
+  blocksize 2048
+  maxdir 256
+  skew 0
+  boottrk 2
+  os 2.2
+end
+
+# RomWBW 1.20M floppy media.
+diskdef wbw_fd120
+  seclen 512
+  tracks 160
+  sectrk 15
+  blocksize 2048
+  maxdir 256
+  skew 0
+  boottrk 2
+  os 2.2
+end
+
+# RomWBW 720K floppy media.
+diskdef wbw_fd720
+  seclen 512
+  tracks 160
+  sectrk 9
+  blocksize 2048
+  maxdir 128
+  skew 0
+  boottrk 4
+  os 2.2
+end
+
+# RomWBW 360K floppy media.
+diskdef wbw_fd360
+  seclen 512
+  tracks 80
+  sectrk 9
+  blocksize 2048
+  maxdir 128
+  skew 0
+  boottrk 4
+  os 2.2
+end
+
+# --- RomWBW hard-disk media (single slice) -----------------------------------
+
+# RomWBW 8MB Hard Disk (1024 directory entry format). Pure filesystem image, no
+# MBR prefix — matches a standalone hd1k_*.img (8,388,608 bytes).
+diskdef wbw_hd1k
+  seclen 512
+  tracks 1024
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 2
+  os 2.2
+end
+
+# RomWBW 8320KB Hard Disk Slice (512 directory entry format). Legacy format —
+# matches a standalone hd512_*.img (8,519,680 bytes).
+diskdef wbw_hd512
+  seclen 512
+  tracks 1040
+  sectrk 16
+  blocksize 4096
+  maxdir 512
+  skew 0
+  boottrk 16
+  os 2.2
+end
+
+# --- RC2014 (Grant Searle) hard-disk slice -----------------------------------
+
+# RC2014 standard (Grant Searle) hard-disk slice 0 (8 MB). A CF card is a
+# concatenation of these slices; cpm-fm opens slice 0 in Phase 1.
+diskdef rc2014
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  skew 0
+  boottrk 1
+  os 2.2
+end
+
+# --- RomWBW ROM disks --------------------------------------------------------
+# Taken verbatim from RomWBW v3.6 Source/Images/diskdefs. Single-slice, no
+# offset — the standalone ROM-disk images cpm-fm can open directly.
+
+# RomWBW 128KB ROM Disk.
+diskdef wbw_rom128
+  seclen 512
+  tracks 4
+  sectrk 64
+  blocksize 2048
+  maxdir 256
+  skew 0
+  boottrk 0
+  os 2.2
+end
+
+# RomWBW 256KB ROM Disk.
+diskdef wbw_rom256
+  seclen 512
+  tracks 8
+  sectrk 64
+  blocksize 2048
+  maxdir 256
+  skew 0
+  boottrk 0
+  os 2.2
+end
+
+# RomWBW 384KB ROM Disk.
+diskdef wbw_rom384
+  seclen 512
+  tracks 12
+  sectrk 64
+  blocksize 2048
+  maxdir 256
+  skew 0
+  boottrk 0
+  os 2.2
+end
+
+# RomWBW 896KB ROM Disk.
+diskdef wbw_rom896
+  seclen 512
+  tracks 28
+  sectrk 64
+  blocksize 2048
+  maxdir 256
+  skew 0
+  boottrk 0
+  os 2.2
+end
+
+# --- Other classic single-slice layouts --------------------------------------
+# Verbatim from the cpmtools / RomWBW diskdefs. Standard-skew, single-slice
+# layouts whose sizes do not collide with the definitions above.
+
+# Generic 4 MB hard disk (128-byte sectors).
+diskdef 4mb-hd
+  seclen 128
+  tracks 1024
+  sectrk 32
+  blocksize 2048
+  maxdir 256
+  skew 1
+  boottrk 0
+  os p2dos
+end
+
+# Amstrad PCW / CF2 3" disk (180 KiB).
+diskdef pcw
+  seclen 512
+  tracks 40
+  sectrk 9
+  blocksize 1024
+  maxdir 64
+  skew 1
+  boottrk 1
+  os 3
+end
+
+# Epson QX-10 5.25" (400 KiB).
+diskdef epsqx10
+  seclen 512
+  tracks 40
+  sectrk 20
+  blocksize 2048
+  maxdir 128
+  skew 0
+  boottrk 2
+  os 2.2
+end
+
+# Royal Alphatronic (320 KiB).
+diskdef alpha
+  seclen 256
+  tracks 40
+  sectrk 32
+  blocksize 2048
+  maxdir 128
+  skew 1
+  boottrk 2
+  os 2.2
+end
+
+# Interak 5.25" DSDD (800 KiB).
+diskdef interak
+  seclen 512
+  tracks 80
+  sectrk 20
+  blocksize 4096
+  maxdir 256
+  skew 0
+  boottrk 2
+  os 2.2
+end

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import tempfile
 import threading
 
 from PySide6.QtWidgets import QDialog, QMenu, QMessageBox
@@ -9,6 +8,7 @@ from PySide6.QtWidgets import QDialog, QMenu, QMessageBox
 from cpm_fm.gui.file_action_dialog import FileActionDialog
 from cpm_fm.gui.mw_base import MainWindowMixinBase
 from cpm_fm.utils.i18n import tr
+from cpm_fm.utils.temp_cleanup import make_temp_dir
 
 
 class _ContextMenuMixin(MainWindowMixinBase):
@@ -217,7 +217,7 @@ class _ContextMenuMixin(MainWindowMixinBase):
         view_file_ready signal (NFR-004). The progress dialog (FR-105) is driven
         by the same batch signals as a normal transfer.
         """
-        save_path = os.path.join(tempfile.mkdtemp(prefix="cpm_fm_"), name)
+        save_path = os.path.join(make_temp_dir(), name)
         self._transfer_cancel.clear()  # FR-120: start un-cancelled.
         self.batch_started.emit("host", 1)
         self.set_status(tr("status.downloading_for_viewing", name=name))
