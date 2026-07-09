@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.30.0**
+**Version 2.31.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -442,6 +442,10 @@ You can build a **new** CP/M disk image from the files currently in the Host wor
 Save Image writes to a **new file** that you name in the Save-As dialog; it never overwrites the image you opened (if you pick the same name it warns and does nothing). The new image reuses the opened image's disk layout and keeps its reserved/boot tracks, so a bootable disk stays bootable. Every file in the working folder is written into the new image under user 0.
 
 If the working folder holds more files than the disk's directory can list, or more data than the disk can hold, or a file has a name that is not a valid CP/M 8.3 name, the save stops with an explanatory message and writes nothing — remove or rename files and try again. **Save Image…** is greyed out unless an image is open **and** disk image writing is enabled.
+
+**Copying files back into an image.** While an image is open, the Host pane *is* the image's working folder, so any file you **Copy to Host** (or drag onto the Host pane) from a connected CP/M machine is added to it — and is written into the new image the next time you Save Image. This is the easy way to pull files off real hardware and into an image. The Host Files group title shows the name of the image you are editing, so you can tell a staged image apart from an ordinary folder.
+
+**Don't lose your edits.** With disk image writing enabled, if you have added, removed or replaced files since opening the image and then do something that would throw the working folder away — opening another image, **File → New**, **Load**ing a configuration, changing the host directory, or quitting — the application asks first: **Save** writes a new image (via the Save-As dialog) before continuing, **Discard** continues and loses the changes, and **Cancel** stays where you are with the image still open. (With writing turned off, or when nothing has changed, it does not ask.)
 
 ---
 

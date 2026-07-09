@@ -320,3 +320,9 @@ dialog.save_image.filter = CP/M 디스크 이미지 (*.img *.dsk *.cpm);;모든 
 status.disk_image_saved = 디스크 이미지를 '{name}'에 저장했습니다 (파일 {count}개)
 error.disk_image_write = 디스크 이미지를 쓸 수 없습니다: {error}
 error.disk_image_overwrite_source = 이미지 저장은 새 파일을 만듭니다. 원본 이미지와 다른 이름을 선택하세요.
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [이미지: {name}]
+button.discard = 버리기
+dialog.image_dirty.title = 저장되지 않은 디스크 이미지 변경사항
+dialog.image_dirty.message = 열려 있는 디스크 이미지 '{name}'에 저장되지 않은 변경사항이 있습니다. 버리기 전에 새 이미지 파일로 저장하시겠습니까?

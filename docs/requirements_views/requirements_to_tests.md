@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_257/470 requirements have a verifying test; 213 untested; 0 stale tag(s)._
+_259/472 requirements have a verifying test; 213 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -191,6 +191,7 @@ _257/470 requirements have a verifying test; 213 untested; 0 stale tag(s)._
 | FR-172 | `tests/test_disk_image/test_detect.py:<module>`, `tests/test_disk_image/test_detect.py:test_detect_returns_empty_for_foreign_file`, `tests/test_disk_image/test_detect.py:test_detect_returns_empty_for_zero_byte_file`, `tests/test_disk_image/test_image.py:<module>`, `tests/test_disk_image/test_image.py:test_open_image_rejects_bad_input`, `tests/test_disk_image/test_image.py:test_open_image_rejects_foreign_sized_file`, `tests/test_gui_smoke.py:test_open_disk_image_rejects_bad_file` |
 | FR-173 | `tests/test_gui_smoke.py:test_image_details_action_enabled_only_when_image_open`, `tests/test_gui_smoke.py:test_image_details_dialog_lists_metadata`, `tests/test_gui_smoke.py:test_image_details_noop_when_no_image` |
 | FR-174 | `tests/test_disk_image/test_write.py:<module>`, `tests/test_disk_image/test_write.py:test_boot_tracks_preserved`, `tests/test_disk_image/test_write.py:test_delete_frees_blocks_for_reuse`, `tests/test_disk_image/test_write.py:test_directory_full_raises`, `tests/test_disk_image/test_write.py:test_disk_full_raises`, `tests/test_disk_image/test_write.py:test_invalid_name_raises`, `tests/test_disk_image/test_write.py:test_split_83_normalises`, `tests/test_disk_image/test_write.py:test_write_16bit_pointers`, `tests/test_disk_image/test_write.py:test_write_empty_and_odd_length`, `tests/test_disk_image/test_write.py:test_write_matches_synthetic_builder`, `tests/test_disk_image/test_write.py:test_write_multi_extent`, `tests/test_disk_image/test_write.py:test_write_preserves_attributes`, `tests/test_disk_image/test_write.py:test_write_read_single_extent`, `tests/test_gui_smoke.py:test_save_image_action_gated_by_setting`, `tests/test_gui_smoke.py:test_save_image_noop_when_writing_disabled`, `tests/test_gui_smoke.py:test_save_image_refuses_source_overwrite`, `tests/test_gui_smoke.py:test_save_image_writes_new_image` |
+| FR-175 | `tests/test_gui_smoke.py:test_change_dir_saves_when_dirty_and_save_chosen`, `tests/test_gui_smoke.py:test_close_event_cancel_keeps_image_open`, `tests/test_gui_smoke.py:test_copy_to_image_file_included_on_save`, `tests/test_gui_smoke.py:test_maybe_prompt_save_image_routing`, `tests/test_gui_smoke.py:test_new_aborts_when_dirty_and_cancelled` |
 | IFR-004 | `tests/test_config_handler.py:test_load_json_malformed_returns_empty`, `tests/test_config_handler.py:test_load_json_reads_valid_object`, `tests/test_config_handler.py:test_save_json_to_unwritable_path_returns_false` |
 | NFR-001 | `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
 | NFR-002 | `tests/test_serial_manager.py:test_flow_control_nested_key`, `tests/test_serial_manager.py:test_nested_key_names_are_honoured` |
@@ -269,6 +270,7 @@ _257/470 requirements have a verifying test; 213 untested; 0 stale tag(s)._
 | UIR-108 | `tests/test_gui_smoke.py:test_open_disk_image_extracts_and_lists` |
 | UIR-109 | `tests/test_gui_smoke.py:test_image_details_action_enabled_only_when_image_open`, `tests/test_gui_smoke.py:test_image_details_dialog_lists_metadata`, `tests/test_gui_smoke.py:test_image_details_noop_when_no_image` |
 | UIR-110 | `tests/test_gui_smoke.py:test_save_image_action_gated_by_setting`, `tests/test_gui_smoke.py:test_save_image_noop_when_writing_disabled`, `tests/test_gui_smoke.py:test_save_image_writes_new_image` |
+| UIR-111 | `tests/test_gui_smoke.py:test_host_group_title_shows_open_image` |
 
 ## Untested requirements
 

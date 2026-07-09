@@ -320,3 +320,9 @@ dialog.save_image.filter = CP/M 磁碟映像 (*.img *.dsk *.cpm);;所有檔案 (
 status.disk_image_saved = 磁碟映像已儲存至 '{name}'（{count} 個檔案）
 error.disk_image_write = 無法寫入磁碟映像：{error}
 error.disk_image_overwrite_source = 儲存映像會建立新檔案 — 請揀選與來源映像唔同嘅名。
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [映像：{name}]
+button.discard = 放棄
+dialog.image_dirty.title = 磁碟映像有未儲存嘅更改
+dialog.image_dirty.message = 開咗嘅磁碟映像「{name}」有未儲存嘅更改。放棄之前係咪要儲存去新嘅映像檔案？

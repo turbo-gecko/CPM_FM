@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.42 |
-| Scorecard for plan version | 1.42 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.43 |
+| Scorecard for plan version | 1.43 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -164,6 +164,8 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-DI08 | Image Details… disabled when no image open | FR-173, UIR-109 | | | |
 | MT-DI09 | Save Image… gated by image_write_enabled + image open | FR-174, UIR-110 | | | |
 | MT-DI10 | Save Image… re-packs workdir to a new image; source untouched | FR-174, DR-050 | | | |
+| MT-DI11 | Copy-to-image: file received into the Host pane is written on save | FR-175 | | | |
+| MT-DI12 | Unsaved-changes Save/Discard/Cancel prompt + image-name group title | FR-175, UIR-111 | | | |
 
 ### §10 Remote listing & drive selection (live)
 | ID | Title | Req | Result | Env | Notes |

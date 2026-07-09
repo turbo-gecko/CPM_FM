@@ -320,3 +320,9 @@ dialog.save_image.filter = Immagini disco CP/M (*.img *.dsk *.cpm);;Tutti i file
 status.disk_image_saved = Immagine disco salvata in '{name}' ({count} file)
 error.disk_image_write = Impossibile scrivere l'immagine disco: {error}
 error.disk_image_overwrite_source = Salva immagine crea un nuovo file: scegli un nome diverso da quello dell'immagine di origine.
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [immagine: {name}]
+button.discard = Ignora
+dialog.image_dirty.title = Modifiche non salvate all'immagine disco
+dialog.image_dirty.message = L'immagine disco aperta '{name}' contiene modifiche non salvate. Salvarle in un nuovo file immagine prima di annullare?

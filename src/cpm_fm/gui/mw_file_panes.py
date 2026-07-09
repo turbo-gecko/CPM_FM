@@ -214,12 +214,16 @@ class _FilePanesMixin(MainWindowMixinBase):
 
     def change_host_dir(self):
         """
-        Satisfies: FR-062, FR-171.
+        Satisfies: FR-062, FR-171, FR-175.
         """
         path = QFileDialog.getExistingDirectory(
             self, tr("dialog.change_directory.title"), self.host_dir
         )
         if path:
+            # FR-175: discarding the open image may lose unsaved staged changes;
+            # offer to save first and abort the change on Cancel.
+            if not self._maybe_prompt_save_image():
+                return
             # FR-171: navigating to another directory discards any open disk
             # image (temp working dir, metadata, Image Details action).
             self._cleanup_image_workdir()

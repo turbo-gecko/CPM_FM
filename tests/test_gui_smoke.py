@@ -4622,3 +4622,191 @@ def test_save_image_refuses_source_overwrite(qapp, monkeypatch, state, tmp_path)
         assert src.read_bytes() == original  # source untouched
     finally:
         win.close()
+
+
+def test_copy_to_image_file_included_on_save(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-175."""
+    # FR-175: a file received while an image is open lands in the working
+    # directory (which IS the Host pane) and is therefore included when the
+    # image is saved — copy-to-image needs no separate transfer path.
+    from cpm_fm.utils.disk_image import load_diskdefs
+    from cpm_fm.utils.disk_image.image import CpmImage
+
+    win = MainWindow(state)
+    try:
+        geom = load_diskdefs().get("ibm-3740")
+        src = tmp_path / "src.img"
+        src.write_bytes(bytes([0xE5]) * geom.total_bytes)
+        workdir = tmp_path / "wd"
+        workdir.mkdir()
+        (workdir / "EXISTING.TXT").write_bytes(b"x" * 128)
+
+        win._image_source = str(src)
+        win._image_geom = geom
+        win._image_workdir = str(workdir)
+        win.host_dir = str(workdir)  # Copy-to-Host writes to os.path.join(host_dir, name)
+        win.settings["image_write_enabled"] = "ON"
+        win._update_save_image_action()
+
+        # Simulate a file received from the remote landing in the Host pane.
+        # (CP/M storage is 128-byte-record granular, so use a record multiple.)
+        with open(os.path.join(win.host_dir, "GOTFROM.CPM"), "wb") as fh:
+            fh.write(b"y" * 256)
+
+        dest = tmp_path / "out.img"
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QFileDialog.getSaveFileName",
+            lambda *a, **k: (str(dest), ""),
+        )
+        assert win.menu_save_image() is True
+
+        reopened = CpmImage(bytearray(dest.read_bytes()), geom)
+        assert {f.name for f in reopened.list_files()} == {"EXISTING.TXT", "GOTFROM.CPM"}
+        assert reopened.read_file("GOTFROM.CPM") == b"y" * 256
+    finally:
+        win.close()
+
+
+def test_maybe_prompt_save_image_routing(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-175."""
+    # FR-175: the unsaved-changes guard prompts only when an image is open,
+    # writing is on, AND there are staged changes; and it maps
+    # Save/Discard/Cancel to proceed-if-saved / proceed / abort.
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path)
+
+        # Writing off → proceed, never prompt.
+        prompted = []
+        monkeypatch.setattr(
+            win, "_prompt_save_discard_cancel", lambda: prompted.append(1) or "cancel"
+        )
+        assert win._maybe_prompt_save_image() is True
+        assert prompted == []
+
+        # Writing on but not dirty → still no prompt.
+        win.settings["image_write_enabled"] = "ON"
+        assert win._maybe_prompt_save_image() is True
+        assert prompted == []
+
+        # Stage a change → now dirty.
+        with open(os.path.join(workdir, "NEW.TXT"), "wb") as fh:
+            fh.write(b"z")
+        assert win._image_is_dirty()
+
+        # Cancel aborts (False); the prompt is shown.
+        assert win._maybe_prompt_save_image() is False
+        assert prompted == [1]
+
+        # Discard proceeds (True).
+        monkeypatch.setattr(win, "_prompt_save_discard_cancel", lambda: "discard")
+        assert win._maybe_prompt_save_image() is True
+
+        # Save routes through menu_save_image and proceeds only if it saved.
+        monkeypatch.setattr(win, "_prompt_save_discard_cancel", lambda: "save")
+        monkeypatch.setattr(win, "menu_save_image", lambda: True)
+        assert win._maybe_prompt_save_image() is True
+        monkeypatch.setattr(win, "menu_save_image", lambda: False)  # Save-As cancelled
+        assert win._maybe_prompt_save_image() is False
+    finally:
+        win.settings["image_write_enabled"] = "OFF"
+        win.close()
+
+
+def test_new_aborts_when_dirty_and_cancelled(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-175."""
+    # FR-175: File > New on a dirty open image prompts; Cancel leaves the image
+    # open and does not create a new configuration.
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path)
+        win.settings["image_write_enabled"] = "ON"
+        with open(os.path.join(workdir, "NEW.TXT"), "wb") as fh:
+            fh.write(b"z")
+
+        saved = []
+        monkeypatch.setattr(win, "_save_to_path", lambda *a, **k: saved.append(1) or True)
+        monkeypatch.setattr(win, "_prompt_save_discard_cancel", lambda: "cancel")
+
+        win.menu_new()
+
+        assert win._image_workdir == workdir  # image still open — New aborted
+        assert os.path.isdir(workdir)
+        assert saved == []  # never reached the config-save step
+    finally:
+        win.settings["image_write_enabled"] = "OFF"
+        win.close()
+
+
+def test_change_dir_saves_when_dirty_and_save_chosen(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-175."""
+    # FR-175: Change Directory on a dirty open image prompts; choosing Save
+    # routes through Save Image… and then proceeds with the directory change.
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path)
+        win.settings["image_write_enabled"] = "ON"
+        with open(os.path.join(workdir, "NEW.TXT"), "wb") as fh:
+            fh.write(b"z")
+
+        saved = []
+        monkeypatch.setattr(win, "_prompt_save_discard_cancel", lambda: "save")
+        monkeypatch.setattr(win, "menu_save_image", lambda: saved.append(1) or True)
+
+        newdir = tmp_path / "plain"
+        newdir.mkdir()
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_file_panes.QFileDialog.getExistingDirectory",
+            lambda *a, **k: str(newdir),
+        )
+
+        win.change_host_dir()
+        qapp.processEvents()
+
+        assert saved == [1]  # routed through Save Image
+        assert win._image_workdir is None  # discard proceeded after the save
+        assert win.host_dir == str(newdir)
+    finally:
+        win.close()
+
+
+def test_close_event_cancel_keeps_image_open(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-175."""
+    # FR-175: exiting with a dirty open image prompts; Cancel ignores the close
+    # event and keeps the image open.
+    from PySide6.QtGui import QCloseEvent
+
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path)
+        win.settings["image_write_enabled"] = "ON"
+        with open(os.path.join(workdir, "NEW.TXT"), "wb") as fh:
+            fh.write(b"z")
+
+        monkeypatch.setattr(win, "_prompt_save_discard_cancel", lambda: "cancel")
+        evt = QCloseEvent()
+        win.closeEvent(evt)
+
+        assert not evt.isAccepted()  # close aborted
+        assert win._image_workdir == workdir  # image still open
+    finally:
+        win.settings["image_write_enabled"] = "OFF"  # let the real close proceed
+        win.close()
+
+
+def test_host_group_title_shows_open_image(qapp, monkeypatch, state, tmp_path):
+    """Verifies: UIR-111."""
+    # UIR-111: while an image is open the Host group title names the image file;
+    # after it is closed the title reverts to a plain directory path.
+    win = MainWindow(state)
+    try:
+        _open_fake_image(win, qapp, monkeypatch, tmp_path)
+        win._update_host_group_title()
+        assert "disk.img" in win.host_group.title()
+
+        win._cleanup_image_workdir()
+        win.host_dir = str(tmp_path)
+        win._update_host_group_title()
+        assert "disk.img" not in win.host_group.title()
+    finally:
+        win.close()

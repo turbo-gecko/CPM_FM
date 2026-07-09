@@ -234,6 +234,9 @@ class MainWindow(
         # UIR-110: the Save Image… menu action, enabled only while an image is open
         # and the opt-in image_write_enabled setting is on.
         self._save_image_action: QAction | None = None
+        # FR-175: signature of the working directory as opened / last saved, used
+        # to detect unsaved copy-to-image changes (None when no image is open).
+        self._image_baseline: set[tuple[str, int, int]] | None = None
         # FR-130/FR-133: the canonical, unfiltered file names for each pane. The
         # visible QListWidget rows are derived from these by filter_and_sort, so
         # filtering/sorting can be re-applied without re-reading the source.
@@ -378,12 +381,22 @@ class MainWindow(
         Safe to call before the group box exists (during early construction) —
         it simply does nothing.
 
-        Satisfies: FR-126, UIR-011.
+        While a disk image is open (FR-169) the title shows the image file name
+        instead of the temporary working-directory path, so the staged image is
+        not mistaken for an ordinary host folder (UIR-111).
+
+        Satisfies: FR-126, UIR-011, UIR-111.
         """
         group = getattr(self, "host_group", None)
         if group is None:
             return
         label = tr("main.host_files")
+        # UIR-111: an open image shows its file name rather than the temp path.
+        if self._image_workdir is not None and self._image_source is not None:
+            group.setTitle(
+                tr("main.host_files_image", label=label, name=os.path.basename(self._image_source))
+            )
+            return
         metrics = QFontMetrics(group.font())
         # Width consumed by the fixed prefix ("Host Files — ") plus a margin for
         # the group-box frame and title indent, leaving the rest for the path.
@@ -967,14 +980,19 @@ class MainWindow(
 
     def closeEvent(self, event):
         """
-        Satisfies: FR-004, FR-015, FR-016, FR-168.
-
         FR-004: persist window geometry on exit. The Terminal Window persists
         in the background when the user closes it (it hides rather than
         destroys), so it still exists here and its current geometry is saved.
         FR-168: record which auxiliary windows are open now, so the next start-up
         can reopen them.
+
+        Satisfies: FR-004, FR-015, FR-016, FR-168, FR-175.
         """
+        # FR-175: exiting discards any open image's working directory; offer to
+        # save unsaved staged changes first. Cancel aborts the close.
+        if not self._maybe_prompt_save_image():
+            event.ignore()
+            return
         self._disconnect_signals()  # prevent orphaned slot accumulation (NFR-004)
         self.window_state.save_geometry("main", self)
         # FR-168: remember whether the Terminal Window and Transfer History window

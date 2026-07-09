@@ -320,3 +320,9 @@ dialog.save_image.filter = Images disque CP/M (*.img *.dsk *.cpm);;Tous les fich
 status.disk_image_saved = Image disque enregistrée dans « {name} » ({count} fichier(s))
 error.disk_image_write = Impossible d'écrire l'image disque : {error}
 error.disk_image_overwrite_source = Enregistrer l'image crée un nouveau fichier — choisissez un nom différent de l'image source.
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [image : {name}]
+button.discard = Abandonner
+dialog.image_dirty.title = Modifications non enregistrées de l'image disque
+dialog.image_dirty.message = L'image disque ouverte « {name} » comporte des modifications non enregistrées. Les enregistrer dans un nouveau fichier image avant d'abandonner ?

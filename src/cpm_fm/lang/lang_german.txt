@@ -320,3 +320,9 @@ dialog.save_image.filter = CP/M-Diskettenabbilder (*.img *.dsk *.cpm);;Alle Date
 status.disk_image_saved = Diskettenabbild gespeichert unter '{name}' ({count} Datei(en))
 error.disk_image_write = Das Diskettenabbild konnte nicht geschrieben werden: {error}
 error.disk_image_overwrite_source = „Abbild speichern“ erstellt eine neue Datei – wählen Sie einen anderen Namen als das Quellabbild.
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [Abbild: {name}]
+button.discard = Verwerfen
+dialog.image_dirty.title = Nicht gespeicherte Änderungen am Disk-Abbild
+dialog.image_dirty.message = Das geöffnete Disk-Abbild „{name}“ enthält nicht gespeicherte Änderungen. Vor dem Verwerfen in einer neuen Abbilddatei speichern?

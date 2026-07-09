@@ -325,3 +325,9 @@ dialog.save_image.filter = CP/M disk images (*.img *.dsk *.cpm);;All files (*)
 status.disk_image_saved = Disk image saved to '{name}' ({count} file(s))
 error.disk_image_write = Could not write the disk image: {error}
 error.disk_image_overwrite_source = Save Image creates a new file — choose a name different from the source image.
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [image: {name}]
+button.discard = Discard
+dialog.image_dirty.title = Unsaved Disk Image Changes
+dialog.image_dirty.message = The open disk image '{name}' has unsaved changes. Save them to a new image file before discarding?

@@ -320,3 +320,9 @@ dialog.save_image.filter = CP/M-schijfimages (*.img *.dsk *.cpm);;Alle bestanden
 status.disk_image_saved = Schijfimage opgeslagen als '{name}' ({count} bestand(en))
 error.disk_image_write = Kan de schijfimage niet schrijven: {error}
 error.disk_image_overwrite_source = Image opslaan maakt een nieuw bestand — kies een andere naam dan de bronimage.
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [image: {name}]
+button.discard = Verwerpen
+dialog.image_dirty.title = Niet-opgeslagen wijzigingen in schijfimage
+dialog.image_dirty.message = De geopende schijfimage '{name}' heeft niet-opgeslagen wijzigingen. Opslaan in een nieuw imagebestand voordat u ze verwerpt?

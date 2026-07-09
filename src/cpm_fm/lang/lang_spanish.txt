@@ -320,3 +320,9 @@ dialog.save_image.filter = Imágenes de disco CP/M (*.img *.dsk *.cpm);;Todos lo
 status.disk_image_saved = Imagen de disco guardada en '{name}' ({count} archivo(s))
 error.disk_image_write = No se pudo escribir la imagen de disco: {error}
 error.disk_image_overwrite_source = Guardar imagen crea un archivo nuevo: elige un nombre distinto al de la imagen de origen.
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [imagen: {name}]
+button.discard = Descartar
+dialog.image_dirty.title = Cambios sin guardar en la imagen de disco
+dialog.image_dirty.message = La imagen de disco abierta '{name}' tiene cambios sin guardar. ¿Guardarlos en un nuevo archivo de imagen antes de descartar?

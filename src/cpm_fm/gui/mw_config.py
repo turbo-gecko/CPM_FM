@@ -30,8 +30,14 @@ class _ConfigMixin(MainWindowMixinBase):
 
     def load_config(self, filename):
         """
-        Satisfies: FR-005, FR-011, FR-012, FR-017, FR-017a, FR-060, FR-125, FR-171.
+        Satisfies: FR-005, FR-011, FR-012, FR-017, FR-017a, FR-060, FR-125, FR-171, FR-175.
         """
+        # FR-175: loading a configuration discards any open image's working
+        # directory; offer to save unsaved staged changes first (evaluated
+        # against the current settings, before they are replaced below). Cancel
+        # aborts the load. No-op when no image is open.
+        if not self._maybe_prompt_save_image():
+            return
         # FR-017a: if a port is open under the current configuration, close it
         # (Disconnect behaviour, FR-050-FR-058) BEFORE replacing the settings
         # below. do_disconnect reads the port names from self.settings, so it
@@ -207,14 +213,19 @@ class _ConfigMixin(MainWindowMixinBase):
 
     def menu_new(self):
         """
-        Satisfies: FR-018, FR-019.
-
         FR-018: save the current configuration first (to the last-used file if
         known, otherwise via the Save dialog); abort if the save is cancelled or
         fails so nothing is lost. FR-019: on a successful save, close any open
         ports, clear the Remote Files list, and replace the settings with the
         default configuration.
+
+        Satisfies: FR-018, FR-019, FR-175.
         """
+        # FR-175: File > New discards any open image's working directory; offer
+        # to save unsaved staged changes first and abort New on Cancel. No-op
+        # when no image is open.
+        if not self._maybe_prompt_save_image():
+            return
         # FR-018: save the current configuration. Save silently to the
         # currently-loaded file if there is one, otherwise prompt with the Save
         # dialog. Abort New on cancel/failure.
@@ -281,7 +292,7 @@ class _ConfigMixin(MainWindowMixinBase):
 
     def menu_general_config(self):
         """
-        Satisfies: FR-021, FR-171, UIR-110.
+        Satisfies: FR-021, FR-171, FR-175, UIR-110.
         """
 
         def update_settings(new_set):
@@ -300,10 +311,15 @@ class _ConfigMixin(MainWindowMixinBase):
             # general settings must not revert it.
             new_host_dir = new_set.get("host_directory", old_host_dir)
             if new_host_dir and new_host_dir != old_host_dir:
-                # FR-171: moving the Host pane off an open image discards it.
-                self._cleanup_image_workdir()
-                self.host_dir = new_host_dir
-                self.refresh_host_files()
+                # FR-175: moving the Host pane off an open image discards it and
+                # may lose unsaved staged changes; offer to save first. On Cancel,
+                # keep the image open and leave the host directory unchanged (the
+                # other general settings the user saved still apply).
+                if self._maybe_prompt_save_image():
+                    # FR-171: moving the Host pane off an open image discards it.
+                    self._cleanup_image_workdir()
+                    self.host_dir = new_host_dir
+                    self.refresh_host_files()
 
             # FR-174/UIR-110: image_write_enabled may have been toggled while an
             # image is open — re-evaluate the Save Image… action's enabled state.

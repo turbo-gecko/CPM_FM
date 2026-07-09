@@ -985,6 +985,13 @@
       "tests/test_gui_smoke.py:test_save_image_refuses_source_overwrite",
       "tests/test_gui_smoke.py:test_save_image_writes_new_image"
     ],
+    "FR-175": [
+      "tests/test_gui_smoke.py:test_change_dir_saves_when_dirty_and_save_chosen",
+      "tests/test_gui_smoke.py:test_close_event_cancel_keeps_image_open",
+      "tests/test_gui_smoke.py:test_copy_to_image_file_included_on_save",
+      "tests/test_gui_smoke.py:test_maybe_prompt_save_image_routing",
+      "tests/test_gui_smoke.py:test_new_aborts_when_dirty_and_cancelled"
+    ],
     "IFR-004": [
       "tests/test_config_handler.py:test_load_json_malformed_returns_empty",
       "tests/test_config_handler.py:test_load_json_reads_valid_object",
@@ -1292,6 +1299,9 @@
       "tests/test_gui_smoke.py:test_save_image_action_gated_by_setting",
       "tests/test_gui_smoke.py:test_save_image_noop_when_writing_disabled",
       "tests/test_gui_smoke.py:test_save_image_writes_new_image"
+    ],
+    "UIR-111": [
+      "tests/test_gui_smoke.py:test_host_group_title_shows_open_image"
     ]
   },
   "untested": [

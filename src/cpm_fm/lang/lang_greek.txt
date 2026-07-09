@@ -320,3 +320,9 @@ dialog.save_image.filter = Εικόνες δίσκου CP/M (*.img *.dsk *.cpm);
 status.disk_image_saved = Η εικόνα δίσκου αποθηκεύτηκε στο '{name}' ({count} αρχείο/-α)
 error.disk_image_write = Δεν ήταν δυνατή η εγγραφή της εικόνας δίσκου: {error}
 error.disk_image_overwrite_source = Η Αποθήκευση εικόνας δημιουργεί νέο αρχείο — επιλέξτε όνομα διαφορετικό από την εικόνα προέλευσης.
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [εικόνα: {name}]
+button.discard = Απόρριψη
+dialog.image_dirty.title = Μη αποθηκευμένες αλλαγές εικόνας δίσκου
+dialog.image_dirty.message = Η ανοιχτή εικόνα δίσκου '{name}' έχει μη αποθηκευμένες αλλαγές. Να αποθηκευτούν σε νέο αρχείο εικόνας πριν την απόρριψη;

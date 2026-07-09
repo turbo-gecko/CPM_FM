@@ -325,3 +325,9 @@ dialog.save_image.filter = CP/M booty chests (*.img *.dsk *.cpm);;All plunder (*
 status.disk_image_saved = Booty chest stowed at '{name}' ({count} treasure(s))
 error.disk_image_write = Could not stow the booty chest: {error}
 error.disk_image_overwrite_source = Stowin' a chest carves a fresh one — pick a name unlike the source chest, matey.
+
+# --- Disk image copy-to-image (v2.31) -------------------------------------------
+main.host_files_image = {label} — [booty chest: {name}]
+button.discard = Toss Overboard
+dialog.image_dirty.title = Unsaved Booty in the Disk Chest
+dialog.image_dirty.message = The open disk chest '{name}' be holdin' unsaved booty. Stow it in a fresh image chest afore ye toss it overboard?
