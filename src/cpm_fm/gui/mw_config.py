@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 from cpm_fm.gui.about_dialog import AboutDialog
 from cpm_fm.gui.config_dialogs import (
     GeneralConfigDialog,
+    RemoteConfigDialog,
     SerialConfigDialog,
     TerminalConfigDialog,
 )
@@ -349,6 +350,22 @@ class _ConfigMixin(MainWindowMixinBase):
                 self.set_status(tr("status.general_settings_updated"))
 
         GeneralConfigDialog(self, self.settings, update_settings, self.window_state)
+
+    def menu_remote_config(self):
+        """Present the Remote Config dialog (remote commands + transfer timing).
+
+        Satisfies: FR-021d, FR-161, UIR-116.
+        """
+
+        def update_settings(new_set):
+            self.settings.update(new_set)
+            # FR-021d: persist only the remote settings to the active config
+            # file, leaving the serial/general/terminal settings untouched. If no
+            # file is loaded the helper warns and the change stays session-only.
+            if not self._save_subset_to_active_config(new_set, "status.remote_settings_saved"):
+                self.set_status(tr("status.remote_settings_updated"))
+
+        RemoteConfigDialog(self, self.settings, update_settings, self.window_state)
 
     def menu_terminal_config(self):
         """Present the Terminal Config dialog (terminal settings + macros).

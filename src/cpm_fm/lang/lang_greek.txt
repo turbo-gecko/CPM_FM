@@ -20,6 +20,7 @@ menu.file.exit = Έξοδος
 menu.config = Ρυθμίσεις
 menu.config.serial = Σειριακή
 menu.config.general = Γενικά
+menu.config.remote = Απομακρυσμένο
 menu.config.language = Γλώσσα
 menu.help = Βοήθεια
 menu.help.manual = Εγχειρίδιο
@@ -143,7 +144,7 @@ error.transfer_no_response_send = Δεν υπάρχει απόκριση από 
 error.transfer_no_response_recv = Δεν υπάρχει απόκριση από τον απομακρυσμένο για {name} - ελέγξτε την εντολή Λήψη από τον απομακρυσμένο στο Config > General
 warning.select_upload = Παρακαλώ επιλέξτε ένα ή περισσότερα αρχεία για μεταφόρτωση
 warning.select_download = Παρακαλώ επιλέξτε ένα ή περισσότερα αρχεία για λήψη
-warning.no_config_loaded = Δεν έχει φορτωθεί αρχείο ρυθμίσεων. Οι ρυθμίσεις εφαρμόστηκαν μόνο στην τρέχουσα συνεδρία. Χρησιμοποιήστε Αρχείο > Αποθήκευση για να τις γράψετε σε αρχείο ρυθμίσεων.
+warning.no_config_loaded = Δεν έχει φορτωθεί αρχείο ρυθμίσεων. Οι ρυθμίσεις εφαρμόστηκαν μόνο στην τρέχουσα συνεδρία. Χρησιμοποιήστε Ρυθμίσεις > Αποθήκευση διαμόρφωσης για να τις γράψετε σε αρχείο ρυθμίσεων.
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = Εφαρμογή
@@ -204,26 +205,26 @@ status.terminal_settings_updated = Οι τερματικές ρυθμίσεις 
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = Γενικές Ρυθμίσεις
-config.general.remote_group = Απομακρυσμένο
-config.general.list_files = Λίστα αρχείων
-config.general.recv_remote = Λήψη από συσκευή
-config.general.send_remote = Αποστολή σε συσκευή
-config.general.xmodem_1k = Χρήση XMODEM-1K
-config.general.recv_remote_1k = Λήψη από συσκευή (1K)
-config.general.send_remote_1k = Αποστολή σε συσκευή (1K)
-config.general.xfer_launch_delay = Καθυστέρηση έναρξης (s)
-config.general.xfer_handshake_timeout = Χρονικό όριο χειραψίας (s)
-config.general.xfer_interfile_delay = Καθυστέρηση μεταξύ αρχείων (s)
-config.general.eol = Τέλος γραμμής
+config.remote.title = Απομακρυσμένες Ρυθμίσεις
+config.remote.list_files = Λίστα αρχείων
+config.remote.recv_remote = Λήψη από συσκευή
+config.remote.send_remote = Αποστολή σε συσκευή
+config.remote.xmodem_1k = Χρήση XMODEM-1K
+config.remote.recv_remote_1k = Λήψη από συσκευή (1K)
+config.remote.send_remote_1k = Αποστολή σε συσκευή (1K)
+config.remote.xfer_launch_delay = Καθυστέρηση έναρξης (s)
+config.remote.xfer_handshake_timeout = Χρονικό όριο χειραψίας (s)
+config.remote.xfer_interfile_delay = Καθυστέρηση μεταξύ αρχείων (s)
+config.terminal.eol = Τέλος γραμμής
 config.general.debug_logging = Καταγραφή αποσφαλμάτωσης
-config.general.echo_transfer = Ηχώ δεδομένων μεταφοράς
+config.terminal.echo_transfer = Ηχώ δεδομένων μεταφοράς
 config.general.viewer = Προβολέας/Επεξεργαστής
 config.general.image_directory = Προεπιλεγμένος κατάλογος εικόνων
-config.general.rename_remote = Μετονομασία
-config.general.delete_remote = Διαγραφή
-config.general.erase_all = Διαγραφή όλων
+config.remote.rename_remote = Μετονομασία
+config.remote.delete_remote = Διαγραφή
+config.remote.erase_all = Διαγραφή όλων
 config.general.host_directory = Προεπιλεγμένος κατάλογος ξενιστή
-config.general.boot_sequence = Ακολουθία εκκίνησης
+config.remote.boot_sequence = Ακολουθία εκκίνησης
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = Ιστορικό

@@ -2776,33 +2776,39 @@ def test_file_action_dialog_multi_file_shows_readonly_list(qapp):
         dlg.deleteLater()
 
 
-def test_general_config_remote_group_first(qapp, monkeypatch):
-    """Verifies: UIR-041, UIR-089, UIR-090, UIR-094, UIR-095, UIR-107, UIR-115."""
-    # UIR-041: the General Config dialog gathers the remote command fields
-    # (List Files, Receive/Send, the XMODEM-1K toggle + 1K commands, Rename,
-    # Delete) into a "Remote" group placed first, with Rename/Delete labelled
-    # without the "Remote" suffix. UIR-089/UIR-090: the 1K toggle and its two
-    # command fields sit directly below Send to Remote. UIR-094/UIR-095: a
-    # label-less Test button row sits directly below each of Receive/Send.
-    from PySide6.QtWidgets import QFormLayout, QGroupBox
+def _ungrouped_form(dlg):
+    """Return the single ungrouped QFormLayout of a base ConfigDialog.
 
-    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+    The dialog layout is [QScrollArea, button-row] (UIR-117); the scroll area's
+    content widget holds the ungrouped form as its first layout item.
+    """
+    scroll = dlg.layout().itemAt(0).widget()
+    content = scroll.widget()
+    return content.layout().itemAt(0).layout()
+
+
+def test_remote_config_fields_ungrouped(qapp, monkeypatch):
+    """Verifies: UIR-116, UIR-042, UIR-045, UIR-046, UIR-049, UIR-052, UIR-055,
+    UIR-056, UIR-059, UIR-089, UIR-090, UIR-094, UIR-095, UIR-107, UIR-117."""
+    # UIR-116: the Remote Config dialog presents its fields ungrouped (no group
+    # box) in field-list order, with a label-less Test button row directly below
+    # each of Receive/Send (UIR-094/UIR-095), the XMODEM-1K toggle + 1K commands
+    # below Send (UIR-089/UIR-090), then Rename/Delete/Erase All, the three Xfer
+    # timing fields, and Boot Sequence last.
+    from PySide6.QtWidgets import QFormLayout, QGroupBox, QScrollArea
+
+    from cpm_fm.gui.config_dialogs import ConfigDialog, RemoteConfigDialog
 
     # The base dialog calls exec() in __init__; neutralise it so the modal does
     # not block this headless test.
     monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
-    dlg = GeneralConfigDialog(None, {}, lambda s: None)
+    dlg = RemoteConfigDialog(None, {}, lambda s: None)
     try:
-        layout = dlg.layout()
-        # The first laid-out section is the Remote group box.
-        first = layout.itemAt(0).widget()
-        assert isinstance(first, QGroupBox)
-        assert first.title() == "Remote"
-        # Its rows hold the remote command fields, in order, with the XMODEM-1K
-        # toggle and its 1K command fields directly below Send to Remote. A
-        # Test button row has no label item at all (empty label), not an
-        # empty-text QLabel.
-        form = first.layout()
+        # UIR-117: the field area is inside a vertical scroll area, and the
+        # dialog carries no group boxes (UIR-116).
+        assert isinstance(dlg.layout().itemAt(0).widget(), QScrollArea)
+        assert not dlg.findChildren(QGroupBox)
+        form = _ungrouped_form(dlg)
         labels = []
         for i in range(form.rowCount()):
             item = form.itemAt(i, QFormLayout.ItemRole.LabelRole)
@@ -2818,14 +2824,54 @@ def test_general_config_remote_group_first(qapp, monkeypatch):
             "Send to Remote (1K)",
             "Rename",
             "Delete",
-            "Erase All",  # UIR-107: multi-line erase-all macro, last in the group
+            "Erase All",  # UIR-107: multi-line erase-all macro
+            "Xfer Launch Delay (s)",
+            "Xfer Handshake Timeout (s)",
+            "Xfer Inter-file Delay (s)",
+            "Boot Sequence",  # UIR-059: multi-line, last
         ]
-        # The non-remote settings remain reachable for saving (e.g. EOL).
-        assert "eol" in dlg.entries and "host_directory" in dlg.entries
-        # UIR-115: the Default Image Directory field replaces the removed opt-in
-        # disk-image-writing checkbox.
-        assert "image_directory" in dlg.entries
-        assert "image_write_enabled" not in dlg.entries
+        # eol/echo_transfer_data moved to the Terminal dialog; not here.
+        assert "eol" not in dlg.entries
+        assert "echo_transfer_data" not in dlg.entries
+    finally:
+        dlg.deleteLater()
+
+
+def test_general_config_trimmed_fields(qapp, monkeypatch):
+    """Verifies: UIR-040, UIR-041, UIR-044, UIR-115, UIR-117."""
+    # UIR-041/UIR-044: after v2.36 the General dialog holds only Debug Logging,
+    # Viewer/Editor, Default Host Directory and Default Image Directory, ungrouped
+    # (no group boxes). The remote/transfer/boot fields moved to the Remote
+    # dialog and EOL/Echo Transfer Data to the Terminal dialog.
+    from PySide6.QtWidgets import QFormLayout, QGroupBox, QScrollArea
+
+    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+
+    monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
+    dlg = GeneralConfigDialog(None, {}, lambda s: None)
+    try:
+        assert isinstance(dlg.layout().itemAt(0).widget(), QScrollArea)  # UIR-117
+        assert not dlg.findChildren(QGroupBox)  # UIR-041: ungrouped
+        form = _ungrouped_form(dlg)
+        labels = []
+        for i in range(form.rowCount()):
+            item = form.itemAt(i, QFormLayout.ItemRole.LabelRole)
+            labels.append(item.widget().text() if item is not None else "")
+        assert labels == [
+            "Debug Logging",
+            "Viewer/Editor",
+            "Default Host Directory",
+            "Default Image Directory",  # UIR-115
+        ]
+        assert set(dlg.entries) == {
+            "debug_logging",
+            "viewer_cmd",
+            "host_directory",
+            "image_directory",
+        }
+        # The moved fields are gone from the General dialog.
+        for moved in ("list_files_cmd", "eol", "echo_transfer_data", "boot_sequence"):
+            assert moved not in dlg.entries
     finally:
         dlg.deleteLater()
 
@@ -2846,11 +2892,11 @@ class _SilentSerial:
         pass
 
 
-def _open_general_config_for_test(win, monkeypatch):
-    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+def _open_remote_config_for_test(win, monkeypatch):
+    from cpm_fm.gui.config_dialogs import ConfigDialog, RemoteConfigDialog
 
     monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
-    return GeneralConfigDialog(win, win.settings, lambda s: None)
+    return RemoteConfigDialog(win, win.settings, lambda s: None)
 
 
 def test_config_test_button_requires_connection(qapp, monkeypatch, state):
@@ -2867,7 +2913,7 @@ def test_config_test_button_requires_connection(qapp, monkeypatch, state):
             "cpm_fm.gui.config_dialogs.QMessageBox.critical",
             lambda *a, **k: criticals.append(a[1:]),
         )
-        dlg = _open_general_config_for_test(win, monkeypatch)
+        dlg = _open_remote_config_for_test(win, monkeypatch)
         try:
             dlg._test_send_remote_cmd()
             assert sent == []
@@ -2899,7 +2945,7 @@ def test_config_test_button_reports_success_when_remote_responds(qapp, monkeypat
             "cpm_fm.gui.config_dialogs.QMessageBox.information",
             lambda *a, **k: infos.append(a[1:]),
         )
-        dlg = _open_general_config_for_test(win, monkeypatch)
+        dlg = _open_remote_config_for_test(win, monkeypatch)
         try:
             dlg.entries["send_remote_cmd"].setText("PCGET $1")
             dlg._test_send_remote_cmd()
@@ -2938,7 +2984,7 @@ def test_config_test_button_reports_no_response(qapp, monkeypatch, state):
             "cpm_fm.gui.config_dialogs.QMessageBox.warning",
             lambda *a, **k: warnings.append(a[1:]),
         )
-        dlg = _open_general_config_for_test(win, monkeypatch)
+        dlg = _open_remote_config_for_test(win, monkeypatch)
         try:
             dlg.entries["recv_remote_cmd"].setText("PCPUT $1")
             dlg._test_recv_remote_cmd()
@@ -2992,10 +3038,10 @@ def test_general_config_save_keeps_current_host_dir(qapp, state, monkeypatch):
 
         # Save with the host-directory field unchanged (it carries the stored
         # config value back) plus an unrelated edit.
-        callback({"host_directory": "/path/A", "eol": "LF"})
+        callback({"host_directory": "/path/A", "viewer_cmd": "vi $1"})
         assert win.host_dir == "/path/B"  # current selection preserved
         assert win.settings["host_directory"] == "/path/A"  # config preserved
-        assert win.settings["eol"] == "LF"  # unrelated edit applied
+        assert win.settings["viewer_cmd"] == "vi $1"  # unrelated edit applied
 
         # Editing the field to a new value does follow it.
         callback({"host_directory": "/path/C"})
@@ -3074,8 +3120,8 @@ def test_general_config_save_persists_general_only(qapp, state, monkeypatch, tmp
                 {
                     "terminal_port": "COM1",
                     "speed": "9600",
-                    "eol": "CR",
-                    "list_files_cmd": "DIR",
+                    "debug_logging": "OFF",
+                    "viewer_cmd": "notepad $1",
                 }
             ),
             encoding="utf-8",
@@ -3095,15 +3141,67 @@ def test_general_config_save_persists_general_only(qapp, state, monkeypatch, tmp
         monkeypatch.setattr("cpm_fm.gui.mw_config.QFileDialog.getSaveFileName", _no_dialog)
 
         win.menu_general_config()
-        captured["callback"]({"eol": "LF", "list_files_cmd": "LS"})
+        captured["callback"]({"debug_logging": "ON", "viewer_cmd": "vi $1"})
 
         on_disk = json.loads(cfg.read_text(encoding="utf-8"))
         # General settings persisted...
-        assert on_disk["eol"] == "LF"
-        assert on_disk["list_files_cmd"] == "LS"
+        assert on_disk["debug_logging"] == "ON"
+        assert on_disk["viewer_cmd"] == "vi $1"
         # ...and the serial settings in the file left untouched.
         assert on_disk["terminal_port"] == "COM1"
         assert on_disk["speed"] == "9600"
+    finally:
+        win.close()
+
+
+def test_remote_config_save_persists_remote_only(qapp, state, monkeypatch, tmp_path):
+    """Verifies: FR-021d."""
+    # FR-021d: the Remote dialog Save writes only the remote settings to the
+    # currently loaded config file, leaving serial/general/terminal untouched,
+    # and never presents a Save dialog.
+    import json
+
+    win = MainWindow(state)
+    try:
+        cfg = tmp_path / "active.json"
+        cfg.write_text(
+            json.dumps(
+                {
+                    "terminal_port": "COM1",
+                    "eol": "CR",
+                    "list_files_cmd": "DIR",
+                    "viewer_cmd": "notepad $1",
+                }
+            ),
+            encoding="utf-8",
+        )
+        win.window_state.last_config = str(cfg)
+
+        captured = {}
+
+        def fake_dialog(parent, settings, callback, window_state):
+            captured["callback"] = callback
+
+        monkeypatch.setattr("cpm_fm.gui.mw_config.RemoteConfigDialog", fake_dialog)
+
+        def _no_dialog(*a, **k):
+            raise AssertionError("Save dialog must not be presented")
+
+        monkeypatch.setattr("cpm_fm.gui.mw_config.QFileDialog.getSaveFileName", _no_dialog)
+
+        win.menu_remote_config()
+        captured["callback"]({"list_files_cmd": "LS", "recv_remote_cmd": "PCPUT $1"})
+
+        on_disk = json.loads(cfg.read_text(encoding="utf-8"))
+        # Remote settings persisted...
+        assert on_disk["list_files_cmd"] == "LS"
+        assert on_disk["recv_remote_cmd"] == "PCPUT $1"
+        # ...and every other setting in the file left untouched.
+        assert on_disk["terminal_port"] == "COM1"
+        assert on_disk["eol"] == "CR"
+        assert on_disk["viewer_cmd"] == "notepad $1"
+        # The running session also reflects the change.
+        assert win.settings["list_files_cmd"] == "LS"
     finally:
         win.close()
 
@@ -3253,40 +3351,46 @@ def test_handle_terminal_recv_capture_buffer_byte_identical(qapp, state):
         win.close()
 
 
-def test_general_config_has_echo_transfer_field(qapp, monkeypatch):
-    """Verifies: UIR-058."""
-    # UIR-058: the General Config dialog exposes an "Echo Transfer Data"
-    # OFF/ON dropdown persisted as echo_transfer_data, defaulting to OFF.
+def test_terminal_config_has_eol_and_echo_transfer_fields(qapp, monkeypatch):
+    """Verifies: UIR-047, UIR-048, UIR-058."""
+    # UIR-047/UIR-048: the Terminal Config dialog exposes an "End of Line"
+    # dropdown (CR/LF/CRLF, default CR). UIR-058: it also exposes an "Echo
+    # Transfer Data" OFF/ON dropdown persisted as echo_transfer_data, default OFF.
+    # Both moved here from the General Config dialog in v2.36.
     from PySide6.QtWidgets import QComboBox
 
-    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+    from cpm_fm.gui.config_dialogs import ConfigDialog, TerminalConfigDialog
 
     monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
-    dlg = GeneralConfigDialog(None, {}, lambda s: None)
+    dlg = TerminalConfigDialog(None, {}, lambda s: None)
     try:
-        combo = dlg.entries["echo_transfer_data"]
-        assert isinstance(combo, QComboBox)
-        items = [combo.itemText(i) for i in range(combo.count())]
-        assert items == ["OFF", "ON"]
-        assert combo.currentText() == "OFF"  # default
+        eol = dlg.entries["eol"]
+        assert isinstance(eol, QComboBox)
+        assert [eol.itemText(i) for i in range(eol.count())] == ["CR", "LF", "CRLF"]
+        assert eol.currentText() == "CR"  # UIR-048 default
+
+        echo = dlg.entries["echo_transfer_data"]
+        assert isinstance(echo, QComboBox)
+        assert [echo.itemText(i) for i in range(echo.count())] == ["OFF", "ON"]
+        assert echo.currentText() == "OFF"  # default
     finally:
         dlg.deleteLater()
 
 
-def test_general_config_xmodem_1k_checkbox_round_trips(qapp, monkeypatch):
+def test_remote_config_xmodem_1k_checkbox_round_trips(qapp, monkeypatch):
     """Verifies: UIR-089, UIR-090."""
-    # UIR-089/UIR-090: the dialog exposes a "Use XMODEM-1K" checkbox persisted as
-    # xmodem_1k ("OFF"/"ON") plus two blank-by-default 1K command fields. The
-    # checkbox reflects the current setting and saves back as "ON"/"OFF".
+    # UIR-089/UIR-090: the Remote Config dialog exposes a "Use XMODEM-1K" checkbox
+    # persisted as xmodem_1k ("OFF"/"ON") plus two blank-by-default 1K command
+    # fields. The checkbox reflects the current setting and saves back as ON/OFF.
     from PySide6.QtWidgets import QCheckBox
 
-    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+    from cpm_fm.gui.config_dialogs import ConfigDialog, RemoteConfigDialog
 
     monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
 
     # Default (no setting): unchecked, blank 1K command fields.
     saved: dict = {}
-    dlg = GeneralConfigDialog(None, {}, saved.update)
+    dlg = RemoteConfigDialog(None, {}, saved.update)
     try:
         chk = dlg.entries["xmodem_1k"]
         assert isinstance(chk, QCheckBox)
@@ -3300,25 +3404,25 @@ def test_general_config_xmodem_1k_checkbox_round_trips(qapp, monkeypatch):
         dlg.deleteLater()
 
     # An existing "ON" setting renders the checkbox checked.
-    dlg2 = GeneralConfigDialog(None, {"xmodem_1k": "ON"}, lambda s: None)
+    dlg2 = RemoteConfigDialog(None, {"xmodem_1k": "ON"}, lambda s: None)
     try:
         assert dlg2.entries["xmodem_1k"].isChecked() is True
     finally:
         dlg2.deleteLater()
 
 
-def test_general_config_boot_sequence_multiline_round_trips(qapp, monkeypatch):
+def test_remote_config_boot_sequence_multiline_round_trips(qapp, monkeypatch):
     """Verifies: UIR-059."""
-    # UIR-059: the dialog exposes a multi-line "Boot Sequence" editor persisted
-    # as boot_sequence (default empty), preserving newlines on save.
+    # UIR-059: the Remote Config dialog exposes a multi-line "Boot Sequence"
+    # editor persisted as boot_sequence (default empty), preserving newlines.
     from PySide6.QtWidgets import QPlainTextEdit
 
-    from cpm_fm.gui.config_dialogs import ConfigDialog, GeneralConfigDialog
+    from cpm_fm.gui.config_dialogs import ConfigDialog, RemoteConfigDialog
 
     monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
 
     saved: dict = {}
-    dlg = GeneralConfigDialog(None, {}, saved.update)
+    dlg = RemoteConfigDialog(None, {}, saved.update)
     try:
         editor = dlg.entries["boot_sequence"]
         assert isinstance(editor, QPlainTextEdit)
@@ -3330,7 +3434,7 @@ def test_general_config_boot_sequence_multiline_round_trips(qapp, monkeypatch):
         dlg.deleteLater()
 
     # An existing value is rendered verbatim, newlines included.
-    dlg2 = GeneralConfigDialog(None, {"boot_sequence": "SEND A\nWAIT 1"}, lambda s: None)
+    dlg2 = RemoteConfigDialog(None, {"boot_sequence": "SEND A\nWAIT 1"}, lambda s: None)
     try:
         assert dlg2.entries["boot_sequence"].toPlainText() == "SEND A\nWAIT 1"
     finally:

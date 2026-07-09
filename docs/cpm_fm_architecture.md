@@ -136,7 +136,7 @@ threads in `terminal/` (serial reads, X-Modem transfers) push results back to th
 - **Three separate persistence stores, deliberately not merged:** the per-configuration serial/general
   JSON (`ConfigHandler`), the QSettings-backed UI/session state (`WindowState` — window geometry,
   last-used config dir/file), and the transfer-history JSON (`TransferHistory`). Keep them distinct.
-- **The app starts unconfigured** (`self.settings = {}`, FR-003); settings come from File > Load, the
+- **The app starts unconfigured** (`self.settings = {}`, FR-003); settings come from Config > Load Config, the
   Config dialogs, or the automatic reload of the last-used configuration file.
 - **GUI strings are never hard-coded (CR-015):** every user-facing string is routed through
   `i18n.tr(key)`, with the key added to all `lang/lang_*.txt` files; protocol/command values are not

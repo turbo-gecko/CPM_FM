@@ -523,17 +523,15 @@ class MainWindow(
 
     def setup_menu(self):
         """
-        Satisfies: UIR-001, UIR-002, UIR-003, UIR-004, UIR-109, UIR-110, FR-018, FR-019,
-        FR-022, FR-122.
+        Satisfies: UIR-001, UIR-002, UIR-003, UIR-004, UIR-109, UIR-110, UIR-116, FR-018,
+        FR-019, FR-021d, FR-022, FR-122.
         """
         menubar = self.menuBar()
 
         file_menu = menubar.addMenu("")
         self._register_text(file_menu.setTitle, "menu.file")
-        self._add_menu_action(file_menu, "menu.file.new", self.menu_new)
-        self._add_menu_action(file_menu, "menu.file.load", self.menu_load)
-        self._add_menu_action(file_menu, "menu.file.save", self.menu_save)
-        # UIR-108: Open Disk Image… sits after Save, before the Exit separator.
+        # UIR-002/UIR-108: Open Disk Image… is the first File-menu item — New/Load/
+        # Save Config moved to the Config menu (UIR-003) in v2.36.
         self._add_menu_action(file_menu, "menu.file.open_image", self.menu_open_image)
         # UIR-114: New Disk Image… sits immediately after Open Disk Image…. It is
         # always available (FR-178; disk-image writing is no longer opt-in, v2.35).
@@ -563,9 +561,17 @@ class MainWindow(
 
         config_menu = menubar.addMenu("")
         self._register_text(config_menu.setTitle, "menu.config")
+        # UIR-003: New/Load/Save Config sit at the top of the Config menu (moved
+        # from the File menu in v2.36), separated from the dialog items below.
+        self._add_menu_action(config_menu, "menu.file.new", self.menu_new)
+        self._add_menu_action(config_menu, "menu.file.load", self.menu_load)
+        self._add_menu_action(config_menu, "menu.file.save", self.menu_save)
+        config_menu.addSeparator()
         self._add_menu_action(config_menu, "menu.config.serial", self.menu_serial_config)
         self._add_menu_action(config_menu, "menu.config.terminal", self.menu_terminal_config)
         self._add_menu_action(config_menu, "menu.config.general", self.menu_general_config)
+        # UIR-003/UIR-116: the Remote Config dialog (FR-021d).
+        self._add_menu_action(config_menu, "menu.config.remote", self.menu_remote_config)
         self._setup_language_menu(config_menu)
 
         # UIR-004: Help menu with Manual (FR-023) and About (FR-022) items.

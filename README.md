@@ -88,8 +88,8 @@ python -m cpm_fm # equivalent, keeps a console for debugging output
 ```
 
 The app starts unconfigured (unless it can reload the last-used configuration). Use
-**File > Load** to load a settings file — see the samples in [`examples/`](examples/) — or set
-parameters via the **Config** menu and **File > Save** them. **File > New** resets to defaults.
+**Config > Load Config** to load a settings file — see the samples in [`examples/`](examples/) — or set
+parameters via the **Config** menu and **Config > Save Config** them. **Config > New Config** resets to defaults.
 The loaded configuration's name is shown in the title bar.
 
 Connect, disconnect, open the terminal, view the transfer history, and run a whole-drive **Backup**

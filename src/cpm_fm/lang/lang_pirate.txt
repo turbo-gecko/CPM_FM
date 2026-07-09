@@ -25,6 +25,7 @@ menu.file.exit = Abandon Ship
 menu.config = Ship's Orders
 menu.config.serial = Signal Flags
 menu.config.general = General Orders
+menu.config.remote = Foreign Lands
 menu.config.language = Pirate Tongue
 menu.help = Scallywag's Guide
 menu.help.manual = The Logbook
@@ -148,7 +149,7 @@ error.transfer_no_response_send = No word from the far shore for {name} - check 
 error.transfer_no_response_recv = No word from the far shore for {name} - check yer Receive from Remote command in Config > General
 warning.select_upload = Hand over one or more loot items to upload!
 warning.select_download = Pick one or more treasures to bring home!
-warning.no_config_loaded = No chart be loaded, matey. Yer orders be set for this voyage only. Use File > Save to commit 'em to a chart.
+warning.no_config_loaded = No chart be loaded, matey. Yer orders be set for this voyage only. Use Ship's Orders > Stash Charter to commit 'em to a chart.
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = Aye
@@ -209,26 +210,26 @@ status.terminal_settings_updated = Captain's Log updated
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = Ship's Orders
-config.general.remote_group = Foreign Lands
-config.general.list_files = Scour Charts
-config.general.recv_remote = Drag in from Far Shore
-config.general.send_remote = Send to Far Shore
-config.general.xmodem_1k = Hoist XMODEM-1K
-config.general.recv_remote_1k = Drag in from Far Shore (1K)
-config.general.send_remote_1k = Send to Far Shore (1K)
-config.general.xfer_launch_delay = Delay Before Launch (s)
-config.general.xfer_handshake_timeout = Handshake Wait Time (s)
-config.general.xfer_interfile_delay = Delay Between Loot (s)
-config.general.eol = End o' the Line
+config.remote.title = Foreign Lands Config
+config.remote.list_files = Scour Charts
+config.remote.recv_remote = Drag in from Far Shore
+config.remote.send_remote = Send to Far Shore
+config.remote.xmodem_1k = Hoist XMODEM-1K
+config.remote.recv_remote_1k = Drag in from Far Shore (1K)
+config.remote.send_remote_1k = Send to Far Shore (1K)
+config.remote.xfer_launch_delay = Delay Before Launch (s)
+config.remote.xfer_handshake_timeout = Handshake Wait Time (s)
+config.remote.xfer_interfile_delay = Delay Between Loot (s)
+config.terminal.eol = End o' the Line
 config.general.debug_logging = Secret Loggin'
-config.general.echo_transfer = Echo the Cargo
+config.terminal.echo_transfer = Echo the Cargo
 config.general.viewer = Spyglass/Carver
 config.general.image_directory = Default Booty Chest Locker
-config.general.rename_remote = Rename
-config.general.delete_remote = Delete
-config.general.erase_all = Scuttle All
+config.remote.rename_remote = Rename
+config.remote.delete_remote = Delete
+config.remote.erase_all = Scuttle All
 config.general.host_directory = Home Port Directory
-config.general.boot_sequence = Wakin' Orders
+config.remote.boot_sequence = Wakin' Orders
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = Logbook

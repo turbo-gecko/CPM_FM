@@ -20,6 +20,7 @@ menu.file.exit = Salir
 menu.config = Configuración
 menu.config.serial = Serie
 menu.config.general = General
+menu.config.remote = Remoto
 menu.config.language = Idioma
 menu.help = Ayuda
 menu.help.manual = Manual
@@ -143,7 +144,7 @@ error.transfer_no_response_send = Sin respuesta del remoto para {name}: verifiqu
 error.transfer_no_response_recv = Sin respuesta del remoto para {name}: verifique el comando Recibir del remoto en Config > General
 warning.select_upload = Por favor, seleccione uno o más archivos para enviar
 warning.select_download = Por favor, seleccione uno o más archivos para descargar
-warning.no_config_loaded = No hay ningún archivo de configuración cargado. Los ajustes se han aplicado solo a la sesión actual. Use Archivo > Guardar para escribirlos en un archivo de configuración.
+warning.no_config_loaded = No hay ningún archivo de configuración cargado. Los ajustes se han aplicado solo a la sesión actual. Use Configuración > Guardar configuración para escribirlos en un archivo de configuración.
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = Aplicar
@@ -204,26 +205,26 @@ status.terminal_settings_updated = Ajustes de terminal actualizados
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = Configuración general
-config.general.remote_group = Remoto
-config.general.list_files = Listar archivos
-config.general.recv_remote = Recibir del dispositivo
-config.general.send_remote = Enviar al dispositivo
-config.general.xmodem_1k = Usar XMODEM-1K
-config.general.recv_remote_1k = Recibir del dispositivo (1K)
-config.general.send_remote_1k = Enviar al dispositivo (1K)
-config.general.xfer_launch_delay = Retraso de inicio (s)
-config.general.xfer_handshake_timeout = Tiempo de espera de enlace (s)
-config.general.xfer_interfile_delay = Retraso entre archivos (s)
-config.general.eol = Fin de línea
+config.remote.title = Configuración remota
+config.remote.list_files = Listar archivos
+config.remote.recv_remote = Recibir del dispositivo
+config.remote.send_remote = Enviar al dispositivo
+config.remote.xmodem_1k = Usar XMODEM-1K
+config.remote.recv_remote_1k = Recibir del dispositivo (1K)
+config.remote.send_remote_1k = Enviar al dispositivo (1K)
+config.remote.xfer_launch_delay = Retraso de inicio (s)
+config.remote.xfer_handshake_timeout = Tiempo de espera de enlace (s)
+config.remote.xfer_interfile_delay = Retraso entre archivos (s)
+config.terminal.eol = Fin de línea
 config.general.debug_logging = Registro de depuración
-config.general.echo_transfer = Mostrar datos de transferencia
+config.terminal.echo_transfer = Mostrar datos de transferencia
 config.general.viewer = Visor/Editor
 config.general.image_directory = Directorio de imágenes por defecto
-config.general.rename_remote = Renombrar
-config.general.delete_remote = Eliminar
-config.general.erase_all = Borrar todo
+config.remote.rename_remote = Renombrar
+config.remote.delete_remote = Eliminar
+config.remote.erase_all = Borrar todo
 config.general.host_directory = Directorio del host por defecto
-config.general.boot_sequence = Secuencia de arranque
+config.remote.boot_sequence = Secuencia de arranque
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = Historial

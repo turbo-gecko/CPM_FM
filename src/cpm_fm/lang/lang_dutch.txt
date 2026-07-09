@@ -20,6 +20,7 @@ menu.file.exit = Afsluiten
 menu.config = Configuratie
 menu.config.serial = Serieel
 menu.config.general = Algemeen
+menu.config.remote = Afstand
 menu.config.language = Taal
 menu.help = Help
 menu.help.manual = Handleiding
@@ -143,7 +144,7 @@ error.transfer_no_response_send = Geen reactie van extern voor {name} - controle
 error.transfer_no_response_recv = Geen reactie van extern voor {name} - controleer het commando Ontvangen van extern in Config > General
 warning.select_upload = Selecteer een of meer bestanden om te uploaden
 warning.select_download = Selecteer een of meer bestanden om te downloaden
-warning.no_config_loaded = Er is geen configuratiebestand geladen. De instellingen zijn alleen op de huidige sessie toegepast. Gebruik Bestand > Opslaan om ze naar een configuratiebestand te schrijven.
+warning.no_config_loaded = Er is geen configuratiebestand geladen. De instellingen zijn alleen op de huidige sessie toegepast. Gebruik Configuratie > Configuratie opslaan om ze naar een configuratiebestand te schrijven.
 
 # --- Common buttons ----------------------------------------------------------
 button.apply = Toepassen
@@ -204,26 +205,26 @@ status.terminal_settings_updated = Terminal instellingen bijgewerkt
 
 # --- General Configuration dialog --------------------------------------------
 config.general.title = Algemene Configuratie
-config.general.remote_group = Afstand
-config.general.list_files = Bestanden listen
-config.general.recv_remote = Ontvangen van apparaat
-config.general.send_remote = Verzenden naar apparaat
-config.general.xmodem_1k = XMODEM-1K gebruiken
-config.general.recv_remote_1k = Ontvangen van apparaat (1K)
-config.general.send_remote_1k = Verzenden naar apparaat (1K)
-config.general.xfer_launch_delay = Startvertraging (s)
-config.general.xfer_handshake_timeout = Handshake-timeout (s)
-config.general.xfer_interfile_delay = Vertraging tussen bestanden (s)
-config.general.eol = Einde regel
+config.remote.title = Configuratie op afstand
+config.remote.list_files = Bestanden listen
+config.remote.recv_remote = Ontvangen van apparaat
+config.remote.send_remote = Verzenden naar apparaat
+config.remote.xmodem_1k = XMODEM-1K gebruiken
+config.remote.recv_remote_1k = Ontvangen van apparaat (1K)
+config.remote.send_remote_1k = Verzenden naar apparaat (1K)
+config.remote.xfer_launch_delay = Startvertraging (s)
+config.remote.xfer_handshake_timeout = Handshake-timeout (s)
+config.remote.xfer_interfile_delay = Vertraging tussen bestanden (s)
+config.terminal.eol = Einde regel
 config.general.debug_logging = Debug logging
-config.general.echo_transfer = Overdrachtsdata echoën
+config.terminal.echo_transfer = Overdrachtsdata echoën
 config.general.viewer = Viewer/Editor
 config.general.image_directory = Standaard imagemap
-config.general.rename_remote = Hernoemen
-config.general.delete_remote = Verwijderen
-config.general.erase_all = Alles wissen
+config.remote.rename_remote = Hernoemen
+config.remote.delete_remote = Verwijderen
+config.remote.erase_all = Alles wissen
 config.general.host_directory = Standaard hostmap
-config.general.boot_sequence = Opstartreeks
+config.remote.boot_sequence = Opstartreeks
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = Geschiedenis

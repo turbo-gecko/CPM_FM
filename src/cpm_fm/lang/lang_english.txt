@@ -25,6 +25,7 @@ menu.file.exit = Exit
 menu.config = Config
 menu.config.serial = Serial
 menu.config.general = General
+menu.config.remote = Remote
 menu.config.language = Language
 menu.help = Help
 menu.help.manual = Manual
@@ -168,7 +169,7 @@ error.transfer_no_response_send = No response from remote for {name} - check the
 error.transfer_no_response_recv = No response from remote for {name} - check the Receive from Remote command in Config > General
 warning.select_upload = Please select one or more files to upload
 warning.select_download = Please select one or more files to download
-warning.no_config_loaded = No configuration file is loaded. The settings have been applied to the current session only. Use File > Save to write them to a configuration file.
+warning.no_config_loaded = No configuration file is loaded. The settings have been applied to the current session only. Use Config > Save Config to write them to a configuration file.
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = Apply
@@ -234,26 +235,26 @@ status.terminal_settings_updated = Terminal settings updated
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = General Config
-config.general.remote_group = Remote
-config.general.list_files = List Files
-config.general.recv_remote = Receive from Remote
-config.general.send_remote = Send to Remote
-config.general.xmodem_1k = Use XMODEM-1K
-config.general.recv_remote_1k = Receive from Remote (1K)
-config.general.send_remote_1k = Send to Remote (1K)
-config.general.xfer_launch_delay = Xfer Launch Delay (s)
-config.general.xfer_handshake_timeout = Xfer Handshake Timeout (s)
-config.general.xfer_interfile_delay = Xfer Inter-file Delay (s)
-config.general.eol = End of Line
+config.remote.title = Remote Config
+config.remote.list_files = List Files
+config.remote.recv_remote = Receive from Remote
+config.remote.send_remote = Send to Remote
+config.remote.xmodem_1k = Use XMODEM-1K
+config.remote.recv_remote_1k = Receive from Remote (1K)
+config.remote.send_remote_1k = Send to Remote (1K)
+config.remote.xfer_launch_delay = Xfer Launch Delay (s)
+config.remote.xfer_handshake_timeout = Xfer Handshake Timeout (s)
+config.remote.xfer_interfile_delay = Xfer Inter-file Delay (s)
+config.terminal.eol = End of Line
 config.general.debug_logging = Debug Logging
-config.general.echo_transfer = Echo Transfer Data
+config.terminal.echo_transfer = Echo Transfer Data
 config.general.viewer = Viewer/Editor
 config.general.image_directory = Default Image Directory
-config.general.rename_remote = Rename
-config.general.delete_remote = Delete
-config.general.erase_all = Erase All
+config.remote.rename_remote = Rename
+config.remote.delete_remote = Delete
+config.remote.erase_all = Erase All
 config.general.host_directory = Default Host Directory
-config.general.boot_sequence = Boot Sequence
+config.remote.boot_sequence = Boot Sequence
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 history.title = Transfer History

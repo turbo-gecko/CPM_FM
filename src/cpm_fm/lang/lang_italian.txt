@@ -20,6 +20,7 @@ menu.file.exit = Esci
 menu.config = Configurazione
 menu.config.serial = Seriale
 menu.config.general = Generale
+menu.config.remote = Remoto
 menu.config.language = Lingua
 menu.help = Aiuto
 menu.help.manual = Manuale
@@ -143,7 +144,7 @@ error.transfer_no_response_send = Nessuna risposta dal remoto per {name} - contr
 error.transfer_no_response_recv = Nessuna risposta dal remoto per {name} - controlla il comando Ricevi dal remoto in Config > Generale
 warning.select_upload = Selezionare uno o più file da inviare
 warning.select_download = Selezionare uno o più file da scaricare
-warning.no_config_loaded = Nessun file di configurazione caricato. Le impostazioni sono state applicate solo alla sessione corrente. Usare File > Salva per scriverle in un file di configurazione.
+warning.no_config_loaded = Nessun file di configurazione caricato. Le impostazioni sono state applicate solo alla sessione corrente. Usare Configurazione > Salva configurazione per scriverle in un file di configurazione.
 
 # --- Common buttons -----------------------------------------------------------
 button.apply = Applica
@@ -204,26 +205,26 @@ status.terminal_settings_updated = Impostazioni terminale aggiornate
 
 # --- General Configuration dialog ---------------------------------------------
 config.general.title = Configurazione Generale
-config.general.remote_group = Remoto
-config.general.list_files = Elenca file
-config.general.recv_remote = Ricevi dal dispositivo
-config.general.send_remote = Invia al dispositivo
-config.general.xmodem_1k = Usa XMODEM-1K
-config.general.recv_remote_1k = Ricevi dal dispositivo (1K)
-config.general.send_remote_1k = Invia al dispositivo (1K)
-config.general.xfer_launch_delay = Ritardo avvio (s)
-config.general.xfer_handshake_timeout = Timeout di handshake (s)
-config.general.xfer_interfile_delay = Ritardo tra file (s)
-config.general.eol = Fine linea
+config.remote.title = Configurazione Remota
+config.remote.list_files = Elenca file
+config.remote.recv_remote = Ricevi dal dispositivo
+config.remote.send_remote = Invia al dispositivo
+config.remote.xmodem_1k = Usa XMODEM-1K
+config.remote.recv_remote_1k = Ricevi dal dispositivo (1K)
+config.remote.send_remote_1k = Invia al dispositivo (1K)
+config.remote.xfer_launch_delay = Ritardo avvio (s)
+config.remote.xfer_handshake_timeout = Timeout di handshake (s)
+config.remote.xfer_interfile_delay = Ritardo tra file (s)
+config.terminal.eol = Fine linea
 config.general.debug_logging = Log di debug
-config.general.echo_transfer = Eco dei dati di trasferimento
+config.terminal.echo_transfer = Eco dei dati di trasferimento
 config.general.viewer = Visualizzatore/Editor
 config.general.image_directory = Directory immagini predefinita
-config.general.rename_remote = Rinomina
-config.general.delete_remote = Elimina
-config.general.erase_all = Cancella tutto
+config.remote.rename_remote = Rinomina
+config.remote.delete_remote = Elimina
+config.remote.erase_all = Cancella tutto
 config.general.host_directory = Directory host predefinita
-config.general.boot_sequence = Sequenza di avvio
+config.remote.boot_sequence = Sequenza di avvio
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = Cronologia

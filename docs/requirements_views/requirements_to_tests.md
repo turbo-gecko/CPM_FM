@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_268/481 requirements have a verifying test; 213 untested; 0 stale tag(s)._
+_282/484 requirements have a verifying test; 202 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -63,6 +63,7 @@ _268/481 requirements have a verifying test; 213 untested; 0 stale tag(s)._
 | FR-021a | `tests/test_gui_smoke.py:test_dialog_save_warns_and_writes_nothing_when_no_config_loaded`, `tests/test_gui_smoke.py:test_general_config_save_keeps_current_host_dir`, `tests/test_gui_smoke.py:test_general_config_save_persists_general_only` |
 | FR-021b | `tests/test_macros.py:test_macro_settings_defaults_present_and_empty`, `tests/test_macros.py:test_menu_terminal_config_saves_subset_and_applies`, `tests/test_macros.py:test_terminal_config_macros_round_trip_label_and_sequence` |
 | FR-021c | `tests/test_macros.py:test_menu_terminal_config_saves_subset_and_applies` |
+| FR-021d | `tests/test_gui_smoke.py:test_remote_config_save_persists_remote_only` |
 | FR-022 | `tests/test_gui_smoke.py:test_menu_about_opens_dialog` |
 | FR-023 | `tests/test_gui_smoke.py:test_help_menu_contains_manual_action`, `tests/test_gui_smoke.py:test_menu_manual_opens_dialog`, `tests/test_gui_smoke.py:test_menu_manual_reuses_open_window` |
 | FR-030 | `tests/test_gui_smoke.py:test_connect_when_terminal_already_open_notifies_and_takes_no_action`, `tests/test_serial_manager.py:test_numeric_defaults_applied_when_absent`, `tests/test_serial_manager.py:test_numeric_fields_are_coerced_to_int`, `tests/test_serial_manager.py:test_open_port_returns_false_on_serial_error`, `tests/test_serial_manager.py:test_parity_maps_to_pyserial_constant`, `tests/test_serial_manager.py:test_write_timeout_defaults_to_2000ms_when_absent`, `tests/test_serial_manager.py:test_write_timeout_falls_back_on_non_numeric_value`, `tests/test_serial_manager.py:test_write_timeout_is_per_port_and_converted_ms_to_seconds` |
@@ -231,11 +232,22 @@ _268/481 requirements have a verifying test; 213 untested; 0 stale tag(s)._
 | UIR-032 | `tests/test_serial_manager.py:test_read_timeout_defaults_to_100ms_when_absent`, `tests/test_serial_manager.py:test_read_timeout_is_per_port_and_converted_ms_to_seconds` |
 | UIR-033 | `tests/test_serial_manager.py:test_read_timeout_defaults_to_100ms_when_absent`, `tests/test_serial_manager.py:test_read_timeout_is_per_port_and_converted_ms_to_seconds` |
 | UIR-034 | `tests/test_config_handler.py:test_default_settings_terminal_type_is_vt100`, `tests/test_gui_smoke.py:test_apply_terminal_settings_refreshes_status_bar`, `tests/test_gui_smoke.py:test_set_terminal_type_from_menu_applies_and_updates_setting`, `tests/test_macros.py:test_menu_terminal_config_saves_subset_and_applies`, `tests/test_macros.py:test_terminal_config_terminal_tab_round_trips`, `tests/test_term_translate.py:test_make_translator_defaults_to_identity`, `tests/test_term_translate.py:test_make_translator_selects_type`, `tests/test_vt100_engine.py:test_adm3a_engine_clear_screen`, `tests/test_vt100_engine.py:test_set_terminal_type_switches_interpretation`, `tests/test_vt100_engine.py:test_terminal_type_defaults_to_vt100`, `tests/test_vt100_engine.py:test_vt52_engine_direct_address_and_text` |
-| UIR-041 | `tests/test_gui_smoke.py:test_general_config_remote_group_first` |
+| UIR-040 | `tests/test_gui_smoke.py:test_general_config_trimmed_fields` |
+| UIR-041 | `tests/test_gui_smoke.py:test_general_config_trimmed_fields` |
+| UIR-042 | `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped` |
+| UIR-044 | `tests/test_gui_smoke.py:test_general_config_trimmed_fields` |
+| UIR-045 | `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped` |
+| UIR-046 | `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped` |
+| UIR-047 | `tests/test_gui_smoke.py:test_terminal_config_has_eol_and_echo_transfer_fields` |
+| UIR-048 | `tests/test_gui_smoke.py:test_terminal_config_has_eol_and_echo_transfer_fields` |
+| UIR-049 | `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped` |
 | UIR-051 | `tests/test_gui_smoke.py:test_batch_progress_dialog_shows_file_position`, `tests/test_gui_smoke.py:test_progress_dialog_cancel_button_requests_cancel`, `tests/test_gui_smoke.py:test_progress_dialog_started_and_updates`, `tests/test_gui_smoke.py:test_progress_dialog_title_for_receive` |
+| UIR-052 | `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped` |
+| UIR-055 | `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped` |
+| UIR-056 | `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped` |
 | UIR-057 | `tests/test_gui_smoke.py:test_file_action_dialog_button_layout` |
-| UIR-058 | `tests/test_gui_smoke.py:test_general_config_has_echo_transfer_field`, `tests/test_gui_smoke.py:test_transfer_byte_echo_respects_setting` |
-| UIR-059 | `tests/test_gui_smoke.py:test_general_config_boot_sequence_multiline_round_trips` |
+| UIR-058 | `tests/test_gui_smoke.py:test_terminal_config_has_eol_and_echo_transfer_fields`, `tests/test_gui_smoke.py:test_transfer_byte_echo_respects_setting` |
+| UIR-059 | `tests/test_gui_smoke.py:test_remote_config_boot_sequence_multiline_round_trips`, `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped` |
 | UIR-062 | `tests/test_terminal_view.py:test_autoscroll_toggle_moves_to_bottom`, `tests/test_terminal_view.py:test_grid_grows_with_scrollback`, `tests/test_terminal_view.py:test_row_cells_spans_scrollback_then_live_screen` |
 | UIR-064 | `tests/test_gui_smoke.py:test_terminal_window_status_bar_shows_terminal_type` |
 | UIR-066 | `tests/test_terminal_view.py:test_autoscroll_toggle_moves_to_bottom` |
@@ -252,12 +264,12 @@ _268/481 requirements have a verifying test; 213 untested; 0 stale tag(s)._
 | UIR-084 | `tests/test_conflict_resolution.py:test_conflict_dialog_cancel_on_window_close`, `tests/test_conflict_resolution.py:test_on_conflict_detected_records_choice_and_releases_worker` |
 | UIR-085 | `tests/test_filename_validation.py:test_on_invalid_name_detected_records_choice_and_releases_worker` |
 | UIR-088 | `tests/test_backup_restore.py:test_on_backup_restore_confirm_records_choice` |
-| UIR-089 | `tests/test_config_handler.py:test_default_settings_include_xmodem_1k_keys`, `tests/test_gui_smoke.py:test_general_config_remote_group_first`, `tests/test_gui_smoke.py:test_general_config_xmodem_1k_checkbox_round_trips`, `tests/test_gui_smoke.py:test_issue_remote_cmd_uses_1k_command_when_enabled`, `tests/test_xmodem.py:test_receive_file_1k_polls_crc_first`, `tests/test_xmodem.py:test_send_file_1k_uses_stx_1024_byte_frames` |
-| UIR-090 | `tests/test_config_handler.py:test_default_settings_include_xmodem_1k_keys`, `tests/test_gui_smoke.py:test_general_config_remote_group_first`, `tests/test_gui_smoke.py:test_general_config_xmodem_1k_checkbox_round_trips`, `tests/test_gui_smoke.py:test_issue_remote_cmd_uses_1k_command_when_enabled` |
+| UIR-089 | `tests/test_config_handler.py:test_default_settings_include_xmodem_1k_keys`, `tests/test_gui_smoke.py:test_issue_remote_cmd_uses_1k_command_when_enabled`, `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped`, `tests/test_gui_smoke.py:test_remote_config_xmodem_1k_checkbox_round_trips`, `tests/test_xmodem.py:test_receive_file_1k_polls_crc_first`, `tests/test_xmodem.py:test_send_file_1k_uses_stx_1024_byte_frames` |
+| UIR-090 | `tests/test_config_handler.py:test_default_settings_include_xmodem_1k_keys`, `tests/test_gui_smoke.py:test_issue_remote_cmd_uses_1k_command_when_enabled`, `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped`, `tests/test_gui_smoke.py:test_remote_config_xmodem_1k_checkbox_round_trips` |
 | UIR-091 | `tests/test_gui_smoke.py:test_manual_dialog_contents`, `tests/test_gui_smoke.py:test_render_manual_html_anchors_match_toc_links` |
 | UIR-092 | `tests/test_i18n.py:test_remote_unavailable_keys_resolve` |
-| UIR-094 | `tests/test_gui_smoke.py:test_general_config_remote_group_first` |
-| UIR-095 | `tests/test_gui_smoke.py:test_general_config_remote_group_first` |
+| UIR-094 | `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped` |
+| UIR-095 | `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped` |
 | UIR-098 | `tests/test_macros.py:test_terminal_config_macros_round_trip_label_and_sequence` |
 | UIR-099 | `tests/test_gui_smoke.py:test_terminal_context_menu_has_six_items_and_copy_state`, `tests/test_gui_smoke.py:test_terminal_context_menu_terminal_type_submenu`, `tests/test_terminal_view.py:test_context_menu_callback_invoked_with_position` |
 | UIR-100 | `tests/test_terminal_view.py:test_clear_selection_drops_highlight`, `tests/test_terminal_view.py:test_mouse_drag_selects_text_on_one_row`, `tests/test_terminal_view.py:test_plain_click_clears_selection`, `tests/test_terminal_view.py:test_selected_text_trims_trailing_blanks_and_joins_rows` |
@@ -271,7 +283,7 @@ _268/481 requirements have a verifying test; 213 untested; 0 stale tag(s)._
 | UIR-104 | `tests/test_gui_smoke.py:test_apply_terminal_settings_applies_local_echo_and_autoscroll` |
 | UIR-105 | `tests/test_gui_smoke.py:test_boot_menu_item_reflects_config`, `tests/test_gui_smoke.py:test_terminal_context_menu_boot_enabled_reflects_provider`, `tests/test_gui_smoke.py:test_terminal_context_menu_has_six_items_and_copy_state` |
 | UIR-106 | `tests/test_gui_smoke.py:test_apply_terminal_settings_refreshes_status_bar`, `tests/test_gui_smoke.py:test_terminal_window_status_bar_follows_language`, `tests/test_gui_smoke.py:test_terminal_window_status_bar_shows_terminal_type` |
-| UIR-107 | `tests/test_gui_smoke.py:test_general_config_remote_group_first` |
+| UIR-107 | `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped` |
 | UIR-108 | `tests/test_gui_smoke.py:test_open_disk_image_extracts_and_lists` |
 | UIR-109 | `tests/test_gui_smoke.py:test_image_details_action_enabled_only_when_image_open`, `tests/test_gui_smoke.py:test_image_details_dialog_lists_metadata`, `tests/test_gui_smoke.py:test_image_details_noop_when_no_image` |
 | UIR-110 | `tests/test_gui_smoke.py:test_save_image_action_enabled_when_image_open` |
@@ -279,7 +291,9 @@ _268/481 requirements have a verifying test; 213 untested; 0 stale tag(s)._
 | UIR-112 | `tests/test_gui_smoke.py:test_remote_group_title_and_drive_combo_reflect_image`, `tests/test_gui_smoke.py:test_remote_mount_lists_image_in_remote_pane` |
 | UIR-113 | `tests/test_gui_smoke.py:test_close_image_action_enabled_only_when_image_open` |
 | UIR-114 | `tests/test_gui_smoke.py:test_new_image_action_always_enabled`, `tests/test_gui_smoke.py:test_new_image_group_title_placeholder` |
-| UIR-115 | `tests/test_gui_smoke.py:test_general_config_remote_group_first` |
+| UIR-115 | `tests/test_gui_smoke.py:test_general_config_trimmed_fields` |
+| UIR-116 | `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped` |
+| UIR-117 | `tests/test_gui_smoke.py:test_general_config_trimmed_fields`, `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped` |
 
 ## Untested requirements
 
@@ -447,15 +461,7 @@ These defined requirements have no `Verifies:` test tag:
 - UIR-029
 - UIR-030
 - UIR-031
-- UIR-040
-- UIR-042
 - UIR-043
-- UIR-044
-- UIR-045
-- UIR-046
-- UIR-047
-- UIR-048
-- UIR-049
 - UIR-050
 - UIR-051a
 - UIR-051b
@@ -463,11 +469,8 @@ These defined requirements have no `Verifies:` test tag:
 - UIR-051d
 - UIR-051e
 - UIR-051f
-- UIR-052
 - UIR-053
 - UIR-054
-- UIR-055
-- UIR-056
 - UIR-057a
 - UIR-057b
 - UIR-057c

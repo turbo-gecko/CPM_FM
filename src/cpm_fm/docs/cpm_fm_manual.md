@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.35.0**
+**Version 2.36.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -93,8 +93,8 @@ The main window is organized into four areas:
 
 ### Menu Bar
 
-- **File** — New, Load, Save, Exit
-- **Config** — Serial, General, Language
+- **File** — Open/New/Save/Close Disk Image, Image Details, Exit
+- **Config** — New Config, Load Config, Save Config, Serial, Terminal, General, Remote, Language
 - **Help** — Manual, About
 
 The **Help → Manual** item opens this user manual in a built-in viewer.
@@ -126,9 +126,9 @@ A draggable splitter sits between the panes so you can resize them.
 
 ## 6. Getting Started — A Typical Session
 
-1. **Configure your serial port(s).** Open **Config → Serial**, select the correct port(s) and matching speed/parity/etc., and click Save to apply them. (On a first run, before you have saved a configuration file, a notice reminds you that these settings apply to this session only until you do **File → Save** in step 3.) (See [Section 7](#7-configuration).)
+1. **Configure your serial port(s).** Open **Config → Serial**, select the correct port(s) and matching speed/parity/etc., and click Save to apply them. (On a first run, before you have saved a configuration file, a notice reminds you that these settings apply to this session only until you do **Config → Save Config** in step 3.) (See [Section 7](#7-configuration).)
 2. **Set your host working directory.** Open **Config → General** and choose a Host Directory, or use the **Change Directory** button in the Host pane later.
-3. **Save your configuration** via **File → Save** so it reloads automatically next time.
+3. **Save your configuration** via **Config → Save Config** so it reloads automatically next time.
 4. **Connect** using the toolbar **Connect** button. Watch the status-bar indicators turn green. The program then checks that the remote is at the CP/M prompt and, if so, automatically selects the current drive and lists its files (see [Section 8](#8-connecting-and-disconnecting)).
 5. **Select a remote drive** (A: – P:) from the dropdown in the Remote pane and click **Update** to list its files.
 6. **Transfer files** by selecting them and clicking **Copy to Remote** / **Copy to Host**, or by dragging between panes.
@@ -175,12 +175,18 @@ Configure the Terminal Window and its macro buttons. The dialog has two tabs.
 | **Terminal Type** | VT100, VT52, ADM-3A | VT100 |
 | **Local Echo** | On / Off | Off |
 | **Autoscroll** | On / Off | On |
+| **End of Line** | CR, LF, CRLF | CR |
+| **Echo Transfer Data** | On / Off | Off |
 
 > **Terminal Type** selects the terminal emulation the Terminal Window uses to interpret the remote's output and to encode the cursor keys you type. The default **VT100** is a VT-100/ANSI terminal. Choose **VT52** for software written for a DEC VT-52, or **ADM-3A** for the classic Lear Siegler ADM-3A that much CP/M software (WordStar, Turbo Pascal, etc.) targets. VT-52 and ADM-3A output is translated into the same on-screen VT-100 model, so cursor positioning, screen clearing, and (for VT-52) line-drawing all work; the ADM-3A has no colour or text attributes. A change takes effect immediately in an open Terminal Window. (You can also switch the type on the fly from the Terminal Window's right-click menu — see [Section 13](#13-the-terminal-window).)
 
 > **Local Echo** shows what you type in the Terminal Window on screen. Leave it **Off** when the remote already echoes your keystrokes (the usual case); turn it **On** if what you type does not appear.
 
 > **Autoscroll** keeps the newest output visible as it arrives. Leave it **On** for normal use; turn it **Off** to stop the view jumping to the bottom while you scroll back through earlier output.
+
+> **End of Line** is the line terminator sent when you type a line in the Terminal Window, and used by the boot sequence and macros' `SEND` directive: **CR** (the CP/M norm), **LF**, or **CRLF**.
+
+> **Echo Transfer Data** shows the raw X-Modem bytes as hex tokens (e.g. `<01><06>`) in the Terminal Window during a transfer — a diagnostic aid, normally **Off**.
 
 **Macros tab:**
 
@@ -194,7 +200,18 @@ Like the other config dialogs, **Save** writes only the terminal and macro setti
 
 ### Config → General
 
-Configure CP/M command templates and behavior. The remote-command fields are gathered into a **Remote** group at the top; the remaining settings follow below it.
+General host-side settings. All fields are shown in a single list.
+
+| Setting | Purpose | Default |
+|---------|---------|---------|
+| **Debug Logging** | Writes verbose transfer tracing to standard output. | OFF |
+| **Viewer Command** | The program used to view/edit a file; `$1` is replaced with the file path. | `notepad $1` |
+| **Default Host Directory** | The host working directory, saved with the configuration. | — |
+| **Default Image Directory** | The folder browsed by Open/New/Save Disk Image (Section 10), remembered separately from the host directory. | — |
+
+### Config → Remote
+
+Configure the CP/M command templates and transfer timing used to talk to the remote. All fields are shown in a single list.
 
 **Remote command templates** (the `$1`/`$2` placeholders are filled in automatically):
 
@@ -224,27 +241,31 @@ Configure CP/M command templates and behavior. The remote-command fields are gat
 
 > **Test button.** A **Test** button sits beside the Recv from Remote and Send to Remote fields. It requires an active connection, and sends the field's currently entered command (even if not yet saved) exactly as a real transfer would, then reports whether the remote answered within the Transfer Handshake Timeout — without transferring any file. Use it while working out a command's exact syntax, before running a real transfer.
 
-**Other settings:**
+**Transfer timing and boot:**
 
 | Setting | Purpose | Default |
 |---------|---------|---------|
 | **Transfer Launch Delay** | Seconds to wait after issuing the CP/M command before starting the X-Modem handshake, giving the CP/M program time to start. | 3 |
 | **Transfer Handshake Timeout** | Seconds to wait for the remote's first response after the launch delay before treating the transfer as a misconfigured command (see [Section 17](#17-tips-and-troubleshooting)). | 10 |
 | **Inter-File Delay** | Seconds to pause between files in a batch, so the CP/M prompt returns before the next command — and once more after the last file, before the file list refreshes, so the just-transferred file reliably appears (increase this if a transferred file is missing from the list until you press Update, which can happen on a slow CP/M machine). | 2 |
-| **EOL** | Line terminator used when sending text from the Terminal and the boot sequence: CR, LF, or CRLF. | CR |
-| **Debug Logging** | Writes verbose transfer tracing to standard output. | OFF |
-| **Echo Transfer Data** | Shows raw X-Modem bytes as hex tokens (e.g. `<01><06>`) in the Terminal window. | OFF |
-| **Viewer Command** | The program used to view/edit a file; `$1` is replaced with the file path. | `notepad $1` |
-| **Host Directory** | The host working directory, saved with the configuration. | — |
 | **Boot Sequence** | An optional script of keystrokes that drives the remote into CP/M when it does not boot there on its own. See [Section 9](#9-booting-the-remote-into-cpm). | *(blank)* |
 
-> **The Save button in each dialog.** The **Save** button in the Serial dialog writes **only the serial settings** to the configuration file you currently have loaded, leaving the other settings in that file untouched. The **Terminal** dialog likewise writes only the terminal and macro settings, and the **General** dialog writes only the general settings. No button opens a file picker. If no configuration file is loaded yet, the change is applied to the current session only and a warning reminds you to use **File → Save** to write it to a file. To save *everything* to a file (or to a new file), use **File → Save**.
+> **The Save button in each dialog.** The **Save** button in the Serial dialog writes **only the serial settings** to the configuration file you currently have loaded, leaving the other settings in that file untouched. The **Terminal** dialog likewise writes only the terminal and macro settings, the **General** dialog writes only the general settings, and the **Remote** dialog writes only the remote settings. No button opens a file picker. If no configuration file is loaded yet, the change is applied to the current session only and a warning reminds you to use **Config → Save Config** to write it to a file. To save *everything* to a file (or to a new file), use **Config → Save Config**.
+
+> **Scrolling.** Each configuration dialog places its fields in a scrollable area, so if the dialog is shorter than its contents a vertical scrollbar appears; the Save/Cancel buttons stay fixed at the bottom.
+
+### Configuration Files — New / Load / Save Config
+
+These three items live at the top of the **Config** menu (they moved there from the File menu in v2.36).
+
+- **New Config** — Saves the current configuration, then resets all settings to their defaults and closes any open ports.
+- **Load Config** — Opens a saved JSON configuration. The loaded file's name appears in the title bar, and its host directory (if stored) is restored. If you are connected when you load a configuration, the current ports are closed first, so you are never left "connected" on the previous configuration's ports — reconnect to use the newly loaded configuration's ports.
+- **Save Config** — Writes the **entire** current configuration (all serial, general, terminal and remote settings) to a JSON file you choose. The saved configuration is remembered and reloaded automatically on the next launch.
 
 ### File Menu Actions
 
-- **New** — Saves the current configuration, then resets all settings to their defaults and closes any open ports.
-- **Load** — Opens a saved JSON configuration. The loaded file's name appears in the title bar, and its host directory (if stored) is restored. If you are connected when you load a configuration, the current ports are closed first, so you are never left "connected" on the previous configuration's ports — reconnect to use the newly loaded configuration's ports.
-- **Save** — Writes the **entire** current configuration (all serial and general settings) to a JSON file you choose. The saved configuration is remembered and reloaded automatically on the next launch.
+The File menu holds the disk-image actions (Section 10) and **Exit**.
+
 - **Exit** — Closes all ports and saves your window geometry and the current configuration name. It also remembers which of the **Terminal Window** and **Transfer History** window were open and reopens them on the next launch. On exit the program **cleans up its temporary working folders** — the folders it creates when you open a disk image or **View** a remote file (named `cpm_fm…` in your system temp directory). To recover from an unclean shutdown (a crash or forced quit), it also sweeps away any such leftover folders from previous sessions the next time it starts, so they never pile up on your PC.
 
 ---
@@ -278,7 +299,7 @@ Click **Disconnect** to close the port(s). Both indicators turn red, and the rem
 
 Some machines do not boot straight into CP/M — they may stop at a ROM monitor, a boot menu, or wait for a keypress. The **boot sequence** lets you record the keystrokes needed to drive such a machine into CP/M so you do not have to type them by hand every time.
 
-You write the sequence as a short script in **Config → General → Boot Sequence**. It is empty by default, which leaves the feature switched off.
+You write the sequence as a short script in **Config → Remote → Boot Sequence**. It is empty by default, which leaves the feature switched off.
 
 ### When the boot sequence runs
 
@@ -304,7 +325,7 @@ If a line cannot be understood (an unknown keyword, an invalid hexadecimal byte,
 
 | Directive | What it does |
 |-----------|--------------|
-| `SEND <text>` | Sends `<text>` followed by the configured end-of-line (the **EOL** setting in Config → General). This is the equivalent of typing the text and pressing Enter. `SEND` on its own (no text) sends just the end-of-line — a bare Enter. |
+| `SEND <text>` | Sends `<text>` followed by the configured end-of-line (the **End of Line** setting in Config → Terminal). This is the equivalent of typing the text and pressing Enter. `SEND` on its own (no text) sends just the end-of-line — a bare Enter. |
 | `SENDRAW <hh> [hh …]` | Sends one or more raw bytes given as two-digit hexadecimal values, separated by spaces, with **no** end-of-line added. Use this for control keys and other non-printing characters. |
 | `WAIT <seconds>` | Pauses for the given number of seconds before the next directive. Decimals are allowed (e.g. `WAIT 0.5`). |
 | `WAITFOR <text> [seconds]` | Watches the incoming serial data and waits until `<text>` appears, or until the optional timeout (in seconds) elapses — whichever comes first. If no timeout is given, it waits up to **10 seconds**. Use this to synchronize with a prompt the machine prints. |
@@ -425,7 +446,7 @@ You can browse the contents of a **CP/M disk image** — a raw-sector image of a
 
 Because a CP/M image does not record its own disk layout, the program **auto-detects** the geometry by matching the file size against a built-in database of common formats — standard 8-inch and 5.25-inch floppies, the **RomWBW** floppy and hard-disk formats (fd144/fd120/fd720/fd360, hd1k, hd512), and the RC2014 CompactFlash slice. When the layout is unambiguous it is used automatically and shown in the status bar; when two formats are equally plausible — or none is recognised — a small dialog asks you to pick the format to use. (For example, an 8 MB image could be either a RomWBW *hd1k* slice or an RC2014 slice, which share the same size, so you will be asked to choose.)
 
-The image's files are extracted to a temporary working folder that becomes the Host directory, so everything you can do with an ordinary host folder works unchanged: filter and sort the list, and **Copy to Remote** (or drag-and-drop) to send files straight to a connected CP/M machine. By default the original image file is left untouched — opening an image is a read-only view. (If you want to save a modified copy of the image, see [Saving a CP/M Disk Image](#saving-a-cpm-disk-image) below.) The temporary folder is discarded automatically when you open another image, choose **File → New**, load a configuration, change the host directory, or exit.
+The image's files are extracted to a temporary working folder that becomes the Host directory, so everything you can do with an ordinary host folder works unchanged: filter and sort the list, and **Copy to Remote** (or drag-and-drop) to send files straight to a connected CP/M machine. By default the original image file is left untouched — opening an image is a read-only view. (If you want to save a modified copy of the image, see [Saving a CP/M Disk Image](#saving-a-cpm-disk-image) below.) The temporary folder is discarded automatically when you open another image, choose **Config → New Config**, load a configuration, change the host directory, or exit.
 
 If your image uses an unusual layout that is not auto-detected, you can supply your own cpmtools-format `diskdefs` file (support for selecting one is being extended).
 
@@ -440,7 +461,7 @@ When you open an image the mount-side dialog offers two choices:
 
 Copying **into** an image still checks that each name fits the CP/M 8.3 convention (offering to rename if not) and asks before overwriting an existing file; copying **out** to your folder just writes the files as they are. To save the edited image, tick disk-image writing and use **Save Image…** (below).
 
-Because a CP/M machine and an image cannot both occupy the Remote pane at once, mounting an image there is only allowed while you are **not** connected, and you cannot Connect while a Remote-pane image is open — close the image first (for example with **File → New**).
+Because a CP/M machine and an image cannot both occupy the Remote pane at once, mounting an image there is only allowed while you are **not** connected, and you cannot Connect while a Remote-pane image is open — close the image first (for example with **File → Close Disk Image…**).
 
 ### Viewing CP/M File Details
 
@@ -454,7 +475,7 @@ If the working folder holds more files than the disk's directory can list, or mo
 
 **Copying files back into an image.** While an image is open, any file you **Copy to Host** (or drag onto the Host pane) from a connected CP/M machine is added to it — and is written back the next time you Save Image. This is the easy way to pull files off real hardware and into an image. The pane's group title shows the name of the image you are editing, so you can tell a staged image apart from an ordinary folder.
 
-**Don't lose your edits.** If you have added, removed or replaced files since opening (or last saving) the image and then do something that would throw those changes away — opening another image, **File → New Config**, **Load**ing a configuration, closing the image, or quitting — the application asks first: **Save** writes the image before continuing, **Discard** continues and loses the changes, and **Cancel** stays where you are with the image still open. (When nothing has changed, it does not ask.)
+**Don't lose your edits.** If you have added, removed or replaced files since opening (or last saving) the image and then do something that would throw those changes away — opening another image, **Config → New Config Config**, **Load**ing a configuration, closing the image, or quitting — the application asks first: **Save** writes the image before continuing, **Discard** continues and loses the changes, and **Cancel** stays where you are with the image still open. (When nothing has changed, it does not ask.)
 
 ### Creating a New Disk Image
 
@@ -462,7 +483,7 @@ You can also build a **brand-new, empty** CP/M image from scratch — handy for 
 
 The new image starts empty and unnamed: the pane title shows "(new image)" until you save it. Copy files in as usual, then choose **File → Save Image…** to write it to a file (it asks where the first time; from then on the image is named after that file). A newly created image is a valid data disk but is **not bootable** — it has no system tracks.
 
-**Tip:** Open, New and Save Image all browse the **Default Image Directory** (set in **Config → General**), which is remembered separately from the Host directory — so you can keep your image files in one place and your working files in another without navigating back and forth. Save your configuration (**File → Save Config**) to remember it.
+**Tip:** Open, New and Save Image all browse the **Default Image Directory** (set in **Config → General**), which is remembered separately from the Host directory — so you can keep your image files in one place and your working files in another without navigating back and forth. Save your configuration (**Config → Save Config**) to remember it.
 
 **Backing up to and from an image.** With an image mounted in the **Remote** pane, the toolbar **Backup** and **Restore** buttons copy *all* files between the Host folder and the image at once: **Backup** (◀) copies the whole image out to the Host folder, and **Restore** (▶) copies the whole Host folder into the image (each first empties the destination, and asks you to confirm).
 
@@ -558,7 +579,7 @@ The window has **no buttons or checkboxes** — every terminal action is on the 
 - **Clear Window** — resets the screen and empties the buffers.
 - **Font…** — opens your system's standard font-selection dialog, where you can choose the family, style, and size used to draw the Receive area. The new font is applied straight away — the character grid reflows to the new character size — and is **remembered across sessions**, independently of which configuration file is loaded. The default is a monospaced **Courier New**; a monospaced font is recommended so full-screen CP/M programs line up correctly.
 - **Reset Size (24×80)** — resizes the window so the character grid returns to the classic 80 columns × 24 rows.
-- **Boot into CP/M** — runs the configured boot sequence (see [Section 9](#9-booting-the-remote-into-cpm)). It is greyed out until you configure a boot sequence in Config → General.
+- **Boot into CP/M** — runs the configured boot sequence (see [Section 9](#9-booting-the-remote-into-cpm)). It is greyed out until you configure a boot sequence in Config → Remote.
 - **Terminal Type** (submenu) — lists **VT100**, **VT52**, and **ADM-3A** with the active type ticked. Choosing one switches the terminal emulation straight away — exactly like the **Terminal Type** dropdown in Config → Terminal (see [Section 7](#7-configuration)). The choice is kept with the rest of the terminal settings and saved next time you save the configuration.
 - **Macros** (submenu) — lists your configured macro buttons by label. Choosing one runs that macro's keystrokes on the CP/M system. If no macros are configured the submenu is greyed out. You program the macros on the **Macros** tab of **Config → Terminal** (see [Section 7](#7-configuration)); each uses the same script directives as the boot sequence (`SEND`, `SENDRAW`, `WAIT`, `WAITFOR`), and running one requires the Terminal Port to be open.
 
@@ -605,7 +626,7 @@ These operations move an entire drive's worth of files in one step. **Both are d
 
 1. Click **Restore** on the toolbar.
 2. The program snapshots the host files and refreshes the remote list, then warns: *all files on the remote drive will be deleted and replaced.* Cancel is the safe default.
-3. On confirmation, it clears the remote drive — by default deleting every remote file with the Delete command, or, if you have configured an **Erase All** sequence (Config → General), by running that once — and uploads every host file, with CP/M filename validation, conflict handling, progress, and history tracking active.
+3. On confirmation, it clears the remote drive — by default deleting every remote file with the Delete command, or, if you have configured an **Erase All** sequence (Config → Remote), by running that once — and uploads every host file, with CP/M filename validation, conflict handling, progress, and history tracking active.
 
 > Because these operations delete files at the destination, double-check your host directory and selected remote drive before confirming.
 
@@ -621,7 +642,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 
 ## 17. Tips and Troubleshooting
 
-- **A transfer never starts / times out.** Make sure the CP/M side launched its X-Modem helper. Increase the **Transfer Launch Delay** if your CP/M program is slow to start. If the remote never responds at all, the program now reports "No response from remote… check the Send to Remote / Receive from Remote command" instead of a generic failure — use the **Test** button beside those fields (Config → General) to check a command without running a real transfer.
+- **A transfer never starts / times out.** Make sure the CP/M side launched its X-Modem helper. Increase the **Transfer Launch Delay** if your CP/M program is slow to start. If the remote never responds at all, the program now reports "No response from remote… check the Send to Remote / Receive from Remote command" instead of a generic failure — use the **Test** button beside those fields (Config → Remote) to check a command without running a real transfer.
 - **The machine doesn't reach CP/M when you connect.** If it sits at a ROM monitor or boot menu, set up a **Boot Sequence** (see [Section 9](#9-booting-the-remote-into-cpm)); the program will run it automatically when the connect check finds no CP/M prompt, or you can run it on demand with the Terminal window's **Boot into CP/M** button.
 - **Characters get dropped during terminal use or transfers.** Increase **Msec per Char** and/or **Msec per Line**, or lower the baud rate.
 - **XMODEM-1K transfers are unreliable.** Raise the **Transfer Timeout** (try 1000 ms) so each larger 1024-byte block has time to arrive.
@@ -629,8 +650,8 @@ Switch languages at any time via **Config → Language**. The change is applied 
 - **Files fail with name errors on upload.** This is the 8.3 validation step — accept the suggested CP/M-compatible name in the dialog.
 - **Sharing one serial port** for both Terminal and Transport is supported; the program pauses terminal reading during transfers automatically.
 - **Connect works but the remote never lists files, or Disconnect feels slow.** Check you haven't set the **Terminal Port** and **Transport Port** back-to-front in Config → Serial — with them swapped the connection check can't reach CP/M. Disconnect (and the **Abort** button on the "Remote Filesystem Unavailable" dialog) still completes promptly in that case; if it ever seems to pause, it is bounded by the ports' write timeout (2 seconds each) and returns on its own.
-- **Need to see what's happening on the wire?** Enable **Debug Logging** and/or **Echo Transfer Data** in Config → General, and launch with `python -m cpm_fm` to view the console output.
-- **Settings didn't persist.** Use **File → Save** to write your configuration; the saved file is reloaded automatically on the next launch.
+- **Need to see what's happening on the wire?** Enable **Debug Logging** (Config → General) and/or **Echo Transfer Data** (Config → Terminal), and launch with `python -m cpm_fm` to view the console output.
+- **Settings didn't persist.** Use **Config → Save Config** to write your configuration; the saved file is reloaded automatically on the next launch.
 
 ---
 

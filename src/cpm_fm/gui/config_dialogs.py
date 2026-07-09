@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
+    QScrollArea,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -98,15 +99,22 @@ class ConfigDialog(QDialog):
 
     def create_widgets(self):
         """
-        Satisfies: UIR-021, UIR-041, UIR-053, UIR-075.
+        Satisfies: UIR-021, UIR-041, UIR-053, UIR-075, UIR-117.
 
         Fields are laid out into sections keyed by their optional ``group``: a
         grouped field goes into a titled :class:`QGroupBox`, an ungrouped field
         into a plain form. Sections are emitted in the order their first field
         appears in the list, so the field order alone controls dialog layout.
+        UIR-117: the field sections are placed inside a vertically scrollable
+        area so tall dialogs stay fully reachable; the Save/Cancel row (UIR-075)
+        sits below it, fixed and outside the scrolled area.
         """
         layout = QVBoxLayout(self)
         self.entries: dict[str, Any] = {}
+
+        # UIR-117: the field sections live in a scrollable content widget.
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
 
         # Map each group key (or None for ungrouped) to its form, recording the
         # order sections are first seen so the layout follows the field list.
@@ -122,11 +130,18 @@ class ConfigDialog(QDialog):
 
         for group in section_order:
             if group is None:
-                layout.addLayout(forms[group])
+                content_layout.addLayout(forms[group])
             else:
                 box = QGroupBox(tr(group))
                 box.setLayout(forms[group])
-                layout.addWidget(box)
+                content_layout.addWidget(box)
+
+        # UIR-117: a vertical scrollbar appears on demand; the content resizes
+        # to the viewport width so the two-column form keeps its proportions.
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(content)
+        layout.addWidget(scroll)
 
         # UIR-075: Cancel at the far left, the affirmative (Save) button at the
         # far right.
@@ -365,25 +380,30 @@ class SerialConfigDialog(ConfigDialog):
         )
 
 
-class GeneralConfigDialog(ConfigDialog):
-    """
-    Specialized dialog for General Configuration
-    (SRS docs/cpm_fm_requirements.md, UIR-040 through UIR-048).
+class RemoteConfigDialog(ConfigDialog):
+    """Specialized dialog for the Remote Configuration settings.
 
-    Satisfies: UIR-040-UIR-059, UIR-089, UIR-090, UIR-093, UIR-094, UIR-095, UIR-107,
-    UIR-110, FR-161.
+    Holds the remote-command fields (List Files, Receive/Send from Remote and
+    their Test buttons, the XMODEM-1K options, Rename, Delete, Erase All), the
+    transfer-timing fields (Xfer Launch Delay, Handshake Timeout, Inter-file
+    Delay) and the Boot Sequence editor. All fields are presented **ungrouped**
+    in a two-column layout (UIR-116) — the dialog carries no group boxes. Split
+    out of the former General Configuration Dialog in v2.36.
+
+    Satisfies: UIR-116, UIR-117, UIR-042, UIR-045, UIR-046, UIR-049, UIR-052,
+    UIR-055, UIR-056, UIR-059, UIR-089, UIR-090, UIR-093, UIR-094, UIR-095,
+    UIR-107, FR-161, FR-021d.
     """
 
     def __init__(self, parent, settings, callback, window_state=None):
         """
-        Satisfies: UIR-041, UIR-042, UIR-045, UIR-046, UIR-047, UIR-048,
-        UIR-049, UIR-050, UIR-052, UIR-053, UIR-054, UIR-055, UIR-056,
-        UIR-058, UIR-059, UIR-089, UIR-090, UIR-093, UIR-094, UIR-095, UIR-107.
+        Satisfies: UIR-116, UIR-042, UIR-045, UIR-046, UIR-049, UIR-052,
+        UIR-055, UIR-056, UIR-059, UIR-089, UIR-090, UIR-093, UIR-094, UIR-095,
+        UIR-107.
 
-        Command text fields limited to 79 characters. UIR-041: the remote
-        command fields (List Files, Receive from Remote, Send to Remote, Rename,
-        Delete) are gathered into a "Remote" group placed first; the remaining
-        general settings follow ungrouped.
+        Command text fields limited to 79 characters. UIR-116: every field is
+        ungrouped (no ``group`` key), so the base dialog renders a single flat
+        two-column form in field-list order.
         """
         # FR-161: the Test buttons need the MainWindow's serial_mgr/settings.
         # ``parent`` already *is* the MainWindow at every call site; stored
@@ -398,26 +418,20 @@ class GeneralConfigDialog(ConfigDialog):
         self._test_no_response_key = ""
         self._test_deadline = 0.0
 
-        # UIR-041: i18n key for the "Remote" group box title. The five remote
-        # command fields below carry this so the base dialog boxes them together
-        # and, being first in the list, renders the group before everything else.
-        REMOTE = "config.general.remote_group"
         fields = [
             {
                 "key": "list_files_cmd",
-                "label_key": "config.general.list_files",
+                "label_key": "config.remote.list_files",
                 "type": "text",
                 "default": "DIR",
                 "maxlength": 79,
-                "group": REMOTE,
             },
             {
                 "key": "recv_remote_cmd",
-                "label_key": "config.general.recv_remote",
+                "label_key": "config.remote.recv_remote",
                 "type": "text",
                 "default": "PCPUT $1",
                 "maxlength": 79,
-                "group": REMOTE,
             },
             # UIR-094: pre-flight test for the Receive from Remote command
             # (FR-161) — not a persisted setting, so it carries no "default"
@@ -427,15 +441,13 @@ class GeneralConfigDialog(ConfigDialog):
                 "type": "button",
                 "button_key": "button.test",
                 "on_click": "_test_recv_remote_cmd",
-                "group": REMOTE,
             },
             {
                 "key": "send_remote_cmd",
-                "label_key": "config.general.send_remote",
+                "label_key": "config.remote.send_remote",
                 "type": "text",
                 "default": "PCGET $1",
                 "maxlength": 79,
-                "group": REMOTE,
             },
             # UIR-095: pre-flight test for the Send to Remote command (FR-161).
             {
@@ -443,7 +455,6 @@ class GeneralConfigDialog(ConfigDialog):
                 "type": "button",
                 "button_key": "button.test",
                 "on_click": "_test_send_remote_cmd",
-                "group": REMOTE,
             },
             # XMODEM-1K mode: when checked, host->remote sends use 1024-byte STX
             # frames and the _1k commands below replace the standard send/recv
@@ -451,66 +462,57 @@ class GeneralConfigDialog(ConfigDialog):
             # counterpart). Default unchecked.
             {
                 "key": "xmodem_1k",
-                "label_key": "config.general.xmodem_1k",
+                "label_key": "config.remote.xmodem_1k",
                 "type": "checkbox",
                 "default": "OFF",
-                "group": REMOTE,
             },
             {
                 "key": "recv_remote_cmd_1k",
-                "label_key": "config.general.recv_remote_1k",
+                "label_key": "config.remote.recv_remote_1k",
                 "type": "text",
                 "default": "",
                 "maxlength": 79,
-                "group": REMOTE,
             },
             {
                 "key": "send_remote_cmd_1k",
-                "label_key": "config.general.send_remote_1k",
+                "label_key": "config.remote.send_remote_1k",
                 "type": "text",
                 "default": "",
                 "maxlength": 79,
-                "group": REMOTE,
             },
             # UIR-055: remote rename command (FR-117); $1 = original name,
-            # $2 = new name (CP/M REN newname=oldname). Labelled just "Rename"
-            # inside the Remote group.
+            # $2 = new name (CP/M REN newname=oldname).
             {
                 "key": "rename_remote_cmd",
-                "label_key": "config.general.rename_remote",
+                "label_key": "config.remote.rename_remote",
                 "type": "text",
                 "default": "REN $2=$1",
                 "maxlength": 79,
-                "group": REMOTE,
             },
-            # UIR-056: remote delete command (FR-117); $1 = filename. Labelled
-            # just "Delete" inside the Remote group.
+            # UIR-056: remote delete command (FR-117); $1 = filename.
             {
                 "key": "delete_remote_cmd",
-                "label_key": "config.general.delete_remote",
+                "label_key": "config.remote.delete_remote",
                 "type": "text",
                 "default": "ERA $1",
                 "maxlength": 79,
-                "group": REMOTE,
             },
             # UIR-107: optional whole-drive erase macro sequence (FR-153e), run
             # once during Restore to clear the remote drive. Multi-line, in the
             # boot-sequence directive language; empty falls back to the per-file
-            # ERA loop (FR-153c). Placed last in the Remote group so the tall
-            # editor sits at the bottom of the boxed fields.
+            # ERA loop (FR-153c).
             {
                 "key": "erase_all_remote_seq",
-                "label_key": "config.general.erase_all",
+                "label_key": "config.remote.erase_all",
                 "type": "multiline",
                 "default": "",
-                "group": REMOTE,
             },
             # UIR-049: seconds to wait after launching PCPUT/PCGET before the
             # X-Modem handshake starts, so prompts do not overrun the remote
             # UART during its start-up (FR-087). Integer 0..60 inclusive.
             {
                 "key": "xfer_launch_delay",
-                "label_key": "config.general.xfer_launch_delay",
+                "label_key": "config.remote.xfer_launch_delay",
                 "type": "text",
                 "default": "3",
                 "int_range": (0, 60),
@@ -520,7 +522,7 @@ class GeneralConfigDialog(ConfigDialog):
             # command (FR-159/FR-160). Integer 1..60 inclusive.
             {
                 "key": "xfer_handshake_timeout",
-                "label_key": "config.general.xfer_handshake_timeout",
+                "label_key": "config.remote.xfer_handshake_timeout",
                 "type": "text",
                 "default": "10",
                 "int_range": (1, 60),
@@ -531,75 +533,29 @@ class GeneralConfigDialog(ConfigDialog):
             # returning to the prompt (FR-109). Integer 0..60 inclusive.
             {
                 "key": "xfer_interfile_delay",
-                "label_key": "config.general.xfer_interfile_delay",
+                "label_key": "config.remote.xfer_interfile_delay",
                 "type": "text",
                 "default": "2",
                 "int_range": (0, 60),
             },
-            {
-                "key": "eol",
-                "label_key": "config.general.eol",
-                "type": "dropdown",
-                "options": ["CR", "LF", "CRLF"],
-                "default": "CR",
-            },
-            # UIR-050: gate verbose transfer debug output to stdout (FR-088).
-            {
-                "key": "debug_logging",
-                "label_key": "config.general.debug_logging",
-                "type": "dropdown",
-                "options": ["OFF", "ON"],
-                "default": "OFF",
-            },
-            # UIR-058: gate the X-Modem transfer byte echo to the Terminal
-            # Window (FR-086). Default OFF.
-            {
-                "key": "echo_transfer_data",
-                "label_key": "config.general.echo_transfer",
-                "type": "dropdown",
-                "options": ["OFF", "ON"],
-                "default": "OFF",
-            },
-            # UIR-054: command used to open a file for viewing/editing (FR-112);
-            # $1 is the file path.
-            {
-                "key": "viewer_cmd",
-                "label_key": "config.general.viewer",
-                "type": "text",
-                "default": "notepad $1",
-            },
-            {
-                "key": "host_directory",
-                "label_key": "config.general.host_directory",
-                "type": "directory",
-                "default": "",
-            },
-            # FR-179/UIR-115: the default folder for CP/M disk-image files, browsed
-            # by Open/New/Save Image and remembered on File > Save Config.
-            {
-                "key": "image_directory",
-                "label_key": "config.general.image_directory",
-                "type": "directory",
-                "default": "",
-            },
             # UIR-059: optional multi-line boot-into-CP/M keystroke sequence
             # (FR-047). Placed last so the tall editor sits at the bottom of the
-            # ungrouped layout. Empty by default — feature disabled.
+            # layout. Empty by default — feature disabled.
             {
                 "key": "boot_sequence",
-                "label_key": "config.general.boot_sequence",
+                "label_key": "config.remote.boot_sequence",
                 "type": "multiline",
                 "default": "",
             },
         ]
         super().__init__(
             parent,
-            tr("config.general.title"),
+            tr("config.remote.title"),
             settings,
             fields,
             callback,
             window_state,
-            "general_config",
+            "remote_config",
         )
 
     def _test_recv_remote_cmd(self):
@@ -726,6 +682,70 @@ class GeneralConfigDialog(ConfigDialog):
             widget.setEnabled(enabled)
 
 
+class GeneralConfigDialog(ConfigDialog):
+    """Specialized dialog for General Configuration.
+
+    After v2.36 the General dialog holds only the general settings that are not
+    remote/transfer- or terminal-specific: Debug Logging, Viewer/Editor, the
+    Default Host Directory and the Default Image Directory. The former Remote
+    group and the transfer-timing/Boot Sequence fields moved to the Remote
+    Configuration Dialog (UIR-116); End of Line and Echo Transfer Data moved to
+    the Terminal Config dialog (UIR-103a). All fields are ungrouped (UIR-041).
+
+    Satisfies: UIR-040, UIR-041, UIR-044, UIR-050, UIR-053, UIR-054, UIR-115,
+    UIR-117, FR-021, FR-021a.
+    """
+
+    def __init__(self, parent, settings, callback, window_state=None):
+        """
+        Satisfies: UIR-041, UIR-044, UIR-050, UIR-053, UIR-054, UIR-115.
+
+        The fields are ungrouped (no ``group`` key), so the base dialog renders
+        a single flat two-column form in field-list order.
+        """
+        fields = [
+            # UIR-050: gate verbose transfer debug output to stdout (FR-088).
+            {
+                "key": "debug_logging",
+                "label_key": "config.general.debug_logging",
+                "type": "dropdown",
+                "options": ["OFF", "ON"],
+                "default": "OFF",
+            },
+            # UIR-054: command used to open a file for viewing/editing (FR-112);
+            # $1 is the file path.
+            {
+                "key": "viewer_cmd",
+                "label_key": "config.general.viewer",
+                "type": "text",
+                "default": "notepad $1",
+            },
+            {
+                "key": "host_directory",
+                "label_key": "config.general.host_directory",
+                "type": "directory",
+                "default": "",
+            },
+            # FR-179/UIR-115: the default folder for CP/M disk-image files, browsed
+            # by Open/New/Save Image and remembered on Config > Save Config.
+            {
+                "key": "image_directory",
+                "label_key": "config.general.image_directory",
+                "type": "directory",
+                "default": "",
+            },
+        ]
+        super().__init__(
+            parent,
+            tr("config.general.title"),
+            settings,
+            fields,
+            callback,
+            window_state,
+            "general_config",
+        )
+
+
 class TerminalConfigDialog(ConfigDialog):
     """Configuration dialog for the Terminal Window settings and macro buttons.
 
@@ -745,25 +765,26 @@ class TerminalConfigDialog(ConfigDialog):
     :meth:`ConfigDialog.save` writes every registered entry — the three terminal
     settings and all twenty ``macro_<n>_*`` keys — back to the settings.
 
-    Satisfies: UIR-103, UIR-103a, UIR-098, UIR-034, FR-093, FR-021b, FR-162.
+    Satisfies: UIR-103, UIR-103a, UIR-098, UIR-034, UIR-047, UIR-048, UIR-058,
+    UIR-117, FR-093, FR-021b, FR-162.
     """
 
     MACRO_COUNT = 10
 
     def __init__(self, parent, settings, callback, window_state=None):
         """
-        Satisfies: UIR-103, UIR-103a, UIR-034, FR-021b.
+        Satisfies: UIR-103, UIR-103a, UIR-034, UIR-047, UIR-048, UIR-058, FR-021b.
 
         ``parent`` is the MainWindow, stored under ``_main_window`` so the Test
         handlers can reach its serial manager and macro runner (mirrors
-        :class:`GeneralConfigDialog`). The Terminal-tab field list is passed to
+        :class:`RemoteConfigDialog`). The Terminal-tab field list is passed to
         the base as ``fields`` so :meth:`ConfigDialog._build_field` can build
         those rows; the macro tabs are built directly in :meth:`create_widgets`.
         Must be set before ``super().__init__``, which builds the widgets and
         enters the modal ``exec()``.
         """
         self._main_window = parent
-        # UIR-103a: the three Terminal-tab settings, built via the base field
+        # UIR-103a: the Terminal-tab settings, built via the base field
         # machinery so their save/round-trip is shared with the other dialogs.
         terminal_fields = [
             # UIR-034: terminal emulation type applied to the Terminal Window.
@@ -788,6 +809,25 @@ class TerminalConfigDialog(ConfigDialog):
                 "type": "checkbox",
                 "default": "ON",
             },
+            # UIR-047/UIR-048: end-of-line convention applied to typed/sent lines.
+            # Moved from the General Config dialog in v2.36.
+            {
+                "key": "eol",
+                "label_key": "config.terminal.eol",
+                "type": "dropdown",
+                "options": ["CR", "LF", "CRLF"],
+                "default": "CR",
+            },
+            # UIR-058: gate the X-Modem transfer byte echo to the Terminal
+            # Window (FR-086). Default OFF. Moved from the General Config dialog
+            # in v2.36.
+            {
+                "key": "echo_transfer_data",
+                "label_key": "config.terminal.echo_transfer",
+                "type": "dropdown",
+                "options": ["OFF", "ON"],
+                "default": "OFF",
+            },
         ]
         super().__init__(
             parent,
@@ -802,16 +842,17 @@ class TerminalConfigDialog(ConfigDialog):
     def create_widgets(self):
         """Build the Terminal-settings tab and the nested macro-button tabs.
 
-        The **Terminal** tab lays the three ``self.fields`` (Terminal Type, Local
-        Echo, Autoscroll) into a two-column form via
-        :meth:`ConfigDialog._build_field`. The **Macros** tab holds a nested
-        :class:`QTabWidget` of ten slots, each a Label field, a Keystrokes editor,
-        and a Test button; the Label/Keystrokes widgets are registered in
-        ``self.entries`` under the ``macro_<n>_label``/``macro_<n>_seq`` keys so
-        the inherited :meth:`ConfigDialog.save` writes all of them (with the three
-        terminal settings) straight back to the settings.
+        The **Terminal** tab lays ``self.fields`` (Terminal Type, Local Echo,
+        Autoscroll, End of Line, Echo Transfer Data) into a two-column form via
+        :meth:`ConfigDialog._build_field`, inside a vertical scroll area
+        (UIR-117). The **Macros** tab holds a nested :class:`QTabWidget` of ten
+        slots, each a Label field, a Keystrokes editor, and a Test button; the
+        Label/Keystrokes widgets are registered in ``self.entries`` under the
+        ``macro_<n>_label``/``macro_<n>_seq`` keys so the inherited
+        :meth:`ConfigDialog.save` writes all of them (with the terminal settings)
+        straight back to the settings.
 
-        Satisfies: UIR-103, UIR-103a, UIR-098, UIR-075, FR-021b.
+        Satisfies: UIR-103, UIR-103a, UIR-098, UIR-075, UIR-117, FR-021b.
         """
         outer = QVBoxLayout(self)
         self.entries: dict[str, Any] = {}
@@ -819,13 +860,18 @@ class TerminalConfigDialog(ConfigDialog):
         tabs = QTabWidget()
 
         # UIR-103a: the Terminal-settings tab (Terminal Type / Local Echo /
-        # Autoscroll) as a two-column form.
+        # Autoscroll / End of Line / Echo Transfer Data) as a two-column form.
+        # UIR-117: the form sits inside a vertical scroll area so every field
+        # stays reachable when the tab is shorter than its contents.
         term_page = QWidget()
         term_form = QFormLayout(term_page)
         for field in self.fields:
             label, widget = self._build_field(field)
             term_form.addRow(label, widget)
-        tabs.addTab(term_page, tr("config.terminal.tab.terminal"))
+        term_scroll = QScrollArea()
+        term_scroll.setWidgetResizable(True)
+        term_scroll.setWidget(term_page)
+        tabs.addTab(term_scroll, tr("config.terminal.tab.terminal"))
 
         # UIR-103d/UIR-098: the Macros tab — a nested tab per macro slot.
         macro_page = QWidget()

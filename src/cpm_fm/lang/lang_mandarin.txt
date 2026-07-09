@@ -20,6 +20,7 @@ menu.file.exit = 退出
 menu.config = 配置
 menu.config.serial = 串口
 menu.config.general = 常规
+menu.config.remote = 远程
 menu.config.language = 语言
 menu.help = 帮助
 menu.help.manual = 手册
@@ -143,7 +144,7 @@ error.transfer_no_response_send = {name} 传输时远程无响应——请检查
 error.transfer_no_response_recv = {name} 传输时远程无响应——请检查"配置 > 通用"中的"从远程接收"命令
 warning.select_upload = 请选择一个或多个要发送的文件
 warning.select_download = 请选择一个或多个要下载的文件
-warning.no_config_loaded = 未加载配置文件。设置仅应用于当前会话。请使用“文件 > 保存”将其写入配置文件。
+warning.no_config_loaded = 未加载配置文件。设置仅应用于当前会话。请使用“配置 > 保存配置”将其写入配置文件。
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = 应用
@@ -204,26 +205,26 @@ status.terminal_settings_updated = 终端设置已更新
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = 常规配置
-config.general.remote_group = 远程
-config.general.list_files = 列出文件
-config.general.recv_remote = 从设备接收
-config.general.send_remote = 发送到设备
-config.general.xmodem_1k = 使用 XMODEM-1K
-config.general.recv_remote_1k = 从设备接收 (1K)
-config.general.send_remote_1k = 发送到设备 (1K)
-config.general.xfer_launch_delay = 启动延迟 (s)
-config.general.xfer_handshake_timeout = 握手超时 (s)
-config.general.xfer_interfile_delay = 文件间隔延迟 (s)
-config.general.eol = 换行符
+config.remote.title = 远程配置
+config.remote.list_files = 列出文件
+config.remote.recv_remote = 从设备接收
+config.remote.send_remote = 发送到设备
+config.remote.xmodem_1k = 使用 XMODEM-1K
+config.remote.recv_remote_1k = 从设备接收 (1K)
+config.remote.send_remote_1k = 发送到设备 (1K)
+config.remote.xfer_launch_delay = 启动延迟 (s)
+config.remote.xfer_handshake_timeout = 握手超时 (s)
+config.remote.xfer_interfile_delay = 文件间隔延迟 (s)
+config.terminal.eol = 换行符
 config.general.debug_logging = 调试日志
-config.general.echo_transfer = 回显传输数据
+config.terminal.echo_transfer = 回显传输数据
 config.general.viewer = 查看器/编辑器
 config.general.image_directory = 默认映像目录
-config.general.rename_remote = 重命名
-config.general.delete_remote = 删除
-config.general.erase_all = 全部删除
+config.remote.rename_remote = 重命名
+config.remote.delete_remote = 删除
+config.remote.erase_all = 全部删除
 config.general.host_directory = 默认主机目录
-config.general.boot_sequence = 启动序列
+config.remote.boot_sequence = 启动序列
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = 历史

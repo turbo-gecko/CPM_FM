@@ -20,6 +20,7 @@ menu.file.exit = Beenden
 menu.config = Konfiguration
 menu.config.serial = Seriell
 menu.config.general = Allgemein
+menu.config.remote = Gerät
 menu.config.language = Sprache
 menu.help = Hilfe
 menu.help.manual = Handbuch
@@ -143,7 +144,7 @@ error.transfer_no_response_send = Keine Antwort vom Remote-Rechner für {name} -
 error.transfer_no_response_recv = Keine Antwort vom Remote-Rechner für {name} - prüfen Sie den Befehl "Von Remote empfangen" unter Konfiguration > Allgemein
 warning.select_upload = Bitte eine oder mehrere Dateien zum Hochladen auswählen
 warning.select_download = Bitte eine oder mehrere Dateien zum Herunterladen auswählen
-warning.no_config_loaded = Es ist keine Konfigurationsdatei geladen. Die Einstellungen wurden nur auf die aktuelle Sitzung angewendet. Verwenden Sie Datei > Speichern, um sie in eine Konfigurationsdatei zu schreiben.
+warning.no_config_loaded = Es ist keine Konfigurationsdatei geladen. Die Einstellungen wurden nur auf die aktuelle Sitzung angewendet. Verwenden Sie Konfiguration > Konfiguration speichern, um sie in eine Konfigurationsdatei zu schreiben.
 
 # --- Common buttons ------------------------------------------------------------
 button.apply = Anwenden
@@ -204,26 +205,26 @@ status.terminal_settings_updated = Terminal-Einstellungen aktualisiert
 
 # --- General Configuration dialog ----------------------------------------------
 config.general.title = Allgemeine Konfiguration
-config.general.remote_group = Gerät
-config.general.list_files = Dateien auflisten
-config.general.recv_remote = Vom Gerät empfangen
-config.general.send_remote = An Gerät senden
-config.general.xmodem_1k = XMODEM-1K verwenden
-config.general.recv_remote_1k = Vom Gerät empfangen (1K)
-config.general.send_remote_1k = An Gerät senden (1K)
-config.general.xfer_launch_delay = Startverzögerung (s)
-config.general.xfer_handshake_timeout = Handshake-Timeout (s)
-config.general.xfer_interfile_delay = Verzögerung zwischen Dateien (s)
-config.general.eol = Zeilenende
+config.remote.title = Fernkonfiguration
+config.remote.list_files = Dateien auflisten
+config.remote.recv_remote = Vom Gerät empfangen
+config.remote.send_remote = An Gerät senden
+config.remote.xmodem_1k = XMODEM-1K verwenden
+config.remote.recv_remote_1k = Vom Gerät empfangen (1K)
+config.remote.send_remote_1k = An Gerät senden (1K)
+config.remote.xfer_launch_delay = Startverzögerung (s)
+config.remote.xfer_handshake_timeout = Handshake-Timeout (s)
+config.remote.xfer_interfile_delay = Verzögerung zwischen Dateien (s)
+config.terminal.eol = Zeilenende
 config.general.debug_logging = Debug-Protokollierung
-config.general.echo_transfer = Übertragungsdaten anzeigen
+config.terminal.echo_transfer = Übertragungsdaten anzeigen
 config.general.viewer = Betrachter/Editor
 config.general.image_directory = Standard-Abbildverzeichnis
-config.general.rename_remote = Umbenennen
-config.general.delete_remote = Löschen
-config.general.erase_all = Alles löschen
+config.remote.rename_remote = Umbenennen
+config.remote.delete_remote = Löschen
+config.remote.erase_all = Alles löschen
 config.general.host_directory = Standard-Host-Verzeichnis
-config.general.boot_sequence = Startsequenz
+config.remote.boot_sequence = Startsequenz
 
 # --- Transfer history (Feature 2) ----------------------------------------------
 toolbar.history = Verlauf
