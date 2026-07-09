@@ -149,6 +149,21 @@
       "tests/test_disk_image/test_geometry.py:test_skew_table_known_sequence",
       "tests/test_disk_image/test_geometry.py:test_skew_zero_and_one_are_identity"
     ],
+    "DR-050": [
+      "tests/test_disk_image/test_write.py:<module>",
+      "tests/test_disk_image/test_write.py:test_boot_tracks_preserved",
+      "tests/test_disk_image/test_write.py:test_delete_frees_blocks_for_reuse",
+      "tests/test_disk_image/test_write.py:test_directory_full_raises",
+      "tests/test_disk_image/test_write.py:test_disk_full_raises",
+      "tests/test_disk_image/test_write.py:test_invalid_name_raises",
+      "tests/test_disk_image/test_write.py:test_write_16bit_pointers",
+      "tests/test_disk_image/test_write.py:test_write_empty_and_odd_length",
+      "tests/test_disk_image/test_write.py:test_write_matches_synthetic_builder",
+      "tests/test_disk_image/test_write.py:test_write_multi_extent",
+      "tests/test_disk_image/test_write.py:test_write_preserves_attributes",
+      "tests/test_disk_image/test_write.py:test_write_read_single_extent",
+      "tests/test_gui_smoke.py:test_save_image_writes_new_image"
+    ],
     "FR-001": [
       "tests/test_serial_manager.py:test_status_flags_default_false_at_startup"
     ],
@@ -951,6 +966,25 @@
       "tests/test_gui_smoke.py:test_image_details_dialog_lists_metadata",
       "tests/test_gui_smoke.py:test_image_details_noop_when_no_image"
     ],
+    "FR-174": [
+      "tests/test_disk_image/test_write.py:<module>",
+      "tests/test_disk_image/test_write.py:test_boot_tracks_preserved",
+      "tests/test_disk_image/test_write.py:test_delete_frees_blocks_for_reuse",
+      "tests/test_disk_image/test_write.py:test_directory_full_raises",
+      "tests/test_disk_image/test_write.py:test_disk_full_raises",
+      "tests/test_disk_image/test_write.py:test_invalid_name_raises",
+      "tests/test_disk_image/test_write.py:test_split_83_normalises",
+      "tests/test_disk_image/test_write.py:test_write_16bit_pointers",
+      "tests/test_disk_image/test_write.py:test_write_empty_and_odd_length",
+      "tests/test_disk_image/test_write.py:test_write_matches_synthetic_builder",
+      "tests/test_disk_image/test_write.py:test_write_multi_extent",
+      "tests/test_disk_image/test_write.py:test_write_preserves_attributes",
+      "tests/test_disk_image/test_write.py:test_write_read_single_extent",
+      "tests/test_gui_smoke.py:test_save_image_action_gated_by_setting",
+      "tests/test_gui_smoke.py:test_save_image_noop_when_writing_disabled",
+      "tests/test_gui_smoke.py:test_save_image_refuses_source_overwrite",
+      "tests/test_gui_smoke.py:test_save_image_writes_new_image"
+    ],
     "IFR-004": [
       "tests/test_config_handler.py:test_load_json_malformed_returns_empty",
       "tests/test_config_handler.py:test_load_json_reads_valid_object",
@@ -1253,6 +1287,11 @@
       "tests/test_gui_smoke.py:test_image_details_action_enabled_only_when_image_open",
       "tests/test_gui_smoke.py:test_image_details_dialog_lists_metadata",
       "tests/test_gui_smoke.py:test_image_details_noop_when_no_image"
+    ],
+    "UIR-110": [
+      "tests/test_gui_smoke.py:test_save_image_action_gated_by_setting",
+      "tests/test_gui_smoke.py:test_save_image_noop_when_writing_disabled",
+      "tests/test_gui_smoke.py:test_save_image_writes_new_image"
     ]
   },
   "untested": [

@@ -58,7 +58,7 @@ from cpm_fm.utils.temp_cleanup import sweep_temp_dirs
 from cpm_fm.utils.transfer_history import TransferHistory
 
 if TYPE_CHECKING:
-    from cpm_fm.utils.disk_image import CpmFileEntry
+    from cpm_fm.utils.disk_image import CpmFileEntry, DiskDef
 
 
 def build_viewer_args(template: str, path: str) -> list[str]:
@@ -220,6 +220,10 @@ class MainWindow(
         # disk image (and the source image path), or None when no image is open.
         self._image_workdir: str | None = None
         self._image_source: str | None = None
+        # FR-174: the geometry the open image was decoded with, so Save Image… can
+        # re-open the source with the same geometry when re-packing (None when no
+        # image is open).
+        self._image_geom: DiskDef | None = None
         # FR-173: the CP/M file metadata of the currently open image, captured at
         # open time for the read-only Image Details view (empty when none open).
         self._image_files: list[CpmFileEntry] = []
@@ -227,6 +231,9 @@ class MainWindow(
         # open. Created in setup_menu; held here so the open/cleanup paths can
         # toggle it.
         self._image_details_action: QAction | None = None
+        # UIR-110: the Save Image… menu action, enabled only while an image is open
+        # and the opt-in image_write_enabled setting is on.
+        self._save_image_action: QAction | None = None
         # FR-130/FR-133: the canonical, unfiltered file names for each pane. The
         # visible QListWidget rows are derived from these by filter_and_sort, so
         # filtering/sorting can be re-applied without re-reading the source.
@@ -453,7 +460,8 @@ class MainWindow(
 
     def setup_menu(self):
         """
-        Satisfies: UIR-001, UIR-002, UIR-003, UIR-004, UIR-109, FR-018, FR-019, FR-022, FR-122.
+        Satisfies: UIR-001, UIR-002, UIR-003, UIR-004, UIR-109, UIR-110, FR-018, FR-019,
+        FR-022, FR-122.
         """
         menubar = self.menuBar()
 
@@ -470,6 +478,12 @@ class MainWindow(
             file_menu, "menu.file.image_details", self.menu_image_details
         )
         self._image_details_action.setEnabled(False)
+        # UIR-110: Save Image… sits immediately after Image Details…, disabled
+        # until an image is open and disk-image writing is enabled (FR-174).
+        self._save_image_action = self._add_menu_action(
+            file_menu, "menu.file.save_image", self.menu_save_image
+        )
+        self._save_image_action.setEnabled(False)
         file_menu.addSeparator()
         self._add_menu_action(file_menu, "menu.file.exit", self.close)
 

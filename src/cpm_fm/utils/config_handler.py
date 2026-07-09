@@ -72,6 +72,10 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     # "SEND ERA *.*\nWAITFOR (Y/N)\nSEND Y"). Empty falls back to the per-file
     # ERA loop (FR-153c) that avoids the interactive ERA *.* confirmation.
     "erase_all_remote_seq": "",
+    # FR-174/UIR-110: opt-in gate for writing a CP/M disk image back to disk
+    # (File > Save Image…). Off by default so the disk-image feature is read-only
+    # unless the user deliberately enables writing in General Config.
+    "image_write_enabled": "OFF",
     "host_directory": "",
     # FR-047/UIR-059: optional boot-into-CP/M keystroke sequence. A newline-
     # separated script (SEND/SENDRAW/WAIT/WAITFOR directives) run to drive a

@@ -218,6 +218,7 @@ config.general.eol = Fin de línea
 config.general.debug_logging = Registro de depuración
 config.general.echo_transfer = Mostrar datos de transferencia
 config.general.viewer = Visor/Editor
+config.general.image_write = Habilitar escritura de imagen de disco (Guardar imagen…)
 config.general.rename_remote = Renombrar
 config.general.delete_remote = Eliminar
 config.general.erase_all = Borrar todo
@@ -311,3 +312,11 @@ dialog.image_details.col.size = Tamaño
 dialog.image_details.col.user = Usuario
 dialog.image_details.col.attrs = Atributos
 dialog.image_details.close = Cerrar
+
+# --- Disk image write (v2.30) ----------------------------------------------------
+menu.file.save_image = Guardar imagen…
+dialog.save_image.title = Guardar imagen de disco CP/M
+dialog.save_image.filter = Imágenes de disco CP/M (*.img *.dsk *.cpm);;Todos los archivos (*)
+status.disk_image_saved = Imagen de disco guardada en '{name}' ({count} archivo(s))
+error.disk_image_write = No se pudo escribir la imagen de disco: {error}
+error.disk_image_overwrite_source = Guardar imagen crea un archivo nuevo: elige un nombre distinto al de la imagen de origen.

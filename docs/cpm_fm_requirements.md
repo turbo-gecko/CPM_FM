@@ -11,7 +11,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 2.29.1 |
+| Version | 2.30.0 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
@@ -483,15 +483,18 @@ operation shows the standard progress dialog and can be cancelled.)*
 
 ### 3.19 CP/M disk image support
 
-Read-only support (v2.28) for opening a CP/M raw-sector disk image on the host and working with the
-files it contains through the existing Host pane and transfer path. Writing files back into an image is
-deferred to a later feature group. A CP/M image stores no geometry (DR-048), so the layout is selected
-from a bundled geometry database (auto-detected, FR-170) with a manual override. The files are extracted
-to a temporary host working directory (FR-171) so the whole established Copy-to-Remote / drag-and-drop /
-conflict / filename-validation / X-Modem path (FR-080–FR-086, FR-119, FR-136–FR-139, FR-145–FR-149)
-applies unchanged. The CP/M filesystem logic lives entirely in the GUI-free `utils/` layer (CR-014). A
-read-only details view (FR-173) exposes the CP/M-specific metadata — user number and attribute flags —
-that the extracted plain host files no longer carry.
+Support (v2.28, read; v2.30, write) for opening a CP/M raw-sector disk image on the host and working
+with the files it contains through the existing Host pane and transfer path. A CP/M image stores no
+geometry (DR-048), so the layout is selected from a bundled geometry database (auto-detected, FR-170)
+with a manual override. The files are extracted to a temporary host working directory (FR-171) so the
+whole established Copy-to-Remote / drag-and-drop / conflict / filename-validation / X-Modem path
+(FR-080–FR-086, FR-119, FR-136–FR-139, FR-145–FR-149) applies unchanged. The CP/M filesystem logic
+lives entirely in the GUI-free `utils/` layer (CR-014). A read-only details view (FR-173) exposes the
+CP/M-specific metadata — user number and attribute flags — that the extracted plain host files no longer
+carry. Writing a new image back to disk (FR-174) is an opt-in feature (`image_write_enabled`, default
+off): the current working-directory contents are re-packed into a fresh CP/M filesystem — preserving the
+opened image's reserved/boot tracks and geometry (DR-050) — and written to a user-chosen new file, so a
+source archive is never modified in place.
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
@@ -500,6 +503,7 @@ that the extracted plain host files no longer carry.
 | FR-171 | On opening an image (FR-169), the application shall extract each file it contains to a temporary host working directory and point the Host Files list at that directory, so the existing Copy-to-Remote, drag-and-drop, file-conflict (FR-145–FR-147), CP/M 8.3 filename-validation (FR-148/FR-149) and X-Modem (FR-080–FR-086) transfer path applies unchanged. The temporary working directory shall be removed — and the open-image state (including the Image Details view, FR-173) discarded — whenever the Host pane leaves it: when another image is opened, when the host directory is changed away from it by loading a configuration (FR-011), a General Config host-directory edit (FR-021), or Change Directory (FR-062), on File > New (FR-019), and on application exit (FR-016). No stale image contents shall remain viewable after the Host pane has moved on. *(v2.28; v2.29: the discard also fires on configuration load and host-directory change.)* | Mandatory | T | impl. `mw_disk_image.py:menu_open_image`, `mw_disk_image.py:_cleanup_image_workdir`, `mw_config.py:load_config`, `mw_config.py:menu_general_config`, `mw_file_panes.py:change_host_dir`, `utils/disk_image/filesystem.py:read_file`; tests `test_gui_smoke.py`, `test_disk_image/test_directory.py` |
 | FR-172 | The image-open path shall reject an unreadable, truncated, zero-byte, or foreign (non-CP/M) file gracefully: the underlying reader shall return no image rather than raising (so the GUI cannot crash on bad input), and the application shall show an explanatory error dialog and leave the current Host pane unchanged. Corruption within an otherwise recognised geometry shall yield a best-effort listing plus a status-bar warning rather than an abort. *(v2.28.)* | Mandatory | T | impl. `utils/disk_image/__init__.py:open_image`, `utils/disk_image/image.py:CpmImage`, `mw_disk_image.py:menu_open_image`; tests `test_disk_image/test_image.py` |
 | FR-173 | While a disk image is open (FR-169), the application shall provide a File > Image Details… action (UIR-109) that presents a read-only dialog listing every file in the currently open image with its CP/M metadata — name, size in bytes, user number, and the read-only/system/archive attributes (DR-049). The listing reflects the image as opened (the metadata is captured at open time and is independent of any subsequent host-directory change). The action shall be disabled while no image is open. *(v2.29.)* | Mandatory | T | impl. `mw_disk_image.py:menu_image_details`, `gui/disk_image_details_dialog.py:DiskImageDetailsDialog`; tests `test_gui_smoke.py` |
+| FR-174 | While a disk image is open (FR-169) **and** disk-image writing is enabled (the opt-in `image_write_enabled` setting, default off, UIR-110), the application shall provide a File > Save Image… action (UIR-110) that re-packs the current host working-directory contents into a fresh CP/M disk image and writes it, via a Save-As file dialog, to a user-chosen new path. The re-pack shall use the opened image's geometry and preserve its reserved/boot tracks verbatim (DR-050) so the written image remains bootable; every regular file in the working directory is written into the new image with user number 0. The source image file shall never be modified in place. The action shall be disabled whenever no image is open or writing is not enabled. If the working-directory contents do not fit the geometry — more files than the directory holds (`maxdir`) or more data than the data area holds (`dsm`) — or a name is not a valid CP/M 8.3 name, the save shall abort with an explanatory error dialog and write nothing. The underlying write library (`write_file`/`delete_file`/`save`) shall raise a typed error in these cases rather than truncating silently. *(v2.30.)* | Mandatory | T | impl. `mw_disk_image.py:menu_save_image`, `mw_disk_image.py:_repack_workdir`, `utils/disk_image/image.py:CpmImage.write_file`, `utils/disk_image/image.py:CpmImage.delete_file`, `utils/disk_image/image.py:CpmImage.save`, `utils/disk_image/filesystem.py:build_dir_entries`, `utils/disk_image/filesystem.py:split_83`; tests `test_disk_image/test_write.py`, `test_gui_smoke.py` |
 
 ---
 
@@ -510,7 +514,7 @@ that the extracted plain host files no longer carry.
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
 | UIR-001 | The GUI shall present a menu bar at the top of the main window. | Mandatory | I | App_Requirements §Look and Feel, §Main Program GUI; impl. `app.py:setup_menu` |
-| UIR-002 | The menu bar shall contain a File menu with the items New, Load, Save, Open Disk Image… (UIR-108), Image Details… (UIR-109), and Exit. *(Open Disk Image added v2.28; Image Details added v2.29.)* | Mandatory | I | App_Requirements §Look and Feel; impl. `app.py:setup_menu` |
+| UIR-002 | The menu bar shall contain a File menu with the items New, Load, Save, Open Disk Image… (UIR-108), Image Details… (UIR-109), Save Image… (UIR-110), and Exit. *(Open Disk Image added v2.28; Image Details added v2.29; Save Image added v2.30.)* | Mandatory | I | App_Requirements §Look and Feel; impl. `app.py:setup_menu` |
 | UIR-003 | The menu bar shall contain a Config menu with the items Serial, Terminal (UIR-103), General, and Language (the Language submenu, UIR-077). *(Language added v2.0; Macro Buttons added v2.21; Macro Buttons folded into Terminal and Terminal added v2.25.)* | Mandatory | I | App_Requirements §Look and Feel; impl. `app.py:setup_menu`, `_setup_language_menu` |
 | UIR-004 | The menu bar shall contain a Help menu with the items Manual (FR-023) and About (FR-022). *(v1.10; Manual added v2.13.)* | Mandatory | I | impl. `app.py:setup_menu` |
 | UIR-005 | The main window title bar shall show the application name and, when a configuration file is loaded, the loaded config's base name (no path, no extension) per FR-125. *(v2.4.)* | Mandatory | I | impl. `app.py:_update_window_title` |
@@ -720,6 +724,7 @@ that the extracted plain host files no longer carry.
 |----|-------------|----------|--------------|--------|
 | UIR-109 | The File menu (UIR-002) shall contain an **Image Details…** item, placed immediately after **Open Disk Image…** (UIR-108), that opens the image-details dialog (FR-173). The item shall be disabled whenever no disk image is currently open. The dialog shall be a modal, read-only table with one row per file and the columns **Name**, **Size** (bytes), **User**, and **Attributes** (the R/S/A flags), plus a close button; its title, column headers and button follow the active language (FR-121). *(v2.29.)* | Mandatory | I | impl. `app.py:setup_menu`, `mw_disk_image.py:menu_image_details`, `gui/disk_image_details_dialog.py:DiskImageDetailsDialog`; `lang/*.txt` (`menu.file.image_details`, `dialog.image_details.*`) |
 | UIR-108 | The File menu (UIR-002) shall contain an **Open Disk Image…** item, placed after **Save** and before the separator preceding **Exit**, that invokes the image-open behaviour (FR-169). Its label follows the active language (FR-121). When the opened image's geometry is ambiguous (FR-170) the application shall present a geometry-picker dialog listing the candidate `diskdefs` names for the user to choose from; otherwise no dialog is shown. The detected or chosen geometry name shall be reflected in the status bar, and the Host Files group title shall show the temporary working directory (FR-126) like any other host directory. *(v2.28.)* | Mandatory | I | impl. `app.py:setup_menu`, `mw_disk_image.py:menu_open_image`; `lang/*.txt` (`menu.file.open_image`, `dialog.open_image.*`, `status.disk_image_loaded`) |
+| UIR-110 | The File menu (UIR-002) shall contain a **Save Image…** item, placed immediately after **Image Details…** (UIR-109), that invokes the image write-back behaviour (FR-174) through a Save-As file dialog. The item shall be disabled whenever no disk image is open **or** the opt-in `image_write_enabled` setting is off. That setting shall be a checkbox on the General Config dialog (UIR-040), default off, persisted with the other general settings; while it is off the disk-image feature is read-only. On a successful save the status bar shall report the written file; a capacity or filename error (FR-174) shall be shown as an explanatory error dialog and nothing written. The item's label, dialog title and messages follow the active language (FR-121). *(v2.30.)* | Mandatory | I | impl. `app.py:setup_menu`, `mw_disk_image.py:menu_save_image`, `gui/config_dialogs.py:GeneralConfigDialog`; `lang/*.txt` (`menu.file.save_image`, `dialog.save_image.*`, `config.general.image_write`, `status.disk_image_saved`, `error.disk_image_write`) |
 
 ---
 
@@ -848,6 +853,12 @@ join, whitespace/CRLF robustness, de-duplication, empty/edge inputs, and drive-p
 |----|-------------|----------|--------------|--------|
 | DR-049 | The application shall reconstruct files from the CP/M directory (located after `boottrk` reserved tracks, `maxdir` 32-byte entries) as follows. Each 32-byte entry is: user number (byte 0; `0x00`–`0x1F` for an in-use entry, `0xE5` for a deleted/empty entry), 8-byte file name and 3-byte type (bytes 1–11, 7-bit ASCII; the high bit of each type/name byte carries an attribute flag — read-only, system, archive — **not** a single attribute byte), the extent counters `EX`/`S1`/`S2` (bytes 12–14), the record count `RC` (byte 15), and the 16-byte allocation map `AL` (bytes 16–31; 8-bit block pointers when the block count `dsm < 256`, else 16-bit little-endian). A logical file is the set of entries sharing the same `(user, name, type)`, ordered by extent number; its contents are the concatenation of the data blocks named by each extent's `AL`, truncated to the true byte length implied by the final extent's `EX`/`RC` (records are 128 bytes). Sector addressing within a track applies the geometry's skew (DR-048). *(v2.28.)* | Mandatory | T | impl. `utils/disk_image/directory.py:parse_directory`, `utils/disk_image/directory.py:CpmDirEntry`, `utils/disk_image/geometry.py:skew_table`, `utils/disk_image/filesystem.py:read_file`; tests `test_disk_image/test_directory.py`, `test_disk_image/test_geometry.py` |
 
+### 6.13 CP/M image write / re-pack format
+
+| ID | Requirement | Priority | Verification | Source |
+|----|-------------|----------|--------------|--------|
+| DR-050 | Writing a CP/M image (FR-174) shall invert the read format (DR-049) into the same on-disk layout the reader accepts, so that a write→save→re-open round-trip preserves every file's name, user number and byte content. The reserved/boot tracks (the first `boottrk` tracks plus any `offset`) shall be copied verbatim from the opened source image; only the data area (directory + data blocks) is rebuilt. Data blocks shall be allocated sequentially from the first block after the directory region (`ceil(maxdir × 32 / blocksize)` blocks) up to `dsm`; each file is split into one or more directory entries, each entry addressing at most `extents_per_entry` 16 KiB logical extents through its 16-byte allocation map (8-bit pointers when `dsm < 256`, else 16-bit little-endian), with the extent counters `EX`/`S2` and the final record count `RC` set to the file's record-granular length, and unused directory slots filled with `0xE5`. Sector addressing on write applies the geometry's skew identically to the read path (DR-048). A file set that needs more than `maxdir` directory entries (directory full) or more than `dsm + 1` data blocks (disk full), or a name that is not a valid CP/M 8.3 name, shall raise a typed error and write nothing. *(v2.30.)* | Mandatory | T | impl. `utils/disk_image/filesystem.py:build_dir_entries`, `utils/disk_image/filesystem.py:split_83`, `utils/disk_image/image.py:CpmImage.write_file`, `utils/disk_image/image.py:CpmImage.delete_file`, `utils/disk_image/image.py:CpmImage.save`, `utils/disk_image/image.py:CpmImage._write_data`; tests `test_disk_image/test_write.py` |
+
 ---
 
 ## 7. Design Constraints
@@ -962,6 +973,7 @@ future refactor in the Issue Resolution Log (OI-27).
 | v2.27 configurable whole-drive erase sequence | FR-153e, UIR-107; revises FR-153d |
 | v2.28 CP/M disk image read support | FR-169 – FR-172, UIR-108, DR-048, DR-049; revises UIR-002 |
 | v2.29 disk-image details view + detection hardening | FR-173, UIR-109; revises FR-170, FR-171, DR-048, UIR-002 |
+| v2.30 CP/M disk image write (opt-in) | FR-174, UIR-110, DR-050; revises UIR-002 |
 
 ---
 

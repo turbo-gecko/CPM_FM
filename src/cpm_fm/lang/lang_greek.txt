@@ -218,6 +218,7 @@ config.general.eol = Τέλος γραμμής
 config.general.debug_logging = Καταγραφή αποσφαλμάτωσης
 config.general.echo_transfer = Ηχώ δεδομένων μεταφοράς
 config.general.viewer = Προβολέας/Επεξεργαστής
+config.general.image_write = Ενεργοποίηση εγγραφής εικόνας δίσκου (Αποθήκευση εικόνας…)
 config.general.rename_remote = Μετονομασία
 config.general.delete_remote = Διαγραφή
 config.general.erase_all = Διαγραφή όλων
@@ -311,3 +312,11 @@ dialog.image_details.col.size = Μέγεθος
 dialog.image_details.col.user = Χρήστης
 dialog.image_details.col.attrs = Χαρακτηριστικά
 dialog.image_details.close = Κλείσιμο
+
+# --- Disk image write (v2.30) ----------------------------------------------------
+menu.file.save_image = Αποθήκευση εικόνας…
+dialog.save_image.title = Αποθήκευση εικόνας δίσκου CP/M
+dialog.save_image.filter = Εικόνες δίσκου CP/M (*.img *.dsk *.cpm);;Όλα τα αρχεία (*)
+status.disk_image_saved = Η εικόνα δίσκου αποθηκεύτηκε στο '{name}' ({count} αρχείο/-α)
+error.disk_image_write = Δεν ήταν δυνατή η εγγραφή της εικόνας δίσκου: {error}
+error.disk_image_overwrite_source = Η Αποθήκευση εικόνας δημιουργεί νέο αρχείο — επιλέξτε όνομα διαφορετικό από την εικόνα προέλευσης.

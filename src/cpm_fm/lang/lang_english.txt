@@ -248,6 +248,7 @@ config.general.eol = End of Line
 config.general.debug_logging = Debug Logging
 config.general.echo_transfer = Echo Transfer Data
 config.general.viewer = Viewer/Editor
+config.general.image_write = Enable disk image writing (Save Image…)
 config.general.rename_remote = Rename
 config.general.delete_remote = Delete
 config.general.erase_all = Erase All
@@ -316,3 +317,11 @@ dialog.image_details.col.size = Size
 dialog.image_details.col.user = User
 dialog.image_details.col.attrs = Attributes
 dialog.image_details.close = Close
+
+# --- Disk image write (v2.30) ----------------------------------------------------
+menu.file.save_image = Save Image…
+dialog.save_image.title = Save CP/M Disk Image
+dialog.save_image.filter = CP/M disk images (*.img *.dsk *.cpm);;All files (*)
+status.disk_image_saved = Disk image saved to '{name}' ({count} file(s))
+error.disk_image_write = Could not write the disk image: {error}
+error.disk_image_overwrite_source = Save Image creates a new file — choose a name different from the source image.

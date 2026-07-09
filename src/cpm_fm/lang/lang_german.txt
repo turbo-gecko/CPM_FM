@@ -218,6 +218,7 @@ config.general.eol = Zeilenende
 config.general.debug_logging = Debug-Protokollierung
 config.general.echo_transfer = Übertragungsdaten anzeigen
 config.general.viewer = Betrachter/Editor
+config.general.image_write = Schreiben von Diskettenabbildern aktivieren (Abbild speichern…)
 config.general.rename_remote = Umbenennen
 config.general.delete_remote = Löschen
 config.general.erase_all = Alles löschen
@@ -311,3 +312,11 @@ dialog.image_details.col.size = Größe
 dialog.image_details.col.user = Benutzer
 dialog.image_details.col.attrs = Attribute
 dialog.image_details.close = Schließen
+
+# --- Disk image write (v2.30) ----------------------------------------------------
+menu.file.save_image = Abbild speichern…
+dialog.save_image.title = CP/M-Diskettenabbild speichern
+dialog.save_image.filter = CP/M-Diskettenabbilder (*.img *.dsk *.cpm);;Alle Dateien (*)
+status.disk_image_saved = Diskettenabbild gespeichert unter '{name}' ({count} Datei(en))
+error.disk_image_write = Das Diskettenabbild konnte nicht geschrieben werden: {error}
+error.disk_image_overwrite_source = „Abbild speichern“ erstellt eine neue Datei – wählen Sie einen anderen Namen als das Quellabbild.

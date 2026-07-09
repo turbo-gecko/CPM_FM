@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from cpm_fm.terminal.serial_manager import SerialManager
     from cpm_fm.terminal.vt100_engine import VT100Engine
     from cpm_fm.utils.config_handler import ConfigHandler
-    from cpm_fm.utils.disk_image import CpmFileEntry
+    from cpm_fm.utils.disk_image import CpmFileEntry, DiskDef
     from cpm_fm.utils.transfer_history import TransferHistory
 
 
@@ -63,10 +63,15 @@ class MainWindowMixinBase:
         # Disk-image (FR-171): temp workdir of the open image and its source path.
         _image_workdir: str | None
         _image_source: str | None
+        # Disk-image write (FR-174): the geometry the image was decoded with, so
+        # Save Image… can re-open the source with matching geometry to re-pack.
+        _image_geom: DiskDef | None
         # Disk-image details view (FR-173/UIR-109): file metadata captured at open
         # time and the enable-toggled Image Details… menu action.
         _image_files: list[CpmFileEntry]
         _image_details_action: QAction | None
+        # Disk-image write (FR-174/UIR-110): the enable-toggled Save Image… action.
+        _save_image_action: QAction | None
 
         # --- file-pane widgets and their canonical (unfiltered) name lists ---
         host_list: FileListWidget
@@ -129,6 +134,8 @@ class MainWindowMixinBase:
         def _erase_remote_file(self, name: str) -> None: ...
         def _cleanup_image_workdir(self) -> None: ...
         def menu_image_details(self) -> None: ...
+        def menu_save_image(self) -> None: ...
+        def _update_save_image_action(self) -> None: ...
         def refresh_host_files(self) -> None: ...
         @staticmethod
         def _file_size(path: str) -> int: ...

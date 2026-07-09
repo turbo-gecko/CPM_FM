@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.41 |
-| Scorecard for plan version | 1.41 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.42 |
+| Scorecard for plan version | 1.42 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -162,6 +162,8 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-DI06 | Temp workdir discarded on New / reopen / exit | FR-171 | | | |
 | MT-DI07 | Image Details… shows read-only name/size/user/attrs table | FR-173, UIR-109 | | | |
 | MT-DI08 | Image Details… disabled when no image open | FR-173, UIR-109 | | | |
+| MT-DI09 | Save Image… gated by image_write_enabled + image open | FR-174, UIR-110 | | | |
+| MT-DI10 | Save Image… re-packs workdir to a new image; source untouched | FR-174, DR-050 | | | |
 
 ### §10 Remote listing & drive selection (live)
 | ID | Title | Req | Result | Env | Notes |

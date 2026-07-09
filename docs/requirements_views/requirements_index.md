@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_467 requirements across 59 sections._
+_470 requirements across 60 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -368,6 +368,7 @@ _467 requirements across 59 sections._
 | FR-171 | On opening an image (FR-169), the application shall extract each file it contains to a… | mw_disk_image.py:menu_open_image, mw_disk_image.py:_cleanup_image_workdir, mw_config.py:load_config, mw_config.py:menu_general_config, mw_file_panes.py:change_host_dir, utils/disk_image/filesystem.py:read_file; tests test_gui_smoke.py, test_disk_image/test_directory.py |
 | FR-172 | The image-open path shall reject an unreadable, truncated, zero-byte, or foreign (non-CP/M) file gracefully… | utils/disk_image/__init__.py:open_image, utils/disk_image/image.py:CpmImage, mw_disk_image.py:menu_open_image; tests test_disk_image/test_image.py |
 | FR-173 | While a disk image is open (FR-169), the application shall provide a File > Image… | mw_disk_image.py:menu_image_details, gui/disk_image_details_dialog.py:DiskImageDetailsDialog; tests test_gui_smoke.py |
+| FR-174 | While a disk image is open (FR-169) **and** disk-image writing is enabled (the opt-in image_write_enabled… | mw_disk_image.py:menu_save_image, mw_disk_image.py:_repack_workdir, utils/disk_image/image.py:CpmImage.write_file, utils/disk_image/image.py:CpmImage.delete_file, utils/disk_image/image.py:CpmImage.save, utils/disk_image/filesystem.py:build_dir_entries, utils/disk_image/filesystem.py:split_83; tests test_disk_image/test_write.py, test_gui_smoke.py |
 
 ## 4.1 Menu bar
 
@@ -582,6 +583,7 @@ _467 requirements across 59 sections._
 |----|---------|------|
 | UIR-109 | The File menu (UIR-002) shall contain an **Image Details…** item, placed immediately after **Open Disk… | app.py:setup_menu, mw_disk_image.py:menu_image_details, gui/disk_image_details_dialog.py:DiskImageDetailsDialog; lang/*.txt (menu.file.image_details, dialog.image_details.*) |
 | UIR-108 | The File menu (UIR-002) shall contain an **Open Disk Image…** item, placed after **Save** and… | app.py:setup_menu, mw_disk_image.py:menu_open_image; lang/*.txt (menu.file.open_image, dialog.open_image.*, status.disk_image_loaded) |
+| UIR-110 | The File menu (UIR-002) shall contain a **Save Image…** item, placed immediately after **Image Details…**… | app.py:setup_menu, mw_disk_image.py:menu_save_image, gui/config_dialogs.py:GeneralConfigDialog; lang/*.txt (menu.file.save_image, dialog.save_image.*, config.general.image_write, status.disk_image_saved, error.disk_image_write) |
 
 ## 5. External Interface Requirements
 
@@ -696,6 +698,12 @@ _467 requirements across 59 sections._
 | ID | Summary | Impl |
 |----|---------|------|
 | DR-049 | The application shall reconstruct files from the CP/M directory (located after boottrk reserved tracks, maxdir… | utils/disk_image/directory.py:parse_directory, utils/disk_image/directory.py:CpmDirEntry, utils/disk_image/geometry.py:skew_table, utils/disk_image/filesystem.py:read_file; tests test_disk_image/test_directory.py, test_disk_image/test_geometry.py |
+
+## 6.13 CP/M image write / re-pack format
+
+| ID | Summary | Impl |
+|----|---------|------|
+| DR-050 | Writing a CP/M image (FR-174) shall invert the read format (DR-049) into the same on-disk… | utils/disk_image/filesystem.py:build_dir_entries, utils/disk_image/filesystem.py:split_83, utils/disk_image/image.py:CpmImage.write_file, utils/disk_image/image.py:CpmImage.delete_file, utils/disk_image/image.py:CpmImage.save, utils/disk_image/image.py:CpmImage._write_data; tests test_disk_image/test_write.py |
 
 ## 7. Design Constraints
 

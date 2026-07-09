@@ -281,7 +281,7 @@ class _ConfigMixin(MainWindowMixinBase):
 
     def menu_general_config(self):
         """
-        Satisfies: FR-021, FR-171.
+        Satisfies: FR-021, FR-171, UIR-110.
         """
 
         def update_settings(new_set):
@@ -304,6 +304,10 @@ class _ConfigMixin(MainWindowMixinBase):
                 self._cleanup_image_workdir()
                 self.host_dir = new_host_dir
                 self.refresh_host_files()
+
+            # FR-174/UIR-110: image_write_enabled may have been toggled while an
+            # image is open — re-evaluate the Save Image… action's enabled state.
+            self._update_save_image_action()
 
             # FR-021a: persist only the general settings to the active config
             # file, leaving the serial settings in that file untouched. If no

@@ -223,6 +223,7 @@ config.general.eol = End o' the Line
 config.general.debug_logging = Secret Loggin'
 config.general.echo_transfer = Echo the Cargo
 config.general.viewer = Spyglass/Carver
+config.general.image_write = Allow carvin' booty chests (Stow Booty Chest…)
 config.general.rename_remote = Rename
 config.general.delete_remote = Delete
 config.general.erase_all = Scuttle All
@@ -316,3 +317,11 @@ dialog.image_details.col.size = Heft
 dialog.image_details.col.user = Swab
 dialog.image_details.col.attrs = Markings
 dialog.image_details.close = Batten Down
+
+# --- Disk image write (v2.30) ----------------------------------------------------
+menu.file.save_image = Stow Booty Chest…
+dialog.save_image.title = Stow yer CP/M Booty Chest
+dialog.save_image.filter = CP/M booty chests (*.img *.dsk *.cpm);;All plunder (*)
+status.disk_image_saved = Booty chest stowed at '{name}' ({count} treasure(s))
+error.disk_image_write = Could not stow the booty chest: {error}
+error.disk_image_overwrite_source = Stowin' a chest carves a fresh one — pick a name unlike the source chest, matey.

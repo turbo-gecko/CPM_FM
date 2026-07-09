@@ -218,6 +218,7 @@ config.general.eol = Koniec linii
 config.general.debug_logging = Logowanie debugowania
 config.general.echo_transfer = Echo danych transferu
 config.general.viewer = Podgląd/Edytor
+config.general.image_write = Włącz zapis obrazu dysku (Zapisz obraz…)
 config.general.rename_remote = Zmień nazwę
 config.general.delete_remote = Usuń
 config.general.erase_all = Wymaż wszystko
@@ -311,3 +312,11 @@ dialog.image_details.col.size = Rozmiar
 dialog.image_details.col.user = Użytkownik
 dialog.image_details.col.attrs = Atrybuty
 dialog.image_details.close = Zamknij
+
+# --- Disk image write (v2.30) ----------------------------------------------------
+menu.file.save_image = Zapisz obraz…
+dialog.save_image.title = Zapisz obraz dysku CP/M
+dialog.save_image.filter = Obrazy dysków CP/M (*.img *.dsk *.cpm);;Wszystkie pliki (*)
+status.disk_image_saved = Obraz dysku zapisany w '{name}' ({count} plik(ów))
+error.disk_image_write = Nie można zapisać obrazu dysku: {error}
+error.disk_image_overwrite_source = Zapisywanie obrazu tworzy nowy plik — wybierz nazwę inną niż obraz źródłowy.

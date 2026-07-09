@@ -56,7 +56,8 @@
     "UIR-082",
     "UIR-086",
     "UIR-087",
-    "UIR-109"
+    "UIR-109",
+    "UIR-110"
   ],
   "src/cpm_fm/gui/about_dialog.py": [
     "FR-022",
@@ -120,7 +121,8 @@
     "UIR-098",
     "UIR-103",
     "UIR-103a",
-    "UIR-107"
+    "UIR-107",
+    "UIR-110"
   ],
   "src/cpm_fm/gui/conflict_dialog.py": [
     "FR-146",
@@ -203,7 +205,8 @@
     "UIR-103",
     "UIR-103a",
     "UIR-104",
-    "UIR-106"
+    "UIR-106",
+    "UIR-110"
   ],
   "src/cpm_fm/gui/mw_context_menu.py": [
     "CR-010",
@@ -224,13 +227,16 @@
     "UIR-019"
   ],
   "src/cpm_fm/gui/mw_disk_image.py": [
+    "DR-050",
     "FR-169",
     "FR-170",
     "FR-171",
     "FR-172",
     "FR-173",
+    "FR-174",
     "UIR-108",
-    "UIR-109"
+    "UIR-109",
+    "UIR-110"
   ],
   "src/cpm_fm/gui/mw_file_panes.py": [
     "FR-017",
@@ -600,8 +606,10 @@
   "src/cpm_fm/utils/disk_image/filesystem.py": [
     "CR-014",
     "DR-049",
+    "DR-050",
     "FR-169",
-    "FR-171"
+    "FR-171",
+    "FR-174"
   ],
   "src/cpm_fm/utils/disk_image/geometry.py": [
     "CR-014",
@@ -611,9 +619,11 @@
   "src/cpm_fm/utils/disk_image/image.py": [
     "CR-014",
     "DR-049",
+    "DR-050",
     "FR-169",
     "FR-171",
-    "FR-172"
+    "FR-172",
+    "FR-174"
   ],
   "src/cpm_fm/utils/file_filter.py": [
     "CR-014",

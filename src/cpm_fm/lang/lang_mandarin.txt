@@ -218,6 +218,7 @@ config.general.eol = 换行符
 config.general.debug_logging = 调试日志
 config.general.echo_transfer = 回显传输数据
 config.general.viewer = 查看器/编辑器
+config.general.image_write = 启用磁盘映像写入（保存映像…）
 config.general.rename_remote = 重命名
 config.general.delete_remote = 删除
 config.general.erase_all = 全部删除
@@ -311,3 +312,11 @@ dialog.image_details.col.size = 大小
 dialog.image_details.col.user = 用户
 dialog.image_details.col.attrs = 属性
 dialog.image_details.close = 关闭
+
+# --- Disk image write (v2.30) ----------------------------------------------------
+menu.file.save_image = 保存映像…
+dialog.save_image.title = 保存 CP/M 磁盘映像
+dialog.save_image.filter = CP/M 磁盘映像 (*.img *.dsk *.cpm);;所有文件 (*)
+status.disk_image_saved = 磁盘映像已保存到 '{name}'（{count} 个文件）
+error.disk_image_write = 无法写入磁盘映像：{error}
+error.disk_image_overwrite_source = 保存映像会创建新文件 — 请选择与源映像不同的名称。

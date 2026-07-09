@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.29.1**
+**Version 2.30.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -19,7 +19,7 @@ It works with real vintage CP/M hardware as well as emulators, provided they exp
 7. [Configuration](#7-configuration)
 8. [Connecting and Disconnecting](#8-connecting-and-disconnecting)
 9. [Booting the Remote into CP/M](#9-booting-the-remote-into-cpm)
-10. [Browsing Files](#10-browsing-files) — including [Opening a CP/M Disk Image](#opening-a-cpm-disk-image) and [Viewing CP/M File Details](#viewing-cpm-file-details)
+10. [Browsing Files](#10-browsing-files) — including [Opening a CP/M Disk Image](#opening-a-cpm-disk-image), [Viewing CP/M File Details](#viewing-cpm-file-details) and [Saving a CP/M Disk Image](#saving-a-cpm-disk-image)
 11. [Transferring Files](#11-transferring-files)
 12. [Managing Files (Rename, Delete, View/Edit)](#12-managing-files-rename-delete-viewedit)
 13. [The Terminal Window](#13-the-terminal-window)
@@ -425,15 +425,23 @@ You can browse the contents of a **CP/M disk image** — a raw-sector image of a
 
 Because a CP/M image does not record its own disk layout, the program **auto-detects** the geometry by matching the file size against a built-in database of common formats — standard 8-inch and 5.25-inch floppies, the **RomWBW** floppy and hard-disk formats (fd144/fd120/fd720/fd360, hd1k, hd512), and the RC2014 CompactFlash slice. When the layout is unambiguous it is used automatically and shown in the status bar; when two formats are equally plausible — or none is recognised — a small dialog asks you to pick the format to use. (For example, an 8 MB image could be either a RomWBW *hd1k* slice or an RC2014 slice, which share the same size, so you will be asked to choose.)
 
-The image's files are extracted to a temporary working folder that becomes the Host directory, so everything you can do with an ordinary host folder works unchanged: filter and sort the list, and **Copy to Remote** (or drag-and-drop) to send files straight to a connected CP/M machine. Nothing is written back into the image — this is a read-only view. The temporary folder is discarded automatically when you open another image, choose **File → New**, or exit.
+The image's files are extracted to a temporary working folder that becomes the Host directory, so everything you can do with an ordinary host folder works unchanged: filter and sort the list, and **Copy to Remote** (or drag-and-drop) to send files straight to a connected CP/M machine. By default the original image file is left untouched — opening an image is a read-only view. (If you want to save a modified copy of the image, see [Saving a CP/M Disk Image](#saving-a-cpm-disk-image) below.) The temporary folder is discarded automatically when you open another image, choose **File → New**, load a configuration, change the host directory, or exit.
 
-If your image uses an unusual layout that is not auto-detected, you can supply your own cpmtools-format `diskdefs` file (support for selecting one is being extended). Writing files back into an image is planned for a later release.
+If your image uses an unusual layout that is not auto-detected, you can supply your own cpmtools-format `diskdefs` file (support for selecting one is being extended).
 
 The built-in format database also covers the RomWBW ROM-disk images, a generic 4 MB hard disk, and several classic-machine floppy formats (Amstrad PCW, Epson QX-10, Royal Alphatronic, Interak) in addition to the layouts listed above.
 
 ### Viewing CP/M File Details
 
 Once an image is open, choose **File → Image Details…** to see the CP/M-specific information for each file that the extracted host files no longer carry. A read-only table lists every file with its **Name**, **Size** in bytes, CP/M **User** number, and **Attributes** — the read-only (R), system (S) and archive (A) flags, shown as those letters for each file that has them set, or a dash when none are. Close the dialog to return; it does not change anything. **Image Details…** is greyed out until an image is open.
+
+### Saving a CP/M Disk Image
+
+You can build a **new** CP/M disk image from the files currently in the Host working folder. This is an opt-in feature: first tick **Enable disk image writing (Save Image…)** in **Config → General** (it is off by default, so an image can never be changed by accident). With writing enabled and an image open, edit the working folder as you like — delete files, or drag new ones in — then choose **File → Save Image…**.
+
+Save Image writes to a **new file** that you name in the Save-As dialog; it never overwrites the image you opened (if you pick the same name it warns and does nothing). The new image reuses the opened image's disk layout and keeps its reserved/boot tracks, so a bootable disk stays bootable. Every file in the working folder is written into the new image under user 0.
+
+If the working folder holds more files than the disk's directory can list, or more data than the disk can hold, or a file has a name that is not a valid CP/M 8.3 name, the save stops with an explanatory message and writes nothing — remove or rename files and try again. **Save Image…** is greyed out unless an image is open **and** disk image writing is enabled.
 
 ---
 
@@ -629,6 +637,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 | Debug Logging | OFF |
 | Echo Transfer Data | OFF |
 | Viewer Command | `notepad $1` |
+| Enable disk image writing (Save Image…) | OFF |
 | Boot Sequence | *(blank)* |
 | Macro Buttons (Label + Keystrokes, ×10) | *(blank)* |
 | Terminal Font | Courier New (monospaced) |

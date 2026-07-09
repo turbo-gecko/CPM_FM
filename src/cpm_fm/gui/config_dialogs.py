@@ -370,7 +370,8 @@ class GeneralConfigDialog(ConfigDialog):
     Specialized dialog for General Configuration
     (SRS docs/cpm_fm_requirements.md, UIR-040 through UIR-048).
 
-    Satisfies: UIR-040-UIR-059, UIR-089, UIR-090, UIR-093, UIR-094, UIR-095, UIR-107, FR-161.
+    Satisfies: UIR-040-UIR-059, UIR-089, UIR-090, UIR-093, UIR-094, UIR-095, UIR-107,
+    UIR-110, FR-161.
     """
 
     def __init__(self, parent, settings, callback, window_state=None):
@@ -566,6 +567,15 @@ class GeneralConfigDialog(ConfigDialog):
                 "label_key": "config.general.viewer",
                 "type": "text",
                 "default": "notepad $1",
+            },
+            # UIR-110: opt-in gate for writing a disk image back to disk
+            # (File > Save Image…, FR-174). Default unchecked — the disk-image
+            # feature is read-only until this is enabled.
+            {
+                "key": "image_write_enabled",
+                "label_key": "config.general.image_write",
+                "type": "checkbox",
+                "default": "OFF",
             },
             {
                 "key": "host_directory",

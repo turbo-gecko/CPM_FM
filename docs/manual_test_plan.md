@@ -4,9 +4,9 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.41 |
+| Version | 1.42 |
 | Status | Draft |
-| Date | 2026-07-07 |
+| Date | 2026-07-09 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.25.0) |
 
 ---
@@ -270,6 +270,8 @@ CompactFlash image), plus any non-disk file to use as the "foreign" input.
 | MT-DI06 | FR-171 | After opening an image, move the Host pane off it: choose **File → New**, **Load** a different configuration, use **Change Directory**, open a second image, or exit. | The previous temporary working directory is discarded each time and no stale image contents remain — **Image Details…** greys out again — while the Host pane repaints to the new directory. |
 | MT-DI07 | FR-173, UIR-109 | After MT-DI01, choose **File → Image Details…**. | A read-only dialog opens with one row per file and the columns **Name**, **Size**, **User**, **Attributes** (R/S/A shown for flagged files, a dash otherwise). Closing it leaves the Host pane unchanged. |
 | MT-DI08 | FR-173, UIR-109 | With no image open (e.g. right after **File → New**), inspect the File menu. | **Image Details…** is present but greyed out (disabled); it becomes enabled only after an image is opened. |
+| MT-DI09 | FR-174, UIR-110 | Inspect the File menu with **image_write_enabled** off (the default): open an image and check **Save Image…**. Then open **Config → General**, tick **Enable disk image writing (Save Image…)**, and re-check. | **Save Image…** (after **Image Details…**) is greyed out while writing is off, even with an image open. After enabling the setting it becomes enabled; it greys out again when the image is closed (**File → New**) or writing is disabled. |
+| MT-DI10 | FR-174, DR-050 | With writing enabled and an image open (MT-DI01), optionally add or delete files in the Host working directory, then choose **File → Save Image…** and save to a **new** file name. Re-open that new file with **Open Disk Image…**. **[CP/M]** | A new image file is written (the source image is untouched — choosing the source path is refused with a warning). Re-opening it lists exactly the working-directory files with their content intact. If used on real hardware, the written image mounts and boots as the original did (boot tracks preserved). A too-full working directory (more/larger files than the geometry holds) or an invalid CP/M name aborts with an explanatory error and writes nothing. |
 
 ---
 

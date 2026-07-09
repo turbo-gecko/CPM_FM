@@ -218,6 +218,7 @@ config.general.eol = Einde regel
 config.general.debug_logging = Debug logging
 config.general.echo_transfer = Overdrachtsdata echoën
 config.general.viewer = Viewer/Editor
+config.general.image_write = Schrijven van schijfimage inschakelen (Image opslaan…)
 config.general.rename_remote = Hernoemen
 config.general.delete_remote = Verwijderen
 config.general.erase_all = Alles wissen
@@ -311,3 +312,11 @@ dialog.image_details.col.size = Grootte
 dialog.image_details.col.user = Gebruiker
 dialog.image_details.col.attrs = Kenmerken
 dialog.image_details.close = Sluiten
+
+# --- Disk image write (v2.30) ----------------------------------------------------
+menu.file.save_image = Image opslaan…
+dialog.save_image.title = CP/M-schijfimage opslaan
+dialog.save_image.filter = CP/M-schijfimages (*.img *.dsk *.cpm);;Alle bestanden (*)
+status.disk_image_saved = Schijfimage opgeslagen als '{name}' ({count} bestand(en))
+error.disk_image_write = Kan de schijfimage niet schrijven: {error}
+error.disk_image_overwrite_source = Image opslaan maakt een nieuw bestand — kies een andere naam dan de bronimage.

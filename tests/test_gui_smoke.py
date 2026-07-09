@@ -4503,3 +4503,122 @@ def test_change_dir_discards_open_image(qapp, monkeypatch, state, tmp_path):
         assert win.host_dir == str(newdir)
     finally:
         win.close()
+
+
+def test_save_image_action_gated_by_setting(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-174, UIR-110."""
+    # UIR-110: Save Image… is enabled only while an image is open AND the opt-in
+    # image_write_enabled setting is on; it re-disables when either goes away.
+    win = MainWindow(state)
+    try:
+        assert win._save_image_action is not None
+        assert not win._save_image_action.isEnabled()  # no image, writing off
+
+        _open_fake_image(win, qapp, monkeypatch, tmp_path)
+        # Image open but writing still off (default) → still disabled.
+        assert not win._save_image_action.isEnabled()
+
+        win.settings["image_write_enabled"] = "ON"
+        win._update_save_image_action()
+        assert win._save_image_action.isEnabled()
+
+        win._cleanup_image_workdir()  # closing the image re-disables it
+        assert not win._save_image_action.isEnabled()
+    finally:
+        win.close()
+
+
+def test_save_image_noop_when_writing_disabled(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-174, UIR-110."""
+    # UIR-110: with writing off, invoking the handler must not even open the
+    # Save-As dialog.
+    win = MainWindow(state)
+    try:
+        _open_fake_image(win, qapp, monkeypatch, tmp_path)
+        called = []
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QFileDialog.getSaveFileName",
+            lambda *a, **k: called.append(1) or ("", ""),
+        )
+        win.menu_save_image()
+        assert called == []
+    finally:
+        win.close()
+
+
+def test_save_image_writes_new_image(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-174, DR-050, UIR-110."""
+    # FR-174: with writing enabled, Save Image re-packs the working directory into
+    # a fresh image at the chosen path; re-opening it lists those files.
+    from cpm_fm.utils.disk_image import load_diskdefs
+    from cpm_fm.utils.disk_image.image import CpmImage
+
+    win = MainWindow(state)
+    try:
+        geom = load_diskdefs().get("ibm-3740")
+        src = tmp_path / "src.img"
+        src.write_bytes(bytes([0xE5]) * geom.total_bytes)
+        workdir = tmp_path / "wd"
+        workdir.mkdir()
+        (workdir / "A.TXT").write_bytes(b"a" * 128)
+        (workdir / "B.TXT").write_bytes(b"b" * 256)
+
+        win._image_source = str(src)
+        win._image_geom = geom
+        win._image_workdir = str(workdir)
+        win.settings["image_write_enabled"] = "ON"
+        win._update_save_image_action()
+
+        dest = tmp_path / "out.img"
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QFileDialog.getSaveFileName",
+            lambda *a, **k: (str(dest), ""),
+        )
+        win.menu_save_image()
+        qapp.processEvents()
+
+        assert dest.exists()
+        reopened = CpmImage(bytearray(dest.read_bytes()), geom)
+        assert {f.name for f in reopened.list_files()} == {"A.TXT", "B.TXT"}
+        assert reopened.read_file("A.TXT") == b"a" * 128
+        assert reopened.read_file("B.TXT") == b"b" * 256
+    finally:
+        win.close()
+
+
+def test_save_image_refuses_source_overwrite(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-174."""
+    # FR-174: Save Image never writes over the source image — choosing the source
+    # path is refused with a warning and nothing is written.
+    from cpm_fm.utils.disk_image import load_diskdefs
+
+    win = MainWindow(state)
+    try:
+        geom = load_diskdefs().get("ibm-3740")
+        src = tmp_path / "src.img"
+        original = bytes([0xE5]) * geom.total_bytes
+        src.write_bytes(original)
+        workdir = tmp_path / "wd"
+        workdir.mkdir()
+        (workdir / "A.TXT").write_bytes(b"a" * 128)
+
+        win._image_source = str(src)
+        win._image_geom = geom
+        win._image_workdir = str(workdir)
+        win.settings["image_write_enabled"] = "ON"
+        win._update_save_image_action()
+
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QFileDialog.getSaveFileName",
+            lambda *a, **k: (str(src), ""),  # user picks the source path
+        )
+        warnings = []
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QMessageBox.warning",
+            lambda *a, **k: warnings.append(a[1:]),
+        )
+        win.menu_save_image()
+        assert warnings  # refused with a warning
+        assert src.read_bytes() == original  # source untouched
+    finally:
+        win.close()
