@@ -231,8 +231,15 @@ class _RemoteMixin(MainWindowMixinBase):
     def do_connect(self):
         """
         Satisfies: FR-030, FR-031, FR-032, FR-034, FR-037, FR-038, FR-039,
-        FR-040, FR-041, FR-046, FR-050.
+        FR-040, FR-041, FR-046, FR-050, FR-176.
         """
+        # FR-176: a Remote-pane disk image is mutually exclusive with a live
+        # serial session — refuse to connect until the image is closed.
+        if self._remote_is_image():
+            QMessageBox.warning(
+                self, tr("dialog.warning.title"), tr("error.image_remote_blocks_connect")
+            )
+            return
         # FR-030: do not attempt to reopen an already-open Terminal Port —
         # reopening fails (the OS won't grant a second handle), which used to
         # desync the connected flag from the real port state and lock the
@@ -559,15 +566,17 @@ class _RemoteMixin(MainWindowMixinBase):
         critical error dialog (in addition to the status-bar message and the
         list being cleared by refresh_remote_files), then delegate. The
         auto-refresh callers (post-transfer) call refresh_remote_files directly
-        so they never raise this dialog.
+        so they never raise this dialog. FR-176: while a disk image is mounted in
+        the Remote pane the list is local (no port), so the not-connected dialog
+        is suppressed and Update simply re-lists the image.
         """
-        if not self.serial_mgr.terminal_connected:
+        if not self._remote_is_image() and not self.serial_mgr.terminal_connected:
             QMessageBox.critical(self, tr("dialog.error.title"), tr("error.terminal_not_connected"))
         self.refresh_remote_files()
 
     def refresh_remote_files(self):
         """
-        Satisfies: FR-073, FR-074.
+        Satisfies: FR-073, FR-074, FR-176.
 
         FR-073: populate the Remote Files list for the drive currently shown in
         the drive-selection drop-down (UIR-017). Switch to that drive first (as
@@ -575,7 +584,14 @@ class _RemoteMixin(MainWindowMixinBase):
         displayed files always match the drive next to the Update button even
         when the remote's current drive was changed directly in the Terminal
         Window. Runs the drive-change logic on a worker thread.
+
+        FR-176: when a disk image is mounted in the Remote pane the list is
+        sourced locally from the image working directory (no drive change, no
+        serial I/O) rather than by reading the port.
         """
+        if self._remote_is_image():
+            self._list_image_remote()
+            return
         if not self.serial_mgr.terminal_connected:
             self.set_status(tr("status.terminal_not_open_list"))
             self._clear_remote_files()
@@ -651,8 +667,12 @@ class _RemoteMixin(MainWindowMixinBase):
         Satisfies: FR-100, FR-104.
 
         FR-100/FR-104: switch the remote drive to the selected letter. Mirror
-        FR-074 and refuse when the Terminal Port is closed.
+        FR-074 and refuse when the Terminal Port is closed. FR-176: a no-op while
+        a disk image is mounted in the Remote pane (the drive drop-down is
+        disabled then; this guards any programmatic call).
         """
+        if self._remote_is_image():
+            return
         if not self.serial_mgr.terminal_connected:
             self.set_status(tr("status.terminal_not_open_list"))
             self._clear_remote_files()

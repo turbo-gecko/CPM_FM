@@ -237,6 +237,15 @@ class MainWindow(
         # FR-175: signature of the working directory as opened / last saved, used
         # to detect unsaved copy-to-image changes (None when no image is open).
         self._image_baseline: set[tuple[str, int, int]] | None = None
+        # FR-176: which pane the open image is mounted into — "host" (default) or
+        # "remote". Meaningful only while an image is open (_image_workdir set).
+        self._image_pane: str = "host"
+        # FR-177: the real host directory active just before a Host-side image was
+        # opened, restored by Close Disk Image… (None when none recorded).
+        self._pre_image_host_dir: str | None = None
+        # UIR-113: the Close Disk Image… menu action, enabled only while an image
+        # is open. Created in setup_menu; held here so open/cleanup can toggle it.
+        self._close_image_action: QAction | None = None
         # FR-130/FR-133: the canonical, unfiltered file names for each pane. The
         # visible QListWidget rows are derived from these by filter_and_sort, so
         # filtering/sorting can be re-applied without re-reading the source.
@@ -350,6 +359,7 @@ class MainWindow(
         # the connection indicators above.
         self._update_window_title()
         self._update_host_group_title()
+        self._update_remote_group_title()
         if self.terminal_win is not None:
             self.terminal_win.retranslate_ui()
 
@@ -404,6 +414,32 @@ class MainWindow(
         avail = group.width() - metrics.horizontalAdvance(prefix) - 24
         elided = metrics.elidedText(self.host_dir, Qt.TextElideMode.ElideLeft, max(0, avail))
         group.setTitle(tr("main.host_files_dir", label=label, dir=elided))
+
+    def _update_remote_group_title(self) -> None:
+        """Set the Remote Files group title, naming an image mounted here.
+
+        Normally the title is the plain translated "Remote Files" label. While a
+        disk image is mounted in the Remote pane (FR-176) the title instead shows
+        the image file's name so the local virtual device is not mistaken for the
+        live CP/M device (UIR-112). Re-applied on language change
+        (``retranslate_ui``) and safe to call before the group box exists.
+
+        Satisfies: FR-176, UIR-112.
+        """
+        group = getattr(self, "remote_group", None)
+        if group is None:
+            return
+        label = tr("main.remote_files")
+        if self._remote_is_image() and self._image_source is not None:
+            group.setTitle(
+                tr(
+                    "main.remote_files_image",
+                    label=label,
+                    name=os.path.basename(self._image_source),
+                )
+            )
+            return
+        group.setTitle(label)
 
     # ------------------------------------------------------------------ setup
 
@@ -497,6 +533,12 @@ class MainWindow(
             file_menu, "menu.file.save_image", self.menu_save_image
         )
         self._save_image_action.setEnabled(False)
+        # UIR-113: Close Disk Image… sits immediately after Save Image…, disabled
+        # until an image is open (FR-177).
+        self._close_image_action = self._add_menu_action(
+            file_menu, "menu.file.close_image", self.menu_close_image
+        )
+        self._close_image_action.setEnabled(False)
         file_menu.addSeparator()
         self._add_menu_action(file_menu, "menu.file.exit", self.close)
 
@@ -653,8 +695,14 @@ class MainWindow(
         splitter.addWidget(host_group)
 
         # Right Side: Remote Files
+        # FR-176/UIR-112: kept as an attribute so the title can indicate an open
+        # image when one is mounted in the Remote pane (set via
+        # _update_remote_group_title). Like the Host group title, it is not put in
+        # the i18n registry — retranslate_ui re-applies it directly — because its
+        # text is composite when an image is mounted.
         remote_group = QGroupBox()
-        self._register_text(remote_group.setTitle, "main.remote_files")
+        self.remote_group = remote_group
+        self._update_remote_group_title()
         remote_layout = QVBoxLayout(remote_group)
 
         # UIR-012/UIR-017: a drive-selection drop-down (A:–P:) followed by the

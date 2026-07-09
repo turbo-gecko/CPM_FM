@@ -4301,6 +4301,7 @@ def test_open_disk_image_extracts_and_lists(qapp, monkeypatch, state, tmp_path):
         monkeypatch.setattr("cpm_fm.gui.mw_disk_image.is_ambiguous", lambda r: False)
         monkeypatch.setattr("cpm_fm.gui.mw_disk_image.detect_diskdef", lambda p, d: [])
         monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda p, dd=None: _FakeImage())
+        monkeypatch.setattr(win, "_prompt_mount_side", lambda: "host")
 
         win.menu_open_image()
         qapp.processEvents()
@@ -4335,6 +4336,7 @@ def test_open_disk_image_rejects_bad_file(qapp, monkeypatch, state, tmp_path):
             lambda *a, **k: errors.append(a[1:]),
         )
 
+        monkeypatch.setattr(win, "_prompt_mount_side", lambda: "host")
         win.menu_open_image()
         qapp.processEvents()
 
@@ -4356,6 +4358,7 @@ def test_open_disk_image_cleanup_on_close(qapp, monkeypatch, state, tmp_path):
     monkeypatch.setattr("cpm_fm.gui.mw_disk_image.is_ambiguous", lambda r: False)
     monkeypatch.setattr("cpm_fm.gui.mw_disk_image.detect_diskdef", lambda p, d: [])
     monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda p, dd=None: _FakeImage())
+    monkeypatch.setattr(win, "_prompt_mount_side", lambda: "host")
 
     win.menu_open_image()
     qapp.processEvents()
@@ -4407,6 +4410,7 @@ def test_image_details_action_enabled_only_when_image_open(qapp, monkeypatch, st
         monkeypatch.setattr("cpm_fm.gui.mw_disk_image.is_ambiguous", lambda r: False)
         monkeypatch.setattr("cpm_fm.gui.mw_disk_image.detect_diskdef", lambda p, d: [])
         monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda p, dd=None: _FakeImage())
+        monkeypatch.setattr(win, "_prompt_mount_side", lambda: "host")
 
         win.menu_open_image()
         qapp.processEvents()
@@ -4436,8 +4440,12 @@ def test_image_details_noop_when_no_image(qapp, monkeypatch, state):
         win.close()
 
 
-def _open_fake_image(win, qapp, monkeypatch, tmp_path):
-    """Open a fake disk image in ``win`` and return its temp working directory."""
+def _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="host"):
+    """Open a fake disk image in ``win`` and return its temp working directory.
+
+    ``mount`` selects the pane the image is mounted into (FR-176); the mount-side
+    dialog is bypassed by patching ``_prompt_mount_side`` so the modal never runs.
+    """
     monkeypatch.setattr(
         "cpm_fm.gui.mw_disk_image.QFileDialog.getOpenFileName",
         lambda *a, **k: (str(tmp_path / "disk.img"), ""),
@@ -4445,6 +4453,7 @@ def _open_fake_image(win, qapp, monkeypatch, tmp_path):
     monkeypatch.setattr("cpm_fm.gui.mw_disk_image.is_ambiguous", lambda r: False)
     monkeypatch.setattr("cpm_fm.gui.mw_disk_image.detect_diskdef", lambda p, d: [])
     monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda p, dd=None: _FakeImage())
+    monkeypatch.setattr(win, "_prompt_mount_side", lambda: mount)
     win.menu_open_image()
     qapp.processEvents()
     return win._image_workdir
@@ -4808,5 +4817,296 @@ def test_host_group_title_shows_open_image(qapp, monkeypatch, state, tmp_path):
         win.host_dir = str(tmp_path)
         win._update_host_group_title()
         assert "disk.img" not in win.host_group.title()
+    finally:
+        win.close()
+
+
+def test_remote_mount_lists_image_in_remote_pane(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176, UIR-112."""
+    # FR-176: a Remote-side mount lists the image in the Remote pane, leaves the
+    # Host pane on its real directory, and disables the drive drop-down.
+    win = MainWindow(state)
+    try:
+        before_host = win.host_dir
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+        assert workdir is not None
+        assert win._remote_is_image()
+        assert win.host_dir == before_host  # Host pane unchanged
+        assert set(win._remote_files) == {"HELLO.TXT", "GAME.COM"}
+        assert not win.drive_combo.isEnabled()
+    finally:
+        win.close()
+
+
+def test_copy_to_remote_stages_into_remote_mounted_image(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176."""
+    # FR-176: Copy to Remote with a Remote-mounted image is a local copy of the
+    # selected Host files into the image working directory (no serial connection).
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+        hostdir = tmp_path / "host"
+        hostdir.mkdir()
+        (hostdir / "NOTES.TXT").write_bytes(b"hello")
+        win.host_dir = str(hostdir)
+
+        monkeypatch.setattr(win, "_selected_filenames", lambda w: ["NOTES.TXT"])
+        monkeypatch.setattr(win, "_record_history", lambda *a, **k: None)
+
+        win.do_copy_to_remote()
+        qapp.processEvents()
+
+        staged = os.path.join(workdir, "NOTES.TXT")
+        assert os.path.isfile(staged)
+        with open(staged, "rb") as fh:
+            assert fh.read() == b"hello"
+        assert "NOTES.TXT" in win._remote_files  # Remote pane re-listed from image
+        assert not win.serial_mgr.terminal_connected  # purely local, no serial
+    finally:
+        win.close()
+
+
+def test_copy_to_remote_image_validates_8_3(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176, FR-148, FR-149."""
+    # FR-176: the into-image direction still applies CP/M 8.3 name validation.
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+        hostdir = tmp_path / "host"
+        hostdir.mkdir()
+        (hostdir / "longname.text").write_bytes(b"x")  # not a valid CP/M 8.3 name
+        win.host_dir = str(hostdir)
+
+        monkeypatch.setattr(win, "_selected_filenames", lambda w: ["longname.text"])
+        monkeypatch.setattr(win, "_record_history", lambda *a, **k: None)
+        prompted = []
+        monkeypatch.setattr(
+            win,
+            "_prompt_invalid_name_local",
+            lambda name: prompted.append(name) or ("rename", "GOOD.TXT"),
+        )
+
+        win.do_copy_to_remote()
+        qapp.processEvents()
+
+        assert prompted == ["longname.text"]  # validation prompt fired
+        assert os.path.isfile(os.path.join(workdir, "GOOD.TXT"))  # copied under the fixed name
+    finally:
+        win.close()
+
+
+def test_copy_to_host_copies_out_of_remote_image(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176."""
+    # FR-176: Copy to Host with a Remote-mounted image is a local copy out to the
+    # host directory, with NO 8.3 validation on the outbound files.
+    win = MainWindow(state)
+    try:
+        _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+        hostdir = tmp_path / "host"
+        hostdir.mkdir()
+        win.host_dir = str(hostdir)
+
+        monkeypatch.setattr(win, "_selected_filenames", lambda w: ["HELLO.TXT"])
+        monkeypatch.setattr(win, "_record_history", lambda *a, **k: None)
+
+        def _no_83(name):
+            raise AssertionError("8.3 validation must not run on the outbound copy")
+
+        monkeypatch.setattr(win, "_prompt_invalid_name_local", _no_83)
+
+        win.do_copy_to_host()
+        qapp.processEvents()
+
+        out = hostdir / "HELLO.TXT"
+        assert out.is_file()
+        assert out.read_bytes() == b"content-of-HELLO.TXT"
+    finally:
+        win.close()
+
+
+def test_remote_mount_refused_while_connected(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176."""
+    # FR-176: a Remote-side mount is refused while the Terminal Port is connected.
+    win = MainWindow(state)
+    try:
+        win.serial_mgr.terminal_connected = True
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QFileDialog.getOpenFileName",
+            lambda *a, **k: (str(tmp_path / "disk.img"), ""),
+        )
+        monkeypatch.setattr(win, "_prompt_mount_side", lambda: "remote")
+        warned = []
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_disk_image.QMessageBox.warning",
+            lambda *a, **k: warned.append(a[1:]),
+        )
+        opened = []
+        monkeypatch.setattr("cpm_fm.gui.mw_disk_image.open_image", lambda *a, **k: opened.append(1))
+
+        win.menu_open_image()
+
+        assert warned  # refused with an explanatory message
+        assert win._image_workdir is None
+        assert opened == []  # never reached the image open
+    finally:
+        win.serial_mgr.terminal_connected = False
+        win.close()
+
+
+def test_connect_refused_while_remote_image_mounted(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176."""
+    # FR-176: a Connect is refused while a Remote-side image is mounted.
+    win = MainWindow(state)
+    try:
+        _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+        warned = []
+        monkeypatch.setattr(
+            "cpm_fm.gui.mw_remote.QMessageBox.warning",
+            lambda *a, **k: warned.append(a[1:]),
+        )
+        opened = []
+        monkeypatch.setattr(win.serial_mgr, "open_port", lambda *a, **k: opened.append(1) or True)
+
+        win.do_connect()
+
+        assert warned
+        assert opened == []  # never attempted to open a port
+        assert not win.serial_mgr.terminal_connected
+    finally:
+        win.close()
+
+
+def test_remote_group_title_and_drive_combo_reflect_image(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176, UIR-112."""
+    # UIR-112: the Remote group title names a Remote-mounted image and the drive
+    # drop-down is disabled; both revert (and the stale listing clears) on close.
+    win = MainWindow(state)
+    try:
+        _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+        assert "disk.img" in win.remote_group.title()
+        assert not win.drive_combo.isEnabled()
+
+        win._cleanup_image_workdir()
+        assert "disk.img" not in win.remote_group.title()
+        assert win.drive_combo.isEnabled()
+        assert win._remote_files == []  # stale image listing cleared
+    finally:
+        win.close()
+
+
+def test_close_image_action_enabled_only_when_image_open(qapp, monkeypatch, state, tmp_path):
+    """Verifies: UIR-113."""
+    # UIR-113: Close Disk Image… is disabled until an image is open and is
+    # re-disabled once it is closed.
+    win = MainWindow(state)
+    try:
+        assert win._close_image_action is not None
+        assert not win._close_image_action.isEnabled()
+
+        _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="host")
+        assert win._close_image_action.isEnabled()
+
+        win.menu_close_image()
+        qapp.processEvents()
+        assert not win._close_image_action.isEnabled()
+    finally:
+        win.close()
+
+
+def test_close_image_restores_host_pane(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-177."""
+    # FR-177: closing a Host-mounted image discards the working directory and
+    # restores the Host pane to the directory active before the image was opened.
+    win = MainWindow(state)
+    try:
+        realdir = tmp_path / "real"
+        realdir.mkdir()
+        (realdir / "A.TXT").write_bytes(b"a")
+        win.host_dir = str(realdir)
+        win.refresh_host_files()
+
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="host")
+        assert win.host_dir == workdir
+
+        win.menu_close_image()
+        qapp.processEvents()
+
+        assert win._image_workdir is None
+        assert not os.path.isdir(workdir)  # temp working dir removed
+        assert win.host_dir == str(realdir)  # restored to the pre-open directory
+        assert "A.TXT" in win._host_files  # Host pane re-listed
+    finally:
+        win.close()
+
+
+def test_close_image_resets_remote_pane(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-177, FR-176."""
+    # FR-177: closing a Remote-mounted image resets the Remote pane (listing
+    # cleared, drive drop-down re-enabled, title restored) and leaves the Host
+    # pane untouched.
+    win = MainWindow(state)
+    try:
+        realdir = tmp_path / "real"
+        realdir.mkdir()
+        win.host_dir = str(realdir)
+        _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+        assert win._remote_files  # image listed in the Remote pane
+        assert not win.drive_combo.isEnabled()
+        assert "disk.img" in win.remote_group.title()
+
+        win.menu_close_image()
+        qapp.processEvents()
+
+        assert win._image_workdir is None
+        assert win._remote_files == []  # Remote listing cleared
+        assert win.drive_combo.isEnabled()  # drive drop-down restored
+        assert "disk.img" not in win.remote_group.title()
+        assert win.host_dir == str(realdir)  # Host pane untouched
+    finally:
+        win.close()
+
+
+def test_close_image_cancel_keeps_image_open(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-177, FR-175."""
+    # FR-177/FR-175: closing a dirty image with writing on prompts; Cancel aborts
+    # the close and keeps the image open.
+    win = MainWindow(state)
+    try:
+        workdir = _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="host")
+        win.settings["image_write_enabled"] = "ON"
+        with open(os.path.join(workdir, "NEW.TXT"), "wb") as fh:
+            fh.write(b"z")
+
+        monkeypatch.setattr(win, "_prompt_save_discard_cancel", lambda: "cancel")
+        win.menu_close_image()
+
+        assert win._image_workdir == workdir  # still open — close aborted
+        assert os.path.isdir(workdir)
+    finally:
+        win.settings["image_write_enabled"] = "OFF"
+        win.close()
+
+
+def test_open_remote_after_host_restores_host_pane(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-176."""
+    # v2.33.1: opening a Remote-side image directly after a Host-side image must
+    # not leave the Host pane on the previous image's (deleted) working directory.
+    win = MainWindow(state)
+    try:
+        realdir = tmp_path / "real"
+        realdir.mkdir()
+        (realdir / "A.TXT").write_bytes(b"a")
+        win.host_dir = str(realdir)
+        win.refresh_host_files()
+
+        host_wd = _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="host")
+        assert win.host_dir == host_wd
+
+        _open_fake_image(win, qapp, monkeypatch, tmp_path, mount="remote")
+
+        assert not os.path.isdir(host_wd)  # previous Host workdir removed
+        assert win.host_dir == str(realdir)  # Host pane restored to a real folder
+        assert os.path.isdir(win.host_dir)
+        assert "A.TXT" in win._host_files
     finally:
         win.close()

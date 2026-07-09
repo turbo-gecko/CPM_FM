@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_472 requirements across 60 sections._
+_476 requirements across 60 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -118,8 +118,8 @@ _472 requirements across 60 sections._
 | FR-070 | The Remote Files list shall be empty (unpopulated) at startup | app.py:__init__, app.py:setup_layout |
 | FR-071 | The Update button shall be enabled at startup | app.py:setup_layout |
 | FR-072 | The Update button (Host Files group — UIR-011) shall be enabled at startup | app.py:setup_layout |
-| FR-073 | When the Update button (in the Remote Files group) is pressed, the application shall switch… | mw_remote.py:refresh_remote_files, mw_remote.py:_do_change_drive_logic |
-| FR-074 | If the Terminal Port is not open when populating the remote file list, the application… | mw_remote.py:refresh_remote_files |
+| FR-073 | When the Update button (in the Remote Files group) is pressed, the application shall switch… | mw_remote.py:refresh_remote_files, mw_remote.py:_do_change_drive_logic, mw_disk_image.py:_list_image_remote |
+| FR-074 | If the Terminal Port is not open when populating the remote file list, the application… | mw_remote.py:refresh_remote_files, mw_disk_image.py:_list_image_remote |
 | FR-075 | If the Terminal status flag is true, the application shall send the configured List Files… | mw_remote.py:_capture_terminal_response |
 | FR-076 | After sending the List Files command, the application shall wait at least one second for… | mw_remote.py:_capture_terminal_response |
 | FR-077 | The application shall process the captured remote output into a dictionary of filenames using the… | mw_remote.py:_do_refresh_remote_logic, cpm_parser.py:parse_dir_output; tests test_cpm_parser.py |
@@ -365,11 +365,13 @@ _472 requirements across 60 sections._
 |----|---------|------|
 | FR-169 | The application shall provide a File > Open Disk Image… action (UIR-108) that presents a… | mw_disk_image.py:menu_open_image, utils/disk_image/__init__.py:open_image, utils/disk_image/filesystem.py:list_files; tests test_disk_image/test_image.py, test_gui_smoke.py |
 | FR-170 | On opening an image (FR-169), the application shall auto-detect the disk geometry from a bundled… | utils/disk_image/__init__.py:detect_diskdef, utils/disk_image/__init__.py:load_diskdefs, utils/disk_image/diskdefs.py:parse_diskdefs, mw_disk_image.py:menu_open_image; tests test_disk_image/test_detect.py, test_disk_image/test_diskdefs.py |
-| FR-171 | On opening an image (FR-169), the application shall extract each file it contains to a… | mw_disk_image.py:menu_open_image, mw_disk_image.py:_cleanup_image_workdir, mw_config.py:load_config, mw_config.py:menu_general_config, mw_file_panes.py:change_host_dir, utils/disk_image/filesystem.py:read_file; tests test_gui_smoke.py, test_disk_image/test_directory.py |
+| FR-171 | On opening an image (FR-169), the application shall extract each file it contains to a… | mw_disk_image.py:menu_open_image, mw_disk_image.py:_cleanup_image_workdir, mw_disk_image.py:_list_image_remote, mw_config.py:load_config, mw_config.py:menu_general_config, mw_file_panes.py:change_host_dir, utils/disk_image/filesystem.py:read_file; tests test_gui_smoke.py, test_disk_image/test_directory.py |
 | FR-172 | The image-open path shall reject an unreadable, truncated, zero-byte, or foreign (non-CP/M) file gracefully… | utils/disk_image/__init__.py:open_image, utils/disk_image/image.py:CpmImage, mw_disk_image.py:menu_open_image; tests test_disk_image/test_image.py |
 | FR-173 | While a disk image is open (FR-169), the application shall provide a File > Image… | mw_disk_image.py:menu_image_details, gui/disk_image_details_dialog.py:DiskImageDetailsDialog; tests test_gui_smoke.py |
 | FR-174 | While a disk image is open (FR-169) **and** disk-image writing is enabled (the opt-in image_write_enabled… | mw_disk_image.py:menu_save_image, mw_disk_image.py:_repack_workdir, utils/disk_image/image.py:CpmImage.write_file, utils/disk_image/image.py:CpmImage.delete_file, utils/disk_image/image.py:CpmImage.save, utils/disk_image/filesystem.py:build_dir_entries, utils/disk_image/filesystem.py:split_83; tests test_disk_image/test_write.py, test_gui_smoke.py |
 | FR-175 | While a disk image is open (FR-169), files received from the remote through the existing… | mw_disk_image.py:_maybe_prompt_save_image, mw_disk_image.py:_prompt_save_discard_cancel, mw_disk_image.py:_image_is_dirty, mw_disk_image.py:_capture_image_baseline, mw_disk_image.py:menu_save_image, mw_disk_image.py:menu_open_image, mw_file_panes.py:change_host_dir, mw_config.py:load_config, mw_config.py:menu_new, mw_config.py:menu_general_config, app.py:closeEvent; tests test_gui_smoke.py |
+| FR-176 | On opening an image (FR-169) the application shall let the user choose, via a modal… | mw_disk_image.py:menu_open_image, mw_disk_image.py:_prompt_mount_side, mw_disk_image.py:_remote_is_image, mw_disk_image.py:_list_image_remote, mw_disk_image.py:_copy_host_to_image, mw_disk_image.py:_copy_image_to_host, mw_transfer_batches.py:do_copy_to_remote, mw_transfer_batches.py:do_copy_to_host, mw_transfers.py:_on_files_dropped, mw_remote.py:refresh_remote_files, mw_remote.py:do_connect, app.py:_update_remote_group_title; tests test_gui_smoke.py |
+| FR-177 | While a disk image is open (FR-169), the application shall provide a **File > Close… | mw_disk_image.py:menu_close_image, mw_disk_image.py:menu_open_image, mw_disk_image.py:_cleanup_image_workdir, app.py:setup_menu; tests test_gui_smoke.py |
 
 ## 4.1 Menu bar
 
@@ -586,6 +588,8 @@ _472 requirements across 60 sections._
 | UIR-108 | The File menu (UIR-002) shall contain an **Open Disk Image…** item, placed after **Save** and… | app.py:setup_menu, mw_disk_image.py:menu_open_image; lang/*.txt (menu.file.open_image, dialog.open_image.*, status.disk_image_loaded) |
 | UIR-110 | The File menu (UIR-002) shall contain a **Save Image…** item, placed immediately after **Image Details…**… | app.py:setup_menu, mw_disk_image.py:menu_save_image, gui/config_dialogs.py:GeneralConfigDialog; lang/*.txt (menu.file.save_image, dialog.save_image.*, config.general.image_write, status.disk_image_saved, error.disk_image_write) |
 | UIR-111 | While a disk image is open (FR-169) the Host Files group title (FR-126/UIR-011) shall indicate… | app.py:_update_host_group_title, mw_disk_image.py:_prompt_save_discard_cancel; lang/*.txt (main.host_files_image, dialog.image_dirty.title, dialog.image_dirty.message, button.discard) |
+| UIR-112 | When opening a disk image (FR-169) the application shall present a modal **mount-side** dialog offering… | mw_disk_image.py:_prompt_mount_side, app.py:_update_remote_group_title, mw_disk_image.py:menu_open_image; lang/*.txt (dialog.mount_side.title, dialog.mount_side.message, dialog.mount_side.host, dialog.mount_side.remote, main.remote_files_image) |
+| UIR-113 | The File menu (UIR-002) shall contain a **Close Disk Image…** item, placed immediately after **Save… | app.py:setup_menu, mw_disk_image.py:menu_close_image; lang/*.txt (menu.file.close_image, status.disk_image_closed) |
 
 ## 5. External Interface Requirements
 

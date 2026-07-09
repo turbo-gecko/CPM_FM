@@ -326,3 +326,19 @@ main.host_files_image = {label} — [obraz: {name}]
 button.discard = Odrzuć
 dialog.image_dirty.title = Niezapisane zmiany w obrazie dysku
 dialog.image_dirty.message = Otwarty obraz dysku '{name}' ma niezapisane zmiany. Zapisać je do nowego pliku obrazu przed odrzuceniem?
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [obraz: {name}]
+dialog.mount_side.title = Otwórz obraz dysku
+dialog.mount_side.message = W którym panelu zamontować obraz?
+dialog.mount_side.host = Panel hosta (transfer do/z urządzenia CP/M)
+dialog.mount_side.remote = Panel zdalny (transfer do/z folderu hosta)
+error.image_remote_needs_disconnect = Rozłącz się z urządzeniem CP/M przed zamontowaniem obrazu w panelu zdalnym.
+error.image_remote_blocks_connect = Zamknij obraz dysku (Plik ▸ Nowy) przed połączeniem z urządzeniem CP/M.
+error.image_copy = Nie można skopiować pliku: {error}
+status.image_copy_in = Skopiowano {count} plik(ów) do obrazu
+status.image_copy_out = Skopiowano {count} plik(ów) do folderu hosta
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = Zamknij obraz dysku…
+status.disk_image_closed = Zamknięto obraz dysku

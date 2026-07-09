@@ -326,3 +326,19 @@ main.host_files_image = {label} — [이미지: {name}]
 button.discard = 버리기
 dialog.image_dirty.title = 저장되지 않은 디스크 이미지 변경사항
 dialog.image_dirty.message = 열려 있는 디스크 이미지 '{name}'에 저장되지 않은 변경사항이 있습니다. 버리기 전에 새 이미지 파일로 저장하시겠습니까?
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [이미지: {name}]
+dialog.mount_side.title = 디스크 이미지 열기
+dialog.mount_side.message = 이미지를 어느 창에 마운트할까요?
+dialog.mount_side.host = 호스트 창 (CP/M 장치로/에서 전송)
+dialog.mount_side.remote = 원격 창 (호스트 폴더로/에서 전송)
+error.image_remote_needs_disconnect = 원격 창에 이미지를 마운트하기 전에 CP/M 장치와의 연결을 끊으세요.
+error.image_remote_blocks_connect = CP/M 장치에 연결하기 전에 디스크 이미지를 닫으세요 (파일 ▸ 새로 만들기).
+error.image_copy = 파일을 복사할 수 없습니다: {error}
+status.image_copy_in = {count}개 파일을 이미지에 복사했습니다
+status.image_copy_out = {count}개 파일을 호스트 폴더에 복사했습니다
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = 디스크 이미지 닫기…
+status.disk_image_closed = 디스크 이미지를 닫았습니다

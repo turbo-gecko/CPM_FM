@@ -326,3 +326,19 @@ main.host_files_image = {label} — [Abbild: {name}]
 button.discard = Verwerfen
 dialog.image_dirty.title = Nicht gespeicherte Änderungen am Disk-Abbild
 dialog.image_dirty.message = Das geöffnete Disk-Abbild „{name}“ enthält nicht gespeicherte Änderungen. Vor dem Verwerfen in einer neuen Abbilddatei speichern?
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [Abbild: {name}]
+dialog.mount_side.title = Disk-Abbild öffnen
+dialog.mount_side.message = In welchem Bereich soll das Abbild eingebunden werden?
+dialog.mount_side.host = Host-Bereich (Übertragung zum/vom CP/M-Gerät)
+dialog.mount_side.remote = Remote-Bereich (Übertragung zu/von einem Host-Ordner)
+error.image_remote_needs_disconnect = Trennen Sie die Verbindung zum CP/M-Gerät, bevor Sie ein Abbild im Remote-Bereich einbinden.
+error.image_remote_blocks_connect = Schließen Sie das Disk-Abbild (Datei ▸ Neu), bevor Sie sich mit dem CP/M-Gerät verbinden.
+error.image_copy = Die Datei konnte nicht kopiert werden: {error}
+status.image_copy_in = {count} Datei(en) in das Abbild kopiert
+status.image_copy_out = {count} Datei(en) in den Host-Ordner kopiert
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = Disk-Abbild schließen…
+status.disk_image_closed = Disk-Abbild geschlossen

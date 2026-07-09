@@ -326,3 +326,19 @@ main.host_files_image = {label} — [immagine: {name}]
 button.discard = Ignora
 dialog.image_dirty.title = Modifiche non salvate all'immagine disco
 dialog.image_dirty.message = L'immagine disco aperta '{name}' contiene modifiche non salvate. Salvarle in un nuovo file immagine prima di annullare?
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [immagine: {name}]
+dialog.mount_side.title = Apri immagine disco
+dialog.mount_side.message = In quale riquadro montare l'immagine?
+dialog.mount_side.host = Riquadro host (trasferimento da/verso il dispositivo CP/M)
+dialog.mount_side.remote = Riquadro remoto (trasferimento da/verso una cartella host)
+error.image_remote_needs_disconnect = Disconnetti dal dispositivo CP/M prima di montare un'immagine nel riquadro remoto.
+error.image_remote_blocks_connect = Chiudi l'immagine disco (File ▸ Nuovo) prima di connetterti al dispositivo CP/M.
+error.image_copy = Impossibile copiare il file: {error}
+status.image_copy_in = Copiati {count} file nell'immagine
+status.image_copy_out = Copiati {count} file nella cartella host
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = Chiudi immagine disco…
+status.disk_image_closed = Immagine disco chiusa

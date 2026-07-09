@@ -7,7 +7,7 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.43 |
+| Scorecard version | 1.46 |
 | Scorecard for plan version | 1.43 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
@@ -166,6 +166,9 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-DI10 | Save Image… re-packs workdir to a new image; source untouched | FR-174, DR-050 | | | |
 | MT-DI11 | Copy-to-image: file received into the Host pane is written on save | FR-175 | | | |
 | MT-DI12 | Unsaved-changes Save/Discard/Cancel prompt + image-name group title | FR-175, UIR-111 | | | |
+| MT-DI13 | Remote-pane mount: local host↔image copy (both directions) + affordance | FR-176, UIR-112 | | | |
+| MT-DI14 | Remote-pane mount mutual exclusion with a live serial session | FR-176 | | | |
+| MT-DI15 | Close Disk Image restores Host/Remote panes; save prompt on close | FR-177, UIR-113 | | | |
 
 ### §10 Remote listing & drive selection (live)
 | ID | Title | Req | Result | Env | Notes |

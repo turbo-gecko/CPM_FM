@@ -25,11 +25,22 @@ class _TransferBatchesMixin(MainWindowMixinBase):
 
     def do_copy_to_remote(self):
         """
-        Satisfies: FR-080, FR-084, FR-106, CR-010.
+        Satisfies: FR-080, FR-084, FR-106, FR-176, CR-010.
 
-        FR-080: a transfer is permitted only when both the Terminal and
-        Transport status flags are true.
+        FR-080: a serial transfer is permitted only when both the Terminal and
+        Transport status flags are true. FR-176: when a disk image is mounted in
+        the Remote pane, "Copy to Remote" is instead a local copy of the selected
+        Host files into the image (no serial connection required).
         """
+        # FR-176: stage into the Remote-mounted image via a local filesystem copy.
+        if self._remote_is_image():
+            filenames = self._selected_filenames(self.host_list)
+            if not filenames:
+                QMessageBox.warning(self, tr("dialog.warning.title"), tr("warning.select_upload"))
+                return
+            self._copy_host_to_image([os.path.join(self.host_dir, name) for name in filenames])
+            return
+
         if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
             QMessageBox.critical(
                 self, tr("dialog.error.title"), tr("error.transport_not_connected")
@@ -226,11 +237,22 @@ class _TransferBatchesMixin(MainWindowMixinBase):
 
     def do_copy_to_host(self):
         """
-        Satisfies: FR-080, FR-085, FR-106, CR-010.
+        Satisfies: FR-080, FR-085, FR-106, FR-176, CR-010.
 
-        FR-080: a transfer is permitted only when both the Terminal and
-        Transport status flags are true.
+        FR-080: a serial transfer is permitted only when both the Terminal and
+        Transport status flags are true. FR-176: when a disk image is mounted in
+        the Remote pane, "Copy to Host" is instead a local copy of the selected
+        image files into the host directory (no serial connection required).
         """
+        # FR-176: copy out of the Remote-mounted image via a local filesystem copy.
+        if self._remote_is_image():
+            filenames = self._selected_filenames(self.remote_list)
+            if not filenames:
+                QMessageBox.warning(self, tr("dialog.warning.title"), tr("warning.select_download"))
+                return
+            self._copy_image_to_host(filenames)
+            return
+
         if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
             QMessageBox.critical(
                 self, tr("dialog.error.title"), tr("error.transport_not_connected")

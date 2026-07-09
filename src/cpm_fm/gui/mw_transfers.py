@@ -50,8 +50,25 @@ class _TransfersMixin(MainWindowMixinBase):
         the Terminal and Transport status flags are true (FR-080/CR-010), and is
         confirmed first (FR-137).
 
-        Satisfies: FR-137, FR-138, FR-080, FR-106, FR-107, CR-010.
+        Satisfies: FR-137, FR-138, FR-080, FR-106, FR-107, FR-176, CR-010.
         """
+        # FR-176: with a disk image mounted in the Remote pane, a drop is a local
+        # filesystem copy (no serial connection, no slow-transfer confirmation):
+        # onto Remote stages Host files into the image, onto Host copies image
+        # files out to the host directory.
+        if self._remote_is_image():
+            if not payload:
+                return
+            if target_pane == "remote":
+                sources = (
+                    list(payload)
+                    if external
+                    else [os.path.join(self.host_dir, name) for name in payload]
+                )
+                self._copy_host_to_image(sources)
+            elif target_pane == "host" and not external:
+                self._copy_image_to_host(list(payload))
+            return
         if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
             QMessageBox.critical(
                 self, tr("dialog.error.title"), tr("error.transport_not_connected")

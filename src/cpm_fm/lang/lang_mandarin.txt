@@ -326,3 +326,19 @@ main.host_files_image = {label} — [映像：{name}]
 button.discard = 放弃
 dialog.image_dirty.title = 磁盘映像有未保存的更改
 dialog.image_dirty.message = 打开的磁盘映像“{name}”有未保存的更改。放弃前是否保存到新的映像文件？
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [映像：{name}]
+dialog.mount_side.title = 打开磁盘映像
+dialog.mount_side.message = 应将映像挂载到哪个面板？
+dialog.mount_side.host = 主机面板（与 CP/M 设备互传）
+dialog.mount_side.remote = 远程面板（与主机文件夹互传）
+error.image_remote_needs_disconnect = 在远程面板挂载映像之前，请先断开与 CP/M 设备的连接。
+error.image_remote_blocks_connect = 连接 CP/M 设备之前，请先关闭磁盘映像（文件 ▸ 新建）。
+error.image_copy = 无法复制文件：{error}
+status.image_copy_in = 已将 {count} 个文件复制到映像
+status.image_copy_out = 已将 {count} 个文件复制到主机文件夹
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = 关闭磁盘映像…
+status.disk_image_closed = 已关闭磁盘映像

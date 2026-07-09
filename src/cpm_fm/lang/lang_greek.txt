@@ -326,3 +326,19 @@ main.host_files_image = {label} — [εικόνα: {name}]
 button.discard = Απόρριψη
 dialog.image_dirty.title = Μη αποθηκευμένες αλλαγές εικόνας δίσκου
 dialog.image_dirty.message = Η ανοιχτή εικόνα δίσκου '{name}' έχει μη αποθηκευμένες αλλαγές. Να αποθηκευτούν σε νέο αρχείο εικόνας πριν την απόρριψη;
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [εικόνα: {name}]
+dialog.mount_side.title = Άνοιγμα εικόνας δίσκου
+dialog.mount_side.message = Σε ποιο τμήμα να προσαρτηθεί η εικόνα;
+dialog.mount_side.host = Τμήμα host (μεταφορά προς/από τη συσκευή CP/M)
+dialog.mount_side.remote = Απομακρυσμένο τμήμα (μεταφορά προς/από φάκελο host)
+error.image_remote_needs_disconnect = Αποσυνδεθείτε από τη συσκευή CP/M πριν προσαρτήσετε εικόνα στο απομακρυσμένο τμήμα.
+error.image_remote_blocks_connect = Κλείστε την εικόνα δίσκου (Αρχείο ▸ Νέο) πριν συνδεθείτε στη συσκευή CP/M.
+error.image_copy = Δεν ήταν δυνατή η αντιγραφή του αρχείου: {error}
+status.image_copy_in = Αντιγράφηκαν {count} αρχείο(α) στην εικόνα
+status.image_copy_out = Αντιγράφηκαν {count} αρχείο(α) στον φάκελο host
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = Κλείσιμο εικόνας δίσκου…
+status.disk_image_closed = Η εικόνα δίσκου έκλεισε

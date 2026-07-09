@@ -326,3 +326,19 @@ main.host_files_image = {label} — [映像：{name}]
 button.discard = 放棄
 dialog.image_dirty.title = 磁碟映像有未儲存嘅更改
 dialog.image_dirty.message = 開咗嘅磁碟映像「{name}」有未儲存嘅更改。放棄之前係咪要儲存去新嘅映像檔案？
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [映像：{name}]
+dialog.mount_side.title = 開啟磁碟映像
+dialog.mount_side.message = 應該將映像掛載喺邊個面板？
+dialog.mount_side.host = 主機面板（同 CP/M 裝置互傳）
+dialog.mount_side.remote = 遠端面板（同主機資料夾互傳）
+error.image_remote_needs_disconnect = 喺遠端面板掛載映像之前，請先斷開同 CP/M 裝置嘅連線。
+error.image_remote_blocks_connect = 連接 CP/M 裝置之前，請先關閉磁碟映像（檔案 ▸ 新增）。
+error.image_copy = 無法複製檔案：{error}
+status.image_copy_in = 已將 {count} 個檔案複製到映像
+status.image_copy_out = 已將 {count} 個檔案複製到主機資料夾
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = 關閉磁碟映像…
+status.disk_image_closed = 已關閉磁碟映像

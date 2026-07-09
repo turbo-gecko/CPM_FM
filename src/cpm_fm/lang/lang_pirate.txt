@@ -331,3 +331,19 @@ main.host_files_image = {label} — [booty chest: {name}]
 button.discard = Toss Overboard
 dialog.image_dirty.title = Unsaved Booty in the Disk Chest
 dialog.image_dirty.message = The open disk chest '{name}' be holdin' unsaved booty. Stow it in a fresh image chest afore ye toss it overboard?
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [booty chest: {name}]
+dialog.mount_side.title = Open a Disk Chest
+dialog.mount_side.message = In which hold should the chest be lashed?
+dialog.mount_side.host = Host hold (haul to/from the CP/M vessel)
+dialog.mount_side.remote = Far hold (haul to/from a host locker)
+error.image_remote_needs_disconnect = Cast off from the CP/M vessel afore ye lash a chest in the far hold, matey.
+error.image_remote_blocks_connect = Batten down the disk chest (File ▸ New) afore ye hail the CP/M vessel.
+error.image_copy = Could not haul the file across: {error}
+status.image_copy_in = Hauled {count} file(s) into the chest
+status.image_copy_out = Hauled {count} file(s) to the host locker
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = Batten the Disk Chest…
+status.disk_image_closed = Disk chest battened down

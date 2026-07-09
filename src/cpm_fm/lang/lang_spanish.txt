@@ -326,3 +326,19 @@ main.host_files_image = {label} — [imagen: {name}]
 button.discard = Descartar
 dialog.image_dirty.title = Cambios sin guardar en la imagen de disco
 dialog.image_dirty.message = La imagen de disco abierta '{name}' tiene cambios sin guardar. ¿Guardarlos en un nuevo archivo de imagen antes de descartar?
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [imagen: {name}]
+dialog.mount_side.title = Abrir imagen de disco
+dialog.mount_side.message = ¿En qué panel se debe montar la imagen?
+dialog.mount_side.host = Panel host (transferir hacia/desde el dispositivo CP/M)
+dialog.mount_side.remote = Panel remoto (transferir hacia/desde una carpeta del host)
+error.image_remote_needs_disconnect = Desconéctate del dispositivo CP/M antes de montar una imagen en el panel remoto.
+error.image_remote_blocks_connect = Cierra la imagen de disco (Archivo ▸ Nuevo) antes de conectar con el dispositivo CP/M.
+error.image_copy = No se pudo copiar el archivo: {error}
+status.image_copy_in = Se copiaron {count} archivo(s) en la imagen
+status.image_copy_out = Se copiaron {count} archivo(s) a la carpeta del host
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = Cerrar imagen de disco…
+status.disk_image_closed = Imagen de disco cerrada

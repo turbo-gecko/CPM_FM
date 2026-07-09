@@ -326,3 +326,19 @@ main.host_files_image = {label} — [image: {name}]
 button.discard = Verwerpen
 dialog.image_dirty.title = Niet-opgeslagen wijzigingen in schijfimage
 dialog.image_dirty.message = De geopende schijfimage '{name}' heeft niet-opgeslagen wijzigingen. Opslaan in een nieuw imagebestand voordat u ze verwerpt?
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [image: {name}]
+dialog.mount_side.title = Schijfimage openen
+dialog.mount_side.message = In welk venster moet de image worden gekoppeld?
+dialog.mount_side.host = Host-venster (overdracht naar/van het CP/M-apparaat)
+dialog.mount_side.remote = Extern venster (overdracht naar/van een hostmap)
+error.image_remote_needs_disconnect = Verbreek de verbinding met het CP/M-apparaat voordat u een image in het externe venster koppelt.
+error.image_remote_blocks_connect = Sluit de schijfimage (Bestand ▸ Nieuw) voordat u verbinding maakt met het CP/M-apparaat.
+error.image_copy = Kan het bestand niet kopiëren: {error}
+status.image_copy_in = {count} bestand(en) naar de image gekopieerd
+status.image_copy_out = {count} bestand(en) naar de hostmap gekopieerd
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = Schijfimage sluiten…
+status.disk_image_closed = Schijfimage gesloten

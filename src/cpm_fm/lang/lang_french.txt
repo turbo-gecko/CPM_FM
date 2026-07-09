@@ -326,3 +326,19 @@ main.host_files_image = {label} — [image : {name}]
 button.discard = Abandonner
 dialog.image_dirty.title = Modifications non enregistrées de l'image disque
 dialog.image_dirty.message = L'image disque ouverte « {name} » comporte des modifications non enregistrées. Les enregistrer dans un nouveau fichier image avant d'abandonner ?
+
+# --- Disk image dual-pane mount (v2.32) -----------------------------------------
+main.remote_files_image = {label} — [image : {name}]
+dialog.mount_side.title = Ouvrir une image disque
+dialog.mount_side.message = Dans quel volet monter l'image ?
+dialog.mount_side.host = Volet hôte (transfert vers/depuis l'appareil CP/M)
+dialog.mount_side.remote = Volet distant (transfert vers/depuis un dossier hôte)
+error.image_remote_needs_disconnect = Déconnectez-vous de l'appareil CP/M avant de monter une image dans le volet distant.
+error.image_remote_blocks_connect = Fermez l'image disque (Fichier ▸ Nouveau) avant de vous connecter à l'appareil CP/M.
+error.image_copy = Impossible de copier le fichier : {error}
+status.image_copy_in = {count} fichier(s) copié(s) dans l'image
+status.image_copy_out = {count} fichier(s) copié(s) vers le dossier hôte
+
+# --- Disk image close (v2.33) ---------------------------------------------------
+menu.file.close_image = Fermer l'image disque…
+status.disk_image_closed = Image disque fermée

@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.31.0**
+**Version 2.33.1**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -19,7 +19,7 @@ It works with real vintage CP/M hardware as well as emulators, provided they exp
 7. [Configuration](#7-configuration)
 8. [Connecting and Disconnecting](#8-connecting-and-disconnecting)
 9. [Booting the Remote into CP/M](#9-booting-the-remote-into-cpm)
-10. [Browsing Files](#10-browsing-files) — including [Opening a CP/M Disk Image](#opening-a-cpm-disk-image), [Viewing CP/M File Details](#viewing-cpm-file-details) and [Saving a CP/M Disk Image](#saving-a-cpm-disk-image)
+10. [Browsing Files](#10-browsing-files) — including [Opening a CP/M Disk Image](#opening-a-cpm-disk-image), [Choosing where to mount an image](#choosing-where-to-mount-an-image), [Viewing CP/M File Details](#viewing-cpm-file-details), [Saving a CP/M Disk Image](#saving-a-cpm-disk-image) and [Closing a Disk Image](#closing-a-disk-image)
 11. [Transferring Files](#11-transferring-files)
 12. [Managing Files (Rename, Delete, View/Edit)](#12-managing-files-rename-delete-viewedit)
 13. [The Terminal Window](#13-the-terminal-window)
@@ -421,7 +421,7 @@ Each pane has its own controls for navigating, filtering, and sorting.
 
 ### Opening a CP/M Disk Image
 
-You can browse the contents of a **CP/M disk image** — a raw-sector image of a floppy or CompactFlash card (typically `.img`, `.dsk`, `.cpm`, or `.cf`) — without any hardware connected. Choose **File → Open Disk Image…**, pick the image file, and its files appear in the **Host Files** pane.
+You can browse the contents of a **CP/M disk image** — a raw-sector image of a floppy or CompactFlash card (typically `.img`, `.dsk`, `.cpm`, or `.cf`) — without any hardware connected. Choose **File → Open Disk Image…**; a short dialog asks **which pane** to mount the image in (see [Choosing where to mount an image](#choosing-where-to-mount-an-image) below — the default, **Host pane**, is described here), then pick the image file and its files appear in the **Host Files** pane.
 
 Because a CP/M image does not record its own disk layout, the program **auto-detects** the geometry by matching the file size against a built-in database of common formats — standard 8-inch and 5.25-inch floppies, the **RomWBW** floppy and hard-disk formats (fd144/fd120/fd720/fd360, hd1k, hd512), and the RC2014 CompactFlash slice. When the layout is unambiguous it is used automatically and shown in the status bar; when two formats are equally plausible — or none is recognised — a small dialog asks you to pick the format to use. (For example, an 8 MB image could be either a RomWBW *hd1k* slice or an RC2014 slice, which share the same size, so you will be asked to choose.)
 
@@ -430,6 +430,17 @@ The image's files are extracted to a temporary working folder that becomes the H
 If your image uses an unusual layout that is not auto-detected, you can supply your own cpmtools-format `diskdefs` file (support for selecting one is being extended).
 
 The built-in format database also covers the RomWBW ROM-disk images, a generic 4 MB hard disk, and several classic-machine floppy formats (Amstrad PCW, Epson QX-10, Royal Alphatronic, Interak) in addition to the layouts listed above.
+
+### Choosing where to mount an image
+
+When you open an image the mount-side dialog offers two choices:
+
+- **Host pane** (the default) puts the image where the Host Files pane usually points, so you transfer its files **to and from a connected CP/M machine** over the serial link exactly as described above. This is the right choice for moving files between an image and real hardware.
+- **Remote pane** mounts the image in the **Remote Files** pane as a kind of local disk, leaving the Host pane on your normal folder. Now the two panes are a plain host folder (left) and the image (right), and **Copy to Remote** / **Copy to Host** — or dragging files between the panes — copy files **straight between the folder and the image on your PC**, with no CP/M machine involved. Copies are instant (there is no serial transfer). When an image is mounted here the Remote group title shows the image's name and the drive drop-down is disabled.
+
+Copying **into** an image still checks that each name fits the CP/M 8.3 convention (offering to rename if not) and asks before overwriting an existing file; copying **out** to your folder just writes the files as they are. To save the edited image, tick disk-image writing and use **Save Image…** (below).
+
+Because a CP/M machine and an image cannot both occupy the Remote pane at once, mounting an image there is only allowed while you are **not** connected, and you cannot Connect while a Remote-pane image is open — close the image first (for example with **File → New**).
 
 ### Viewing CP/M File Details
 
@@ -446,6 +457,10 @@ If the working folder holds more files than the disk's directory can list, or mo
 **Copying files back into an image.** While an image is open, the Host pane *is* the image's working folder, so any file you **Copy to Host** (or drag onto the Host pane) from a connected CP/M machine is added to it — and is written into the new image the next time you Save Image. This is the easy way to pull files off real hardware and into an image. The Host Files group title shows the name of the image you are editing, so you can tell a staged image apart from an ordinary folder.
 
 **Don't lose your edits.** With disk image writing enabled, if you have added, removed or replaced files since opening the image and then do something that would throw the working folder away — opening another image, **File → New**, **Load**ing a configuration, changing the host directory, or quitting — the application asks first: **Save** writes a new image (via the Save-As dialog) before continuing, **Discard** continues and loses the changes, and **Cancel** stays where you are with the image still open. (With writing turned off, or when nothing has changed, it does not ask.)
+
+### Closing a Disk Image
+
+When you are finished with an image, choose **File → Close Disk Image…** to close it without opening another. If you have unsaved changes (with writing enabled) it offers the same **Save / Discard / Cancel** choice first, so **Cancel** leaves the image open. Closing restores the panes to normal: a **Host**-mounted image returns the Host pane to the folder you were viewing before you opened the image, and a **Remote**-mounted image clears the image from the Remote pane and re-enables the drive drop-down. **Close Disk Image…** is greyed out when no image is open.
 
 ---
 

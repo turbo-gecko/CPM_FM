@@ -732,7 +732,8 @@
       "tests/test_conflict_resolution.py:test_resolve_conflict_without_apply_to_all_prompts_each_time"
     ],
     "FR-148": [
-      "tests/test_filename_validation.py:test_remote_batch_valid_name_never_prompts"
+      "tests/test_filename_validation.py:test_remote_batch_valid_name_never_prompts",
+      "tests/test_gui_smoke.py:test_copy_to_remote_image_validates_8_3"
     ],
     "FR-149": [
       "tests/test_filename_validation.py:test_dialog_rename_with_invalid_name_stays_open",
@@ -740,7 +741,8 @@
       "tests/test_filename_validation.py:test_remote_batch_cancel_on_invalid_name",
       "tests/test_filename_validation.py:test_remote_batch_renames_invalid_name",
       "tests/test_filename_validation.py:test_remote_batch_skips_invalid_name",
-      "tests/test_filename_validation.py:test_renamed_name_then_subject_to_conflict"
+      "tests/test_filename_validation.py:test_renamed_name_then_subject_to_conflict",
+      "tests/test_gui_smoke.py:test_copy_to_remote_image_validates_8_3"
     ],
     "FR-150": [
       "tests/test_backup_restore.py:test_backup_order_refresh_confirm_wipe_transfer"
@@ -988,9 +990,26 @@
     "FR-175": [
       "tests/test_gui_smoke.py:test_change_dir_saves_when_dirty_and_save_chosen",
       "tests/test_gui_smoke.py:test_close_event_cancel_keeps_image_open",
+      "tests/test_gui_smoke.py:test_close_image_cancel_keeps_image_open",
       "tests/test_gui_smoke.py:test_copy_to_image_file_included_on_save",
       "tests/test_gui_smoke.py:test_maybe_prompt_save_image_routing",
       "tests/test_gui_smoke.py:test_new_aborts_when_dirty_and_cancelled"
+    ],
+    "FR-176": [
+      "tests/test_gui_smoke.py:test_close_image_resets_remote_pane",
+      "tests/test_gui_smoke.py:test_connect_refused_while_remote_image_mounted",
+      "tests/test_gui_smoke.py:test_copy_to_host_copies_out_of_remote_image",
+      "tests/test_gui_smoke.py:test_copy_to_remote_image_validates_8_3",
+      "tests/test_gui_smoke.py:test_copy_to_remote_stages_into_remote_mounted_image",
+      "tests/test_gui_smoke.py:test_open_remote_after_host_restores_host_pane",
+      "tests/test_gui_smoke.py:test_remote_group_title_and_drive_combo_reflect_image",
+      "tests/test_gui_smoke.py:test_remote_mount_lists_image_in_remote_pane",
+      "tests/test_gui_smoke.py:test_remote_mount_refused_while_connected"
+    ],
+    "FR-177": [
+      "tests/test_gui_smoke.py:test_close_image_cancel_keeps_image_open",
+      "tests/test_gui_smoke.py:test_close_image_resets_remote_pane",
+      "tests/test_gui_smoke.py:test_close_image_restores_host_pane"
     ],
     "IFR-004": [
       "tests/test_config_handler.py:test_load_json_malformed_returns_empty",
@@ -1302,6 +1321,13 @@
     ],
     "UIR-111": [
       "tests/test_gui_smoke.py:test_host_group_title_shows_open_image"
+    ],
+    "UIR-112": [
+      "tests/test_gui_smoke.py:test_remote_group_title_and_drive_combo_reflect_image",
+      "tests/test_gui_smoke.py:test_remote_mount_lists_image_in_remote_pane"
+    ],
+    "UIR-113": [
+      "tests/test_gui_smoke.py:test_close_image_action_enabled_only_when_image_open"
     ]
   },
   "untested": [

@@ -13,12 +13,17 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPushButton,
+    QRadioButton,
     QStyle,
     QVBoxLayout,
 )
 
+from cpm_fm.gui.conflict_dialog import CANCEL, SKIP, FileConflictDialog
+from cpm_fm.gui.dialog_buttons import build_button_row
 from cpm_fm.gui.disk_image_details_dialog import DiskImageDetailsDialog
+from cpm_fm.gui.filename_validation_dialog import FilenameValidationDialog
 from cpm_fm.gui.mw_base import MainWindowMixinBase
+from cpm_fm.terminal.cpm_parser import CPMParser
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QWidget
@@ -58,13 +63,26 @@ class _DiskImageMixin(MainWindowMixinBase):
         is rejected with an error dialog, leaving the current Host pane unchanged
         (FR-172).
 
-        Satisfies: FR-169, FR-170, FR-171, FR-172, FR-175, UIR-108.
+        Satisfies: FR-169, FR-170, FR-171, FR-172, FR-175, FR-176, FR-177, UIR-108.
         """
         # FR-175: opening another image discards the current working directory;
         # offer to save unsaved staged changes first.
         if not self._maybe_prompt_save_image():
             return
         widget = cast("QWidget", self)
+        # FR-176: choose which pane the image mounts into before browsing for it.
+        mount = self._prompt_mount_side()
+        if mount is None:
+            return
+        # FR-176: a Remote-pane mount is mutually exclusive with a live serial
+        # session — refuse it while the Terminal Port is connected.
+        if mount == "remote" and self.serial_mgr.terminal_connected:
+            QMessageBox.warning(
+                widget,
+                tr("dialog.warning.title"),
+                tr("error.image_remote_needs_disconnect"),
+            )
+            return
         start_dir = os.path.dirname(self._image_source) if self._image_source else self.host_dir
         path, _ = QFileDialog.getOpenFileName(
             widget,
@@ -103,18 +121,43 @@ class _DiskImageMixin(MainWindowMixinBase):
         # files become plain host files that no longer carry it (FR-173).
         image_files = img.list_files()
 
-        # Success: swap the temp workdir in as the host directory. Only remove the
-        # previous image workdir once the new one is ready (FR-171).
+        # FR-177: remember the real host directory to restore on Close. Read it
+        # before _cleanup_image_workdir clears the state: when replacing an already
+        # open image, keep the directory recorded for that image (self.host_dir
+        # would be its temporary workdir); otherwise it is the current host dir.
+        pre_dir = self.host_dir if self._image_workdir is None else self._pre_image_host_dir
+
+        # Success: adopt the new workdir. Only remove the previous image workdir
+        # once the new one is ready (FR-171).
         self._cleanup_image_workdir()
         self._image_workdir = workdir
         self._image_source = path
         self._image_geom = img.geom
         self._image_files = image_files
+        self._image_pane = mount
         if self._image_details_action is not None:
             self._image_details_action.setEnabled(True)
+        if self._close_image_action is not None:
+            self._close_image_action.setEnabled(True)
         self._update_save_image_action()
-        self.host_dir = workdir
-        self.refresh_host_files()
+        # FR-176: mount the image into the chosen pane. Host-side repoints the
+        # Host pane at the workdir (the established behaviour); Remote-side leaves
+        # the Host pane on its real directory and sources the Remote list from the
+        # workdir, disabling the (meaningless) drive drop-down.
+        if mount == "remote":
+            self.drive_combo.setEnabled(False)
+            # If the previous mount was Host-side, self.host_dir still points at
+            # that image's now-deleted workdir; restore the Host pane to a real
+            # directory so it is not left on a stale path (v2.33.1 fix).
+            if not os.path.isdir(self.host_dir):
+                self.host_dir = pre_dir or self.settings.get("host_directory") or os.getcwd()
+                self.refresh_host_files()
+            self._list_image_remote()
+            self._update_remote_group_title()
+        else:
+            self._pre_image_host_dir = pre_dir
+            self.host_dir = workdir
+            self.refresh_host_files()
         # FR-175: record the extracted contents as the clean baseline so later
         # copy-to-image edits can be detected as unsaved changes.
         self._capture_image_baseline()
@@ -144,6 +187,37 @@ class _DiskImageMixin(MainWindowMixinBase):
         if not self._image_files:
             return
         DiskImageDetailsDialog(cast("QWidget", self), self._image_files).exec()
+
+    def menu_close_image(self) -> None:
+        """Close the open disk image and restore the Host and Remote panes.
+
+        Prompts to save first when there are unsaved copy-to-image changes and
+        writing is enabled (FR-175); Cancel aborts the close and keeps the image
+        open. Discarding the working directory (``_cleanup_image_workdir``) resets
+        the Remote pane when the image was Remote-mounted (FR-176); a Host-mounted
+        image additionally restores the Host pane to the directory that was active
+        before the image was opened (falling back to the configured host directory
+        or the current working directory). A no-op when no image is open (the menu
+        action is disabled in that state, UIR-113).
+
+        Satisfies: FR-177, FR-175, UIR-113.
+        """
+        if self._image_workdir is None:
+            return
+        # FR-175: closing discards the working directory; offer to save first.
+        if not self._maybe_prompt_save_image():
+            return
+        # FR-177: capture the restore target before cleanup clears the state.
+        was_host = self._image_pane == "host"
+        restore_dir = self._pre_image_host_dir or self.settings.get("host_directory") or os.getcwd()
+        self._cleanup_image_workdir()
+        # FR-177: a Host-side mount had repointed the Host pane at the workdir;
+        # restore the previous directory. A Remote-side mount left the Host pane
+        # alone, and _cleanup_image_workdir already reset the Remote pane.
+        if was_host:
+            self.host_dir = restore_dir
+            self.refresh_host_files()
+        self.set_status(tr("status.disk_image_closed"))
 
     def _image_write_enabled(self) -> bool:
         """True when the opt-in image_write_enabled setting is on (FR-174, UIR-110)."""
@@ -364,6 +438,189 @@ class _DiskImageMixin(MainWindowMixinBase):
         dlg.exec()
         return result["choice"]
 
+    # ------------------------------------------------------- dual-pane mount
+
+    def _prompt_mount_side(self) -> str | None:
+        """Ask which pane to mount the opening image into; return 'host'/'remote'.
+
+        Returns ``None`` when the user cancels (aborting the open). Host is the
+        default. Buttons follow the house order (UIR-075: Cancel far left, OK far
+        right).
+
+        Satisfies: FR-176, UIR-112.
+        """
+        widget = cast("QWidget", self)
+        dlg = QDialog(widget)
+        dlg.setWindowTitle(tr("dialog.mount_side.title"))
+        dlg.setModal(True)
+        layout = QVBoxLayout(dlg)
+        message = QLabel(tr("dialog.mount_side.message"))
+        message.setWordWrap(True)
+        layout.addWidget(message)
+        host_radio = QRadioButton(tr("dialog.mount_side.host"))
+        remote_radio = QRadioButton(tr("dialog.mount_side.remote"))
+        host_radio.setChecked(True)  # FR-176: Host-side is the default.
+        layout.addWidget(host_radio)
+        layout.addWidget(remote_radio)
+
+        ok_btn = QPushButton(tr("button.ok"))
+        cancel_btn = QPushButton(tr("button.cancel"))
+        ok_btn.clicked.connect(dlg.accept)
+        cancel_btn.clicked.connect(dlg.reject)
+        ok_btn.setDefault(True)
+        layout.addLayout(build_button_row(accept_button=ok_btn, reject_button=cancel_btn))
+
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return None
+        return "remote" if remote_radio.isChecked() else "host"
+
+    def _remote_is_image(self) -> bool:
+        """True when an open disk image is mounted in the Remote pane (FR-176)."""
+        return self._image_workdir is not None and self._image_pane == "remote"
+
+    def _list_image_remote(self) -> None:
+        """Populate the Remote Files list from the Remote-mounted image workdir.
+
+        The local virtual-device listing: read the working directory (files only)
+        straight into the canonical Remote list and render it, with no serial I/O
+        (FR-176, revising FR-073/FR-074).
+
+        Satisfies: FR-176.
+        """
+        if not self._image_workdir:
+            return
+        try:
+            files = [
+                f
+                for f in os.listdir(self._image_workdir)
+                if os.path.isfile(os.path.join(self._image_workdir, f))
+            ]
+        except OSError:
+            files = []
+        self._remote_files = files
+        self._apply_remote_view()
+
+    def _copy_host_to_image(self, source_paths: list[str]) -> None:
+        """Copy selected host files into the Remote-mounted image (local, FR-176).
+
+        A plain filesystem copy of each source into the image working directory,
+        applying CP/M 8.3 name validation (FR-148/FR-149) and destination-conflict
+        resolution (FR-145–FR-147) — the same dialogs the serial upload uses, but
+        built directly here because this runs on the GUI thread. Marks the image
+        dirty implicitly (the working-directory signature diverges, FR-175).
+
+        Satisfies: FR-176.
+        """
+        if not self._image_workdir:
+            return
+        widget = cast("QWidget", self)
+        workdir = self._image_workdir
+        existing = {
+            n.upper() for n in os.listdir(workdir) if os.path.isfile(os.path.join(workdir, n))
+        }
+        policy: str | None = None
+        copied = 0
+        for src in source_paths:
+            dest_name = os.path.basename(src)
+            if not CPMParser.is_valid_8_3(dest_name):
+                action, new_name = self._prompt_invalid_name_local(dest_name)
+                if action == CANCEL:
+                    break
+                if action == SKIP:
+                    continue
+                dest_name = new_name
+            if dest_name.upper() in existing:
+                action, policy = self._resolve_conflict_local(dest_name, "remote", policy)
+                if action == CANCEL:
+                    break
+                if action == SKIP:
+                    continue
+            dest = os.path.join(workdir, dest_name)
+            try:
+                shutil.copy2(src, dest)
+            except OSError as exc:
+                QMessageBox.critical(
+                    widget, tr("dialog.error.title"), tr("error.image_copy", error=exc)
+                )
+                break
+            existing.add(dest_name.upper())
+            self._record_history(
+                dest_name, src, "remote", "success", os.path.getsize(dest), "", False
+            )
+            copied += 1
+        self._list_image_remote()
+        self.set_status(tr("status.image_copy_in", count=copied))
+
+    def _copy_image_to_host(self, names: list[str]) -> None:
+        """Copy selected image files out to the host directory (local, FR-176).
+
+        A plain filesystem copy of each image file into the current host
+        directory, applying destination-conflict resolution (FR-145–FR-147) but
+        no 8.3 validation (the out direction produces ordinary host files).
+
+        Satisfies: FR-176.
+        """
+        if not self._image_workdir:
+            return
+        widget = cast("QWidget", self)
+        workdir = self._image_workdir
+        policy: str | None = None
+        copied = 0
+        for name in names:
+            dest = os.path.join(self.host_dir, name)
+            if os.path.exists(dest):
+                action, policy = self._resolve_conflict_local(name, "host", policy)
+                if action == CANCEL:
+                    break
+                if action == SKIP:
+                    continue
+            try:
+                shutil.copy2(os.path.join(workdir, name), dest)
+            except OSError as exc:
+                QMessageBox.critical(
+                    widget, tr("dialog.error.title"), tr("error.image_copy", error=exc)
+                )
+                break
+            self._record_history(name, dest, "host", "success", os.path.getsize(dest), "", False)
+            copied += 1
+        self.refresh_host_files()
+        self.set_status(tr("status.image_copy_out", count=copied))
+
+    def _prompt_invalid_name_local(self, name: str) -> tuple[str, str]:
+        """GUI-thread CP/M 8.3 name-validation prompt for the local copy (FR-176).
+
+        The serial upload path marshals this dialog from a worker thread via a
+        signal (`_prompt_invalid_name`); the local host→image copy runs on the GUI
+        thread, so it builds the identical dialog directly. Returns
+        ``(action, new_name)``.
+
+        Satisfies: FR-176, FR-148, FR-149.
+        """
+        suggested = CPMParser.suggest_8_3(name)
+        dialog = FilenameValidationDialog(cast("QWidget", self), name, suggested)
+        dialog.exec()
+        return dialog.action, dialog.new_name
+
+    def _resolve_conflict_local(
+        self, name: str, direction: str, policy: str | None
+    ) -> tuple[str, str | None]:
+        """GUI-thread destination-conflict prompt for the local copy (FR-176).
+
+        Returns ``(action, updated_policy)``; a batch-wide Overwrite/Skip policy
+        set via the dialog's "apply to all" suppresses further prompts, mirroring
+        the serial path's ``_resolve_conflict``.
+
+        Satisfies: FR-176, FR-146, FR-147.
+        """
+        if policy is not None:
+            return policy, policy
+        dialog = FileConflictDialog(cast("QWidget", self), name, direction)
+        dialog.exec()
+        action, apply_to_all = dialog.action, dialog.apply_to_all
+        if apply_to_all and action != CANCEL:
+            policy = action
+        return action, policy
+
     def _resolve_geometry(self, path: str):
         """Return the geometry to use: ``None`` (auto), a name, or ``False`` if cancelled.
 
@@ -418,10 +675,14 @@ class _DiskImageMixin(MainWindowMixinBase):
     def _cleanup_image_workdir(self) -> None:
         """Remove the current image working directory, if any (FR-016, FR-019, FR-171).
 
-        Called when opening another image, on File > New, and on application exit.
+        Called when opening another image, on File > New, on Close Disk Image…
+        (FR-177), and on application exit.
 
-        Satisfies: FR-171.
+        Satisfies: FR-171, FR-176, FR-177.
         """
+        # FR-176: note a Remote-pane mount before clearing state, so the Remote
+        # pane can be reset to a real-device view below.
+        was_remote_image = self._image_workdir is not None and self._image_pane == "remote"
         if self._image_workdir and os.path.isdir(self._image_workdir):
             shutil.rmtree(self._image_workdir, ignore_errors=True)
         self._image_workdir = None
@@ -429,10 +690,25 @@ class _DiskImageMixin(MainWindowMixinBase):
         self._image_geom = None
         # FR-175: no image open → no clean baseline to compare against.
         self._image_baseline = None
+        # FR-177: no image open → nothing to restore on close.
+        self._pre_image_host_dir = None
+        # FR-176: no image open → the Remote pane is a real device again. Re-enable
+        # the drive drop-down, clear a stale image listing, and restore the title.
+        self._image_pane = "host"
+        drive_combo = getattr(self, "drive_combo", None)
+        if drive_combo is not None:
+            drive_combo.setEnabled(True)
+        if was_remote_image:
+            self._remote_files = []
+            self.remote_list.clear()
+        self._update_remote_group_title()
         # FR-173/UIR-109: no image open → clear its metadata and disable the
         # Image Details… action.
         self._image_files = []
         if self._image_details_action is not None:
             self._image_details_action.setEnabled(False)
+        # UIR-113: no image open → Close Disk Image… is disabled too.
+        if self._close_image_action is not None:
+            self._close_image_action.setEnabled(False)
         # UIR-110: no image open → Save Image… is disabled too.
         self._update_save_image_action()
