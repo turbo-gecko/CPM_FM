@@ -13,9 +13,9 @@ app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = Datei
-menu.file.new = Neu
-menu.file.load = Laden
-menu.file.save = Speichern
+menu.file.new = Neue Konfiguration
+menu.file.load = Konfiguration laden
+menu.file.save = Konfiguration speichern
 menu.file.exit = Beenden
 menu.config = Konfiguration
 menu.config.serial = Seriell
@@ -218,7 +218,7 @@ config.general.eol = Zeilenende
 config.general.debug_logging = Debug-Protokollierung
 config.general.echo_transfer = Übertragungsdaten anzeigen
 config.general.viewer = Betrachter/Editor
-config.general.image_write = Schreiben von Diskettenabbildern aktivieren (Abbild speichern…)
+config.general.image_directory = Standard-Abbildverzeichnis
 config.general.rename_remote = Umbenennen
 config.general.delete_remote = Löschen
 config.general.erase_all = Alles löschen
@@ -342,3 +342,10 @@ status.image_copy_out = {count} Datei(en) in den Host-Ordner kopiert
 # --- Disk image close (v2.33) ---------------------------------------------------
 menu.file.close_image = Disk-Abbild schließen…
 status.disk_image_closed = Disk-Abbild geschlossen
+
+# --- New empty disk image (v2.34) -----------------------------------------------
+menu.file.new_image = Neues Disk-Abbild…
+dialog.new_image.pick_title = Neues Disk-Abbild
+dialog.new_image.pick_label = Wählen Sie das Disk-Format für das neue Abbild:
+main.image_unsaved = (neues Abbild)
+status.new_image_created = Neues Disk-Abbild erstellt ({geometry})

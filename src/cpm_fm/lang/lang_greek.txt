@@ -13,9 +13,9 @@ app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = Αρχείο
-menu.file.new = Νέο
-menu.file.load = Φόρτωση
-menu.file.save = Αποθήκευση
+menu.file.new = Νέα διαμόρφωση
+menu.file.load = Φόρτωση διαμόρφωσης
+menu.file.save = Αποθήκευση διαμόρφωσης
 menu.file.exit = Έξοδος
 menu.config = Ρυθμίσεις
 menu.config.serial = Σειριακή
@@ -218,7 +218,7 @@ config.general.eol = Τέλος γραμμής
 config.general.debug_logging = Καταγραφή αποσφαλμάτωσης
 config.general.echo_transfer = Ηχώ δεδομένων μεταφοράς
 config.general.viewer = Προβολέας/Επεξεργαστής
-config.general.image_write = Ενεργοποίηση εγγραφής εικόνας δίσκου (Αποθήκευση εικόνας…)
+config.general.image_directory = Προεπιλεγμένος κατάλογος εικόνων
 config.general.rename_remote = Μετονομασία
 config.general.delete_remote = Διαγραφή
 config.general.erase_all = Διαγραφή όλων
@@ -342,3 +342,10 @@ status.image_copy_out = Αντιγράφηκαν {count} αρχείο(α) στο
 # --- Disk image close (v2.33) ---------------------------------------------------
 menu.file.close_image = Κλείσιμο εικόνας δίσκου…
 status.disk_image_closed = Η εικόνα δίσκου έκλεισε
+
+# --- New empty disk image (v2.34) -----------------------------------------------
+menu.file.new_image = Νέα εικόνα δίσκου…
+dialog.new_image.pick_title = Νέα εικόνα δίσκου
+dialog.new_image.pick_label = Επιλέξτε τη μορφή δίσκου για τη νέα εικόνα:
+main.image_unsaved = (νέα εικόνα)
+status.new_image_created = Δημιουργήθηκε νέα εικόνα δίσκου ({geometry})

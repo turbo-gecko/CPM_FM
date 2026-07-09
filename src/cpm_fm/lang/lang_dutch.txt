@@ -13,9 +13,9 @@ app.title_with_config = {app} — {config}
 
 # --- Menu bar ----------------------------------------------------------------
 menu.file = Bestand
-menu.file.new = Nieuw
-menu.file.load = Laden
-menu.file.save = Opslaan
+menu.file.new = Nieuwe configuratie
+menu.file.load = Configuratie laden
+menu.file.save = Configuratie opslaan
 menu.file.exit = Afsluiten
 menu.config = Configuratie
 menu.config.serial = Serieel
@@ -218,7 +218,7 @@ config.general.eol = Einde regel
 config.general.debug_logging = Debug logging
 config.general.echo_transfer = Overdrachtsdata echoën
 config.general.viewer = Viewer/Editor
-config.general.image_write = Schrijven van schijfimage inschakelen (Image opslaan…)
+config.general.image_directory = Standaard imagemap
 config.general.rename_remote = Hernoemen
 config.general.delete_remote = Verwijderen
 config.general.erase_all = Alles wissen
@@ -342,3 +342,10 @@ status.image_copy_out = {count} bestand(en) naar de hostmap gekopieerd
 # --- Disk image close (v2.33) ---------------------------------------------------
 menu.file.close_image = Schijfimage sluiten…
 status.disk_image_closed = Schijfimage gesloten
+
+# --- New empty disk image (v2.34) -----------------------------------------------
+menu.file.new_image = Nieuwe schijfimage…
+dialog.new_image.pick_title = Nieuwe schijfimage
+dialog.new_image.pick_label = Kies de schijfindeling voor de nieuwe image:
+main.image_unsaved = (nieuwe image)
+status.new_image_created = Nieuwe schijfimage gemaakt ({geometry})

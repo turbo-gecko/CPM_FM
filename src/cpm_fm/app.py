@@ -216,6 +216,10 @@ class MainWindow(
         self._backup_confirm_answered = threading.Event()
         self._backup_confirm_result = False
         self.host_dir = os.getcwd()
+        # FR-179: the folder where CP/M disk-image files live — the browse root for
+        # Open/New/Save Image, tracked independently of host_dir and set from the
+        # image_directory setting on config load (falls back to the host dir).
+        self.image_dir = os.getcwd()
         # FR-171: temp working directory holding files extracted from an opened
         # disk image (and the source image path), or None when no image is open.
         self._image_workdir: str | None = None
@@ -246,6 +250,9 @@ class MainWindow(
         # UIR-113: the Close Disk Image… menu action, enabled only while an image
         # is open. Created in setup_menu; held here so open/cleanup can toggle it.
         self._close_image_action: QAction | None = None
+        # UIR-114: the New Disk Image… menu action (FR-178). Always available since
+        # disk-image writing is no longer opt-in (v2.35); held for completeness.
+        self._new_image_action: QAction | None = None
         # FR-130/FR-133: the canonical, unfiltered file names for each pane. The
         # visible QListWidget rows are derived from these by filter_and_sort, so
         # filtering/sorting can be re-applied without re-reading the source.
@@ -391,21 +398,28 @@ class MainWindow(
         Safe to call before the group box exists (during early construction) —
         it simply does nothing.
 
-        While a disk image is open (FR-169) the title shows the image file name
+        While a Host-mounted disk image is open (FR-169/FR-176) the title shows the
+        image file name — or a placeholder for an unsaved new image (FR-178) —
         instead of the temporary working-directory path, so the staged image is
-        not mistaken for an ordinary host folder (UIR-111).
+        not mistaken for an ordinary host folder (UIR-111). A Remote-mounted image
+        leaves the Host pane on a real directory, so the normal path title is used.
 
-        Satisfies: FR-126, UIR-011, UIR-111.
+        Satisfies: FR-126, UIR-011, UIR-111, UIR-114.
         """
         group = getattr(self, "host_group", None)
         if group is None:
             return
         label = tr("main.host_files")
-        # UIR-111: an open image shows its file name rather than the temp path.
-        if self._image_workdir is not None and self._image_source is not None:
-            group.setTitle(
-                tr("main.host_files_image", label=label, name=os.path.basename(self._image_source))
+        # UIR-111/UIR-114: a Host-mounted image shows its file name (or a "(new
+        # image)" placeholder when it has no source file yet) rather than the temp
+        # path.
+        if self._image_workdir is not None and self._image_pane == "host":
+            name = (
+                os.path.basename(self._image_source)
+                if self._image_source is not None
+                else tr("main.image_unsaved")
             )
+            group.setTitle(tr("main.host_files_image", label=label, name=name))
             return
         metrics = QFontMetrics(group.font())
         # Width consumed by the fixed prefix ("Host Files — ") plus a margin for
@@ -420,24 +434,24 @@ class MainWindow(
 
         Normally the title is the plain translated "Remote Files" label. While a
         disk image is mounted in the Remote pane (FR-176) the title instead shows
-        the image file's name so the local virtual device is not mistaken for the
-        live CP/M device (UIR-112). Re-applied on language change
-        (``retranslate_ui``) and safe to call before the group box exists.
+        the image file's name — or a placeholder for an unsaved new image (FR-178)
+        — so the local virtual device is not mistaken for the live CP/M device
+        (UIR-112). Re-applied on language change (``retranslate_ui``) and safe to
+        call before the group box exists.
 
-        Satisfies: FR-176, UIR-112.
+        Satisfies: FR-176, UIR-112, UIR-114.
         """
         group = getattr(self, "remote_group", None)
         if group is None:
             return
         label = tr("main.remote_files")
-        if self._remote_is_image() and self._image_source is not None:
-            group.setTitle(
-                tr(
-                    "main.remote_files_image",
-                    label=label,
-                    name=os.path.basename(self._image_source),
-                )
+        if self._remote_is_image():
+            name = (
+                os.path.basename(self._image_source)
+                if self._image_source is not None
+                else tr("main.image_unsaved")
             )
+            group.setTitle(tr("main.remote_files_image", label=label, name=name))
             return
         group.setTitle(label)
 
@@ -521,6 +535,11 @@ class MainWindow(
         self._add_menu_action(file_menu, "menu.file.save", self.menu_save)
         # UIR-108: Open Disk Image… sits after Save, before the Exit separator.
         self._add_menu_action(file_menu, "menu.file.open_image", self.menu_open_image)
+        # UIR-114: New Disk Image… sits immediately after Open Disk Image…. It is
+        # always available (FR-178; disk-image writing is no longer opt-in, v2.35).
+        self._new_image_action = self._add_menu_action(
+            file_menu, "menu.file.new_image", self.menu_new_image
+        )
         # UIR-109: Image Details… sits immediately after Open Disk Image…, disabled
         # until an image is open.
         self._image_details_action = self._add_menu_action(

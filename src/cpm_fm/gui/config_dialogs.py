@@ -568,18 +568,17 @@ class GeneralConfigDialog(ConfigDialog):
                 "type": "text",
                 "default": "notepad $1",
             },
-            # UIR-110: opt-in gate for writing a disk image back to disk
-            # (File > Save Image…, FR-174). Default unchecked — the disk-image
-            # feature is read-only until this is enabled.
-            {
-                "key": "image_write_enabled",
-                "label_key": "config.general.image_write",
-                "type": "checkbox",
-                "default": "OFF",
-            },
             {
                 "key": "host_directory",
                 "label_key": "config.general.host_directory",
+                "type": "directory",
+                "default": "",
+            },
+            # FR-179/UIR-115: the default folder for CP/M disk-image files, browsed
+            # by Open/New/Save Image and remembered on File > Save Config.
+            {
+                "key": "image_directory",
+                "label_key": "config.general.image_directory",
                 "type": "directory",
                 "default": "",
             },

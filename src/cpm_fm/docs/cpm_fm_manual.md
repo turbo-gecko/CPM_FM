@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.33.1**
+**Version 2.35.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -19,7 +19,7 @@ It works with real vintage CP/M hardware as well as emulators, provided they exp
 7. [Configuration](#7-configuration)
 8. [Connecting and Disconnecting](#8-connecting-and-disconnecting)
 9. [Booting the Remote into CP/M](#9-booting-the-remote-into-cpm)
-10. [Browsing Files](#10-browsing-files) — including [Opening a CP/M Disk Image](#opening-a-cpm-disk-image), [Choosing where to mount an image](#choosing-where-to-mount-an-image), [Viewing CP/M File Details](#viewing-cpm-file-details), [Saving a CP/M Disk Image](#saving-a-cpm-disk-image) and [Closing a Disk Image](#closing-a-disk-image)
+10. [Browsing Files](#10-browsing-files) — including [Opening a CP/M Disk Image](#opening-a-cpm-disk-image), [Choosing where to mount an image](#choosing-where-to-mount-an-image), [Viewing CP/M File Details](#viewing-cpm-file-details), [Saving a CP/M Disk Image](#saving-a-cpm-disk-image), [Creating a New Disk Image](#creating-a-new-disk-image) and [Closing a Disk Image](#closing-a-disk-image)
 11. [Transferring Files](#11-transferring-files)
 12. [Managing Files (Rename, Delete, View/Edit)](#12-managing-files-rename-delete-viewedit)
 13. [The Terminal Window](#13-the-terminal-window)
@@ -448,19 +448,27 @@ Once an image is open, choose **File → Image Details…** to see the CP/M-spec
 
 ### Saving a CP/M Disk Image
 
-You can build a **new** CP/M disk image from the files currently in the Host working folder. This is an opt-in feature: first tick **Enable disk image writing (Save Image…)** in **Config → General** (it is off by default, so an image can never be changed by accident). With writing enabled and an image open, edit the working folder as you like — delete files, or drag new ones in — then choose **File → Save Image…**.
+Once you have made changes to an open image — files added, deleted, or copied in — choose **File → Save Image…** to write them back. Saving works like saving any document: an image you opened from a file is **overwritten in place**, and a brand-new image (see below) asks you once for a filename. The saved image reuses the image's disk layout and keeps its reserved/boot tracks, so a bootable disk stays bootable; every file is written under user 0.
 
-Save Image writes to a **new file** that you name in the Save-As dialog; it never overwrites the image you opened (if you pick the same name it warns and does nothing). The new image reuses the opened image's disk layout and keeps its reserved/boot tracks, so a bootable disk stays bootable. Every file in the working folder is written into the new image under user 0.
+If the working folder holds more files than the disk's directory can list, or more data than the disk can hold, or a file has a name that is not a valid CP/M 8.3 name, the save stops with an explanatory message and writes nothing — remove or rename files and try again. **Save Image…** is greyed out only when no image is open. (Disk-image writing is always available — there is no separate setting to enable it.)
 
-If the working folder holds more files than the disk's directory can list, or more data than the disk can hold, or a file has a name that is not a valid CP/M 8.3 name, the save stops with an explanatory message and writes nothing — remove or rename files and try again. **Save Image…** is greyed out unless an image is open **and** disk image writing is enabled.
+**Copying files back into an image.** While an image is open, any file you **Copy to Host** (or drag onto the Host pane) from a connected CP/M machine is added to it — and is written back the next time you Save Image. This is the easy way to pull files off real hardware and into an image. The pane's group title shows the name of the image you are editing, so you can tell a staged image apart from an ordinary folder.
 
-**Copying files back into an image.** While an image is open, the Host pane *is* the image's working folder, so any file you **Copy to Host** (or drag onto the Host pane) from a connected CP/M machine is added to it — and is written into the new image the next time you Save Image. This is the easy way to pull files off real hardware and into an image. The Host Files group title shows the name of the image you are editing, so you can tell a staged image apart from an ordinary folder.
+**Don't lose your edits.** If you have added, removed or replaced files since opening (or last saving) the image and then do something that would throw those changes away — opening another image, **File → New Config**, **Load**ing a configuration, closing the image, or quitting — the application asks first: **Save** writes the image before continuing, **Discard** continues and loses the changes, and **Cancel** stays where you are with the image still open. (When nothing has changed, it does not ask.)
 
-**Don't lose your edits.** With disk image writing enabled, if you have added, removed or replaced files since opening the image and then do something that would throw the working folder away — opening another image, **File → New**, **Load**ing a configuration, changing the host directory, or quitting — the application asks first: **Save** writes a new image (via the Save-As dialog) before continuing, **Discard** continues and loses the changes, and **Cancel** stays where you are with the image still open. (With writing turned off, or when nothing has changed, it does not ask.)
+### Creating a New Disk Image
+
+You can also build a **brand-new, empty** CP/M image from scratch — handy for packaging a set of files as a disk image without starting from an existing one. Choose **File → New Disk Image…**, pick a disk format (geometry), and choose which pane to mount the image in — mounting it in the **Remote** pane is the easy way to copy files from a host folder straight into the image locally.
+
+The new image starts empty and unnamed: the pane title shows "(new image)" until you save it. Copy files in as usual, then choose **File → Save Image…** to write it to a file (it asks where the first time; from then on the image is named after that file). A newly created image is a valid data disk but is **not bootable** — it has no system tracks.
+
+**Tip:** Open, New and Save Image all browse the **Default Image Directory** (set in **Config → General**), which is remembered separately from the Host directory — so you can keep your image files in one place and your working files in another without navigating back and forth. Save your configuration (**File → Save Config**) to remember it.
+
+**Backing up to and from an image.** With an image mounted in the **Remote** pane, the toolbar **Backup** and **Restore** buttons copy *all* files between the Host folder and the image at once: **Backup** (◀) copies the whole image out to the Host folder, and **Restore** (▶) copies the whole Host folder into the image (each first empties the destination, and asks you to confirm).
 
 ### Closing a Disk Image
 
-When you are finished with an image, choose **File → Close Disk Image…** to close it without opening another. If you have unsaved changes (with writing enabled) it offers the same **Save / Discard / Cancel** choice first, so **Cancel** leaves the image open. Closing restores the panes to normal: a **Host**-mounted image returns the Host pane to the folder you were viewing before you opened the image, and a **Remote**-mounted image clears the image from the Remote pane and re-enables the drive drop-down. **Close Disk Image…** is greyed out when no image is open.
+When you are finished with an image, choose **File → Close Disk Image…** to close it without opening another. If you have unsaved changes it offers the same **Save / Discard / Cancel** choice first, so **Cancel** leaves the image open. Closing restores the panes to normal: a **Host**-mounted image returns the Host pane to the folder you were viewing before you opened the image, and a **Remote**-mounted image clears the image from the Remote pane and re-enables the drive drop-down. **Close Disk Image…** is greyed out when no image is open.
 
 ---
 
@@ -656,7 +664,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 | Debug Logging | OFF |
 | Echo Transfer Data | OFF |
 | Viewer Command | `notepad $1` |
-| Enable disk image writing (Save Image…) | OFF |
+| Default Image Directory | *(blank — falls back to the host directory)* |
 | Boot Sequence | *(blank)* |
 | Macro Buttons (Label + Keystrokes, ×10) | *(blank)* |
 | Terminal Font | Courier New (monospaced) |

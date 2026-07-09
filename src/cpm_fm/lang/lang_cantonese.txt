@@ -13,9 +13,9 @@ app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = 檔案
-menu.file.new = 新建
-menu.file.load = 載入
-menu.file.save = 儲存
+menu.file.new = 新增設定
+menu.file.load = 載入設定
+menu.file.save = 儲存設定
 menu.file.exit = 離開
 menu.config = 設定
 menu.config.serial = 串口
@@ -218,7 +218,7 @@ config.general.eol = 換行符
 config.general.debug_logging = 調試日誌
 config.general.echo_transfer = 回顯傳輸數據
 config.general.viewer = 查看器/編輯器
-config.general.image_write = 啟用磁碟映像寫入（儲存映像…）
+config.general.image_directory = 預設映像目錄
 config.general.rename_remote = 重命名
 config.general.delete_remote = 刪除
 config.general.erase_all = 全部刪除
@@ -342,3 +342,10 @@ status.image_copy_out = 已將 {count} 個檔案複製到主機資料夾
 # --- Disk image close (v2.33) ---------------------------------------------------
 menu.file.close_image = 關閉磁碟映像…
 status.disk_image_closed = 已關閉磁碟映像
+
+# --- New empty disk image (v2.34) -----------------------------------------------
+menu.file.new_image = 新增磁碟映像…
+dialog.new_image.pick_title = 新增磁碟映像
+dialog.new_image.pick_label = 為新映像揀選磁碟格式：
+main.image_unsaved = （新映像）
+status.new_image_created = 已建立新磁碟映像（{geometry}）

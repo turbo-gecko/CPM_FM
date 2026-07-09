@@ -13,9 +13,9 @@ app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = 文件
-menu.file.new = 新建
-menu.file.load = 加载
-menu.file.save = 保存
+menu.file.new = 新建配置
+menu.file.load = 加载配置
+menu.file.save = 保存配置
 menu.file.exit = 退出
 menu.config = 配置
 menu.config.serial = 串口
@@ -218,7 +218,7 @@ config.general.eol = 换行符
 config.general.debug_logging = 调试日志
 config.general.echo_transfer = 回显传输数据
 config.general.viewer = 查看器/编辑器
-config.general.image_write = 启用磁盘映像写入（保存映像…）
+config.general.image_directory = 默认映像目录
 config.general.rename_remote = 重命名
 config.general.delete_remote = 删除
 config.general.erase_all = 全部删除
@@ -342,3 +342,10 @@ status.image_copy_out = 已将 {count} 个文件复制到主机文件夹
 # --- Disk image close (v2.33) ---------------------------------------------------
 menu.file.close_image = 关闭磁盘映像…
 status.disk_image_closed = 已关闭磁盘映像
+
+# --- New empty disk image (v2.34) -----------------------------------------------
+menu.file.new_image = 新建磁盘映像…
+dialog.new_image.pick_title = 新建磁盘映像
+dialog.new_image.pick_label = 为新映像选择磁盘格式：
+main.image_unsaved = （新映像）
+status.new_image_created = 已创建新磁盘映像（{geometry}）

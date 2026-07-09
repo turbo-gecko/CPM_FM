@@ -77,6 +77,10 @@ class _ConfigMixin(MainWindowMixinBase):
             self.host_dir = os.getcwd()
             self.refresh_host_files()
 
+        # FR-179: adopt the configured disk-image folder (falls back to the host
+        # directory), tracked independently of the host directory.
+        self.image_dir = self.settings.get("image_directory") or self.host_dir
+
         # UIR-034/UIR-103a: apply the loaded terminal settings — emulation type
         # (so received bytes are interpreted per FR-157 and cursor keys encoded
         # per FR-158a/FR-158b from the first connect), Local Echo (FR-093), and
@@ -164,6 +168,8 @@ class _ConfigMixin(MainWindowMixinBase):
 
         # Persist the current host directory in the settings before saving
         self.settings["host_directory"] = self.host_dir
+        # FR-179: remember the last-used disk-image folder on Save Config.
+        self.settings["image_directory"] = self.image_dir
 
         if self.config_handler.save_json(path, self.settings):
             # FR-005: the saved file becomes the last-used config to reload.
@@ -292,15 +298,16 @@ class _ConfigMixin(MainWindowMixinBase):
 
     def menu_general_config(self):
         """
-        Satisfies: FR-021, FR-171, FR-175, UIR-110.
+        Satisfies: FR-021, FR-171, FR-175, FR-176, FR-179, UIR-115.
         """
 
         def update_settings(new_set):
-            # The dialog seeds its host-directory field from the value stored in
-            # settings and returns every field on save, so an unchanged field
-            # carries the stored value back unchanged. Capture the stored value
-            # before updating to tell an actual edit from an untouched field.
+            # The dialog seeds its host/image-directory fields from the values
+            # stored in settings and returns every field on save, so an unchanged
+            # field carries the stored value back unchanged. Capture the stored
+            # values before updating to tell an actual edit from an untouched field.
             old_host_dir = self.settings.get("host_directory", "")
+            old_image_dir = self.settings.get("image_directory", "")
 
             self.settings.update(new_set)
 
@@ -311,18 +318,28 @@ class _ConfigMixin(MainWindowMixinBase):
             # general settings must not revert it.
             new_host_dir = new_set.get("host_directory", old_host_dir)
             if new_host_dir and new_host_dir != old_host_dir:
-                # FR-175: moving the Host pane off an open image discards it and
-                # may lose unsaved staged changes; offer to save first. On Cancel,
-                # keep the image open and leave the host directory unchanged (the
-                # other general settings the user saved still apply).
-                if self._maybe_prompt_save_image():
-                    # FR-171: moving the Host pane off an open image discards it.
-                    self._cleanup_image_workdir()
+                # FR-176: only a Host-side image is tied to the host folder; a
+                # Remote-mounted image is independent and must not be disturbed by
+                # a host-directory change (v2.35).
+                if self._image_pane == "host" and self._image_workdir is not None:
+                    # FR-175: moving the Host pane off an open image discards it and
+                    # may lose unsaved staged changes; offer to save first. On
+                    # Cancel, keep the image open and leave the host directory
+                    # unchanged (the other general settings the user saved apply).
+                    if self._maybe_prompt_save_image():
+                        self._cleanup_image_workdir()
+                        self.host_dir = new_host_dir
+                        self.refresh_host_files()
+                else:
                     self.host_dir = new_host_dir
                     self.refresh_host_files()
 
-            # FR-174/UIR-110: image_write_enabled may have been toggled while an
-            # image is open — re-evaluate the Save Image… action's enabled state.
+            # FR-179: follow an edited default image directory.
+            new_image_dir = new_set.get("image_directory", old_image_dir)
+            if new_image_dir and new_image_dir != old_image_dir:
+                self.image_dir = new_image_dir
+
+            # Re-evaluate the Save Image… action (enabled iff an image is open).
             self._update_save_image_action()
 
             # FR-021a: persist only the general settings to the active config

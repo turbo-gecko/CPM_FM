@@ -18,9 +18,9 @@ app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = Charts
-menu.file.new = New Voyage
-menu.file.load = Uncover
-menu.file.save = Stash
+menu.file.new = New Charter
+menu.file.load = Load Charter
+menu.file.save = Stash Charter
 menu.file.exit = Abandon Ship
 menu.config = Ship's Orders
 menu.config.serial = Signal Flags
@@ -223,7 +223,7 @@ config.general.eol = End o' the Line
 config.general.debug_logging = Secret Loggin'
 config.general.echo_transfer = Echo the Cargo
 config.general.viewer = Spyglass/Carver
-config.general.image_write = Allow carvin' booty chests (Stow Booty Chest…)
+config.general.image_directory = Default Booty Chest Locker
 config.general.rename_remote = Rename
 config.general.delete_remote = Delete
 config.general.erase_all = Scuttle All
@@ -347,3 +347,10 @@ status.image_copy_out = Hauled {count} file(s) to the host locker
 # --- Disk image close (v2.33) ---------------------------------------------------
 menu.file.close_image = Batten the Disk Chest…
 status.disk_image_closed = Disk chest battened down
+
+# --- New empty disk image (v2.34) -----------------------------------------------
+menu.file.new_image = Forge a New Disk Chest…
+dialog.new_image.pick_title = New Disk Chest
+dialog.new_image.pick_label = Pick the disk format for yer new chest:
+main.image_unsaved = (fresh chest)
+status.new_image_created = New disk chest forged ({geometry})

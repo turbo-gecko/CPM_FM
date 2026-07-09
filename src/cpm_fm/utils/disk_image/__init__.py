@@ -32,6 +32,7 @@ __all__ = [
     "DiskDef",
     "DiskDefError",
     "DiskDefs",
+    "create_image",
     "detect_diskdef",
     "is_ambiguous",
     "load_diskdefs",
@@ -230,3 +231,18 @@ def open_image(path: str | Path, diskdef: str | DiskDef | None = None) -> CpmIma
         return CpmImage(raw[: geom.total_bytes] if geom.total_bytes else raw, geom)
     except (ValueError, IndexError):
         return None
+
+
+def create_image(diskdef: DiskDef) -> CpmImage:
+    """Return a new, empty CP/M image for ``diskdef``.
+
+    The volume is filled with ``0xE5`` — the CP/M "unused" byte — so every
+    directory slot reads as empty (the image contains no files) and the data
+    area is blank; the reserved/boot tracks are likewise unset, making this a
+    valid CP/M data disk that is **not** bootable. Files are added with
+    :meth:`CpmImage.write_file` and the result written with
+    :meth:`CpmImage.save`, exactly as for an opened image (FR-174).
+
+    Satisfies: FR-178, DR-050.
+    """
+    return CpmImage(bytes([0xE5]) * diskdef.total_bytes, diskdef)

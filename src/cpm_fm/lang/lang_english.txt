@@ -18,9 +18,9 @@ app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = File
-menu.file.new = New
-menu.file.load = Load
-menu.file.save = Save
+menu.file.new = New Config
+menu.file.load = Load Config
+menu.file.save = Save Config
 menu.file.exit = Exit
 menu.config = Config
 menu.config.serial = Serial
@@ -248,7 +248,7 @@ config.general.eol = End of Line
 config.general.debug_logging = Debug Logging
 config.general.echo_transfer = Echo Transfer Data
 config.general.viewer = Viewer/Editor
-config.general.image_write = Enable disk image writing (Save Image…)
+config.general.image_directory = Default Image Directory
 config.general.rename_remote = Rename
 config.general.delete_remote = Delete
 config.general.erase_all = Erase All
@@ -347,3 +347,10 @@ status.image_copy_out = Copied {count} file(s) to the host folder
 # --- Disk image close (v2.33) ---------------------------------------------------
 menu.file.close_image = Close Disk Image…
 status.disk_image_closed = Disk image closed
+
+# --- New empty disk image (v2.34) -----------------------------------------------
+menu.file.new_image = New Disk Image…
+dialog.new_image.pick_title = New Disk Image
+dialog.new_image.pick_label = Select the disk format for the new image:
+main.image_unsaved = (new image)
+status.new_image_created = New disk image created ({geometry})

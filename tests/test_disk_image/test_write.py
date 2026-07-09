@@ -57,6 +57,24 @@ def test_write_read_single_extent(tmp_path):
     assert reopened.read_file("HELLO.TXT") == content
 
 
+def test_create_image_is_empty_and_writable(tmp_path):
+    """create_image() yields an empty image that accepts a write and round-trips.
+
+    Verifies: FR-178, DR-050.
+    """
+    from cpm_fm.utils.disk_image import create_image
+
+    geom = _geom("ibm-3740")
+    img = create_image(geom)
+    assert img.list_files() == []  # a freshly created image holds no files
+    img.write_file("HELLO.TXT", b"hi there")
+    dest = tmp_path / "new.img"
+    img.save(dest)
+    reopened = CpmImage(bytearray(dest.read_bytes()), geom)
+    assert [f.name for f in reopened.list_files()] == ["HELLO.TXT"]
+    assert reopened.read_file("HELLO.TXT")[:8] == b"hi there"
+
+
 def test_write_multi_extent(tmp_path):
     """A file larger than one 16 KiB extent spans multiple entries and round-trips.
 

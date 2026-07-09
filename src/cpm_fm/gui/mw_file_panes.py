@@ -214,18 +214,22 @@ class _FilePanesMixin(MainWindowMixinBase):
 
     def change_host_dir(self):
         """
-        Satisfies: FR-062, FR-171, FR-175.
+        Satisfies: FR-062, FR-171, FR-175, FR-176.
         """
         path = QFileDialog.getExistingDirectory(
             self, tr("dialog.change_directory.title"), self.host_dir
         )
         if path:
-            # FR-175: discarding the open image may lose unsaved staged changes;
-            # offer to save first and abort the change on Cancel.
-            if not self._maybe_prompt_save_image():
-                return
-            # FR-171: navigating to another directory discards any open disk
-            # image (temp working dir, metadata, Image Details action).
-            self._cleanup_image_workdir()
+            # FR-176: a Remote-mounted image is independent of the host folder, so
+            # changing the host directory must not disturb it (v2.35). Only a
+            # Host-side image (whose working dir *is* the Host pane) is discarded.
+            if self._image_pane == "host" and self._image_workdir is not None:
+                # FR-175: discarding the open image may lose unsaved staged
+                # changes; offer to save first and abort the change on Cancel.
+                if not self._maybe_prompt_save_image():
+                    return
+                # FR-171: navigating away discards the Host-side image (temp
+                # working dir, metadata, Image Details action).
+                self._cleanup_image_workdir()
             self.host_dir = path
             self.refresh_host_files()

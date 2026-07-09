@@ -28,6 +28,7 @@ from cpm_fm.terminal.cpm_parser import CPMParser
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QWidget
 from cpm_fm.utils.disk_image import (
+    create_image,
     detect_diskdef,
     is_ambiguous,
     load_diskdefs,
@@ -83,15 +84,17 @@ class _DiskImageMixin(MainWindowMixinBase):
                 tr("error.image_remote_needs_disconnect"),
             )
             return
-        start_dir = os.path.dirname(self._image_source) if self._image_source else self.host_dir
+        # FR-179: browse from the dedicated image directory, not the host folder.
         path, _ = QFileDialog.getOpenFileName(
             widget,
             tr("dialog.open_image.title"),
-            start_dir,
+            self.image_dir,
             tr("dialog.open_image.filter"),
         )
         if not path:
             return
+        # FR-179: remember the folder this image came from for next time.
+        self.image_dir = os.path.dirname(path)
 
         diskdef = self._resolve_geometry(path)
         if diskdef is False:  # user cancelled the geometry picker
@@ -219,61 +222,145 @@ class _DiskImageMixin(MainWindowMixinBase):
             self.refresh_host_files()
         self.set_status(tr("status.disk_image_closed"))
 
-    def _image_write_enabled(self) -> bool:
-        """True when the opt-in image_write_enabled setting is on (FR-174, UIR-110)."""
-        return str(self.settings.get("image_write_enabled", "OFF")).upper() == "ON"
+    def menu_new_image(self) -> None:
+        """Create a new, empty CP/M disk image and open it (FR-178).
+
+        Prompts for a geometry (there is no file to auto-detect from) and, via the
+        mount-side dialog (FR-176), which pane to mount it into, then builds a blank
+        image (:func:`~cpm_fm.utils.disk_image.create_image`) with an empty working
+        directory. The new image has no source file — it is unnamed until the first
+        Save Image… (FR-174) — and the empty working directory is its clean baseline,
+        so the FR-175 guard protects files copied in before the first save.
+
+        Satisfies: FR-178, FR-175, FR-176, UIR-114.
+        """
+        # FR-175: creating a new image discards any open one; offer to save first.
+        if not self._maybe_prompt_save_image():
+            return
+        widget = cast("QWidget", self)
+        # FR-176: choose the mount pane, refusing Remote-side while connected.
+        mount = self._prompt_mount_side()
+        if mount is None:
+            return
+        if mount == "remote" and self.serial_mgr.terminal_connected:
+            QMessageBox.warning(
+                widget,
+                tr("dialog.warning.title"),
+                tr("error.image_remote_needs_disconnect"),
+            )
+            return
+        diskdef = self._prompt_new_geometry()
+        if diskdef is None:
+            return
+
+        img = create_image(diskdef)
+        try:
+            workdir = make_temp_dir("img_")
+        except OSError as exc:
+            QMessageBox.critical(
+                widget, tr("dialog.error.title"), tr("error.disk_image_extract", error=exc)
+            )
+            return
+
+        # FR-178: remember the real host dir to restore on close (Host-side only),
+        # read before cleanup clears the state (mirrors menu_open_image).
+        pre_dir = self.host_dir if self._image_workdir is None else self._pre_image_host_dir
+
+        self._cleanup_image_workdir()
+        self._image_workdir = workdir
+        self._image_source = None  # FR-178: unnamed until the first Save Image…
+        self._image_geom = img.geom
+        self._image_files = []
+        self._image_pane = mount
+        if self._image_details_action is not None:
+            self._image_details_action.setEnabled(True)
+        if self._close_image_action is not None:
+            self._close_image_action.setEnabled(True)
+        self._update_save_image_action()
+        if mount == "remote":
+            self.drive_combo.setEnabled(False)
+            self._list_image_remote()
+            self._update_remote_group_title()
+        else:
+            self._pre_image_host_dir = pre_dir
+            self.host_dir = workdir
+            self.refresh_host_files()
+        # FR-175: the empty working directory is the clean baseline.
+        self._capture_image_baseline()
+        self.set_status(tr("status.new_image_created", geometry=diskdef.name))
+
+    def _prompt_new_geometry(self):
+        """Prompt for a bundled geometry to build a new image with (FR-178).
+
+        Returns the chosen :class:`~cpm_fm.utils.disk_image.DiskDef`, or ``None``
+        if the user cancels or no definitions are available.
+
+        Satisfies: FR-178, UIR-114.
+        """
+        try:
+            defs = load_diskdefs()
+        except (OSError, ValueError):
+            return None
+        names = defs.names()
+        if not names:
+            return None
+        name, ok = QInputDialog.getItem(
+            cast("QWidget", self),
+            tr("dialog.new_image.pick_title"),
+            tr("dialog.new_image.pick_label"),
+            names,
+            0,
+            False,
+        )
+        if not ok:
+            return None
+        return defs.get(name)
 
     def _update_save_image_action(self) -> None:
-        """Enable Save Image… only while an image is open and writing is on (UIR-110).
+        """Enable Save Image… only while an image is open (UIR-110).
+
+        Disk-image writing is no longer opt-in (v2.35), so the action depends only
+        on whether an image is open.
 
         Satisfies: FR-174, UIR-110.
         """
         if self._save_image_action is not None:
             self._save_image_action.setEnabled(
-                self._image_workdir is not None
-                and self._image_geom is not None
-                and self._image_write_enabled()
+                self._image_workdir is not None and self._image_geom is not None
             )
 
     def menu_save_image(self) -> bool:
-        """Re-pack the working directory into a new CP/M image via Save As (FR-174).
+        """Save the working directory back into the image file (FR-174).
 
-        Rebuilds the image from the current host working-directory contents using
-        the opened image's geometry, preserving its boot tracks (DR-050), and writes
-        it to a user-chosen new path. Never overwrites the source image. A capacity
+        A plain document-style save (v2.35): an image that already has a file is
+        **overwritten in place** (its geometry and boot tracks preserved, DR-050);
+        a new, unnamed image (FR-178) is written via a Save-As dialog (browsing the
+        image directory, FR-179) and then adopts that path as its file. A capacity
         or filename problem is reported and nothing is written. A no-op when no
-        image is open or writing is disabled (the action is disabled in that state,
-        UIR-110). Returns ``True`` only when a new image was written — the unsaved-
-        changes guard (FR-175) relies on this to decide whether a discard may
-        proceed.
+        image is open (the action is disabled then, UIR-110). Returns ``True`` only
+        when the image was written — the unsaved-changes guard (FR-175) relies on
+        this to decide whether a discard may proceed.
 
-        Satisfies: FR-174, FR-175, UIR-110.
+        Satisfies: FR-174, FR-175, FR-178, FR-179, UIR-110.
         """
-        if not (self._image_workdir and self._image_geom and self._image_source):
-            return False
-        if not self._image_write_enabled():
+        if not (self._image_workdir and self._image_geom):
             return False
         widget = cast("QWidget", self)
 
-        suggested = os.path.join(
-            os.path.dirname(self._image_source),
-            os.path.splitext(os.path.basename(self._image_source))[0] + "_new.img",
-        )
-        path, _ = QFileDialog.getSaveFileName(
-            widget,
-            tr("dialog.save_image.title"),
-            suggested,
-            tr("dialog.save_image.filter"),
-        )
-        if not path:
-            return False
-        if os.path.abspath(path) == os.path.abspath(self._image_source):
-            QMessageBox.warning(
+        if self._image_source is not None:
+            # Overwrite the current image file in place (KISS — like any Save).
+            path = self._image_source
+        else:
+            # FR-178/FR-179: a new image has no file yet; Save-As from the image dir.
+            suggested = os.path.join(self.image_dir, "new_image.img")
+            path, _ = QFileDialog.getSaveFileName(
                 widget,
-                tr("dialog.error.title"),
-                tr("error.disk_image_overwrite_source"),
+                tr("dialog.save_image.title"),
+                suggested,
+                tr("dialog.save_image.filter"),
             )
-            return False
+            if not path:
+                return False
 
         try:
             count = self._repack_workdir(path)
@@ -285,7 +372,15 @@ class _DiskImageMixin(MainWindowMixinBase):
             )
             return False
 
-        # FR-175: the working directory now matches a saved image → clean again.
+        # FR-178: a new (source-less) image adopts the written path as its file, so
+        # it is now file-backed — the pane title names it and later saves overwrite it.
+        if self._image_source is None:
+            self._image_source = path
+            self._update_host_group_title()
+            self._update_remote_group_title()
+        # FR-179: remember the folder we saved into.
+        self.image_dir = os.path.dirname(path)
+        # FR-175: the working directory now matches the saved image → clean again.
         self._capture_image_baseline()
         self.set_status(tr("status.disk_image_saved", name=os.path.basename(path), count=count))
         return True
@@ -295,16 +390,22 @@ class _DiskImageMixin(MainWindowMixinBase):
 
         Re-opens the source image (for its verbatim boot tracks and geometry),
         clears its directory, writes every regular file in the working directory,
-        and saves to ``dest_path``. Returns the number of files written. Raises
+        and saves to ``dest_path``. For a source-less new image (FR-178) it builds
+        a fresh blank image of the open geometry instead. Returns the number of
+        files written. Raises
         :class:`~cpm_fm.utils.disk_image.filesystem.ImageWriteError` (capacity or
         name) or ``OSError`` (unreadable source / unwritable destination).
 
-        Satisfies: FR-174, DR-050.
+        Satisfies: FR-174, FR-178, DR-050.
         """
-        assert self._image_source is not None and self._image_workdir is not None
-        src = open_image(self._image_source, self._image_geom)
-        if src is None:
-            raise ImageWriteError("source image can no longer be read")
+        assert self._image_workdir is not None and self._image_geom is not None
+        if self._image_source is None:
+            src = create_image(self._image_geom)
+        else:
+            opened = open_image(self._image_source, self._image_geom)
+            if opened is None:
+                raise ImageWriteError("source image can no longer be read")
+            src = opened
         for entry in list(src.entries):
             src.delete_file(entry.full_name)
         count = 0
@@ -366,17 +467,16 @@ class _DiskImageMixin(MainWindowMixinBase):
 
         Returns ``True`` when the caller may proceed to discard the working
         directory, ``False`` when the user chose to cancel the action. No prompt
-        is shown — and ``True`` is returned immediately — when no image is open,
-        writing is disabled (nothing is savable), or there are no unsaved changes.
-        Otherwise a Save / Discard / Cancel dialog is shown: Save routes through
-        Save Image… (FR-174) and only permits the discard if the save completed;
-        a cancelled Save-As keeps the changes and aborts the action.
+        is shown — and ``True`` is returned immediately — when no image is open or
+        there are no unsaved changes. This also guards a never-saved new image
+        (FR-178), which has no source file yet. Otherwise a Save / Discard / Cancel
+        dialog is shown: Save routes through Save Image… (FR-174) and only permits
+        the discard if the save completed; a cancelled Save-As keeps the changes
+        and aborts the action.
 
         Satisfies: FR-175.
         """
-        if not (self._image_workdir and self._image_geom and self._image_source):
-            return True
-        if not self._image_write_enabled():
+        if not (self._image_workdir and self._image_geom):
             return True
         if not self._image_is_dirty():
             return True
@@ -397,7 +497,9 @@ class _DiskImageMixin(MainWindowMixinBase):
         Satisfies: FR-175, UIR-111.
         """
         widget = cast("QWidget", self)
-        name = os.path.basename(self._image_source) if self._image_source else ""
+        name = (
+            os.path.basename(self._image_source) if self._image_source else tr("main.image_unsaved")
+        )
         dlg = QDialog(widget)
         dlg.setWindowTitle(tr("dialog.image_dirty.title"))
         dlg.setModal(True)

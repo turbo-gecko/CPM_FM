@@ -24,14 +24,20 @@ class _BackupRestoreMixin(MainWindowMixinBase):
     """
 
     def do_backup(self):
-        """Start a whole-drive Backup (remote→host) on a worker thread.
+        """Start a whole-drive Backup (remote→host).
 
-        FR-080/CR-010: permitted only when both status flags are true. The
-        worker refreshes the destination, confirms the destructive operation,
-        wipes the host directory, and downloads every remote file.
+        FR-180: when the Remote pane holds a disk image, Backup is a local bulk
+        copy of the image into the host directory (no serial). Otherwise it is the
+        serial whole-drive backup, permitted only when both status flags are true
+        (FR-080/CR-010): a worker refreshes the destination, confirms the
+        destructive operation, wipes the host directory, and downloads every
+        remote file.
 
-        Satisfies: FR-150, FR-152, FR-154, CR-010.
+        Satisfies: FR-150, FR-152, FR-154, FR-180, CR-010.
         """
+        if self._remote_is_image():
+            self._backup_image_to_host()
+            return
         if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
             QMessageBox.critical(
                 self, tr("dialog.error.title"), tr("error.transport_not_connected")
@@ -40,20 +46,90 @@ class _BackupRestoreMixin(MainWindowMixinBase):
         threading.Thread(target=self._backup_drive, daemon=True).start()
 
     def do_restore(self):
-        """Start a whole-drive Restore (host→remote) on a worker thread.
+        """Start a whole-drive Restore (host→remote).
 
-        FR-080/CR-010: permitted only when both status flags are true. The
-        worker refreshes the destination, confirms the destructive operation,
-        wipes the remote drive, and uploads every host file.
+        FR-180: when the Remote pane holds a disk image, Restore is a local bulk
+        copy of the host directory into the image (no serial). Otherwise it is the
+        serial whole-drive restore, permitted only when both status flags are true
+        (FR-080/CR-010): a worker refreshes the destination, confirms the
+        destructive operation, wipes the remote drive, and uploads every host file.
 
-        Satisfies: FR-151, FR-152, FR-154, CR-010.
+        Satisfies: FR-151, FR-152, FR-154, FR-180, CR-010.
         """
+        if self._remote_is_image():
+            self._restore_host_to_image()
+            return
         if not (self.serial_mgr.terminal_connected and self.serial_mgr.transport_connected):
             QMessageBox.critical(
                 self, tr("dialog.error.title"), tr("error.transport_not_connected")
             )
             return
         threading.Thread(target=self._restore_drive, daemon=True).start()
+
+    def _backup_image_to_host(self) -> None:
+        """Backup a Remote-mounted image to the host directory (local, FR-180).
+
+        Backup mirrors the source (the image) onto the destination (the host
+        directory): confirm the destructive operation (FR-152), wipe the host
+        directory (FR-153), then copy every image file out reusing the FR-176
+        local copy. Runs on the GUI thread — the copy is a local, instant
+        filesystem operation, so no worker thread or progress dialog is needed.
+
+        Satisfies: FR-180, FR-150, FR-152, FR-153, FR-154.
+        """
+        if self._image_workdir is None:
+            return
+        if not self._confirm_dialog(
+            tr("dialog.backup_restore.backup_title"),
+            tr("dialog.backup_restore.backup"),
+            tr("button.continue"),
+            warning=True,
+            default_accept=False,
+        ):
+            self.set_status(tr("status.backup_restore_cancelled"))
+            return
+        # FR-153: empty the destination (host) first.
+        self._wipe_host_dir(self._host_dir_files())
+        # FR-154: copy every image file out to the host.
+        names = [
+            f
+            for f in os.listdir(self._image_workdir)
+            if os.path.isfile(os.path.join(self._image_workdir, f))
+        ]
+        self._copy_image_to_host(names)
+
+    def _restore_host_to_image(self) -> None:
+        """Restore the host directory into a Remote-mounted image (local, FR-180).
+
+        Restore mirrors the source (the host directory) onto the destination (the
+        image): confirm the destructive operation (FR-152), wipe the image working
+        directory (FR-153), then copy every host file in reusing the FR-176 local
+        copy (CP/M 8.3 validation applies). Runs on the GUI thread (local, instant).
+
+        Satisfies: FR-180, FR-151, FR-152, FR-153, FR-154.
+        """
+        if self._image_workdir is None:
+            return
+        if not self._confirm_dialog(
+            tr("dialog.backup_restore.restore_title"),
+            tr("dialog.backup_restore.restore"),
+            tr("button.continue"),
+            warning=True,
+            default_accept=False,
+        ):
+            self.set_status(tr("status.backup_restore_cancelled"))
+            return
+        # FR-153: empty the destination (the image working directory) first.
+        for name in list(os.listdir(self._image_workdir)):
+            full = os.path.join(self._image_workdir, name)
+            if os.path.isfile(full):
+                try:
+                    os.remove(full)
+                except OSError as e:
+                    self._debug(f"[restore] failed to delete {name}: {e!r}")
+        # FR-154: copy every host file into the image.
+        sources = [os.path.join(self.host_dir, f) for f in self._host_dir_files()]
+        self._copy_host_to_image(sources)
 
     def _backup_drive(self):
         """Worker: mirror the remote drive to the host directory (remote→host).

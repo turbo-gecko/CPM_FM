@@ -13,9 +13,9 @@ app.title_with_config = {app} — {config}
 
 # --- Menu bar ------------------------------------------------------------------
 menu.file = Fichier
-menu.file.new = Nouveau
-menu.file.load = Charger
-menu.file.save = Enregistrer
+menu.file.new = Nouvelle configuration
+menu.file.load = Charger la configuration
+menu.file.save = Enregistrer la configuration
 menu.file.exit = Quitter
 menu.config = Configuration
 menu.config.serial = Série
@@ -218,7 +218,7 @@ config.general.eol = Fin de ligne
 config.general.debug_logging = Journalisation de débogage
 config.general.echo_transfer = Afficher les données de transfert
 config.general.viewer = Visionneuse/Éditeur
-config.general.image_write = Activer l'écriture d'image disque (Enregistrer l'image…)
+config.general.image_directory = Répertoire d'images par défaut
 config.general.rename_remote = Renommer
 config.general.delete_remote = Supprimer
 config.general.erase_all = Tout effacer
@@ -342,3 +342,10 @@ status.image_copy_out = {count} fichier(s) copié(s) vers le dossier hôte
 # --- Disk image close (v2.33) ---------------------------------------------------
 menu.file.close_image = Fermer l'image disque…
 status.disk_image_closed = Image disque fermée
+
+# --- New empty disk image (v2.34) -----------------------------------------------
+menu.file.new_image = Nouvelle image disque…
+dialog.new_image.pick_title = Nouvelle image disque
+dialog.new_image.pick_label = Sélectionnez le format de disque pour la nouvelle image :
+main.image_unsaved = (nouvelle image)
+status.new_image_created = Nouvelle image disque créée ({geometry})
