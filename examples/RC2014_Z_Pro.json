@@ -16,8 +16,8 @@
     "xmodem_1k": "ON",
     "recv_remote_cmd_1k": "A:XM SK $1",
     "send_remote_cmd_1k": "A:XM R $1",
-    "xfer_launch_delay": "1",
-    "xfer_interfile_delay": "1",
+    "xfer_launch_delay": "2",
+    "xfer_interfile_delay": "2",
     "eol": "CR",
     "debug_logging": "OFF",
     "echo_transfer_data": "OFF",
@@ -50,5 +50,7 @@
     "macro_10_seq": "",
     "xfer_handshake_timeout": "10",
     "boot_sequence": "",
-    "erase_all_remote_seq": ""
+    "erase_all_remote_seq": "",
+    "image_write_enabled": "ON",
+    "image_directory": "D:/workspace/Python/CPM_FM/disk_images"
 }

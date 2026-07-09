@@ -22,3 +22,4 @@ integration/results/*
 
 disk_images/*
 .opencode/*
+/integration/results
