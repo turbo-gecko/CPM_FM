@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & discussions
+    url: https://github.com/turbo-gecko/CPM_FM/discussions
+    about: Have a question, need help, or want to discuss an idea? Please start a discussion instead of opening an issue.
+  - name: Report a security vulnerability
+    url: https://github.com/turbo-gecko/CPM_FM/security/advisories/new
+    about: Please report security vulnerabilities privately via GitHub Security Advisories — not as a public issue.

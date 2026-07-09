@@ -1,0 +1,47 @@
+name: Documentation issue
+description: Report a problem with the README, user manual, or other docs
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve the documentation!
+
+        Please [search existing issues](https://github.com/turbo-gecko/CPM_FM/issues?q=is%3Aissue)
+        first.
+  - type: dropdown
+    id: which-doc
+    attributes:
+      label: Which document?
+      options:
+        - README
+        - In-app user manual (Help → Manual)
+        - CONTRIBUTING / community docs
+        - Requirements / architecture docs
+        - Integration (HIL) README
+        - Other (describe below)
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: Section heading, file path, or a link to the exact spot.
+      placeholder: "README → Features, or src/cpm_fm/docs/cpm_fm_manual.md → Backup"
+    validations:
+      required: false
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or missing?
+      description: Describe the error, ambiguity, or gap.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix
+      description: How should it read instead? (Optional, but appreciated.)
+    validations:
+      required: false

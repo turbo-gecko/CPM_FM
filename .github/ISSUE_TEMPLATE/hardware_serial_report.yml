@@ -1,0 +1,122 @@
+name: Hardware / serial report
+description: Report a serial-link, transfer, or CP/M-hardware problem
+title: "[Serial]: "
+labels: ["bug", "hardware"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for anything involving the **serial link**, **X-Modem
+        transfers**, **backup/restore**, **disk images**, or a specific **CP/M
+        target**. The extra hardware detail below is what we need to reproduce
+        and diagnose these problems.
+
+        Please [search existing issues](https://github.com/turbo-gecko/CPM_FM/issues?q=is%3Aissue)
+        first.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the problem (e.g. transfer stalls, corruption, connection drops).
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Connect to '...'
+        2. Copy '...' to Remote
+        3. See '...'
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: cpm-fm version
+      placeholder: "2.36.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Host operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other (describe below)
+    validations:
+      required: true
+  - type: input
+    id: cpm-system
+    attributes:
+      label: CP/M target system
+      description: The machine / SBC you are connecting to, and its CP/M version if known.
+      placeholder: "RC2014 with SC126, CP/M 2.2 / z80pack / Kaypro II / ..."
+    validations:
+      required: true
+  - type: input
+    id: adapter
+    attributes:
+      label: Serial adapter / port
+      description: USB-serial adapter or built-in port, and chipset if known.
+      placeholder: "FTDI FT232, CH340, built-in COM1, ..."
+    validations:
+      required: true
+  - type: input
+    id: baud
+    attributes:
+      label: Baud rate and serial settings
+      placeholder: "115200 8-N-1, flow control none"
+    validations:
+      required: true
+  - type: input
+    id: cable
+    attributes:
+      label: Cable / wiring
+      description: Straight-through, null-modem, direct TTL, level shifter, etc.
+      placeholder: "Null-modem DE-9, RTS/CTS wired"
+    validations:
+      required: false
+  - type: dropdown
+    id: operation
+    attributes:
+      label: Which operation is affected?
+      multiple: true
+      options:
+        - Connect / disconnect
+        - Remote directory listing
+        - Copy to Remote (upload)
+        - Copy to Host (download)
+        - Drag and drop
+        - Whole-drive Backup
+        - Whole-drive Restore
+        - Disk image (mount / read / write / create)
+        - VT-100 terminal
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console output / logs
+      description: >
+        Launch with `.venv/Scripts/python.exe -m cpm_fm` (serial errors print to
+        the console) and paste relevant output here.
+      render: text
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: File sizes/types involved, disk-image geometry, screenshots, etc.
+    validations:
+      required: false
