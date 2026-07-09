@@ -50,8 +50,9 @@ A cross-platform PySide6 desktop app for transferring files between a modern hos
 - **Boot into CP/M:** run a configurable boot-sequence script from the terminal to bring
   the remote up into CP/M.
 - Separate terminal and transport serial ports (which may be the same physical port).
-- Configurable serial parameters, terminal/macro settings, and CP/M commands via the
-  **Serial**, **Terminal**, and **General** config dialogs, saved/loaded as JSON.
+- Configurable serial parameters, terminal/macro settings, general host settings, and
+  CP/M remote commands via the **Serial**, **Terminal**, **General**, and **Remote**
+  config dialogs (each with a vertical scrollbar), saved/loaded as JSON.
 - Remembers and auto-reloads the last-used configuration on startup, shows its name in
   the title bar, and persists each window's size and position between runs.
 - Material Design theme that follows the host OS light/dark mode.
@@ -89,8 +90,8 @@ python -m cpm_fm # equivalent, keeps a console for debugging output
 
 The app starts unconfigured (unless it can reload the last-used configuration). Use
 **Config > Load Config** to load a settings file — see the samples in [`examples/`](examples/) — or set
-parameters via the **Config** menu and **Config > Save Config** them. **Config > New Config** resets to defaults.
-The loaded configuration's name is shown in the title bar.
+parameters via the **Config** menu dialogs and save them with **Config > Save Config**. **Config > New
+Config** resets to defaults. The loaded configuration's name is shown in the title bar.
 
 Connect, disconnect, open the terminal, view the transfer history, and run a whole-drive **Backup**
 or **Restore** from the toolbar. Right-click a file in either pane for transfer, rename, delete, and
