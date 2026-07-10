@@ -11,7 +11,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 2.36.0 |
+| Version | 2.36.1 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
@@ -571,7 +571,7 @@ folder and a Remote-mounted image as a local bulk copy (FR-180).
 | UIR-025 | The dialog shall provide a Data drop-down list with the values 7 and 8; the default shall be 8. | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `config_dialogs.py:__init__` |
 | UIR-026 | The dialog shall provide a Parity drop-down list with the values NONE, ODD, EVEN, MARK, and SPACE; the default shall be NONE. | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `config_dialogs.py:__init__` |
 | UIR-027 | The dialog shall provide a Stop Bits drop-down list with the values 1 and 2; the default shall be 1. | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `config_dialogs.py:__init__` |
-| UIR-028 | The dialog shall provide a Flow Control drop-down list with the values NONE, XON/XOFF, RTS/CTS, and DSR/DTR; the default shall be NONE. The selected value shall be applied to the serial port when it is opened, mapping XON/XOFF, RTS/CTS, and DSR/DTR onto the corresponding software/hardware handshake (NONE disables all). *(v1.7.1: flow control is now applied at port open — see the Issue Resolution Log, OI-20.)* | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `serial_manager.py:open_port` |
+| UIR-028 | The dialog shall provide a Flow Control drop-down list with the values NONE, XON/XOFF, RTS/CTS, and DSR/DTR; the default shall be RTS/CTS. The selected value shall be applied to the serial port when it is opened, mapping XON/XOFF, RTS/CTS, and DSR/DTR onto the corresponding software/hardware handshake (NONE disables all). *(v1.7.1: flow control is now applied at port open — see the Issue Resolution Log, OI-20.)* *(v2.36.1: default changed from NONE to RTS/CTS.)* | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `serial_manager.py:open_port` |
 | UIR-029 | The dialog shall present a "Transmit Delay" group laid out in two columns, formatted as in UIR-021. | Mandatory | I | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `config_dialogs.py:__init__` |
 | UIR-030 | The dialog shall provide an "msec/char" text field that defaults to 0 and is limited to integer values between 0 and 255 inclusive. The value shall be persisted as the `msec_char` setting. *(Inter-character transmission delay is a stored setting only; it is not yet applied during transmission — see CR-011.)* | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `config_dialogs.py:__init__` |
 | UIR-031 | The dialog shall provide an "msec/line" text field that defaults to 0 and is limited to integer values between 0 and 255 inclusive. The value shall be persisted as the `msec_line` setting. *(Inter-line transmission delay is a stored setting only; it is not yet applied during transmission — see CR-011.)* | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `config_dialogs.py:__init__` |

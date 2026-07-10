@@ -4,9 +4,9 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.49 |
+| Version | 1.50 |
 | Status | Draft |
-| Date | 2026-07-09 |
+| Date | 2026-07-10 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.25.0) |
 
 ---
@@ -162,7 +162,7 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 |----|-----|-------|----------|
 | MT-P01 | IFR-003, UIR-022, UIR-023 | Plug in a known adapter. Open Config > Serial. Inspect the Terminal Port and Transfer Port drop-downs. | Both drop-downs list the host's installed serial ports, including the just-plugged adapter. |
 | MT-P02 [visual] | FR-020, UIR-020, UIR-021, UIR-029 | Open Config > Serial. | Modal dialog titled "Serial Config"; "Port Settings" and "Transmit Delay" groups laid out as two columns (name left, field right). |
-| MT-P03 | UIR-024..028 | Inspect each drop-down's values and defaults. | Speed list = 300…921600, default 115200; Data = 7,8 default 8; Parity = NONE,ODD,EVEN,MARK,SPACE default NONE; Stop Bits = 1,2 default 1; Flow = NONE,XON/XOFF,RTS/CTS,DSR/DTR default NONE. |
+| MT-P03 | UIR-024..028 | Inspect each drop-down's values and defaults. | Speed list = 300…921600, default 115200; Data = 7,8 default 8; Parity = NONE,ODD,EVEN,MARK,SPACE default NONE; Stop Bits = 1,2 default 1; Flow = NONE,XON/XOFF,RTS/CTS,DSR/DTR default RTS/CTS. |
 | MT-P04 | UIR-030, UIR-031 | Try to type out-of-range / non-integer values into msec/char and msec/line. | Each field accepts only integers 0–255; default 0. |
 | MT-P05 | UIR-028 | Set Flow = RTS/CTS, save, Connect to a port whose peer requires/asserts hardware flow control. | Handshake applied at open (transfer proceeds where a NONE setting would stall, or verify via a serial line monitor). *(Best-effort; mark N/A if no flow-control-sensitive peer.)* |
 | MT-P06 | IFR-002 | Set Terminal and Transport to the same port; save; reopen the dialog. | Same physical port accepted for both logical ports; values round-trip. |
