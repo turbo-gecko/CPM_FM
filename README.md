@@ -2,7 +2,6 @@
 
 A cross-platform PySide6 desktop app for transferring files between a modern host and legacy
 [CP/M](https://en.wikipedia.org/wiki/CP/M) systems over a serial link, using the X-Modem protocol.
-CP/M 2.2 and ZSDOS 1.1 have been confirmed to work with the application.
 
 >## Note (2026-07-09)
 >From version 2.36.0, a new major feature change occured involving the addition of being

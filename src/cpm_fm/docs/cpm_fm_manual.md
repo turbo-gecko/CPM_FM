@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.36.1**
+**Version 2.36.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -152,7 +152,7 @@ Configure how the program talks to the serial hardware:
 | **Data Bits** | 7 or 8 | 8 |
 | **Parity** | NONE, ODD, EVEN, MARK, SPACE | NONE |
 | **Stop Bits** | 1 or 2 | 1 |
-| **Flow Control** | NONE, XON/XOFF, RTS/CTS, DSR/DTR | RTS/CTS |
+| **Flow Control** | NONE, XON/XOFF, RTS/CTS, DSR/DTR | NONE |
 | **Msec per Char** | 0 – 255 | 0 |
 | **Msec per Line** | 0 – 255 | 0 |
 | **Terminal Timeout (ms)** | 10 – 5000 | 100 |
@@ -663,7 +663,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 | Data Bits | 8 |
 | Parity | NONE |
 | Stop Bits | 1 |
-| Flow Control | RTS/CTS |
+| Flow Control | NONE |
 | Terminal Type | VT100 |
 | Local Echo | OFF |
 | Autoscroll | ON |

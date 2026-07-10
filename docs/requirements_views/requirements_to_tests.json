@@ -1130,7 +1130,6 @@
       "tests/test_gui_smoke.py:test_lists_have_context_menus"
     ],
     "UIR-028": [
-      "tests/test_config_handler.py:test_default_settings_flow_control_is_rts_cts",
       "tests/test_serial_manager.py:test_flow_control_defaults_off_when_absent",
       "tests/test_serial_manager.py:test_flow_control_flat_key"
     ],

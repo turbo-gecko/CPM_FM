@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.49 |
-| Scorecard for plan version | 1.50 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.48 |
+| Scorecard for plan version | 1.43 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |

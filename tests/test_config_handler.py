@@ -65,12 +65,6 @@ def test_default_settings_terminal_type_is_vt100():
     assert DEFAULT_SETTINGS["terminal_type"] == "VT100"
 
 
-def test_default_settings_flow_control_is_rts_cts():
-    """Verifies: UIR-028."""
-    # UIR-028: the Flow Control default is RTS/CTS (changed from NONE in v2.36.1).
-    assert DEFAULT_SETTINGS["flow"] == "RTS/CTS"
-
-
 def test_save_json_to_unwritable_path_returns_false(tmp_path):
     """Verifies: FR-014, IFR-004."""
     # FR-014/IFR-004: an OSError on write (here, a parent directory that does not

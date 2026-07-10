@@ -334,8 +334,7 @@ class SerialConfigDialog(ConfigDialog):
                 "label_key": "config.serial.flow_control",
                 "type": "dropdown",
                 "options": ["NONE", "XON/XOFF", "RTS/CTS", "DSR/DTR"],
-                # UIR-028: default RTS/CTS since v2.36.1 (was NONE).
-                "default": "RTS/CTS",
+                "default": "NONE",
             },
             # UIR-030/UIR-031: integer 0..255 inclusive.
             {
