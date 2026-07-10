@@ -13,7 +13,9 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "data": "8",
     "parity": "NONE",
     "stopbits": "1",
-    "flow": "NONE",
+    # UIR-028: Flow Control default. RTS/CTS (hardware handshake) since v2.36.1
+    # (was NONE) — most supported CP/M serial peers assert hardware flow control.
+    "flow": "RTS/CTS",
     # UIR-034: terminal emulation type the Terminal Window interprets received
     # bytes as (VT100 / VT52 / ADM-3A). Drives FR-157/FR-157i/FR-157j rendering
     # and FR-158a/FR-158b cursor-key encoding. Default VT100 (current behaviour).
