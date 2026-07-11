@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.36.2**
+**Version 2.36.3**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -502,6 +502,8 @@ There are several ways to start a transfer:
 - **Drag files from your operating system's file manager** onto the Remote pane to upload them.
 - Right-click selected files and choose **To Remote** / **To Host**.
 - Re-run a previous transfer from the [Transfer History](#14-transfer-history).
+
+> **Zero-byte files:** empty (zero-byte) files are **skipped** when copying to a CP/M system — a status message notes each one and the rest of the selection transfers normally. X-Modem cannot reliably send an empty file (its smallest unit is a 128-byte block, and many CP/M receivers reject a file that begins with an end-of-transmission and delete it), so the file is left untransferred rather than stalling the batch.
 
 ### The Transfer Progress Dialog
 

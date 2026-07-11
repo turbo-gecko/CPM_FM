@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_283/484 requirements have a verifying test; 201 untested; 0 stale tag(s)._
+_285/486 requirements have a verifying test; 201 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -114,6 +114,7 @@ _283/484 requirements have a verifying test; 201 untested; 0 stale tag(s)._
 | FR-104 | `tests/test_gui_smoke.py:test_change_drive_requires_open_terminal` |
 | FR-105 | `tests/test_gui_smoke.py:test_batch_progress_dialog_shows_file_position`, `tests/test_gui_smoke.py:test_progress_dialog_closes_on_completion`, `tests/test_gui_smoke.py:test_progress_dialog_closes_on_error`, `tests/test_gui_smoke.py:test_progress_dialog_started_and_updates`, `tests/test_gui_smoke.py:test_transfer_run_leaves_no_progress_dialog`, `tests/test_xmodem.py:test_receive_file_reports_progress_with_unknown_total`, `tests/test_xmodem.py:test_send_file_reports_progress_per_packet` |
 | FR-106 | `tests/test_gui_smoke.py:test_copy_to_host_transfers_all_selected`, `tests/test_gui_smoke.py:test_copy_to_remote_transfers_all_selected`, `tests/test_gui_smoke.py:test_host_to_remote_transfers_all_selected_files`, `tests/test_gui_smoke.py:test_remote_to_host_transfers_all_selected_files`, `tests/test_gui_smoke.py:test_selected_filenames_returns_display_order` |
+| FR-106a | `tests/test_gui_smoke.py:test_copy_to_remote_skips_zero_byte_files` |
 | FR-107 | `tests/test_gui_smoke.py:test_copy_to_host_transfers_all_selected`, `tests/test_gui_smoke.py:test_copy_to_remote_transfers_all_selected`, `tests/test_gui_smoke.py:test_host_to_remote_transfers_all_selected_files`, `tests/test_gui_smoke.py:test_remote_to_host_transfers_all_selected_files`, `tests/test_gui_smoke.py:test_selected_filenames_returns_display_order` |
 | FR-108 | `tests/test_gui_smoke.py:test_batch_aborts_on_failure` |
 | FR-108a | `tests/test_gui_smoke.py:test_batch_aborts_on_failure` |
@@ -217,8 +218,9 @@ _283/484 requirements have a verifying test; 201 untested; 0 stale tag(s)._
 | NFR-003m | `tests/test_xmodem.py:test_receive_file_cancel_aborts_and_sends_can`, `tests/test_xmodem.py:test_send_file_cancel_aborts_and_sends_can` |
 | NFR-003n | `tests/test_xmodem.py:test_cancel_flushes_serial_in_both_directions` |
 | NFR-003o | `tests/test_xmodem.py:test_abort_does_not_hang_when_tx_cannot_drain` |
-| NFR-003p | `tests/test_xmodem.py:test_send_file_aborts_after_nak_exhaustion` |
-| NFR-003q | `tests/test_xmodem.py:test_receive_file_empty_transfer_writes_empty_file` |
+| NFR-003p | `tests/test_xmodem.py:test_send_file_aborts_after_nak_exhaustion`, `tests/test_xmodem.py:test_send_file_empty_transfer_fails_when_eot_unacked` |
+| NFR-003q | `tests/test_xmodem.py:test_receive_file_empty_transfer_writes_empty_file`, `tests/test_xmodem.py:test_send_file_empty_transfer_fails_when_eot_unacked`, `tests/test_xmodem.py:test_send_file_empty_transfer_over_banner_succeeds` |
+| NFR-003r | `tests/test_xmodem.py:test_send_file_empty_transfer_over_banner_succeeds`, `tests/test_xmodem.py:test_send_handshake_skips_start_char_in_banner` |
 | NFR-004 | `tests/test_macros.py:test_run_macro_script_runs_on_worker_thread` |
 | NFR-005 | `tests/test_i18n.py:test_available_languages_discovers_shipped_files` |
 | UIR-003 | `tests/test_gui_smoke.py:test_config_menu_has_language_submenu` |

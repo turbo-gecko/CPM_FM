@@ -11,7 +11,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 2.36.2 |
+| Version | 2.36.3 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
@@ -238,7 +238,8 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 | FR-105c | When a batch of multiple files is transferred (FR-106), a single dialog shall serve the whole batch: it shall additionally show the batch position ("File `i` of `N`"), be created when the batch begins, switch to each successive file, and be closed once when the batch ends. *(v1.6.)* | Mandatory | T | — |
 | FR-105d | The application shall close the dialog automatically when the transfer completes, on both success and failure. | Mandatory | T | — |
 | FR-105e | Progress updates originate on the transfer worker thread and shall be delivered to the GUI thread via Qt signals (NFR-004). | Mandatory | T | — |
-| FR-106 | The Copy to Remote and Copy to Host actions shall transfer **all** files currently selected in the respective file list (the lists are multi-select widgets — UIR-011, UIR-012). If no file is selected when the action is invoked, the application shall display a warning dialog with the body text "Please select one or more files to upload" (Copy to Remote) or "Please select one or more files to download" (Copy to Host) and shall not start a transfer. *(v1.6.)* | Mandatory | T | impl. `mw_transfer_batches.py:do_copy_to_remote`, `mw_transfer_batches.py:do_copy_to_host`, `mw_transfers.py:_selected_filenames` |
+| FR-106 | The Copy to Remote and Copy to Host actions shall transfer **all** files currently selected in the respective file list (the lists are multi-select widgets — UIR-011, UIR-012). If no file is selected when the action is invoked, the application shall display a warning dialog with the body text "Please select one or more files to upload" (Copy to Remote) or "Please select one or more files to download" (Copy to Host) and shall not start a transfer. Zero-byte files among a Copy to Remote selection are skipped per FR-106a. *(v1.6.)* | Mandatory | T | impl. `mw_transfer_batches.py:do_copy_to_remote`, `mw_transfer_batches.py:do_copy_to_host`, `mw_transfers.py:_selected_filenames` |
+| FR-106a | A selected host file that is zero bytes shall not be sent over the serial X-Modem link by Copy to Remote: the application shall skip it — recording it in the transfer history as skipped (FR-142) and reporting the skip in the status area — and continue with the remaining files, rather than attempting the transfer. Rationale: X-Modem's minimum transfer unit is a 128-byte packet, and common CP/M receivers (e.g. RomWBW `XM`) reject an EOT sent before any data packet by cancelling the receive and deleting the file, so a zero-byte file cannot be reliably transferred. (Copy to Host is unaffected: the remote file's size is not known before the transfer, and the receiver tolerates an empty transfer per NFR-003q.) *(v2.36.3.)* | Mandatory | T | impl. `mw_transfer_batches.py:_transfer_to_remote_batch` |
 | FR-107 | When more than one file is selected, the files shall be transferred **sequentially** over the single Transport Port (FR-083), in the order they appear in the list (top to bottom). Each file shall be launched with its own CP/M-side command (FR-087) and transferred in a separate X-Modem session. *(v1.6.)* | Mandatory | T | impl. `mw_transfer_batches.py:_transfer_to_remote_batch`, `mw_transfer_batches.py:_transfer_to_host_batch`, `mw_transfers.py:_selected_filenames` |
 | FR-108 | If any file in a multi-file batch fails to transfer, the application shall abort the batch. The abort and partial-success handling are specified by FR-108a–FR-108b. *(v1.6.)* | Mandatory | T | impl. `mw_transfer_batches.py:_transfer_to_remote_batch`, `mw_transfer_batches.py:_transfer_to_host_batch` |
 | FR-108a | On any file's failure the application shall abort the batch — it shall not attempt the remaining files — and shall display an error dialog naming the failed file. | Mandatory | T | — |
@@ -949,6 +950,7 @@ future refactor in the Issue Resolution Log (OI-27).
 | NFR-003o | The wait for the CAN bytes to drain shall be time-bounded rather than an unbounded `flush()` (`serial.Serial.flush()` busy-waits on `out_waiting` with no timeout), so that a flow-control stall — e.g. hardware (RTS/CTS) or software (XON/XOFF) flow control held off because the aborting remote has stopped asserting CTS or sent XOFF — cannot block the abort, and therefore the transfer worker thread, indefinitely; any CAN bytes still queued when the bound elapses are transmitted by the OS in the background while the port remains open. *(v2.13.2.)* | Mandatory | T | impl. `xmodem.py:_drain_tx`, `_abort`; tests `test_xmodem.py` (does not hang when TX cannot drain) |
 | NFR-003p | When a transmitted packet is NAK'd or goes unanswered, the sender shall retransmit the same packet (its sequence number unchanged) for up to a bounded number of attempts (10); if the packet is still not acknowledged after the final attempt, the sender shall abort the transfer and return failure rather than retransmitting indefinitely. *(v2.14.1.)* | Mandatory | T | impl. `xmodem.py:send_file`; tests `test_xmodem.py` (aborts after NAK exhaustion) |
 | NFR-003q | When the sender transmits EOT before any data packet, the receiver shall accept it as a valid, empty transfer — ACKing the EOT and writing a zero-length file — rather than treating the absent data as an error. *(v2.14.1.)* | Mandatory | T | impl. `xmodem.py:receive_file`; tests `test_xmodem.py` (empty transfer writes empty file) |
+| NFR-003r | On send, the sender shall not mistake a start-character-valued byte occurring in the receiver's pre-transfer console output for the genuine X-Modem start character: it shall accept a candidate start character (`C`/NAK) only when the transport line was idle for a bounded interval immediately before it (the `handshake_settle` read window), otherwise skipping it and resuming the scan within the FR-160 handshake budget. The receiver emits its genuine start character (which it then polls periodically) only after a quiet gap, once its banner has printed and it has armed, whereas a start-character-valued byte within the continuous banner burst has no preceding idle. This prevents a printable `C` in a receiver's start-up banner — buffered ahead of the true start character on a shared Terminal/Transport port — from triggering a premature transfer (observed with the RomWBW `XM` receiver: banner "…on COM0", genuine poll the two bytes `C``K`). *(v2.36.3.)* | Mandatory | T | impl. `xmodem.py:XModem.__init__`, `_wait_for_start_char`, `send_file`; tests `test_xmodem.py` (skips start char embedded in banner; empty transfer over banner succeeds) |
 
 ---
 
@@ -965,7 +967,7 @@ future refactor in the Issue Resolution Log (OI-27).
 | App_Requirements §Host Files / Change Directory / Refresh | FR-060 – FR-063 |
 | App_Requirements §General Configuration Dialog | UIR-040 – UIR-053 |
 | App_Requirements / App_Design §Populating remote file list | FR-070 – FR-079 |
-| App_Requirements / App_Design §File Transfers | FR-080 – FR-086, FR-082→NFR-003a–NFR-003q, FR-086 impl. |
+| App_Requirements / App_Design §File Transfers | FR-080 – FR-086, FR-082→NFR-003a–NFR-003r, FR-086 impl. |
 | App_Design §Receiving / Sending data | FR-090 – FR-098 |
 | App_Requirements §Main Program GUI (Terminal/Disconnect buttons) | UIR-016, FR-097 |
 | App_Requirements §Serial Configuration Dialog | UIR-020 – UIR-034, IFR-002, IFR-003 |
@@ -974,7 +976,7 @@ future refactor in the Issue Resolution Log (OI-27).
 | v1.3 UI migration (PySide6 + Material) | UIR-070 – UIR-074, CR-012 – CR-014, NFR-004; revises STR-002, UIR-013, NFR-001 |
 | App_Design §DIR parsing algorithm | DR-001 – DR-032 |
 | App_Design §Project Structure / Class Files / Code Quality | CR-001 – CR-009 |
-| Deferred / as-built constraints (impl. survey) | CR-010, CR-011, NFR-001, NFR-002, NFR-003a – NFR-003q |
+| Deferred / as-built constraints (impl. survey) | CR-010, CR-011, NFR-001, NFR-002, NFR-003a – NFR-003r |
 | App_Design §Program state | FR-001 – FR-003 |
 | v1.8 file context-menu actions | FR-110 – FR-119, UIR-018, UIR-019, UIR-054 – UIR-057 |
 | v1.8.2 common dialog conventions | UIR-075 |

@@ -323,6 +323,36 @@ def test_copy_to_remote_transfers_all_selected(qapp, monkeypatch, state):
         win.close()
 
 
+def test_copy_to_remote_skips_zero_byte_files(qapp, monkeypatch, state, tmp_path):
+    """Verifies: FR-106a."""
+    # FR-106a: a zero-byte host file is skipped on Copy to Remote (X-Modem cannot
+    # reliably send it and receivers such as RomWBW XM cancel+delete on an EOT sent
+    # before any data packet); the skip is recorded and reported, and the batch
+    # continues with the remaining files.
+    win = MainWindow(state)
+    try:
+        monkeypatch.setattr(win, "refresh_remote_files", lambda: None)
+        statuses = []
+        monkeypatch.setattr(win, "set_status", lambda msg: statuses.append(msg))
+        calls = []
+        _arm_transfer(win, monkeypatch, calls=calls)
+        (tmp_path / "A.TXT").write_bytes(b"hi")
+        (tmp_path / "EMPTY.TXT").write_bytes(b"")  # zero bytes
+        (tmp_path / "C.TXT").write_bytes(b"yo")
+        paths = [str(tmp_path / n) for n in ("A.TXT", "EMPTY.TXT", "C.TXT")]
+        win._transfer_to_remote_batch(paths)
+        qapp.processEvents()
+        # The zero-byte file is never attempted; the others transfer, batch continues.
+        assert [os.path.basename(p) for p in calls] == ["A.TXT", "C.TXT"]
+        # The skip is reported in the status area...
+        assert any("EMPTY.TXT" in s for s in statuses)
+        # ...and recorded in the transfer history as skipped.
+        skipped = [e for e in win.transfer_history.get_entries() if e["status"] == "skipped"]
+        assert [e["filename"] for e in skipped] == ["EMPTY.TXT"]
+    finally:
+        win.close()
+
+
 def test_copy_to_host_transfers_all_selected(qapp, monkeypatch, state):
     """Verifies: FR-106, FR-107."""
     # FR-106/FR-107: symmetric multi-file Copy to Host.

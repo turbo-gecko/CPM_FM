@@ -6,7 +6,7 @@
 Maps each source file to the requirement IDs it implements, derived from `Satisfies:` docstring tags in the code.
 Use this for **targeted work**: find the file you're editing, then read just those IDs in `requirements_index.md` or the full SRS — instead of loading the whole specification.
 
-_46 source files; 610 file→requirement links._
+_46 source files; 612 file→requirement links._
 
 | Source file | Requirement IDs |
 |-------------|-----------------|
@@ -27,7 +27,7 @@ _46 source files; 610 file→requirement links._
 | src/cpm_fm/gui/mw_file_panes.py | FR-017, FR-058, FR-060, FR-062, FR-063, FR-074, FR-103, FR-104, FR-126, FR-130, FR-131, FR-132, FR-133, FR-134, FR-135, FR-171, FR-175, FR-176, UIR-079, UIR-080 |
 | src/cpm_fm/gui/mw_history.py | CR-010, FR-080, FR-140, FR-142, FR-143, FR-144, FR-168, UIR-082 |
 | src/cpm_fm/gui/mw_remote.py | FR-030, FR-031, FR-032, FR-034, FR-037, FR-038, FR-039, FR-040, FR-041, FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-073, FR-074, FR-075, FR-076, FR-077, FR-078, FR-079, FR-090, FR-091, FR-092, FR-093, FR-094, FR-095, FR-096, FR-097, FR-098, FR-100, FR-101, FR-102, FR-103, FR-104, FR-120, FR-133, FR-145, FR-157, FR-162, FR-166, FR-176, NFR-004, UIR-034, UIR-069, UIR-101, UIR-102, UIR-103a, UIR-105 |
-| src/cpm_fm/gui/mw_transfer_batches.py | CR-010, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-087, FR-099, FR-105, FR-106, FR-107, FR-108, FR-109, FR-142, FR-149, FR-159, FR-160, FR-176 |
+| src/cpm_fm/gui/mw_transfer_batches.py | CR-010, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-087, FR-099, FR-105, FR-106, FR-106a, FR-107, FR-108, FR-109, FR-142, FR-149, FR-159, FR-160, FR-176 |
 | src/cpm_fm/gui/mw_transfer_guards.py | FR-145, FR-146, FR-147, FR-148, FR-149, UIR-084, UIR-085 |
 | src/cpm_fm/gui/mw_transfers.py | CR-010, FR-050, FR-080, FR-086, FR-087, FR-088, FR-089, FR-105, FR-106, FR-107, FR-109, FR-120, FR-137, FR-138, FR-160, FR-176, UIR-089, UIR-090 |
 | src/cpm_fm/gui/remote_unavailable_dialog.py | FR-044, FR-045, UIR-092 |
@@ -42,7 +42,7 @@ _46 source files; 610 file→requirement links._
 | src/cpm_fm/terminal/serial_manager.py | FR-001, FR-002, FR-015, FR-030, FR-032, FR-033, FR-036, FR-037, FR-038, FR-040, FR-047, FR-050, FR-052, FR-055, FR-057, FR-083, FR-091, FR-096, IFR-001, IFR-002, NFR-001, NFR-002, UIR-028, UIR-032, UIR-033 |
 | src/cpm_fm/terminal/term_translate.py | FR-157, FR-157h, FR-157i, FR-157j, UIR-034 |
 | src/cpm_fm/terminal/vt100_engine.py | CR-014, FR-091, FR-091a, FR-095, FR-157, FR-157a, FR-157b, FR-157c, FR-157d, FR-157e, FR-157f, FR-157g, FR-157h, FR-157i, FR-157j, UIR-034, UIR-062 |
-| src/cpm_fm/terminal/xmodem.py | FR-081, FR-082, FR-083, FR-086, FR-105, FR-120, FR-159, FR-160, NFR-003a, NFR-003b, NFR-003c, NFR-003d, NFR-003e, NFR-003f, NFR-003g, NFR-003h, NFR-003i, NFR-003j, NFR-003k, NFR-003l, NFR-003m, NFR-003n, NFR-003o, NFR-003p, NFR-003q |
+| src/cpm_fm/terminal/xmodem.py | FR-081, FR-082, FR-083, FR-086, FR-105, FR-120, FR-159, FR-160, NFR-003a, NFR-003b, NFR-003c, NFR-003d, NFR-003e, NFR-003f, NFR-003g, NFR-003h, NFR-003i, NFR-003j, NFR-003k, NFR-003l, NFR-003m, NFR-003n, NFR-003o, NFR-003p, NFR-003q, NFR-003r |
 | src/cpm_fm/utils/config_handler.py | FR-011, FR-012, FR-014, IFR-004 |
 | src/cpm_fm/utils/debug_log.py | CR-014, FR-088 |
 | src/cpm_fm/utils/disk_image/__init__.py | CR-014, DR-048, DR-049, DR-050, FR-169, FR-170, FR-171, FR-172, FR-178 |

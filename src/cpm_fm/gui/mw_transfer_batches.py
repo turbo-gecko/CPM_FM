@@ -60,7 +60,7 @@ class _TransferBatchesMixin(MainWindowMixinBase):
 
     def _transfer_to_remote_batch(self, filepaths, retry: bool = False):
         """
-        Satisfies: FR-099, FR-105, FR-106, FR-107, FR-108, FR-109, FR-142, FR-159.
+        Satisfies: FR-099, FR-105, FR-106, FR-106a, FR-107, FR-108, FR-109, FR-142, FR-159.
 
         Transfer each selected file sequentially over the
         single Transport Port. Runs on a worker thread. One progress
@@ -89,6 +89,21 @@ class _TransferBatchesMixin(MainWindowMixinBase):
             if self._transfer_cancel.is_set():
                 self._finish_cancelled_batch("remote", succeeded)
                 return
+            # FR-106a: a zero-byte file cannot be reliably X-Modem'd to the remote
+            # (X-Modem's unit is a 128-byte packet, and common CP/M receivers such
+            # as RomWBW XM cancel the receive and delete the file on an EOT sent
+            # before any data packet). Skip it, record the skip, report it, and
+            # carry on with the rest of the batch rather than stalling/aborting.
+            try:
+                is_zero_byte = os.path.getsize(filepath) == 0
+            except OSError:
+                is_zero_byte = False
+            if is_zero_byte:
+                self._record_history(
+                    name, filepath, "remote", "skipped", 0, "zero-byte file", retry
+                )
+                self.set_status(tr("status.skipped_zero_byte", name=name))
+                continue
             # FR-148/FR-149: a name that does not meet the CP/M 8.3 convention
             # prompts the user to rename the file, skip it, or cancel the batch.
             if not CPMParser.is_valid_8_3(name):

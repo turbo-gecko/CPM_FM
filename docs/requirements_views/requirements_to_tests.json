@@ -513,6 +513,9 @@
       "tests/test_gui_smoke.py:test_remote_to_host_transfers_all_selected_files",
       "tests/test_gui_smoke.py:test_selected_filenames_returns_display_order"
     ],
+    "FR-106a": [
+      "tests/test_gui_smoke.py:test_copy_to_remote_skips_zero_byte_files"
+    ],
     "FR-107": [
       "tests/test_gui_smoke.py:test_copy_to_host_transfers_all_selected",
       "tests/test_gui_smoke.py:test_copy_to_remote_transfers_all_selected",
@@ -1101,10 +1104,17 @@
       "tests/test_xmodem.py:test_abort_does_not_hang_when_tx_cannot_drain"
     ],
     "NFR-003p": [
-      "tests/test_xmodem.py:test_send_file_aborts_after_nak_exhaustion"
+      "tests/test_xmodem.py:test_send_file_aborts_after_nak_exhaustion",
+      "tests/test_xmodem.py:test_send_file_empty_transfer_fails_when_eot_unacked"
     ],
     "NFR-003q": [
-      "tests/test_xmodem.py:test_receive_file_empty_transfer_writes_empty_file"
+      "tests/test_xmodem.py:test_receive_file_empty_transfer_writes_empty_file",
+      "tests/test_xmodem.py:test_send_file_empty_transfer_fails_when_eot_unacked",
+      "tests/test_xmodem.py:test_send_file_empty_transfer_over_banner_succeeds"
+    ],
+    "NFR-003r": [
+      "tests/test_xmodem.py:test_send_file_empty_transfer_over_banner_succeeds",
+      "tests/test_xmodem.py:test_send_handshake_skips_start_char_in_banner"
     ],
     "NFR-004": [
       "tests/test_macros.py:test_run_macro_script_runs_on_worker_thread"
