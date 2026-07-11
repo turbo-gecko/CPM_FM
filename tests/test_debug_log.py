@@ -29,19 +29,29 @@ from cpm_fm.utils.debug_log import (
 
 @pytest.fixture(autouse=True)
 def _reset_debug_logger():
-    """Detach the shared logger's handlers before and after each test.
+    """Restore the shared logger to its pristine state before and after each test.
 
-    ``get_debug_logger`` attaches a handler to a process-global
-    ``logging.getLogger`` singleton, so tests must reset it to stay isolated.
+    ``get_debug_logger`` mutates a process-global ``logging.getLogger``
+    singleton, so tests must reset it to stay isolated. That means detaching its
+    handlers *and* restoring ``propagate`` to the default ``True``:
+    ``get_debug_logger`` sets ``propagate = False``, and pytest's logging plugin
+    reacts to a non-propagating logger by attaching its own ``LogCaptureHandler``
+    directly to it during the call phase. Left set, that flag leaks into the next
+    test, whose ``get_debug_logger`` then sees those capture handlers, trips its
+    ``if not logger.handlers`` guard, and never attaches its own sink — so the
+    handler-count assertions see pytest's handlers instead of ours.
     """
     logger = logging.getLogger(DEBUG_LOGGER_NAME)
-    for handler in list(logger.handlers):
-        handler.close()
-        logger.removeHandler(handler)
+
+    def _reset() -> None:
+        for handler in list(logger.handlers):
+            handler.close()
+            logger.removeHandler(handler)
+        logger.propagate = True
+
+    _reset()
     yield
-    for handler in list(logger.handlers):
-        handler.close()
-        logger.removeHandler(handler)
+    _reset()
 
 
 def test_log_dir_is_cwd_for_source_run(monkeypatch, tmp_path):
