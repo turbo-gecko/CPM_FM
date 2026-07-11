@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_282/484 requirements have a verifying test; 202 untested; 0 stale tag(s)._
+_283/484 requirements have a verifying test; 201 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -97,6 +97,7 @@ _282/484 requirements have a verifying test; 202 untested; 0 stale tag(s)._
 | FR-081 | `tests/test_xmodem.py:test_send_file_returns_false_when_file_missing` |
 | FR-082 | `tests/test_xmodem.py:test_send_file_returns_false_when_no_start_char` |
 | FR-086 | `tests/test_gui_smoke.py:test_transfer_byte_echo_respects_setting` |
+| FR-088 | `tests/test_debug_log.py:test_debug_message_is_written_to_app_folder`, `tests/test_debug_log.py:test_get_debug_logger_is_idempotent`, `tests/test_debug_log.py:test_handler_is_lazy_no_file_until_write`, `tests/test_debug_log.py:test_log_dir_is_cwd_for_source_run`, `tests/test_debug_log.py:test_log_dir_is_executable_folder_when_frozen`, `tests/test_debug_log.py:test_unwritable_folder_falls_back_to_nullhandler` |
 | FR-090 | `tests/test_gui_smoke.py:test_handle_terminal_recv_capture_buffer_byte_identical`, `tests/test_gui_smoke.py:test_handle_terminal_recv_tees_bytes_to_engine_and_buffers` |
 | FR-091 | `tests/test_gui_smoke.py:test_handle_terminal_recv_capture_buffer_byte_identical`, `tests/test_gui_smoke.py:test_handle_terminal_recv_tees_bytes_to_engine_and_buffers`, `tests/test_gui_smoke.py:test_terminal_window_render_and_clear`, `tests/test_gui_smoke.py:test_terminal_window_renders_engine_screen`, `tests/test_serial_manager.py:test_read_loop_dispatches_raw_bytes`, `tests/test_terminal_view.py:test_colour_default_and_named_and_hex`, `tests/test_terminal_view.py:test_grid_grows_with_scrollback`, `tests/test_terminal_view.py:test_paint_does_not_raise`, `tests/test_terminal_view.py:test_row_cells_spans_scrollback_then_live_screen`, `tests/test_vt100_engine.py:test_backspace_moves_cursor_left`, `tests/test_vt100_engine.py:test_crlf_moves_to_next_line`, `tests/test_vt100_engine.py:test_cursor_addressing_cup`, `tests/test_vt100_engine.py:test_cursor_hidden_toggle`, `tests/test_vt100_engine.py:test_cursor_relative_moves`, `tests/test_vt100_engine.py:test_dec_line_drawing_charset`, `tests/test_vt100_engine.py:test_default_geometry`, `tests/test_vt100_engine.py:test_dirty_tracking_and_clear`, `tests/test_vt100_engine.py:test_erase_in_display_clears_screen`, `tests/test_vt100_engine.py:test_erase_in_line_clears_to_end`, `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_line_returns_full_width_padded`, `tests/test_vt100_engine.py:test_plain_text_and_cursor_advance`, `tests/test_vt100_engine.py:test_raw_8bit_mode_maps_bytes_directly`, `tests/test_vt100_engine.py:test_reset_clears_screen_and_cursor`, `tests/test_vt100_engine.py:test_reset_marks_all_lines_dirty`, `tests/test_vt100_engine.py:test_resize_changes_geometry`, `tests/test_vt100_engine.py:test_scrolling_region_confines_scroll`, `tests/test_vt100_engine.py:test_sgr_ansi_colours`, `tests/test_vt100_engine.py:test_sgr_bold_reverse_and_reset`, `tests/test_vt100_engine.py:test_tab_advances_to_next_tab_stop`, `tests/test_vt100_engine.py:test_unknown_escape_ignored_without_desync`, `tests/test_vt100_engine.py:test_utf8_invalid_bytes_replaced_with_fffd`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
 | FR-091a | `tests/test_terminal_view.py:test_grid_size_for_fits_cells_and_clamps_minimum`, `tests/test_terminal_view.py:test_reflow_resizes_engine_to_viewport`, `tests/test_terminal_view.py:test_set_font_updates_cell_metrics_and_paints`, `tests/test_vt100_engine.py:test_resize_changes_geometry` |
@@ -352,7 +353,6 @@ These defined requirements have no `Verifies:` test tag:
 - FR-084
 - FR-085
 - FR-087
-- FR-088
 - FR-089
 - FR-097
 - FR-099a

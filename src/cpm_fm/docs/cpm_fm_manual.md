@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.36.1**
+**Version 2.36.2**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -81,7 +81,7 @@ This makes the `cpm-fm` command available on your system.
 There are two ways to start the application:
 
 - **`cpm-fm`** — Launches the graphical application normally. On Windows, no console window is shown.
-- **`python -m cpm_fm`** — Launches the same application but keeps a console window open, which is useful for viewing debug output.
+- **`python -m cpm_fm`** — Launches the same application but keeps a console window open, which is useful for viewing debug output live. (With **Debug Logging** on, the trace is also written to a `cpm_fm_debug.log` file in the folder you launched from — or next to the executable for a packaged build — regardless of which launcher you use; see Config → General.)
 
 On the first launch, the program starts with built-in default settings. On subsequent launches, it automatically reloads the last configuration you saved, along with the window size, position, and your per-pane filter and sort preferences.
 
@@ -204,7 +204,7 @@ General host-side settings. All fields are shown in a single list.
 
 | Setting | Purpose | Default |
 |---------|---------|---------|
-| **Debug Logging** | Writes verbose transfer tracing to standard output. | OFF |
+| **Debug Logging** | Writes verbose transfer tracing to a `cpm_fm_debug.log` file (in the folder you launched the app from, or next to the executable for a packaged build) and to the console when run via `python -m cpm_fm`. The log file is created only while this is on. | OFF |
 | **Viewer Command** | The program used to view/edit a file; `$1` is replaced with the file path. | `notepad $1` |
 | **Default Host Directory** | The host working directory, saved with the configuration. | — |
 | **Default Image Directory** | The folder browsed by Open/New/Save Disk Image (Section 10), remembered separately from the host directory. | — |
@@ -650,7 +650,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 - **Files fail with name errors on upload.** This is the 8.3 validation step — accept the suggested CP/M-compatible name in the dialog.
 - **Sharing one serial port** for both Terminal and Transport is supported; the program pauses terminal reading during transfers automatically.
 - **Connect works but the remote never lists files, or Disconnect feels slow.** Check you haven't set the **Terminal Port** and **Transport Port** back-to-front in Config → Serial — with them swapped the connection check can't reach CP/M. Disconnect (and the **Abort** button on the "Remote Filesystem Unavailable" dialog) still completes promptly in that case; if it ever seems to pause, it is bounded by the ports' write timeout (2 seconds each) and returns on its own.
-- **Need to see what's happening on the wire?** Enable **Debug Logging** (Config → General) and/or **Echo Transfer Data** (Config → Terminal), and launch with `python -m cpm_fm` to view the console output.
+- **Need to see what's happening on the wire?** Enable **Debug Logging** (Config → General) and/or **Echo Transfer Data** (Config → Terminal). Debug Logging writes a `cpm_fm_debug.log` file in the folder you launched the app from — or next to the executable for a packaged build — (works with either launcher); launching with `python -m cpm_fm` additionally shows the trace live in the console.
 - **Settings didn't persist.** Use **Config → Save Config** to write your configuration; the saved file is reloaded automatically on the next launch.
 
 ---

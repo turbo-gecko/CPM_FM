@@ -4,9 +4,9 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.50 |
+| Version | 1.51 |
 | Status | Draft |
-| Date | 2026-07-10 |
+| Date | 2026-07-11 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.25.0) |
 
 ---
@@ -77,9 +77,10 @@ python -m pip install -e .[dev]
 
 Launch under each of the two entry points as the case requires:
 
-- `cpm-fm` — windowed launcher (no console). Use for normal GUI testing.
+- `cpm-fm` — windowed launcher (no console). Use for normal GUI testing. Debug Logging still
+  writes `cpm_fm_debug.log` to the folder you launched from under this launcher (`FR-088`).
 - `python -m cpm_fm` — keeps a console; **required** for any case that inspects stdout
-  (debug logging, serial error prints — `FR-088`).
+  (debug logging *stdout* trace, serial error prints — `FR-088`).
 
 ### 2.3 Test data
 
@@ -528,7 +529,7 @@ persistence of the language choice.
 
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
-| MT-N01 | FR-088 | Run via `python -m cpm_fm` with Debug Logging **OFF**, do a transfer; then set it **ON** and repeat. | OFF: no verbose per-byte X-Modem trace on stdout. ON: verbose trace and transfer-flow messages appear. |
+| MT-N01 | FR-088 | Run via `python -m cpm_fm` with Debug Logging **OFF**, do a transfer; then set it **ON** and repeat. Then launch via the console-less `cpm-fm` launcher with Debug Logging **ON** and do a transfer. | OFF: no verbose per-byte X-Modem trace on stdout, and **no `cpm_fm_debug.log`** is created in the launch folder. ON (`python -m cpm_fm`): verbose trace and transfer-flow messages appear on stdout **and** are written to `cpm_fm_debug.log` in the folder the app was launched from. ON (`cpm-fm` launcher): the same trace is written to `cpm_fm_debug.log` in the launch folder even though there is no console. |
 | MT-N02 | STR-003, CR-012 | If feasible, repeat the §4 smoke and one transfer (§11) on a second OS (e.g. Linux/macOS as well as Windows). | App launches and core flows work cross-platform. *(Mark N/A if only one OS is available.)* |
 | MT-N03 | NFR-001, NFR-004 | During a long transfer and a long remote listing, interact with the UI. | UI never freezes; no Qt "cannot create children for a parent in a different thread" warnings on the console. |
 

@@ -7,6 +7,7 @@ import time
 from PySide6.QtWidgets import QMessageBox
 
 from cpm_fm.gui.mw_base import MainWindowMixinBase
+from cpm_fm.utils.debug_log import get_debug_logger
 from cpm_fm.utils.i18n import tr
 
 
@@ -132,10 +133,14 @@ class _TransfersMixin(MainWindowMixinBase):
         `python -m cpm_fm`) so transfers can be debugged without conflating
         sent and received bytes, and so prompt/response timing is visible.
         The stdout trace (FR-088) is independent of the Terminal Window echo,
-        so it still fires when the echo is turned off.
+        so it still fires when the echo is turned off. The same trace is written
+        to the debug log file next to the application (FR-088), so it is captured
+        even under the console-less `cpm-fm` launcher.
         """
         if self._debug_enabled():
-            print(f"[xfer {direction} {time.time():.2f}] {data.hex(' ')}", flush=True)
+            msg = f"[xfer {direction} {time.time():.2f}] {data.hex(' ')}"
+            print(msg, flush=True)
+            get_debug_logger().debug(msg)
         if not self._echo_transfer_enabled():
             return
         hex_text = "".join(f"<{b:02X}>" for b in data)
@@ -324,11 +329,17 @@ class _TransfersMixin(MainWindowMixinBase):
         )
 
     def _debug(self, msg: str) -> None:
-        """
+        """Emit ``msg`` to stdout and the app-folder debug log when enabled.
+
+        The stdout write preserves the legacy `python -m cpm_fm` console trace;
+        the file write (FR-088) captures the same message under the console-less
+        `cpm-fm` launcher, where stdout is discarded.
+
         Satisfies: FR-088.
         """
         if self._debug_enabled():
             print(msg, flush=True)
+            get_debug_logger().debug(msg)
 
     def _finish_cancelled_batch(self, direction: str, succeeded: int) -> None:
         """

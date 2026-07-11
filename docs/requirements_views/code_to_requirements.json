@@ -619,6 +619,10 @@
     "FR-014",
     "IFR-004"
   ],
+  "src/cpm_fm/utils/debug_log.py": [
+    "CR-014",
+    "FR-088"
+  ],
   "src/cpm_fm/utils/disk_image/__init__.py": [
     "CR-014",
     "DR-048",

@@ -6,7 +6,7 @@
 Maps each source file to the requirement IDs it implements, derived from `Satisfies:` docstring tags in the code.
 Use this for **targeted work**: find the file you're editing, then read just those IDs in `requirements_index.md` or the full SRS — instead of loading the whole specification.
 
-_45 source files; 608 file→requirement links._
+_46 source files; 610 file→requirement links._
 
 | Source file | Requirement IDs |
 |-------------|-----------------|
@@ -44,6 +44,7 @@ _45 source files; 608 file→requirement links._
 | src/cpm_fm/terminal/vt100_engine.py | CR-014, FR-091, FR-091a, FR-095, FR-157, FR-157a, FR-157b, FR-157c, FR-157d, FR-157e, FR-157f, FR-157g, FR-157h, FR-157i, FR-157j, UIR-034, UIR-062 |
 | src/cpm_fm/terminal/xmodem.py | FR-081, FR-082, FR-083, FR-086, FR-105, FR-120, FR-159, FR-160, NFR-003a, NFR-003b, NFR-003c, NFR-003d, NFR-003e, NFR-003f, NFR-003g, NFR-003h, NFR-003i, NFR-003j, NFR-003k, NFR-003l, NFR-003m, NFR-003n, NFR-003o, NFR-003p, NFR-003q |
 | src/cpm_fm/utils/config_handler.py | FR-011, FR-012, FR-014, IFR-004 |
+| src/cpm_fm/utils/debug_log.py | CR-014, FR-088 |
 | src/cpm_fm/utils/disk_image/__init__.py | CR-014, DR-048, DR-049, DR-050, FR-169, FR-170, FR-171, FR-172, FR-178 |
 | src/cpm_fm/utils/disk_image/directory.py | CR-014, DR-049 |
 | src/cpm_fm/utils/disk_image/diskdefs.py | CR-014, DR-048 |

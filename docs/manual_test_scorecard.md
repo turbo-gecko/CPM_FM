@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.49 |
-| Scorecard for plan version | 1.50 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.50 |
+| Scorecard for plan version | 1.51 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -327,7 +327,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 ### §16 Cross-cutting / non-functional
 | ID | Title | Req | Result | Env | Notes |
 |----|-------|-----|:------:|:---:|-------|
-| MT-N01 | Debug logging OFF/ON on stdout | FR-088 | | | |
+| MT-N01 | Debug logging OFF/ON: stdout + `cpm_fm_debug.log` (incl. `cpm-fm` launcher) | FR-088 | | | |
 | MT-N02 | Cross-platform smoke + transfer | STR-003, CR-012 | | | |
 | MT-N03 | No freeze / no cross-thread Qt warnings | NFR-001/004 | | | |
 
