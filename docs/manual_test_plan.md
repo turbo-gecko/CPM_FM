@@ -4,9 +4,9 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.49 |
+| Version | 1.52 |
 | Status | Draft |
-| Date | 2026-07-09 |
+| Date | 2026-07-11 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.25.0) |
 
 ---
@@ -77,9 +77,10 @@ python -m pip install -e .[dev]
 
 Launch under each of the two entry points as the case requires:
 
-- `cpm-fm` — windowed launcher (no console). Use for normal GUI testing.
+- `cpm-fm` — windowed launcher (no console). Use for normal GUI testing. Debug Logging still
+  writes `cpm_fm_debug.log` to the folder you launched from under this launcher (`FR-088`).
 - `python -m cpm_fm` — keeps a console; **required** for any case that inspects stdout
-  (debug logging, serial error prints — `FR-088`).
+  (debug logging *stdout* trace, serial error prints — `FR-088`).
 
 ### 2.3 Test data
 
@@ -162,7 +163,7 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 |----|-----|-------|----------|
 | MT-P01 | IFR-003, UIR-022, UIR-023 | Plug in a known adapter. Open Config > Serial. Inspect the Terminal Port and Transfer Port drop-downs. | Both drop-downs list the host's installed serial ports, including the just-plugged adapter. |
 | MT-P02 [visual] | FR-020, UIR-020, UIR-021, UIR-029 | Open Config > Serial. | Modal dialog titled "Serial Config"; "Port Settings" and "Transmit Delay" groups laid out as two columns (name left, field right). |
-| MT-P03 | UIR-024..028 | Inspect each drop-down's values and defaults. | Speed list = 300…921600, default 115200; Data = 7,8 default 8; Parity = NONE,ODD,EVEN,MARK,SPACE default NONE; Stop Bits = 1,2 default 1; Flow = NONE,XON/XOFF,RTS/CTS,DSR/DTR default NONE. |
+| MT-P03 | UIR-024..028 | Inspect each drop-down's values and defaults. | Speed list = 300…921600, default 115200; Data = 7,8 default 8; Parity = NONE,ODD,EVEN,MARK,SPACE default NONE; Stop Bits = 1,2 default 1; Flow = NONE,XON/XOFF,RTS/CTS,DSR/DTR default RTS/CTS. |
 | MT-P04 | UIR-030, UIR-031 | Try to type out-of-range / non-integer values into msec/char and msec/line. | Each field accepts only integers 0–255; default 0. |
 | MT-P05 | UIR-028 | Set Flow = RTS/CTS, save, Connect to a port whose peer requires/asserts hardware flow control. | Handshake applied at open (transfer proceeds where a NONE setting would stall, or verify via a serial line monitor). *(Best-effort; mark N/A if no flow-control-sensitive peer.)* |
 | MT-P06 | IFR-002 | Set Terminal and Transport to the same port; save; reopen the dialog. | Same physical port accepted for both logical ports; values round-trip. |
@@ -333,6 +334,7 @@ CP/M side. Use the multi-block (≥1 KB) file plus small files from §2.3.
 | MT-T13 | FR-120, NFR-003m | Start a transfer of the multi-block (≥1 KB) file (either direction); while the progress dialog shows blocks incrementing, press **Cancel**. (Open the Terminal Window first to watch the byte echo.) | The Cancel button disables and shows "Cancelling…"; the transfer aborts promptly; the CAN sequence is sent (visible as `<18>` tokens in the Terminal Window — MT-T09) and the CP/M program reports an abort; the progress dialog closes; the status bar shows a "Transfer cancelled" message; **no** error dialog appears. |
 | MT-T14 | FR-120 | Multi-select three files; start the batch; press **Cancel** during the **second** file (so file 1 already completed). | Remaining files are skipped (third never launched); the dialog closes with a cancellation status; because file 1 completed, the destination list refreshes once; on a cancelled **Copy to Host**, no partially-received file is left in the host folder. |
 | MT-T15 | FR-159, FR-160 | Connected. Temporarily set Send to Remote (Config > General) to a wrong command (e.g. "NOSUCHCMD $1"); Copy to Remote. Repeat with Receive from Remote set wrong; Copy to Host. | Well under the old 60s, an error dialog reports "No response from remote for `<name>` - check the Send to Remote / Receive from Remote command in Config > General" — distinct from the generic "Transfer failed" wording. Restoring the correct command and retrying succeeds normally. |
+| MT-T16 [CP/M] | FR-106a, NFR-003r | Multi-select a normal file **and** a zero-byte host file, then Copy to Remote. Prefer a banner-chatty receiver on a shared port (e.g. RomWBW **XM**, banner "…on COM0") if available. | The zero-byte file is **skipped**: a status message notes it (e.g. "Skipped EMPTY.TXT: zero-byte files are not sent to the remote") and it is recorded as *skipped* in the transfer history — and the batch **continues**, so the normal file transfers and the sequence neither stalls nor aborts. On a banner-chatty receiver the normal file's handshake is not fooled by the stray `C` in the banner (NFR-003r): no premature EOT and no "Receive cancelled / Partial file deleted" on the remote. |
 
 ---
 
@@ -528,7 +530,7 @@ persistence of the language choice.
 
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
-| MT-N01 | FR-088 | Run via `python -m cpm_fm` with Debug Logging **OFF**, do a transfer; then set it **ON** and repeat. | OFF: no verbose per-byte X-Modem trace on stdout. ON: verbose trace and transfer-flow messages appear. |
+| MT-N01 | FR-088 | Run via `python -m cpm_fm` with Debug Logging **OFF**, do a transfer; then set it **ON** and repeat. Then launch via the console-less `cpm-fm` launcher with Debug Logging **ON** and do a transfer. | OFF: no verbose per-byte X-Modem trace on stdout, and **no `cpm_fm_debug.log`** is created in the launch folder. ON (`python -m cpm_fm`): verbose trace and transfer-flow messages appear on stdout **and** are written to `cpm_fm_debug.log` in the folder the app was launched from. ON (`cpm-fm` launcher): the same trace is written to `cpm_fm_debug.log` in the launch folder even though there is no console. |
 | MT-N02 | STR-003, CR-012 | If feasible, repeat the §4 smoke and one transfer (§11) on a second OS (e.g. Linux/macOS as well as Windows). | App launches and core flows work cross-platform. *(Mark N/A if only one OS is available.)* |
 | MT-N03 | NFR-001, NFR-004 | During a long transfer and a long remote listing, interact with the UI. | UI never freezes; no Qt "cannot create children for a parent in a different thread" warnings on the console. |
 

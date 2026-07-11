@@ -101,7 +101,15 @@ def test_round_trip_checksum(request, peer, scratch_drive, samples, tmp_path):
 @pytest.mark.hil
 @pytest.mark.mt("MT-T15", "FR-081", "NFR-003q")
 def test_round_trip_zero_byte_file(peer, scratch_drive, tmp_path):
-    """A zero-byte file round-trips as an empty file (EOT accepted per NFR-003q).
+    """A zero-byte file round-trips as an empty file on receivers that support it.
+
+    This exercises the protocol layer (`peer.send_file` mirrors `_send_one_to_remote`,
+    not the GUI batch): the sender transmits EOT before any data packet. Receivers
+    that accept an EOT-only transfer (NFR-003q; e.g. PCGET) create a zero-length
+    file and it round-trips; strict receivers (e.g. RomWBW `XM`) instead cancel and
+    delete, so the upload fails — that is a receiver-side capability, not a bug, and
+    the case is skipped. (In the GUI, zero-byte host files are not sent at all —
+    FR-106a skips them up front — so the interactive app never hits this.)
 
     Verifies: FR-081, NFR-003q.
     """
@@ -111,11 +119,10 @@ def test_round_trip_zero_byte_file(peer, scratch_drive, tmp_path):
     peer.erase(name, letter=scratch_drive)
     upload_ok = peer.send_file(str(empty_file), letter=scratch_drive)
     if not upload_ok:
-        pytest.skip("N/A: target CP/M sender does not support zero-byte file transfers")
-    # Some CP/M senders don't create a file for zero-byte transfers (EOT-only).
-    # If the file isn't listed, skip the test.
+        pytest.skip("N/A: target CP/M receiver does not support zero-byte (EOT-only) transfers")
+    # Some CP/M receivers don't materialise a file for an EOT-only transfer.
     if not peer.exists(name, letter=scratch_drive):
-        pytest.skip("N/A: target CP/M sender did not create file for zero-byte transfer")
+        pytest.skip("N/A: target CP/M receiver did not create a file for the empty transfer")
     dst = tmp_path / f"dl_{name}"
     recv_ok = peer.recv_file(name, str(dst), letter=scratch_drive)
     assert recv_ok, "download of zero-byte file failed"

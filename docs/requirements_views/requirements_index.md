@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_484 requirements across 61 sections._
+_486 requirements across 61 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -149,7 +149,7 @@ _484 requirements across 61 sections._
 | FR-085 | The Copy to Host button shall be enabled at startup | mw_transfer_batches.py:do_copy_to_host |
 | FR-086 | During an X-Modem file transfer (either direction), the application shall echo every byte sent to… | mw_transfers.py:_on_transfer_bytes, mw_transfers.py:_echo_transfer_enabled; xmodem.py monitor hook; UIR-058 |
 | FR-087 | Before starting the X-Modem transfer, the application shall launch the CP/M side of the transfer… | mw_transfers.py:_issue_remote_cmd, _transfer_to_remote, _transfer_to_host; UIR-045/UIR-046 |
-| FR-088 | The application shall emit verbose transfer debug output (per-byte X-Modem trace and transfer flow messages)… | mw_transfers.py:_debug, mw_transfers.py:_debug_enabled, mw_transfers.py:_on_transfer_bytes; UIR-050 |
+| FR-088 | The application shall emit verbose transfer debug output (per-byte X-Modem trace and transfer flow messages)… | debug_log.py:get_debug_logger, debug_log.py:debug_log_dir, mw_transfers.py:_debug, mw_transfers.py:_debug_enabled, mw_transfers.py:_on_transfer_bytes; UIR-050 |
 | FR-089 | After launching the CP/M side of a transfer (FR-087), the application shall wait xfer_launch_delay seconds… | mw_transfers.py:_launch_delay; UIR-049 |
 | FR-159 | If the initial X-Modem handshake (the wait for the remote's start character, immediately following FR-087/FR-089)… | xmodem.py:send_file, xmodem.py:receive_file (no_response flag); mw_transfer_batches.py:_transfer_to_remote_batch, _transfer_to_host_batch; tests test_xmodem.py, test_gui_smoke.py |
 | FR-160 | The initial X-Modem handshake wait — the time spent waiting for the very first response… | xmodem.py:XModem.__init__, send_file, receive_file; mw_transfers.py:_handshake_timeout; UIR-093; tests test_xmodem.py |
@@ -164,6 +164,7 @@ _484 requirements across 61 sections._
 | FR-105d | The application shall close the dialog automatically when the transfer completes, on both success and… | — |
 | FR-105e | Progress updates originate on the transfer worker thread and shall be delivered to the GUI… | — |
 | FR-106 | The Copy to Remote and Copy to Host actions shall transfer **all** files currently selected… | mw_transfer_batches.py:do_copy_to_remote, mw_transfer_batches.py:do_copy_to_host, mw_transfers.py:_selected_filenames |
+| FR-106a | A selected host file that is zero bytes shall not be sent over the serial… | mw_transfer_batches.py:_transfer_to_remote_batch |
 | FR-107 | When more than one file is selected, the files shall be transferred **sequentially** over the… | mw_transfer_batches.py:_transfer_to_remote_batch, mw_transfer_batches.py:_transfer_to_host_batch, mw_transfers.py:_selected_filenames |
 | FR-108 | If any file in a multi-file batch fails to transfer, the application shall abort the… | mw_transfer_batches.py:_transfer_to_remote_batch, mw_transfer_batches.py:_transfer_to_host_batch |
 | FR-108a | On any file's failure the application shall abort the batch — it shall not attempt… | — |
@@ -759,6 +760,7 @@ _484 requirements across 61 sections._
 | NFR-003o | The wait for the CAN bytes to drain shall be time-bounded rather than an unbounded… | xmodem.py:_drain_tx, _abort; tests test_xmodem.py (does not hang when TX cannot drain) |
 | NFR-003p | When a transmitted packet is NAK'd or goes unanswered, the sender shall retransmit the same… | xmodem.py:send_file; tests test_xmodem.py (aborts after NAK exhaustion) |
 | NFR-003q | When the sender transmits EOT before any data packet, the receiver shall accept it as… | xmodem.py:receive_file; tests test_xmodem.py (empty transfer writes empty file) |
+| NFR-003r | On send, the sender shall not mistake a start-character-valued byte occurring in the receiver's pre-transfer… | xmodem.py:XModem.__init__, _wait_for_start_char, send_file; tests test_xmodem.py (skips start char embedded in banner; empty transfer over banner succeeds) |
 
 ## A4. Project structure and module organisation
 
