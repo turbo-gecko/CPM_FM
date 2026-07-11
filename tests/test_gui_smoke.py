@@ -4434,7 +4434,7 @@ class _FakeImage:
             _FakeEntry("GAME.COM", size_bytes=128, user=3, read_only=True, system=True),
         ]
 
-    def read_file(self, name):
+    def read_file(self, name, user=None):
         return b"content-of-" + name.encode()
 
 

@@ -238,6 +238,35 @@ def test_drive_prompt_letter_none_when_absent():
     assert CPMParser.drive_prompt_letter("A0:BASE>") is None
 
 
+def test_drive_prompt_user_extracts_zcpr_area():
+    """Verifies: DR-051."""
+    # DR-051: the digits immediately after the drive letter are the user area.
+    assert CPMParser.drive_prompt_user("A3>") == 3
+    assert CPMParser.drive_prompt_user("B12>") == 12
+    assert CPMParser.drive_prompt_user("a3>") == 3  # case-insensitive letter
+    assert CPMParser.drive_prompt_user("A0>") == 0
+
+
+def test_drive_prompt_user_none_on_plain_cpm22_prompt():
+    """Verifies: DR-051."""
+    # DR-051: CP/M 2.2's prompt carries no area digits -> None (track authoritatively).
+    assert CPMParser.drive_prompt_user("A>") is None
+    # Leading-digit ZCPR form (4A>) is not the trailing-area form DR-051 reads.
+    assert CPMParser.drive_prompt_user("4A>") is None
+
+
+def test_drive_prompt_user_none_when_no_prompt():
+    """Verifies: DR-051."""
+    assert CPMParser.drive_prompt_user("\n  \nNot ready\n") is None
+    assert CPMParser.drive_prompt_user("A0:BASE>") is None  # path-style out of scope
+
+
+def test_drive_prompt_user_reads_first_prompt():
+    """Verifies: DR-051."""
+    # DR-051: same first-prompt-wins scan as DR-033a.
+    assert CPMParser.drive_prompt_user("\n\nB2>\nA5>\n") == 2
+
+
 # --------------------------------------------------------------------------- #
 # parse_dir_output boundary / edge cases (DR-001-DR-032).
 # --------------------------------------------------------------------------- #

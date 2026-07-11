@@ -16,6 +16,13 @@ CP/M 2.2 and ZSDOS 1.1 have been confirmed to work with the application.
 - Browse host and remote (CP/M) file listings side by side, with a draggable splitter.
   Each pane has a wildcard/substring **filter** and a **sort** control (by name or
   extension, ascending or descending); the filter and sort are remembered per pane.
+- **CP/M user areas (0–15):** pick a user area next to the drive in the Remote pane;
+  listings and transfers are scoped to it. When browsing a **disk image**, each file
+  shows its user area and an optional per-area filter narrows the view to one area;
+  image files copied to a live machine keep their source area, and saving an image
+  preserves every file's area. (Transferring into a *non-zero* area is best-effort —
+  your CP/M transfer utility must be reachable from that area, typically a **SYS file
+  in user 0**; otherwise the transfer reports a "no response" error naming the area.)
 - Transfer single or multiple selected files in both directions over X-Modem, with a
   modal progress dialog (file name, block/byte counts, batch position) and a **Cancel**
   button to abort an in-progress transfer.

@@ -195,6 +195,37 @@ def _hil_gate(request):
 # --------------------------------------------------------------------------- #
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _user_area_baseline(request):
+    """Force every selected target to CP/M user area 0 before any test runs.
+
+    The user area is global CP/M state that persists across test runs and power
+    cycles (FR-184), so a box left in a non-zero area by a previous — possibly
+    interrupted — session would misdirect the very first test that lists or
+    transfers (a listing/transfer runs in whatever area the box is in). This
+    connects to each selected target once, up front, issues ``USER 0``
+    (best-effort), and releases the shared port before the test modules reopen
+    it. Per-module re-baselining also happens in the ``peer`` fixture; this
+    session step additionally covers the first module (typically a GUI-tier one
+    that does not use ``peer``) against a box left dirty by an earlier run.
+    """
+    targets = getattr(request.config, "_hil_targets", None) or []
+    for target in targets:
+        try:
+            from helpers.peer import CpmPeer, PeerError
+
+            p = CpmPeer(target.load_settings())
+            try:
+                p.connect()
+                p.set_user(0)
+            finally:
+                p.close()
+        except (PeerError, OSError) as e:  # unreachable target → per-test gate skips it
+            log.warning("user-area baseline skipped for %s: %s", target.name, e)
+        _await_port_free(target.load_settings())
+    yield
+
+
 @pytest.fixture(scope="module")
 def peer(target):
     """A connected :class:`CpmPeer` for the target, shared across a test module.
@@ -215,6 +246,11 @@ def peer(target):
         p.connect()
     except PeerError as e:
         pytest.skip(f"BLOCKED: could not connect to target {target.name!r}: {e}")
+    # Isolation: force a known user area 0 at the start of each module so a box
+    # left in a non-zero area by an earlier module/run cannot misdirect this
+    # module's listings/transfers (FR-184). Global CP/M state, so it must be
+    # re-established per connection, not assumed.
+    p.set_user(0)
     yield p
     p.close()
     # Single shared port: wait for the OS to release it before the next module

@@ -210,3 +210,17 @@ class GuiDriver:
         assert idx >= 0, f"drive {letter}: not in combo"
         combo.setCurrentIndex(idx)
         self.pump()
+
+    def set_user_area(self, area: int) -> None:
+        """Select CP/M user area ``area`` (0–15) in the user-area drop-down (FR-181).
+
+        Drives the real ``change_user_area`` slot so the ``USER n`` command is
+        issued and the listing re-scoped to that area.
+        """
+        step(log, "set user area %d", area)
+        combo = self.win.user_combo
+        idx = combo.findText(str(area))
+        assert idx >= 0, f"user area {area} not in combo"
+        combo.setCurrentIndex(idx)
+        self.win.change_user_area(idx)
+        self.quiesce()

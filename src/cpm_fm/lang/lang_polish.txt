@@ -143,6 +143,8 @@ error.download_failed = Błąd pobierania {name}
 error.transfer_failed = Błąd transferu {name}; pomijanie pozostałych plików
 error.transfer_no_response_send = Brak odpowiedzi od zdalnego komputera dla {name} - sprawdź polecenie Wyślij do zdalnego w Konfiguracja > Ogólne
 error.transfer_no_response_recv = Brak odpowiedzi od zdalnego komputera dla {name} - sprawdź polecenie Odbierz ze zdalnego w Konfiguracja > Ogólne
+error.transfer_no_response_send_user = Brak odpowiedzi od zdalnego komputera dla {name} w obszarze użytkownika {area} - polecenie Wyślij do zdalnego może być niedostępne z obszaru użytkownika {area}. Musi się w nim znajdować lub mieć atrybut SYS w użytkowniku 0 (patrz podręcznik, sekcja 17), albo polecenie w Konfiguracja > Ogólne jest nieprawidłowe.
+error.transfer_no_response_recv_user = Brak odpowiedzi od zdalnego komputera dla {name} w obszarze użytkownika {area} - polecenie Odbierz ze zdalnego może być niedostępne z obszaru użytkownika {area}. Musi się w nim znajdować lub mieć atrybut SYS w użytkowniku 0 (patrz podręcznik, sekcja 17), albo polecenie w Konfiguracja > Ogólne jest nieprawidłowe.
 warning.select_upload = Proszę wybrać jeden lub więcej plików do wysłania
 warning.select_download = Proszę wybrać jeden lub więcej plików do pobrania
 warning.no_config_loaded = Nie wczytano żadnego pliku konfiguracyjnego. Ustawienia zastosowano tylko w bieżącej sesji. Użyj Konfiguracja > Zapisz konfigurację, aby zapisać je do pliku konfiguracyjnego.
@@ -269,6 +271,8 @@ main.sort.name = Nazwa
 main.sort.extension = Rozszerzenie
 main.sort_by_tooltip = Sortuj według
 main.sort_direction_tooltip = Przełącz kolejność rosnącą/malejącą
+main.area_filter_all = Wszystkie
+main.area_filter_tooltip = Pokaż pliki ze wszystkich obszarów użytkownika lub filtruj do jednego
 
 # --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
 toolbar.backup = Kopia zapasowa

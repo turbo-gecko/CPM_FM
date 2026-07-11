@@ -165,6 +165,13 @@
       "tests/test_disk_image/test_write.py:test_write_read_single_extent",
       "tests/test_gui_smoke.py:test_save_image_overwrites_current_file_in_place"
     ],
+    "DR-051": [
+      "tests/test_cpm_parser.py:test_drive_prompt_user_extracts_zcpr_area",
+      "tests/test_cpm_parser.py:test_drive_prompt_user_none_on_plain_cpm22_prompt",
+      "tests/test_cpm_parser.py:test_drive_prompt_user_none_when_no_prompt",
+      "tests/test_cpm_parser.py:test_drive_prompt_user_reads_first_prompt",
+      "tests/test_user_area.py:test_connect_probe_reads_back_zcpr_area"
+    ],
     "FR-001": [
       "tests/test_serial_manager.py:test_status_flags_default_false_at_startup"
     ],
@@ -883,6 +890,9 @@
       "tests/test_gui_smoke.py:test_config_test_button_reports_no_response",
       "tests/test_gui_smoke.py:test_download_no_response_reports_misconfigured_command_error",
       "tests/test_gui_smoke.py:test_upload_no_response_reports_misconfigured_command_error",
+      "tests/test_user_area.py:test_fail_message_generic_when_not_no_response",
+      "tests/test_user_area.py:test_no_response_message_area_zero_is_unchanged",
+      "tests/test_user_area.py:test_no_response_message_names_user_area_when_nonzero",
       "tests/test_xmodem.py:test_receive_file_no_response_stays_false_on_success",
       "tests/test_xmodem.py:test_receive_file_sets_no_response_on_genuine_handshake_timeout",
       "tests/test_xmodem.py:test_send_file_cancel_during_handshake_does_not_set_no_response",
@@ -962,6 +972,7 @@
       "tests/test_disk_image/test_directory.py:test_multi_extent_file",
       "tests/test_disk_image/test_directory.py:test_multiple_files_and_16bit_pointers",
       "tests/test_disk_image/test_directory.py:test_record_tail_truncation",
+      "tests/test_disk_image/test_write.py:test_write_read_preserves_distinct_user_areas",
       "tests/test_gui_smoke.py:test_change_dir_discards_open_image",
       "tests/test_gui_smoke.py:test_change_dir_keeps_remote_mounted_image",
       "tests/test_gui_smoke.py:test_load_config_discards_open_image",
@@ -1039,6 +1050,52 @@
     "FR-180": [
       "tests/test_gui_smoke.py:test_backup_image_to_host_local",
       "tests/test_gui_smoke.py:test_restore_host_to_image_local"
+    ],
+    "FR-181": [
+      "tests/test_user_area.py:test_change_user_area_tracks_selection_when_disconnected"
+    ],
+    "FR-182": [
+      "tests/test_user_area.py:test_apply_remote_user_area_noop_when_already_in_area",
+      "tests/test_user_area.py:test_apply_remote_user_area_noop_when_command_blank",
+      "tests/test_user_area.py:test_apply_remote_user_area_sends_configured_command",
+      "tests/test_user_area.py:test_change_drive_applies_user_area_before_listing",
+      "tests/test_user_area.py:test_default_settings_include_user_area_cmd"
+    ],
+    "FR-183": [
+      "tests/test_user_area.py:test_apply_transfer_user_area_noop_when_already_in_area",
+      "tests/test_user_area.py:test_apply_transfer_user_area_noop_when_command_blank",
+      "tests/test_user_area.py:test_apply_transfer_user_area_sets_area_then_settles",
+      "tests/test_user_area.py:test_change_drive_applies_user_area_before_listing",
+      "tests/test_user_area.py:test_no_response_message_names_user_area_when_nonzero"
+    ],
+    "FR-184": [
+      "tests/test_user_area.py:test_apply_remote_user_area_noop_when_already_in_area",
+      "tests/test_user_area.py:test_apply_remote_user_area_sends_configured_command",
+      "tests/test_user_area.py:test_apply_transfer_user_area_noop_when_already_in_area",
+      "tests/test_user_area.py:test_change_user_area_tracks_selection_when_disconnected",
+      "tests/test_user_area.py:test_connect_probe_defaults_area_to_zero_on_cpm22",
+      "tests/test_user_area.py:test_connect_probe_reads_back_zcpr_area"
+    ],
+    "FR-185": [
+      "tests/test_disk_image/test_write.py:test_write_read_preserves_distinct_user_areas",
+      "tests/test_user_area.py:test_extract_preserves_area_and_disambiguates_duplicates",
+      "tests/test_user_area.py:test_open_image_preserves_area_map_end_to_end"
+    ],
+    "FR-186": [
+      "tests/test_user_area.py:test_pane_area_map_only_for_mounted_pane"
+    ],
+    "FR-187": [
+      "tests/test_disk_image/test_write.py:test_write_read_preserves_distinct_user_areas"
+    ],
+    "FR-188": [
+      "tests/test_user_area.py:test_image_to_remote_matches_source_area",
+      "tests/test_user_area.py:test_image_to_remote_selected_mode_uses_selected_area"
+    ],
+    "FR-189": [
+      "tests/test_user_area.py:test_area_filter_all_shows_every_area",
+      "tests/test_user_area.py:test_area_filter_narrows_listing_to_selected_area",
+      "tests/test_user_area.py:test_area_filter_populated_with_present_areas",
+      "tests/test_user_area.py:test_open_image_preserves_area_map_end_to_end"
     ],
     "IFR-004": [
       "tests/test_config_handler.py:test_load_json_malformed_returns_empty",
@@ -1411,6 +1468,18 @@
     "UIR-117": [
       "tests/test_gui_smoke.py:test_general_config_trimmed_fields",
       "tests/test_gui_smoke.py:test_remote_config_fields_ungrouped"
+    ],
+    "UIR-118": [
+      "tests/test_user_area.py:test_user_combo_lists_0_to_15"
+    ],
+    "UIR-119": [
+      "tests/test_user_area.py:test_pane_area_map_only_for_mounted_pane",
+      "tests/test_user_area.py:test_render_shows_area_prefix_but_keeps_name"
+    ],
+    "UIR-120": [
+      "tests/test_user_area.py:test_area_filter_hidden_without_image",
+      "tests/test_user_area.py:test_area_filter_populated_with_present_areas",
+      "tests/test_user_area.py:test_open_image_preserves_area_map_end_to_end"
     ]
   },
   "untested": [

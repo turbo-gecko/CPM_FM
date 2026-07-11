@@ -191,6 +191,10 @@ class MainWindow(
         # probe worker so do_disconnect can join it (bounded) before closing.
         self._probe_cancel = threading.Event()
         self._probe_thread: threading.Thread | None = None
+        # FR-184: the user area read from a ZCPR-family probe prompt (DR-051), or
+        # None on CP/M 2.2 whose prompt omits it; used to initialise the tracked
+        # area on connect.
+        self._probe_user_area: int | None = None
         # FR-146/FR-147: file-conflict resolution. The transfer worker thread
         # emits conflict_detected and blocks on _conflict_answered; the GUI
         # thread shows the dialog (NFR-004) and stores (action, apply_to_all) in
@@ -215,6 +219,16 @@ class MainWindow(
         # (Continue) choice in _backup_confirm_result before setting the event.
         self._backup_confirm_answered = threading.Event()
         self._backup_confirm_result = False
+        # FR-184: the tracked, authoritative remote user area (0–15), reset to 0
+        # when a remote connection is established.
+        self._remote_user = 0
+        # FR-182: the area we believe the remote is currently in. Defaults to 0
+        # (a freshly-connected CP/M box is in user area 0) and is re-affirmed on
+        # connect (FR-184). A USER command is issued only when the target area
+        # differs from this, so the area-0 path — the default, feature unused —
+        # issues no command at all and leaves the existing listing/transfer flow
+        # byte-for-byte unchanged, independent of how the connection was made.
+        self._applied_user_area: int | None = 0
         self.host_dir = os.getcwd()
         # FR-179: the folder where CP/M disk-image files live — the browse root for
         # Open/New/Save Image, tracked independently of host_dir and set from the
@@ -231,6 +245,12 @@ class MainWindow(
         # FR-173: the CP/M file metadata of the currently open image, captured at
         # open time for the read-only Image Details view (empty when none open).
         self._image_files: list[CpmFileEntry] = []
+        # FR-185: staged host filename -> (CP/M name, user area) for the open
+        # image. Preserves each extracted file's source user area (and the real
+        # CP/M name where a duplicate name was disambiguated on staging) so the
+        # pane can show the area and transfers/write-back can honour it. Empty
+        # when no image is open.
+        self._image_stage_map: dict[str, tuple[str, int]] = {}
         # UIR-109: the Image Details… menu action, enabled only while an image is
         # open. Created in setup_menu; held here so the open/cleanup paths can
         # toggle it.
@@ -696,9 +716,14 @@ class MainWindow(
         host_layout.addLayout(host_top)
 
         # UIR-079/UIR-080: filter field + sort controls above the Host list.
-        host_fs, self.host_filter, self.host_sort_combo, self.host_sort_dir_btn = (
-            self._build_filter_sort_row("host")
-        )
+        # UIR-120: the trailing area-filter combo is hidden until an image mounts.
+        (
+            host_fs,
+            self.host_filter,
+            self.host_sort_combo,
+            self.host_sort_dir_btn,
+            self.host_area_filter,
+        ) = self._build_filter_sort_row("host")
         host_layout.addLayout(host_fs)
 
         # FR-136/FR-137: a drag-and-drop-capable multi-select list (the
@@ -742,15 +767,28 @@ class MainWindow(
         self.drive_combo.setMinimumWidth(80)
         self.drive_combo.activated.connect(self.change_drive)
         remote_top.addWidget(self.drive_combo, 1)
+        # UIR-118/FR-181: a user-area (0–15) drop-down after the drive drop-down.
+        # `activated` fires only on a user selection, never on programmatic changes.
+        self.user_combo = QComboBox()
+        self.user_combo.addItems([str(u) for u in range(16)])
+        self.user_combo.setMinimumContentsLength(4)
+        self.user_combo.setMinimumWidth(80)
+        self.user_combo.activated.connect(self.change_user_area)
+        remote_top.addWidget(self.user_combo, 1)
         update_btn = QPushButton(clicked=self.do_refresh_remote_files)
         self._register_text(update_btn.setText, "main.update")
         remote_top.addWidget(update_btn, 1)
         remote_layout.addLayout(remote_top)
 
         # UIR-079/UIR-080: filter field + sort controls above the Remote list.
-        remote_fs, self.remote_filter, self.remote_sort_combo, self.remote_sort_dir_btn = (
-            self._build_filter_sort_row("remote")
-        )
+        # UIR-120: the trailing area-filter combo is hidden until an image mounts.
+        (
+            remote_fs,
+            self.remote_filter,
+            self.remote_sort_combo,
+            self.remote_sort_dir_btn,
+            self.remote_area_filter,
+        ) = self._build_filter_sort_row("remote")
         remote_layout.addLayout(remote_fs)
 
         # FR-136/FR-137/FR-138: a drag-and-drop-capable multi-select list.

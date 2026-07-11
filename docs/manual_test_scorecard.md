@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.51 |
-| Scorecard for plan version | 1.52 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.53 |
+| Scorecard for plan version | 1.54 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -172,6 +172,9 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-DI17 | Separate image directory; host-dir change keeps a Remote-mounted image | FR-176, FR-179 | | | |
 | MT-DI18 | Menu items "… Config"; Save Image overwrites in place (KISS, no enable) | FR-174 | | | |
 | MT-DI19 | Backup/Restore mirror host↔image locally for a Remote-mounted image | FR-180 | | | |
+| MT-DI20 | Image pane shows per-file user area; duplicate names disambiguated | FR-185, FR-186, UIR-119 | | | |
+| MT-DI21 | Image→remote matches source area; write-back preserves area | FR-187, FR-188 | | | |
+| MT-DI22 | Image pane user-area filter narrows listing (All + present areas); hidden without image | FR-189, UIR-120 | | | |
 
 ### §10 Remote listing & drive selection (live)
 | ID | Title | Req | Result | Env | Notes |
@@ -183,6 +186,9 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-R05 | Select other drive lists it | FR-100/102 | | | |
 | MT-R06 | Nonexistent drive → "Drive X: not found" | FR-103 | | | |
 | MT-R07 | Update uses displayed drive (OI-22) | FR-073 | | | |
+| MT-R10 | User-area drop-down lists a selected area (USER n) | FR-181, FR-182, UIR-118 | | | |
+| MT-R11 | Transfer targets the selected user area; tracked from 0 on connect | FR-183, FR-184 | | | |
+| MT-R12 | No-response error names the user area on a non-zero-area transfer failure | FR-159, FR-183 | | | |
 
 ### §11 File transfers (live X-Modem)
 | ID | Title | Req | Result | Env | Notes |

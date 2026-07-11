@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_486 requirements across 61 sections._
+_499 requirements across 62 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -137,6 +137,15 @@ _486 requirements across 61 sections._
 | FR-103 | If the <letter>> drive prompt does not appear in the captured response, the application shall… | mw_remote.py:_do_change_drive_logic, mw_remote.py:_on_drive_not_found, drive_not_found signal |
 | FR-104 | If the Terminal Port is not open when a drive is selected, the application shall… | mw_remote.py:change_drive |
 
+## 3.8.2 Remote user-area selection
+
+| ID | Summary | Impl |
+|----|---------|------|
+| FR-181 | The Remote Files group shall provide a user-area selection drop-down (UIR-118) offering the CP/M user… | app.py:setup_layout, mw_remote.py:change_user_area, mw_remote.py:_do_change_drive_logic, mw_remote.py:_apply_remote_user_area |
+| FR-182 | To change the remote user area the application shall send the configured user-area command (user_area_cmd… | mw_remote.py:_apply_remote_user_area, mw_remote.py:_capture_terminal_response |
+| FR-183 | A file transfer (either direction) shall be performed against the selected remote user area… | mw_transfer_batches.py:_send_one_to_remote, mw_transfer_batches.py:_recv_one_to_host, mw_transfers.py:_apply_transfer_user_area |
+| FR-184 | The application shall track the selected remote user area as authoritative, initialised to area 0… | mw_remote.py:_on_connect_probe_ok, mw_remote.py:change_user_area, mw_remote.py:_apply_remote_user_area, mw_transfers.py:_apply_transfer_user_area |
+
 ## 3.9 File transfers
 
 | ID | Summary | Impl |
@@ -151,7 +160,7 @@ _486 requirements across 61 sections._
 | FR-087 | Before starting the X-Modem transfer, the application shall launch the CP/M side of the transfer… | mw_transfers.py:_issue_remote_cmd, _transfer_to_remote, _transfer_to_host; UIR-045/UIR-046 |
 | FR-088 | The application shall emit verbose transfer debug output (per-byte X-Modem trace and transfer flow messages)… | debug_log.py:get_debug_logger, debug_log.py:debug_log_dir, mw_transfers.py:_debug, mw_transfers.py:_debug_enabled, mw_transfers.py:_on_transfer_bytes; UIR-050 |
 | FR-089 | After launching the CP/M side of a transfer (FR-087), the application shall wait xfer_launch_delay seconds… | mw_transfers.py:_launch_delay; UIR-049 |
-| FR-159 | If the initial X-Modem handshake (the wait for the remote's start character, immediately following FR-087/FR-089)… | xmodem.py:send_file, xmodem.py:receive_file (no_response flag); mw_transfer_batches.py:_transfer_to_remote_batch, _transfer_to_host_batch; tests test_xmodem.py, test_gui_smoke.py |
+| FR-159 | If the initial X-Modem handshake (the wait for the remote's start character, immediately following FR-087/FR-089)… | xmodem.py:send_file, xmodem.py:receive_file (no_response flag); mw_transfer_batches.py:_transfer_fail_message, mw_transfer_batches.py:_transfer_to_remote_batch, _transfer_to_host_batch; tests test_xmodem.py, test_gui_smoke.py, test_user_area.py |
 | FR-160 | The initial X-Modem handshake wait — the time spent waiting for the very first response… | xmodem.py:XModem.__init__, send_file, receive_file; mw_transfers.py:_handshake_timeout; UIR-093; tests test_xmodem.py |
 | FR-161 | The Remote Configuration Dialog (UIR-116) shall provide a "Test" button beside each of the Receive… | config_dialogs.py:RemoteConfigDialog; UIR-094, UIR-095; tests test_gui_smoke.py |
 | FR-099 | On a **successful** file transfer the application shall automatically refresh the destination file list so… | app.py:_on_transfer_completed, transfer_completed signal, _transfer_to_remote, _transfer_to_host |
@@ -377,6 +386,11 @@ _486 requirements across 61 sections._
 | FR-178 | The application shall provide a **File > New Disk Image…** action (UIR-114) that creates a… | mw_disk_image.py:menu_new_image, mw_disk_image.py:_prompt_new_geometry, utils/disk_image/__init__.py:create_image, app.py:setup_menu; tests test_disk_image/test_write.py, test_gui_smoke.py |
 | FR-179 | The application shall track a **disk-image directory** — the folder browsed by Open Disk Image…… | app.py, mw_disk_image.py:menu_open_image, mw_disk_image.py:menu_save_image, mw_config.py:load_config, mw_config.py:_save_to_path, mw_config.py:menu_general_config, utils/config_handler.py; tests test_gui_smoke.py |
 | FR-180 | Whole-drive **Backup** (FR-150) and **Restore** (FR-151) shall also operate on a Remote-mounted disk image (FR-176)… | mw_backup_restore.py:do_backup, mw_backup_restore.py:do_restore, mw_backup_restore.py:_backup_image_to_host, mw_backup_restore.py:_restore_host_to_image; tests test_gui_smoke.py |
+| FR-185 | On extracting an image's files (FR-171) the application shall preserve each file's CP/M **user area**… | mw_disk_image.py:_extract_files, mw_disk_image.py:_unique_staged_name, utils/disk_image/image.py:CpmImage.read_file, utils/disk_image/filesystem.py:read_file; tests test_disk_image/test_directory.py, test_gui_smoke.py |
+| FR-186 | While a disk image is mounted (FR-169/FR-176), the image pane shall display each file's user… | mw_file_panes.py:_render_file_list, mw_file_panes.py:_pane_area_map, mw_disk_image.py:_copy_host_to_image; tests test_gui_smoke.py |
+| FR-187 | On writing an image back (FR-174), the application shall write each working-directory file into its… | mw_disk_image.py:_repack_workdir, utils/disk_image/image.py:CpmImage.write_file; tests test_disk_image/test_write.py |
+| FR-188 | When transferring a file staged from a **Host-mounted** disk image (FR-185) to the live remote… | mw_transfer_batches.py:_transfer_to_remote_batch, mw_disk_image.py:_host_image_entry, mw_transfer_batches.py:_send_one_to_remote; tests test_gui_smoke.py |
+| FR-189 | While a disk image is mounted in a file pane (FR-169/FR-176), that pane shall provide… | mw_file_panes.py:_render_file_list, mw_file_panes.py:_update_area_filter, mw_file_panes.py:_area_filter_combo, mw_file_panes.py:_apply_host_view, mw_file_panes.py:_apply_remote_view; tests test_user_area.py, test_gui_smoke.py |
 
 ## 4.1 Menu bar
 
@@ -394,7 +408,7 @@ _486 requirements across 61 sections._
 |----|---------|------|
 | UIR-010 | The main window shall contain a status bar at the bottom | app.py:setup_status_bar, app.py:_on_status_changed |
 | UIR-011 | The main window shall contain a "Host Files" group containing a top row with the… | app.py:setup_layout, _update_host_group_title |
-| UIR-012 | The main window shall contain a "Remote Files" group containing a drive-selection drop-down (UIR-017) followed… | app.py:setup_layout |
+| UIR-012 | The main window shall contain a "Remote Files" group containing a drive-selection drop-down (UIR-017) and… | app.py:setup_layout |
 | UIR-013 | The main window shall provide the actions Connect, Disconnect, Copy to Remote, Copy to Host… | app.py:setup_toolbar |
 | UIR-014 | The status bar shall be a single-line text label… | app.py:set_status |
 | UIR-015 | The Connect button shall be enabled at startup | app.py:setup_toolbar |
@@ -405,6 +419,7 @@ _486 requirements across 61 sections._
 | UIR-079 | Each file pane (Host Files — UIR-011, Remote Files — UIR-012) shall present, in a… | mw_file_panes.py:_build_filter_sort_row, mw_file_panes.py:_render_file_list; lang/*.txt (main.filter_placeholder, main.filter_tooltip) |
 | UIR-080 | The filter row (UIR-079) shall also contain a **sort** control… | mw_file_panes.py:_build_filter_sort_row, mw_file_panes.py:_update_sort_arrow, retranslate_ui; lang/*.txt (main.sort.name, main.sort.extension, main.sort_by_tooltip, main.sort_direction_tooltip) |
 | UIR-081 | Both file-list multi-select widgets (UIR-011, UIR-012) shall support drag-and-drop file transfer as specified by FR-136–FR-139… | gui/file_list_widget.py:FileListWidget; app.py:setup_layout, mw_transfers.py:_on_files_dropped, mw_transfers.py:_confirm_dnd_transfer; lang/*.txt (dialog.dnd_confirm.*) |
+| UIR-118 | The Remote Files group shall contain a user-area selection drop-down positioned immediately after the drive-selection… | app.py:setup_layout, mw_remote.py:change_user_area |
 
 ## 4.3 Serial Configuration Dialog
 
@@ -604,6 +619,8 @@ _486 requirements across 61 sections._
 | UIR-113 | The File menu (UIR-002) shall contain a **Close Disk Image…** item, placed immediately after **Save… | app.py:setup_menu, mw_disk_image.py:menu_close_image; lang/*.txt (menu.file.close_image, status.disk_image_closed) |
 | UIR-114 | The File menu (UIR-002) shall contain a **New Disk Image…** item, placed immediately after **Open… | app.py:setup_menu, app.py:_update_host_group_title, app.py:_update_remote_group_title, mw_disk_image.py:menu_new_image, mw_disk_image.py:_prompt_new_geometry; lang/*.txt (menu.file.new_image, dialog.new_image.pick_title, dialog.new_image.pick_label, main.image_unsaved, status.new_image_created) |
 | UIR-115 | The General Config dialog (UIR-040) shall contain a **Default Image Directory** field (a directory chooser)… | gui/config_dialogs.py:GeneralConfigDialog, mw_config.py:menu_general_config; lang/*.txt (config.general.image_directory) |
+| UIR-119 | While a disk image is mounted in a file pane (FR-169/FR-176), each row of that… | mw_file_panes.py:_render_file_list, mw_file_panes.py:_pane_area_map, gui/file_list_widget.py:startDrag, mw_transfers.py:_selected_filenames, mw_context_menu.py; tests test_gui_smoke.py |
+| UIR-120 | Each file pane's filter/sort row (UIR-079) shall include a **user-area filter** drop-down, placed just after… | mw_file_panes.py:_build_filter_sort_row, mw_file_panes.py:_update_area_filter, mw_file_panes.py:_area_filter_combo, app.py:setup_layout; lang/*.txt (main.area_filter_all, main.area_filter_tooltip); tests test_user_area.py, test_gui_smoke.py |
 
 ## 5. External Interface Requirements
 
@@ -649,6 +666,7 @@ _486 requirements across 61 sections._
 | DR-026 | The parser shall tolerate irregular spacing, extra colons within filenames, and mixed line endings (\n… | cpm_parser.py:CPMParser, cpm_parser.py:parse_dir_output |
 | DR-033 | The drive-prompt detection routine shall report a drive prompt for drive X as present when… | cpm_parser.py:has_drive_prompt; FR-101, FR-102; tests test_cpm_parser.py |
 | DR-033a | The application shall provide a drive-prompt letter-extraction routine that, applying the same matching rule as… | cpm_parser.py:drive_prompt_letter; FR-041, FR-042; tests test_cpm_parser.py |
+| DR-051 | The application shall provide a drive-prompt user-area extraction routine that, applying the same matching rule… | cpm_parser.py:drive_prompt_user; FR-184; tests test_cpm_parser.py |
 
 ## 6.4 Parser constraints
 

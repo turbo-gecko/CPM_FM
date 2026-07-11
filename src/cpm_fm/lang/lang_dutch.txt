@@ -143,6 +143,8 @@ error.download_failed = Downloaden van {name} mislukt
 error.transfer_failed = Overdracht van {name} mislukt; overige bestanden genegeerd
 error.transfer_no_response_send = Geen reactie van extern voor {name} - controleer het commando Verzenden naar extern in Config > General
 error.transfer_no_response_recv = Geen reactie van extern voor {name} - controleer het commando Ontvangen van extern in Config > General
+error.transfer_no_response_send_user = Geen reactie van extern voor {name} in gebruikersgebied {area} - het commando Verzenden naar extern is mogelijk niet bereikbaar vanuit gebruikersgebied {area}. Het moet daar aanwezig zijn of met SYS-attribuut in gebruiker 0 staan (zie handleiding sectie 17), of het commando in Config > General is onjuist.
+error.transfer_no_response_recv_user = Geen reactie van extern voor {name} in gebruikersgebied {area} - het commando Ontvangen van extern is mogelijk niet bereikbaar vanuit gebruikersgebied {area}. Het moet daar aanwezig zijn of met SYS-attribuut in gebruiker 0 staan (zie handleiding sectie 17), of het commando in Config > General is onjuist.
 warning.select_upload = Selecteer een of meer bestanden om te uploaden
 warning.select_download = Selecteer een of meer bestanden om te downloaden
 warning.no_config_loaded = Er is geen configuratiebestand geladen. De instellingen zijn alleen op de huidige sessie toegepast. Gebruik Configuratie > Configuratie opslaan om ze naar een configuratiebestand te schrijven.
@@ -269,6 +271,8 @@ main.sort.name = Naam
 main.sort.extension = Extensie
 main.sort_by_tooltip = Sorteren op
 main.sort_direction_tooltip = Oplopende/aflopende volgorde wisselen
+main.area_filter_all = Alle
+main.area_filter_tooltip = Bestanden uit alle gebruikersgebieden tonen, of filteren op één
 
 # --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
 toolbar.backup = Back-up

@@ -82,3 +82,79 @@ def test_dir_listing_single_file(peer, scratch_drive, tmp_path):
     assert name.upper() in {n.upper() for n in listing}
     peer.erase(name, letter=scratch_drive)
     log.info("%s: single file → %d entry (OK)", scratch_drive, len(listing))
+
+
+@pytest.mark.hil
+@pytest.mark.mt("MT-R10", "FR-181", "FR-182")
+def test_user_area_switch_lists(peer, scratch_drive):
+    """Selecting a user area (USER n) re-scopes the listing without breaking it.
+
+    Verifies: FR-181, FR-182.
+    """
+    assert peer.change_drive(scratch_drive)
+    try:
+        assert peer.set_user(0), "USER 0 not accepted"
+        assert isinstance(peer.list(), dict)
+        assert peer.set_user(3), "USER 3 not accepted"
+        assert isinstance(peer.list(), dict)
+    finally:
+        # Always leave the box in the default area so later tests (whose peer
+        # operations run in the current area) are not contaminated.
+        peer.set_user(0)
+
+
+@pytest.mark.hil
+@pytest.mark.mt("MT-R11", "FR-183", "FR-184")
+def test_transfer_targets_selected_user_area(peer, scratch_drive, tmp_path):
+    """A file sent while area 3 is current lands in area 3, not area 0.
+
+    Confirms the CP/M-side assumption FR-183 relies on: a file received after
+    ``USER 3`` is visible under area 3 and absent under area 0. This is a
+    **best-effort** behaviour (FR-183): it works only when the transfer utility
+    is reachable from a non-zero user area (present there, or SYS in user 0). On
+    a target where it is not, the test is skipped (BLOCKED) rather than failed.
+
+    Isolation: user area is a global CP/M state that persists across tests, so
+    this test always restores ``USER 0`` in a ``finally`` — otherwise a failure
+    mid-test would leave the box in area 3 and break every later transfer test
+    (whose utility may not be reachable from area 3).
+
+    Verifies: FR-183, FR-184.
+    """
+    name = "UAREA.TXT"
+    (tmp_path / name).write_bytes(b"user area 3\r\n")
+    assert peer.change_drive(scratch_drive)
+    try:
+        # Clean the name from both areas first.
+        peer.set_user(0)
+        peer.erase(name)
+        peer.set_user(3)
+        peer.erase(name)
+        # Send while area 3 is current (send_file keeps the current area). A
+        # failed launch here means the utility is not reachable from area 3 —
+        # the documented best-effort limit, not a defect.
+        if not peer.send_file(str(tmp_path / name), letter=scratch_drive):
+            pytest.skip(
+                "BLOCKED: transfer utility not reachable from user area 3 "
+                "(best-effort, FR-183)"
+            )
+        peer.set_user(3)
+        in_area_3 = name.upper() in {n.upper() for n in peer.list()}
+        peer.set_user(0)
+        in_area_0 = name.upper() in {n.upper() for n in peer.list()}
+        if not in_area_3:
+            pytest.skip(
+                "BLOCKED: target did not place the file in user area 3 "
+                "(best-effort, FR-183)"
+            )
+        assert not in_area_0, "file leaked into area 0"
+    finally:
+        # Clean the name from both areas and restore the default area, whatever
+        # happened above (assertion, skip, or success).
+        for area in (3, 0):
+            try:
+                peer.set_user(area)
+                peer.erase(name)
+            except Exception:  # noqa: BLE001 - cleanup must not mask the result
+                pass
+        peer.set_user(0)

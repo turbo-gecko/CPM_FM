@@ -65,7 +65,11 @@ class FileListWidget(QListWidget):
 
         Satisfies: FR-136.
         """
-        names = [item.text() for item in self.selectedItems()]
+        # The real filename is stored in UserRole (UIR-119: the display text may
+        # carry a user-area prefix for a mounted image); fall back to the text.
+        names = [
+            item.data(Qt.ItemDataRole.UserRole) or item.text() for item in self.selectedItems()
+        ]
         if not names:
             return
         mime = QMimeData()

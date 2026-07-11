@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import threading
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QMenu, QMessageBox
 
 from cpm_fm.gui.file_action_dialog import FileActionDialog
@@ -38,7 +39,9 @@ class _ContextMenuMixin(MainWindowMixinBase):
         item = list_widget.itemAt(pos)
         if item is None:
             return None, []
-        name = item.text()
+        # UIR-119: the real filename is in UserRole; the display text may carry a
+        # user-area prefix for a mounted image.
+        name = item.data(Qt.ItemDataRole.UserRole) or item.text()
         names = self._selected_filenames(list_widget)
         if name not in names:
             names = [name]

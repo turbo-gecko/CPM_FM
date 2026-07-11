@@ -143,6 +143,8 @@ error.download_failed = Échec du téléchargement de {name}
 error.transfer_failed = Échec du transfert de {name} ; fichiers restants ignorés
 error.transfer_no_response_send = Aucune réponse du système distant pour {name} - vérifiez la commande Envoyer au distant dans Config > Général
 error.transfer_no_response_recv = Aucune réponse du système distant pour {name} - vérifiez la commande Recevoir du distant dans Config > Général
+error.transfer_no_response_send_user = Aucune réponse du système distant pour {name} dans la zone utilisateur {area} - la commande Envoyer au distant n'est peut-être pas accessible depuis la zone utilisateur {area}. Elle doit y être présente ou porter l'attribut SYS dans l'utilisateur 0 (voir le manuel section 17), ou la commande dans Config > Général est incorrecte.
+error.transfer_no_response_recv_user = Aucune réponse du système distant pour {name} dans la zone utilisateur {area} - la commande Recevoir du distant n'est peut-être pas accessible depuis la zone utilisateur {area}. Elle doit y être présente ou porter l'attribut SYS dans l'utilisateur 0 (voir le manuel section 17), ou la commande dans Config > Général est incorrecte.
 warning.select_upload = Veuillez sélectionner un ou plusieurs fichiers à envoyer
 warning.select_download = Veuillez sélectionner un ou plusieurs fichiers à télécharger
 warning.no_config_loaded = Aucun fichier de configuration n'est chargé. Les paramètres ont été appliqués uniquement à la session en cours. Utilisez Configuration > Enregistrer la configuration pour les écrire dans un fichier de configuration.
@@ -269,6 +271,8 @@ main.sort.name = Nom
 main.sort.extension = Extension
 main.sort_by_tooltip = Trier par
 main.sort_direction_tooltip = Basculer l'ordre croissant/décroissant
+main.area_filter_all = Toutes
+main.area_filter_tooltip = Afficher les fichiers de toutes les zones utilisateur, ou filtrer sur une
 
 # --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
 toolbar.backup = Sauvegarder

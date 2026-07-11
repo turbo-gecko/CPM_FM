@@ -123,6 +123,11 @@ class _DiskImageMixin(MainWindowMixinBase):
         # Capture the CP/M file metadata for the read-only details view before the
         # files become plain host files that no longer carry it (FR-173).
         image_files = img.list_files()
+        # FR-185: _extract_files just built the staged-name→area map, but
+        # _cleanup_image_workdir() below resets it to {}; keep the new image's map
+        # in a local and restore it after cleanup (mirroring image_files), so the
+        # area column (UIR-119) and area filter (FR-189) see the real areas.
+        stage_map = self._image_stage_map
 
         # FR-177: remember the real host directory to restore on Close. Read it
         # before _cleanup_image_workdir clears the state: when replacing an already
@@ -137,6 +142,8 @@ class _DiskImageMixin(MainWindowMixinBase):
         self._image_source = path
         self._image_geom = img.geom
         self._image_files = image_files
+        # FR-185: restore the map cleared by _cleanup_image_workdir() above.
+        self._image_stage_map = stage_map
         self._image_pane = mount
         if self._image_details_action is not None:
             self._image_details_action.setEnabled(True)
@@ -391,12 +398,15 @@ class _DiskImageMixin(MainWindowMixinBase):
         Re-opens the source image (for its verbatim boot tracks and geometry),
         clears its directory, writes every regular file in the working directory,
         and saves to ``dest_path``. For a source-less new image (FR-178) it builds
-        a fresh blank image of the open geometry instead. Returns the number of
+        a fresh blank image of the open geometry instead. Each file is written
+        under its real CP/M name and back into its source user area (FR-187),
+        looked up in ``self._image_stage_map`` (a file with no map entry — e.g.
+        one copied in after open — defaults to area 0). Returns the number of
         files written. Raises
         :class:`~cpm_fm.utils.disk_image.filesystem.ImageWriteError` (capacity or
         name) or ``OSError`` (unreadable source / unwritable destination).
 
-        Satisfies: FR-174, FR-178, DR-050.
+        Satisfies: FR-174, FR-178, FR-187, DR-050.
         """
         assert self._image_workdir is not None and self._image_geom is not None
         if self._image_source is None:
@@ -413,8 +423,10 @@ class _DiskImageMixin(MainWindowMixinBase):
             full = os.path.join(self._image_workdir, name)
             if not os.path.isfile(full):
                 continue
+            # FR-187: restore the file's real CP/M name and source user area.
+            cpm_name, area = self._image_stage_map.get(name, (name, 0))
             with open(full, "rb") as fh:
-                src.write_file(name, fh.read())
+                src.write_file(cpm_name, fh.read(), user=area)
             count += 1
         src.save(dest_path)
         return count
@@ -580,6 +592,20 @@ class _DiskImageMixin(MainWindowMixinBase):
         """True when an open disk image is mounted in the Remote pane (FR-176)."""
         return self._image_workdir is not None and self._image_pane == "remote"
 
+    def _host_image_entry(self, staged_name: str) -> tuple[str, int] | None:
+        """Return ``(CP/M name, user area)`` for a staged Host-mounted image file.
+
+        ``None`` when no image is mounted in the Host pane or ``staged_name`` is
+        not a staged image file (an ordinary host file). Lets a Copy to Remote
+        send each image file under its real CP/M name and into its source user
+        area (FR-188).
+
+        Satisfies: FR-185, FR-188.
+        """
+        if self._image_workdir is None or self._image_pane != "host":
+            return None
+        return self._image_stage_map.get(staged_name)
+
     def _list_image_remote(self) -> None:
         """Populate the Remote Files list from the Remote-mounted image workdir.
 
@@ -609,9 +635,11 @@ class _DiskImageMixin(MainWindowMixinBase):
         applying CP/M 8.3 name validation (FR-148/FR-149) and destination-conflict
         resolution (FR-145–FR-147) — the same dialogs the serial upload uses, but
         built directly here because this runs on the GUI thread. Marks the image
-        dirty implicitly (the working-directory signature diverges, FR-175).
+        dirty implicitly (the working-directory signature diverges, FR-175). Each
+        copied-in file is recorded in the current user area (FR-186) so it lands
+        there on write-back (FR-187).
 
-        Satisfies: FR-176.
+        Satisfies: FR-176, FR-186.
         """
         if not self._image_workdir:
             return
@@ -646,6 +674,10 @@ class _DiskImageMixin(MainWindowMixinBase):
                 )
                 break
             existing.add(dest_name.upper())
+            # FR-186: a file copied into a Remote-mounted image lands in the
+            # currently selected user area (UIR-118); record it so the area column
+            # and write-back (FR-187) reflect it.
+            self._image_stage_map[dest_name] = (dest_name, self._remote_user)
             self._record_history(
                 dest_name, src, "remote", "success", os.path.getsize(dest), "", False
             )
@@ -758,21 +790,57 @@ class _DiskImageMixin(MainWindowMixinBase):
     def _extract_files(self, img, workdir: str) -> list[str]:
         """Extract every file in ``img`` to ``workdir``; return the names that failed.
 
-        Corruption of an individual file is tolerated (best-effort listing) rather
-        than aborting the whole open (FR-172).
+        Each file is read from its own user area (FR-185) — so a name present in
+        more than one area reads the correct content rather than the first extent
+        found — and staged under a host filename that is disambiguated when the
+        same name occurs in a second area (``FOO.COM`` then ``FOO~3.COM``), so no
+        file is silently overwritten. ``self._image_stage_map`` records each
+        staged filename's real CP/M name and source area for the pane's area
+        column (UIR-119), area-preserving transfer (FR-188) and write-back
+        (FR-187). Corruption of an individual file is tolerated (best-effort
+        listing) rather than aborting the whole open (FR-172).
 
-        Satisfies: FR-171, FR-172.
+        Satisfies: FR-171, FR-172, FR-185.
         """
         failed: list[str] = []
+        self._image_stage_map = {}
+        used_names: set[str] = set()
         for entry in img.list_files():
-            safe = os.path.basename(entry.name)
+            cpm_name = os.path.basename(entry.name)
+            staged = self._unique_staged_name(cpm_name, entry.user, used_names)
             try:
-                data = img.read_file(entry.name)
-                with open(os.path.join(workdir, safe), "wb") as fh:
+                data = img.read_file(entry.name, user=entry.user)
+                with open(os.path.join(workdir, staged), "wb") as fh:
                     fh.write(data)
             except (KeyError, OSError, ValueError):
                 failed.append(entry.name)
+                continue
+            used_names.add(staged.upper())
+            self._image_stage_map[staged] = (cpm_name, entry.user)
         return failed
+
+    @staticmethod
+    def _unique_staged_name(cpm_name: str, user: int, used: set[str]) -> str:
+        """Return a host filename for ``cpm_name`` unique within ``used`` (FR-185).
+
+        The common case (a name in a single user area) stages under the CP/M name
+        unchanged. When the same name already occurs in another area the area is
+        woven into the base (``FOO.COM`` → ``FOO~3.COM``), and a numeric suffix is
+        added if even that collides, so distinct files never overwrite one another
+        in the flat working directory.
+
+        Satisfies: FR-185.
+        """
+        if cpm_name.upper() not in used:
+            return cpm_name
+        base, dot, ext = cpm_name.partition(".")
+        suffix = f"~{user}"
+        candidate = f"{base}{suffix}{dot}{ext}"
+        n = 1
+        while candidate.upper() in used:
+            candidate = f"{base}{suffix}_{n}{dot}{ext}"
+            n += 1
+        return candidate
 
     def _cleanup_image_workdir(self) -> None:
         """Remove the current image working directory, if any (FR-016, FR-019, FR-171).
@@ -805,8 +873,9 @@ class _DiskImageMixin(MainWindowMixinBase):
             self.remote_list.clear()
         self._update_remote_group_title()
         # FR-173/UIR-109: no image open → clear its metadata and disable the
-        # Image Details… action.
+        # Image Details… action. FR-185: drop the staged-name→area map too.
         self._image_files = []
+        self._image_stage_map = {}
         if self._image_details_action is not None:
             self._image_details_action.setEnabled(False)
         # UIR-113: no image open → Close Disk Image… is disabled too.

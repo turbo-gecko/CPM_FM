@@ -23,6 +23,37 @@ class _TransferBatchesMixin(MainWindowMixinBase):
     conflict and CP/M-name prompts in :mod:`cpm_fm.gui.mw_transfer_guards`.
     """
 
+    def _transfer_fail_message(self, name: str, direction: str) -> str:
+        """Build the failure message for a file whose batch transfer failed.
+
+        A handshake that got no response at all (``_last_xmodem_no_response``)
+        is the tell-tale of a command that never launched (FR-159). When a
+        non-zero remote user area was applied (FR-183) the most likely cause is
+        that the transfer utility is not reachable from that area, so the
+        message names the area and that reachability constraint; otherwise it
+        points at the command config as before. Any other failure keeps the
+        generic transfer-failed message. ``direction`` is ``"remote"`` (send) or
+        ``"host"`` (receive).
+
+        Satisfies: FR-159, FR-183.
+        """
+        if not self._last_xmodem_no_response:
+            return tr("error.transfer_failed", name=name)
+        area = self._applied_user_area
+        if area:  # non-zero, non-None: the area is the likely reachability cause.
+            key = (
+                "error.transfer_no_response_send_user"
+                if direction == "remote"
+                else "error.transfer_no_response_recv_user"
+            )
+            return tr(key, name=name, area=area)
+        key = (
+            "error.transfer_no_response_send"
+            if direction == "remote"
+            else "error.transfer_no_response_recv"
+        )
+        return tr(key, name=name)
+
     def do_copy_to_remote(self):
         """
         Satisfies: FR-080, FR-084, FR-106, FR-176, CR-010.
@@ -84,7 +115,12 @@ class _TransferBatchesMixin(MainWindowMixinBase):
             name = os.path.basename(filepath)
             # The name the file will be given on the remote; differs from the
             # host base name when the user renames it to satisfy CP/M 8.3.
-            remote_name = name
+            # FR-188: a file staged from a Host-mounted disk image carries its
+            # real CP/M name and source user area — send under that name (in case
+            # a duplicate name was disambiguated on staging) and, in "match" mode,
+            # into that area.
+            img_entry = self._host_image_entry(name)
+            remote_name = img_entry[0] if img_entry else name
             # FR-120: stop before starting the next file if cancellation is requested.
             if self._transfer_cancel.is_set():
                 self._finish_cancelled_batch("remote", succeeded)
@@ -142,8 +178,17 @@ class _TransferBatchesMixin(MainWindowMixinBase):
             except OSError:
                 total_bytes = 0
             self.transfer_file_started.emit(remote_name, total_bytes, index)
+            # FR-188: choose the target user area — the file's source area in
+            # "match" mode (default), else the Remote pane's selected area (the
+            # _send_one_to_remote default when user_area is None).
+            user_area = None
+            if (
+                img_entry is not None
+                and str(self.settings.get("image_area_mode", "match")).lower() == "match"
+            ):
+                user_area = img_entry[1]
             try:
-                ok = self._send_one_to_remote(filepath, remote_name)
+                ok = self._send_one_to_remote(filepath, remote_name, user_area=user_area)
             except Exception as e:
                 self._debug(f"[copy-to-remote] EXCEPTION: {e!r}")
                 # FR-142: record the failed file with its error message.
@@ -158,14 +203,11 @@ class _TransferBatchesMixin(MainWindowMixinBase):
                     self._record_history(remote_name, filepath, "remote", "cancelled", 0, "", retry)
                     self._finish_cancelled_batch("remote", succeeded)
                     return
-                # FR-159: a handshake that got no response at all points at a
-                # misconfigured Send to Remote command, distinct from a
-                # generic mid-transfer failure.
-                fail_key = (
-                    "error.transfer_no_response_send"
-                    if self._last_xmodem_no_response
-                    else "error.transfer_failed"
-                )
+                # FR-159/FR-183: a handshake that got no response at all points
+                # at a misconfigured Send to Remote command (or a utility not
+                # reachable from the applied user area), distinct from a generic
+                # mid-transfer failure.
+                fail_msg = self._transfer_fail_message(remote_name, "remote")
                 # FR-142: record the failed file.
                 self._record_history(
                     remote_name,
@@ -173,15 +215,13 @@ class _TransferBatchesMixin(MainWindowMixinBase):
                     "remote",
                     "failure",
                     0,
-                    tr(fail_key, name=remote_name),
+                    fail_msg,
                     retry,
                 )
                 # FR-108: abort the batch and refresh if anything got through.
                 if succeeded:
                     self.transfer_completed.emit("remote")
-                self.error_raised.emit(
-                    tr("dialog.xmodem_error.title"), tr(fail_key, name=remote_name)
-                )
+                self.error_raised.emit(tr("dialog.xmodem_error.title"), fail_msg)
                 return
             # FR-142: record the successful upload with its size.
             self._record_history(remote_name, filepath, "remote", "success", total_bytes, "", retry)
@@ -196,9 +236,11 @@ class _TransferBatchesMixin(MainWindowMixinBase):
         # FR-099: refresh the Remote Files list so the uploaded files show.
         self.transfer_completed.emit("remote")
 
-    def _send_one_to_remote(self, filepath, remote_name: str | None = None) -> bool:
+    def _send_one_to_remote(
+        self, filepath, remote_name: str | None = None, user_area: int | None = None
+    ) -> bool:
         """
-        Satisfies: FR-081, FR-082, FR-083, FR-087, FR-149, FR-159, FR-160.
+        Satisfies: FR-081, FR-082, FR-083, FR-087, FR-149, FR-159, FR-160, FR-183.
 
         Launch the CP/M receiver (PCGET) and send one file over X-Modem.
         Returns True on success. Runs on the batch worker thread; it does not
@@ -206,10 +248,14 @@ class _TransferBatchesMixin(MainWindowMixinBase):
         ``remote_name`` is the name the file is given on the remote (the PCGET
         argument); it defaults to the host base name and differs only when the
         file was renamed to satisfy the CP/M 8.3 convention (FR-149).
+        ``user_area`` is the remote user area to receive the file into (FR-183);
+        it defaults to the tracked current area (FR-184).
         """
         ser = self.serial_mgr.transport_port
         if remote_name is None:
             remote_name = os.path.basename(filepath)
+        if user_area is None:
+            user_area = self._remote_user
         delay = self._launch_delay()
         self._debug(
             f"[copy-to-remote] start file={remote_name} "
@@ -223,6 +269,10 @@ class _TransferBatchesMixin(MainWindowMixinBase):
         if shared:
             self.serial_mgr.pause_terminal_reads()
         try:
+            # FR-183: set the target user area before launching, so PCGET
+            # receives the file into that area. Done before reset_input_buffer so
+            # the USER command's echo/prompt is cleared from the transport buffer.
+            self._apply_transfer_user_area(user_area)
             # Clear stale bytes, then launch the CP/M receiver (PCGET) on the
             # Terminal Port so its start character lands on a clean transport
             # buffer that send_file does not flush.
@@ -341,14 +391,11 @@ class _TransferBatchesMixin(MainWindowMixinBase):
                     self._record_history(name, save_path, "host", "cancelled", 0, "", retry)
                     self._finish_cancelled_batch("host", succeeded)
                     return
-                # FR-159: a handshake that got no response at all points at a
-                # misconfigured Receive from Remote command, distinct from a
+                # FR-159/FR-183: a handshake that got no response at all points
+                # at a misconfigured Receive from Remote command (or a utility
+                # not reachable from the applied user area), distinct from a
                 # generic mid-transfer failure.
-                fail_key = (
-                    "error.transfer_no_response_recv"
-                    if self._last_xmodem_no_response
-                    else "error.transfer_failed"
-                )
+                fail_msg = self._transfer_fail_message(name, "host")
                 # FR-142: record the failed file.
                 self._record_history(
                     name,
@@ -356,13 +403,13 @@ class _TransferBatchesMixin(MainWindowMixinBase):
                     "host",
                     "failure",
                     0,
-                    tr(fail_key, name=name),
+                    fail_msg,
                     retry,
                 )
                 # FR-108: abort the batch and refresh if anything got through.
                 if succeeded:
                     self.transfer_completed.emit("host")
-                self.error_raised.emit(tr("dialog.xmodem_error.title"), tr(fail_key, name=name))
+                self.error_raised.emit(tr("dialog.xmodem_error.title"), fail_msg)
                 return
             # FR-142: record the successful download with the received file size
             # (the X-Modem stream carries no length, so read it from disk).
@@ -381,15 +428,19 @@ class _TransferBatchesMixin(MainWindowMixinBase):
         # FR-099: refresh the Host Files list so the downloaded files show.
         self.transfer_completed.emit("host")
 
-    def _recv_one_to_host(self, save_path) -> bool:
+    def _recv_one_to_host(self, save_path, user_area: int | None = None) -> bool:
         """
-        Satisfies: FR-081, FR-082, FR-083, FR-087, FR-159, FR-160.
+        Satisfies: FR-081, FR-082, FR-083, FR-087, FR-159, FR-160, FR-183.
 
         Launch the CP/M sender (PCPUT) and receive one file over X-Modem.
         Returns True on success. Runs on the batch worker thread; it does not
         touch the progress dialog or refresh (the batch driver owns those).
+        ``user_area`` is the remote user area to send the file from (FR-183); it
+        defaults to the tracked current area (FR-184).
         """
         ser = self.serial_mgr.transport_port
+        if user_area is None:
+            user_area = self._remote_user
         delay = self._launch_delay()
         self._debug(
             f"[copy-to-host] start file={os.path.basename(save_path)} "
@@ -403,6 +454,9 @@ class _TransferBatchesMixin(MainWindowMixinBase):
         if shared:
             self.serial_mgr.pause_terminal_reads()
         try:
+            # FR-183: set the source user area before launching, so PCPUT sends
+            # the file from that area.
+            self._apply_transfer_user_area(user_area)
             # Launch the CP/M sender (PCPUT) on the Terminal Port, then receive.
             # receive_file drives the handshake (polls with NAK first, then 'C'
             # per NFR-003f), so it tolerates PCPUT taking several seconds to arm.
