@@ -185,6 +185,7 @@ terminal.menu.macros_sub = Makra
 config.serial.title = Konfiguracja portu szeregowego
 config.serial.terminal_port = Port terminala
 config.serial.transfer_port = Port transportu
+config.serial.show_all_ports = Pokaż wszystkie porty
 config.serial.speed = Prędkość
 config.serial.data_bits = Bity danych
 config.serial.parity = Parzystość

@@ -190,6 +190,7 @@ terminal.menu.macros_sub = Battle Cries
 config.serial.title = Signal Flag Config
 config.serial.terminal_port = Captain's Log Port
 config.serial.transfer_port = Cargo Route Port
+config.serial.show_all_ports = Show All Ports, Arr!
 config.serial.speed = Speed o' the Wind
 config.serial.data_bits = Bits o' Information
 config.serial.parity = Parity Check

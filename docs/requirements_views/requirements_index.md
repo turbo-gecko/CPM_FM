@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_499 requirements across 62 sections._
+_500 requirements across 62 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -427,8 +427,8 @@ _499 requirements across 62 sections._
 |----|---------|------|
 | UIR-020 | The Serial Configuration Dialog shall be a modal dialog titled "Serial Config" | config_dialogs.py:__init__, config_dialogs.py:SerialConfigDialog |
 | UIR-021 | The dialog shall present a "Port Settings" group laid out in two columns, with the… | config_dialogs.py:ConfigDialog, config_dialogs.py:create_widgets, config_dialogs.py:SerialConfigDialog |
-| UIR-022 | The dialog shall provide a Terminal Port drop-down list populated by enumerating the serial ports… | config_dialogs.py:SerialConfigDialog, config_dialogs.py:__init__ |
-| UIR-023 | The dialog shall provide a Transfer Port drop-down list populated by enumerating the serial ports… | config_dialogs.py:SerialConfigDialog, config_dialogs.py:__init__ |
+| UIR-022 | The dialog shall provide a Terminal Port drop-down list populated by enumerating the serial ports… | config_dialogs.py:SerialConfigDialog, config_dialogs.py:__init__, mw_config.py:menu_serial_config, utils/port_filter.py:select_ports; tests test_port_filter.py, test_gui_smoke.py |
+| UIR-023 | The dialog shall provide a Transfer Port drop-down list populated by enumerating the serial ports… | config_dialogs.py:SerialConfigDialog, config_dialogs.py:__init__, mw_config.py:menu_serial_config, utils/port_filter.py:select_ports; tests test_port_filter.py, test_gui_smoke.py |
 | UIR-024 | The dialog shall provide a Speed drop-down list with the values 300, 1200, 2400, 4800… | config_dialogs.py:SerialConfigDialog, config_dialogs.py:__init__ |
 | UIR-025 | The dialog shall provide a Data drop-down list with the values 7 and 8… | config_dialogs.py:SerialConfigDialog, config_dialogs.py:__init__ |
 | UIR-026 | The dialog shall provide a Parity drop-down list with the values NONE, ODD, EVEN, MARK… | config_dialogs.py:SerialConfigDialog, config_dialogs.py:__init__ |
@@ -440,6 +440,7 @@ _499 requirements across 62 sections._
 | UIR-032 | The dialog shall provide a "Terminal Timeout (ms)" text field that defaults to 100 and… | config_dialogs.py:SerialConfigDialog; serial_manager.py:open_port |
 | UIR-033 | The dialog shall provide a "Transfer Timeout (ms)" text field that defaults to 100 and… | config_dialogs.py:SerialConfigDialog; serial_manager.py:open_port; NFR-003i |
 | UIR-034 | The Terminal Config dialog's Terminal tab (UIR-103a) shall provide a "Terminal Type" dropdown offering VT100… | config_dialogs.py:TerminalConfigDialog, utils/config_handler.py, gui/mw_config.py:_apply_terminal_type, gui/mw_config.py:_apply_terminal_settings, gui/mw_remote.py:_set_terminal_type_from_menu; tests test_config_handler.py, test_vt100_engine.py, test_gui_smoke.py |
+| UIR-121 | The dialog shall provide a "Show all ports" checkbox, defaulting to **off**, that controls what… | config_dialogs.py:SerialConfigDialog, config_dialogs.py:create_widgets, config_dialogs.py:_on_show_all_toggled, config_dialogs.py:save, mw_config.py:menu_serial_config, utils/port_filter.py:select_ports; lang/*.txt (config.serial.show_all_ports); tests test_port_filter.py, test_gui_smoke.py |
 
 ## 4.4 General Configuration Dialog
 
@@ -628,7 +629,7 @@ _499 requirements across 62 sections._
 |----|---------|------|
 | IFR-001 | The application shall communicate with the remote CP/M system over a serial (RS-232 style) communications… | serial_manager.py:SerialManager |
 | IFR-002 | The application shall support configuring two logical serial ports — a Terminal Port and a… | config_dialogs.py:SerialConfigDialog, serial_manager.py:SerialManager |
-| IFR-003 | The application shall enumerate the serial ports installed on the host and present them for… | mw_config.py:menu_serial_config |
+| IFR-003 | The application shall enumerate the serial ports installed on the host and present them for… | mw_config.py:menu_serial_config, utils/port_filter.py:select_ports; tests test_port_filter.py |
 | IFR-004 | Configuration data shall be exchanged with the file system as JSON files | config_handler.py:ConfigHandler, config_handler.py:load_json, config_handler.py:save_json; tests test_config_handler.py |
 
 ## 6.1 Line filtering

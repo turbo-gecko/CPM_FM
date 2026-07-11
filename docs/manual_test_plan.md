@@ -4,9 +4,9 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.55 |
+| Version | 1.56 |
 | Status | Draft |
-| Date | 2026-07-11 |
+| Date | 2026-07-12 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.25.0) |
 
 ---
@@ -161,7 +161,9 @@ then edit ports via Config > Serial to match your hardware), unless a case says 
 
 | ID | Req | Steps | Expected |
 |----|-----|-------|----------|
-| MT-P01 | IFR-003, UIR-022, UIR-023 | Plug in a known adapter. Open Config > Serial. Inspect the Terminal Port and Transfer Port drop-downs. | Both drop-downs list the host's installed serial ports, including the just-plugged adapter. |
+| MT-P01 | IFR-003, UIR-022, UIR-023 | Plug in a known USB adapter. Open Config > Serial (leave "Show all ports" unticked). Inspect the Terminal Port and Transfer Port drop-downs. | Both drop-downs list the host's **active** ports with the just-plugged USB adapter near the top; on Linux the inactive legacy nodes (`/dev/ttyS1`…`/dev/ttyS31`) are **not** shown, so the list is short. |
+| MT-P01a | UIR-121 | In Config > Serial, tick **Show all ports**, then untick it. | Ticking immediately expands both drop-downs to every port the host reports (on Linux the full `/dev/ttyS*` run appears); the current selection is preserved. Unticking collapses them back to the active list. The checkbox is unticked again the next time the dialog is opened, and toggling it does not by itself change the saved configuration. |
+| MT-P01b | UIR-022, UIR-023 | Configure Terminal Port to an inactive/unplugged port while "Show all ports" is ticked, save, close, then reopen the dialog with "Show all ports" unticked. | The configured port is still listed and selected in the drop-down even though it is otherwise hidden — the saved selection is never silently dropped. |
 | MT-P02 [visual] | FR-020, UIR-020, UIR-021, UIR-029 | Open Config > Serial. | Modal dialog titled "Serial Config"; "Port Settings" and "Transmit Delay" groups laid out as two columns (name left, field right). |
 | MT-P03 | UIR-024..028 | Inspect each drop-down's values and defaults. | Speed list = 300…921600, default 115200; Data = 7,8 default 8; Parity = NONE,ODD,EVEN,MARK,SPACE default NONE; Stop Bits = 1,2 default 1; Flow = NONE,XON/XOFF,RTS/CTS,DSR/DTR default RTS/CTS. |
 | MT-P04 | UIR-030, UIR-031 | Try to type out-of-range / non-integer values into msec/char and msec/line. | Each field accepts only integers 0–255; default 0. |

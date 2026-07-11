@@ -185,6 +185,7 @@ terminal.menu.macros_sub = Μακροεντολές
 config.serial.title = Σειριακές Ρυθμίσεις
 config.serial.terminal_port = Θύρα τερματικού
 config.serial.transfer_port = Θύρα μεταφοράς
+config.serial.show_all_ports = Εμφάνιση όλων των θυρών
 config.serial.speed = Ταχύτητα
 config.serial.data_bits = Bits δεδομένων
 config.serial.parity = Παритетность

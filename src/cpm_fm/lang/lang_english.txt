@@ -217,6 +217,7 @@ terminal.menu.macros_sub = Macros
 config.serial.title = Serial Config
 config.serial.terminal_port = Terminal Port
 config.serial.transfer_port = Transfer Port
+config.serial.show_all_ports = Show All Ports
 config.serial.speed = Speed
 config.serial.data_bits = Data Bits
 config.serial.parity = Parity

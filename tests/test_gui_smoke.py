@@ -3107,7 +3107,7 @@ def test_serial_config_save_persists_only_serial_to_active_file(qapp, state, mon
 
         captured = {}
 
-        def fake_dialog(parent, settings, current_ports, callback, window_state):
+        def fake_dialog(parent, settings, active_ports, all_ports, callback, window_state):
             captured["callback"] = callback
 
         monkeypatch.setattr("cpm_fm.gui.mw_config.SerialConfigDialog", fake_dialog)
@@ -3257,7 +3257,7 @@ def test_dialog_save_warns_and_writes_nothing_when_no_config_loaded(qapp, state,
 
         captured = {}
 
-        def fake_dialog(parent, settings, current_ports, callback, window_state):
+        def fake_dialog(parent, settings, active_ports, all_ports, callback, window_state):
             captured["callback"] = callback
 
         monkeypatch.setattr("cpm_fm.gui.mw_config.SerialConfigDialog", fake_dialog)
@@ -3270,6 +3270,39 @@ def test_dialog_save_warns_and_writes_nothing_when_no_config_loaded(qapp, state,
         assert win.settings["terminal_port"] == "COM9"
     finally:
         win.close()
+
+
+def test_serial_dialog_show_all_ports_toggle(qapp, monkeypatch):
+    """Verifies: UIR-121, UIR-022, UIR-023."""
+    # UIR-022/UIR-023: the port drop-downs show the active list by default;
+    # UIR-121: the "Show all ports" toggle reveals the full host list live and
+    # is transient view state that is never persisted.
+    from cpm_fm.gui.config_dialogs import ConfigDialog, SerialConfigDialog
+
+    # The base dialog calls exec() in __init__; neutralise it so the modal does
+    # not block this headless test.
+    monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
+    active = ["/dev/ttyUSB0"]
+    every = ["/dev/ttyUSB0", "/dev/ttyS0", "/dev/ttyS1"]
+    saved: dict = {}
+    dlg = SerialConfigDialog(None, {"terminal_port": "/dev/ttyUSB0"}, active, every, saved.update)
+    try:
+        term = dlg.entries["terminal_port"]
+        items = lambda c: [c.itemText(i) for i in range(c.count())]  # noqa: E731
+        # Default view: only the active port(s).
+        assert items(term) == ["/dev/ttyUSB0"]
+        # UIR-121: enabling the toggle reveals the full list and keeps selection.
+        dlg.entries["show_all_ports"].setChecked(True)
+        assert set(items(term)) == set(every)
+        assert term.currentText() == "/dev/ttyUSB0"
+        # Disabling collapses back to the active list.
+        dlg.entries["show_all_ports"].setChecked(False)
+        assert items(term) == ["/dev/ttyUSB0"]
+        # UIR-121: the toggle is never written back to the settings on Save.
+        dlg.save()
+        assert "show_all_ports" not in saved
+    finally:
+        dlg.deleteLater()
 
 
 def test_issue_remote_cmd_uses_1k_command_when_enabled(qapp, state, monkeypatch):

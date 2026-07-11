@@ -79,6 +79,12 @@ class ConfigDialog(QDialog):
         # FR-004: optional geometry persistence for this dialog.
         self._window_state = window_state
         self._state_key = state_key
+        # UIR-121: keys of value-bearing fields that are transient view state and
+        # must not be written back to the config on Save (e.g. "Show all ports").
+        # Initialised here — before create_widgets() — so subclasses that build
+        # their own widget tree (e.g. TerminalConfigDialog) can still register
+        # ephemeral fields via _build_field.
+        self._ephemeral_keys: set[str] = set()
 
         self.create_widgets()
         if window_state is not None and state_key is not None:
@@ -169,6 +175,11 @@ class ConfigDialog(QDialog):
         current = str(self.settings.get(key, field.get("default", "")))
         widget: QWidget
 
+        # UIR-121: a field flagged ``persist: False`` carries transient view
+        # state; register it so save() leaves it out of the stored settings.
+        if field.get("persist") is False:
+            self._ephemeral_keys.add(key)
+
         if field["type"] == "button":
             # FR-161: a standalone action button (e.g. "Test"), not a
             # settings-bearing field. ``on_click`` names a method on this
@@ -250,9 +261,17 @@ class ConfigDialog(QDialog):
 
     def save(self):
         """
-        Satisfies: FR-020, FR-021.
+        Satisfies: FR-020, FR-021, UIR-121.
+
+        Transient view-only fields (``self._ephemeral_keys``, e.g. the serial
+        dialog's "Show all ports" toggle) are excluded so they are never
+        persisted to the configuration.
         """
-        new_settings = {key: self._value(w) for key, w in self.entries.items()}
+        new_settings = {
+            key: self._value(w)
+            for key, w in self.entries.items()
+            if key not in self._ephemeral_keys
+        }
         self.result_settings = new_settings
         self.callback(new_settings)
         self.accept()
@@ -266,25 +285,42 @@ class SerialConfigDialog(ConfigDialog):
     Satisfies: UIR-020-UIR-033, IFR-002.
     """
 
-    def __init__(self, parent, settings, current_ports, callback, window_state=None):
+    def __init__(self, parent, settings, active_ports, all_ports, callback, window_state=None):
         """
-        Satisfies: UIR-022-UIR-033.
+        Satisfies: UIR-022-UIR-033, UIR-121.
 
-        Define fields based on Requirements.
+        Define fields based on Requirements. ``active_ports`` is the filtered
+        list shown by default (UIR-022/UIR-023); ``all_ports`` is the full host
+        enumeration revealed by the "Show all ports" toggle (UIR-121). Both are
+        pre-built by :meth:`mw_config.menu_serial_config`, so toggling swaps
+        between them without re-scanning the host.
         """
+        # UIR-121: retained so the toggle can swap the two port drop-downs
+        # between the active and full lists live.
+        self._active_ports = list(active_ports)
+        self._all_ports = list(all_ports)
         fields = [
+            # UIR-121: transient view toggle (not persisted) — reveals the
+            # otherwise-hidden inactive/legacy ports in the two port drop-downs.
+            {
+                "key": "show_all_ports",
+                "label_key": "config.serial.show_all_ports",
+                "type": "checkbox",
+                "default": "OFF",
+                "persist": False,
+            },
             {
                 "key": "terminal_port",
                 "label_key": "config.serial.terminal_port",
                 "type": "dropdown",
-                "options": current_ports,
+                "options": active_ports,
                 "default": "COM1",
             },
             {
                 "key": "transport_port",
                 "label_key": "config.serial.transfer_port",
                 "type": "dropdown",
-                "options": current_ports,
+                "options": active_ports,
                 "default": "COM1",
             },
             {
@@ -379,6 +415,41 @@ class SerialConfigDialog(ConfigDialog):
             window_state,
             "serial_config",
         )
+
+    def create_widgets(self):
+        """
+        Satisfies: UIR-121.
+
+        Extends the base build to wire the "Show all ports" toggle to the two
+        port drop-downs. Runs before the modal ``exec()`` in the base
+        constructor, so the connection is live for the dialog's whole lifetime.
+        """
+        super().create_widgets()
+        toggle = self.entries.get("show_all_ports")
+        if toggle is not None:
+            toggle.toggled.connect(self._on_show_all_toggled)
+
+    def _on_show_all_toggled(self, show_all: bool):
+        """
+        Satisfies: UIR-121.
+
+        Repopulate the Terminal/Transfer port drop-downs from the full or the
+        active list, preserving each combo's current selection (re-adding it if
+        it is not in the newly shown list, so a live choice is never lost).
+        """
+        ports = self._all_ports if show_all else self._active_ports
+        for key in ("terminal_port", "transport_port"):
+            combo = self.entries.get(key)
+            if combo is None:
+                continue
+            current = combo.currentText()
+            combo.blockSignals(True)
+            combo.clear()
+            combo.addItems([str(p) for p in ports])
+            if current and combo.findText(current) < 0:
+                combo.insertItem(0, current)
+            combo.setCurrentText(current)
+            combo.blockSignals(False)
 
 
 class RemoteConfigDialog(ConfigDialog):

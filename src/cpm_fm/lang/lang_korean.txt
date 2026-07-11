@@ -185,6 +185,7 @@ terminal.menu.macros_sub = 매크로
 config.serial.title = 시리얼 설정
 config.serial.terminal_port = 터미널 포트
 config.serial.transfer_port = 전송 포트
+config.serial.show_all_ports = 모든 포트 표시
 config.serial.speed = 속도
 config.serial.data_bits = 데이터 비트
 config.serial.parity = 패리티

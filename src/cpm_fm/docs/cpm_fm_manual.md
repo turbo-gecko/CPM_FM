@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.37.1**
+**Version 2.37.2**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -146,6 +146,7 @@ Configure how the program talks to the serial hardware:
 
 | Field | Options | Default |
 |-------|---------|---------|
+| **Show All Ports** | On / Off | Off |
 | **Terminal Port** | Auto-detected ports | — |
 | **Transport Port** | Auto-detected ports | — |
 | **Speed** | 300 – 921600 baud | 115200 |
@@ -159,6 +160,8 @@ Configure how the program talks to the serial hardware:
 | **Transfer Timeout (ms)** | 10 – 5000 | 100 |
 
 > **Terminal Port vs. Transport Port:** The *Terminal Port* carries interactive commands and directory listings; the *Transport Port* carries X-Modem file transfers. They may be the **same** physical port or **two different** ports. When they share one port, the program automatically pauses terminal reading during transfers to keep the data clean.
+
+> **Show All Ports:** By default the two port drop-downs list only the *active* ports — USB serial adapters appear first, and the inactive legacy serial nodes that Linux always creates (`/dev/ttyS0`…`/dev/ttyS31`) are hidden so the list stays short and the port you want is easy to find. Tick **Show All Ports** to reveal every port the host reports. The port a configuration already uses is always shown, even when it is hidden or currently unplugged, so loading a config never silently changes your port. This checkbox affects the list only; it is not saved with the configuration and starts unticked each time you open the dialog.
 
 > **Msec per Char / Msec per Line** add small pacing delays when sending data — useful for slower CP/M systems that can drop characters if fed too fast.
 
@@ -667,6 +670,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 
 | Setting | Default |
 |---------|---------|
+| Show All Ports (view toggle, not saved) | Off |
 | Speed | 115200 baud |
 | Data Bits | 8 |
 | Parity | NONE |

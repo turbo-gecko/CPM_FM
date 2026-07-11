@@ -17,6 +17,7 @@ from cpm_fm.gui.manual_dialog import ManualDialog
 from cpm_fm.gui.mw_base import MainWindowMixinBase
 from cpm_fm.utils.config_handler import DEFAULT_SETTINGS
 from cpm_fm.utils.i18n import tr
+from cpm_fm.utils.port_filter import select_ports
 
 
 class _ConfigMixin(MainWindowMixinBase):
@@ -281,11 +282,22 @@ class _ConfigMixin(MainWindowMixinBase):
 
     def menu_serial_config(self):
         """
-        Satisfies: FR-020, IFR-003.
+        Satisfies: FR-020, IFR-003, UIR-022, UIR-023, UIR-121.
 
-        IFR-003 / UIR-022 / UIR-023: enumerate the host's serial ports.
+        IFR-003 / UIR-022 / UIR-023: enumerate the host's serial ports. Only the
+        active ports are offered by default — unbacked legacy nodes (Linux's
+        ``/dev/ttyS0``…``ttyS31``) are hidden and USB adapters sorted first
+        (GitHub issue #12) — with the full list one "Show all ports" toggle away
+        (UIR-121). The currently-configured ports are always kept so a saved
+        selection is never silently dropped.
         """
-        ports = [p.device for p in serial.tools.list_ports.comports()]
+        infos = list(serial.tools.list_ports.comports())
+        configured = [
+            self.settings.get("terminal_port", ""),
+            self.settings.get("transport_port", ""),
+        ]
+        active_ports = select_ports(infos, always_include=configured)
+        all_ports = select_ports(infos, show_all=True, always_include=configured)
 
         def update_settings(new_set):
             self.settings.update(new_set)
@@ -295,7 +307,9 @@ class _ConfigMixin(MainWindowMixinBase):
             if not self._save_subset_to_active_config(new_set, "status.serial_settings_saved"):
                 self.set_status(tr("status.serial_settings_updated"))
 
-        SerialConfigDialog(self, self.settings, ports, update_settings, self.window_state)
+        SerialConfigDialog(
+            self, self.settings, active_ports, all_ports, update_settings, self.window_state
+        )
 
     def menu_general_config(self):
         """

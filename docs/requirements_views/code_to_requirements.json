@@ -130,7 +130,8 @@
     "UIR-107",
     "UIR-115",
     "UIR-116",
-    "UIR-117"
+    "UIR-117",
+    "UIR-121"
   ],
   "src/cpm_fm/gui/conflict_dialog.py": [
     "FR-146",
@@ -212,6 +213,8 @@
     "FR-176",
     "FR-179",
     "IFR-003",
+    "UIR-022",
+    "UIR-023",
     "UIR-034",
     "UIR-062",
     "UIR-076",
@@ -221,7 +224,8 @@
     "UIR-104",
     "UIR-106",
     "UIR-115",
-    "UIR-116"
+    "UIR-116",
+    "UIR-121"
   ],
   "src/cpm_fm/gui/mw_context_menu.py": [
     "CR-010",
@@ -701,6 +705,13 @@
     "FR-124",
     "NFR-005",
     "UIR-077"
+  ],
+  "src/cpm_fm/utils/port_filter.py": [
+    "CR-014",
+    "IFR-003",
+    "UIR-022",
+    "UIR-023",
+    "UIR-121"
   ],
   "src/cpm_fm/utils/temp_cleanup.py": [
     "CR-014",

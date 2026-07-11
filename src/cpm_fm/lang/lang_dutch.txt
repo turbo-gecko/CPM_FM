@@ -185,6 +185,7 @@ terminal.menu.macros_sub = Macro's
 config.serial.title = Seriële Configuratie
 config.serial.terminal_port = Terminalpoort
 config.serial.transfer_port = Transportpoort
+config.serial.show_all_ports = Alle poorten tonen
 config.serial.speed = Snelheid
 config.serial.data_bits = Databits
 config.serial.parity = Pariteit

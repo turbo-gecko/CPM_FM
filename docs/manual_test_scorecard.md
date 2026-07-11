@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.54 |
-| Scorecard for plan version | 1.55 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.55 |
+| Scorecard for plan version | 1.56 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -88,7 +88,9 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 ### §6 Serial config & enumeration
 | ID | Title | Req | Result | Env | Notes |
 |----|-------|-----|:------:|:---:|-------|
-| MT-P01 | Port drop-downs enumerate host ports | IFR-003, UIR-022/023 | | | |
+| MT-P01 | Port drop-downs enumerate active host ports | IFR-003, UIR-022/023 | | | |
+| MT-P01a | "Show all ports" toggle reveals/hides full list | UIR-121 | | | |
+| MT-P01b | Configured port always listed even when hidden | UIR-022/023 | | | |
 | MT-P02 | Serial dialog title/layout | FR-020, UIR-020/021/029 | | | |
 | MT-P03 | Drop-down values & defaults | UIR-024-028 | | | |
 | MT-P04 | msec fields 0–255 integer only | UIR-030/031 | | | |
