@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.53 |
-| Scorecard for plan version | 1.54 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.54 |
+| Scorecard for plan version | 1.55 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -208,7 +208,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-T13 | Cancel single live transfer; CAN abort; no error | FR-120, NFR-003m | | | |
 | MT-T14 | Cancel mid-batch; skip rest; refresh; no partial file | FR-120 | | | |
 | MT-T15 | Misconfigured remote command reports "No response" diagnosis, not generic failure | FR-159, FR-160 | | | |
-| MT-T16 | Zero-byte file skipped on Copy to Remote (status + history), batch continues; banner-chatty receiver's normal-file handshake not fooled by stray 'C' | FR-106a, NFR-003r | | | |
+| MT-T16 | Zero-byte file skipped on Copy to Remote (status + history), batch continues; normal-file transfer starts promptly (right after the launch delay) | FR-106a | | | |
 
 ### §11.1 Drag-and-drop file transfer
 | ID | Title | Req | Result | Env | Notes |

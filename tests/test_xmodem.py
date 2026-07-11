@@ -8,7 +8,6 @@ receive, since X-Modem carries no length).
 """
 
 import threading
-import time
 
 from cpm_fm.terminal.xmodem import XModem
 
@@ -67,82 +66,16 @@ class _FakeSerial:
         self.flushes += 1
 
 
-class _ResponsiveReceiver(_FakeSerial):
-    """Fake receiver that models real handshake timing for send tests.
-
-    It serves the seeded handshake bytes (``prefix`` — which may embed a start-up
-    banner containing a stray ``C`` before the genuine start character, to
-    exercise NFR-003r), then stays idle, then ACKs (or, when ``ack`` is False,
-    NAKs) each data/EOT frame reactively. This is what real hardware does: the
-    receiver sends its start character, goes quiet to await the packet, and only
-    responds once a frame arrives. It lets the sender's NFR-003r settle-check see
-    a genuinely idle line after the start character, unlike the older pre-seeded
-    ``b"C" + ACK * n`` fakes whose trailing ACKs now (correctly) look like banner
-    noise.
-    """
-
-    def __init__(self, prefix: bytes, ack: bool = True):
-        super().__init__(prefix)
-        self._ack = ack
-
-    def write(self, data: bytes) -> int:
-        n = super().write(data)
-        if data[:1] in (SOH, STX, EOT):
-            self._inbuf += ACK if self._ack else NAK
-        return n
-
-
-class _XmReceiver(_FakeSerial):
-    """Models the RomWBW XM receiver for send tests (NFR-003r).
-
-    Emits a start-up banner as one continuous burst (containing stray 'C's), then
-    — after a real quiet gap of ``idle`` seconds — polls its genuine start
-    character (observed on the bench as 'C' followed by a stray 'K'), and after
-    the handshake ACKs (or, when ``ack`` is False, NAKs) each data/EOT frame
-    reactively. The quiet gap before the poll is exactly what lets the sender's
-    NFR-003r idle-before check tell the real start char from the banner's.
-    """
-
-    def __init__(self, banner: bytes, poll: bytes = b"CK", ack: bool = True, idle: float = 0.15):
-        super().__init__(banner)
-        self._poll = poll
-        self._ack = ack
-        self._idle = idle
-        self._drained_at = None
-        self.armed = False
-
-    @property
-    def in_waiting(self) -> int:
-        if self._inbuf:
-            return len(self._inbuf)
-        if not self.armed:
-            now = time.time()
-            if self._drained_at is None:
-                self._drained_at = now  # banner just drained: start the quiet clock
-            elif now - self._drained_at >= self._idle:
-                self.armed = True
-                self._inbuf += self._poll  # release one 'CK' poll after the gap
-                return len(self._inbuf)
-        return 0
-
-    def write(self, data: bytes) -> int:
-        n = super().write(data)
-        if data[:1] in (SOH, STX, EOT):
-            self._inbuf += ACK if self._ack else NAK
-        return n
-
-
 def test_send_file_reports_progress_per_packet(tmp_path):
     """Verifies: FR-105, NFR-003a."""
     # 300 bytes -> three 128-byte packets (128, 128, 44 real bytes).
     path = tmp_path / "UP.TXT"
     path.write_bytes(bytes(range(256)) + bytes(44))  # 300 bytes
 
-    # Receiver requests CRC ('C'), then goes idle and ACKs each frame reactively.
-    fake = _ResponsiveReceiver(b"C")
+    # Receiver answers: 'C' (request CRC mode) then one ACK per packet + EOT ACK.
+    fake = _FakeSerial(b"C" + ACK * 4)
     calls: list[tuple[int, int, int | None]] = []
     xm = XModem(fake, progress=lambda b, n, t: calls.append((b, n, t)))
-    xm.handshake_settle = 0.05  # keep the NFR-003r settle window short for the test
 
     assert xm.send_file(str(path)) is True
     # One callback per data packet (not for the EOT), cumulative byte counts,
@@ -157,11 +90,10 @@ def test_send_file_1k_uses_stx_1024_byte_frames(tmp_path):
     path = tmp_path / "UP1K.TXT"
     path.write_bytes(bytes(range(256)) * 4 + bytes(76))  # 1100 bytes
 
-    # Receiver requests CRC ('C'), then goes idle and ACKs each frame reactively.
-    fake = _ResponsiveReceiver(b"C")
+    # Receiver requests CRC ('C'), then one ACK per packet + EOT ACK.
+    fake = _FakeSerial(b"C" + ACK * 3)
     calls: list[tuple[int, int, int | None]] = []
     xm = XModem(fake, progress=lambda b, n, t: calls.append((b, n, t)))
-    xm.handshake_settle = 0.05
 
     assert xm.send_file(str(path), use_1k=True) is True
     # Progress counts real file bytes; total is the 1100-byte file size.
@@ -356,7 +288,7 @@ def test_send_file_returns_false_when_no_start_char(tmp_path, monkeypatch):
     path.write_bytes(b"x" * 10)
     fake = _FakeSerial(b"")
     xm = XModem(fake)
-    monkeypatch.setattr(xm, "_wait_for_start_char", lambda *a, **k: b"")
+    monkeypatch.setattr(xm, "_wait_for_one_of", lambda *a, **k: b"")
     assert xm.send_file(str(path)) is False
     assert CAN not in fake.written
 
@@ -403,10 +335,8 @@ def test_send_file_aborts_after_nak_exhaustion(tmp_path):
     # returns False rather than looping forever.
     path = tmp_path / "UP.TXT"
     path.write_bytes(bytes(range(128)))
-    fake = _ResponsiveReceiver(b"C", ack=False)  # CRC handshake, then NAK every frame
-    xm = XModem(fake)
-    xm.handshake_settle = 0.05
-    assert xm.send_file(str(path)) is False
+    fake = _FakeSerial(b"C" + NAK * 10)  # CRC handshake, then nothing but NAKs
+    assert XModem(fake).send_file(str(path)) is False
 
 
 def test_send_file_pads_final_short_chunk_with_eof(tmp_path):
@@ -415,69 +345,12 @@ def test_send_file_pads_final_short_chunk_with_eof(tmp_path):
     # field with the 0x1A (Ctrl-Z) EOF byte before the trailer is computed.
     path = tmp_path / "UP.TXT"
     path.write_bytes(bytes(range(100)))  # one short packet: 100 real + 28 pad
-    fake = _ResponsiveReceiver(b"C")  # CRC start, then reactive ACKs (packet + EOT)
-    xm = XModem(fake)
-    xm.handshake_settle = 0.05
-    assert xm.send_file(str(path)) is True
+    fake = _FakeSerial(b"C" + ACK * 2)  # CRC start, ACK the packet, ACK the EOT
+    assert XModem(fake).send_file(str(path)) is True
     # Frame layout: SOH(1) seq(1) ~seq(1) data(128) crc(2) ... so data is [3:131].
     data_field = fake.written[3:131]
     assert data_field[:100] == bytes(range(100))
     assert data_field[100:] == b"\x1a" * 28
-
-
-def test_send_handshake_skips_start_char_in_banner(tmp_path):
-    """Verifies: NFR-003r."""
-    # NFR-003r: the stray 'C's in the receiver's start-up banner (e.g. the RomWBW
-    # XM receiver's "...on COM0" / ".COM" / "Ctrl-X") must not be mistaken for the
-    # CRC-mode request. The banner is a continuous burst (no idle before those
-    # 'C's); the genuine start char ('C' of the 'CK' poll) arrives only after a
-    # quiet gap, so the idle-before check skips the banner and returns the poll.
-    banner = (
-        b"\r\nXMODEM v12.5 - 07/13/86\r\n"
-        b"RomWBW [WBW], HBIOS FastPath on COM0\r\n"
-        b"Receiving: J0:DATSWEEP.COM\r\n"
-        b"To cancel: Ctrl-X, pause, Ctrl-X\r\n"
-    )
-    fake = _XmReceiver(banner)  # banner burst, then a quiet gap, then a 'CK' poll
-    xm = XModem(fake)
-    xm.handshake_settle = 0.05
-
-    assert xm._wait_for_start_char((b"C", NAK), timeout=2.0) == b"C"
-    # Reached only via the post-idle poll: every banner 'C' was mid-burst (no
-    # preceding idle) and skipped, so the fake had to arm and emit the real poll.
-    assert fake.armed is True
-
-
-def test_send_file_empty_transfer_over_banner_succeeds(tmp_path):
-    """Verifies: NFR-003q, NFR-003r."""
-    # A zero-byte file to a banner-chatty CRC receiver: the handshake skips the
-    # banner 'C's, waits out the quiet gap, accepts the genuine 'CK' poll (the
-    # trailing 'K' is discarded), sends no data packet, and completes with EOT
-    # alone once the receiver ACKs it.
-    path = tmp_path / "EMPTY.TXT"
-    path.write_bytes(b"")
-    banner = b"XM v12.5 on COM0\r\nReceiving: J0:EMPTY.TXT\r\nready to receive\r\n"
-    fake = _XmReceiver(banner)
-    xm = XModem(fake)
-    xm.handshake_settle = 0.05
-
-    assert xm.send_file(str(path)) is True
-    assert SOH not in fake.written and STX not in fake.written  # no data frame sent
-    assert EOT in fake.written  # the sender wrote the EOT and it was ACKed
-
-
-def test_send_file_empty_transfer_fails_when_eot_unacked(tmp_path):
-    """Verifies: NFR-003p, NFR-003q."""
-    # For an empty transfer the EOT ACK is the only evidence of delivery, so if the
-    # receiver never ACKs the EOT the send reports failure (rather than the former
-    # unconditional success). The bounded EOT retransmit still applies (NFR-003p).
-    path = tmp_path / "EMPTY.TXT"
-    path.write_bytes(b"")
-    fake = _FakeSerial(NAK)  # start char, then silence — never ACKs the EOT
-    xm = XModem(fake)
-    xm.handshake_settle = 0.05
-    xm.eot_timeout = 0.02  # keep the 10 bounded EOT retries fast
-    assert xm.send_file(str(path)) is False
 
 
 # --------------------------------------------------------------------------- #

@@ -629,8 +629,7 @@
     "NFR-003n",
     "NFR-003o",
     "NFR-003p",
-    "NFR-003q",
-    "NFR-003r"
+    "NFR-003q"
   ],
   "src/cpm_fm/utils/config_handler.py": [
     "FR-011",

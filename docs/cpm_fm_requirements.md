@@ -11,7 +11,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 2.37.0 |
+| Version | 2.37.1 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
@@ -970,7 +970,7 @@ future refactor in the Issue Resolution Log (OI-27).
 | NFR-003o | The wait for the CAN bytes to drain shall be time-bounded rather than an unbounded `flush()` (`serial.Serial.flush()` busy-waits on `out_waiting` with no timeout), so that a flow-control stall — e.g. hardware (RTS/CTS) or software (XON/XOFF) flow control held off because the aborting remote has stopped asserting CTS or sent XOFF — cannot block the abort, and therefore the transfer worker thread, indefinitely; any CAN bytes still queued when the bound elapses are transmitted by the OS in the background while the port remains open. *(v2.13.2.)* | Mandatory | T | impl. `xmodem.py:_drain_tx`, `_abort`; tests `test_xmodem.py` (does not hang when TX cannot drain) |
 | NFR-003p | When a transmitted packet is NAK'd or goes unanswered, the sender shall retransmit the same packet (its sequence number unchanged) for up to a bounded number of attempts (10); if the packet is still not acknowledged after the final attempt, the sender shall abort the transfer and return failure rather than retransmitting indefinitely. *(v2.14.1.)* | Mandatory | T | impl. `xmodem.py:send_file`; tests `test_xmodem.py` (aborts after NAK exhaustion) |
 | NFR-003q | When the sender transmits EOT before any data packet, the receiver shall accept it as a valid, empty transfer — ACKing the EOT and writing a zero-length file — rather than treating the absent data as an error. *(v2.14.1.)* | Mandatory | T | impl. `xmodem.py:receive_file`; tests `test_xmodem.py` (empty transfer writes empty file) |
-| NFR-003r | On send, the sender shall not mistake a start-character-valued byte occurring in the receiver's pre-transfer console output for the genuine X-Modem start character: it shall accept a candidate start character (`C`/NAK) only when the transport line was idle for a bounded interval immediately before it (the `handshake_settle` read window), otherwise skipping it and resuming the scan within the FR-160 handshake budget. The receiver emits its genuine start character (which it then polls periodically) only after a quiet gap, once its banner has printed and it has armed, whereas a start-character-valued byte within the continuous banner burst has no preceding idle. This prevents a printable `C` in a receiver's start-up banner — buffered ahead of the true start character on a shared Terminal/Transport port — from triggering a premature transfer (observed with the RomWBW `XM` receiver: banner "…on COM0", genuine poll the two bytes `C``K`). *(v2.36.3.)* | Mandatory | T | impl. `xmodem.py:XModem.__init__`, `_wait_for_start_char`, `send_file`; tests `test_xmodem.py` (skips start char embedded in banner; empty transfer over banner succeeds) |
+| NFR-003r | *(Removed v2.37.1: superseded by FR-106a.)* Was (v2.36.3): on send, the sender shall accept a candidate start character (`C`/NAK) only when the transport line was idle immediately before it, so a printable `C` in a receiver's start-up banner (buffered ahead of the true start character on a shared Terminal/Transport port) is not mistaken for the CRC request. **Removed** because FR-106a skips zero-byte files up front — the only case where matching an early banner `C` was harmful (a premature EOT) — which makes the banner-robust handshake unnecessary; and because the idle-before wait regressed transfer-start latency (the sender waited seconds for the receiver's genuine poll instead of starting immediately after the launch delay). The send handshake reverts to matching the first `C`/NAK. | — | — | superseded by FR-106a; see `docs/requirements_change_history.md` (v2.37.1) |
 
 ---
 
@@ -987,7 +987,7 @@ future refactor in the Issue Resolution Log (OI-27).
 | App_Requirements §Host Files / Change Directory / Refresh | FR-060 – FR-063 |
 | App_Requirements §General Configuration Dialog | UIR-040 – UIR-053 |
 | App_Requirements / App_Design §Populating remote file list | FR-070 – FR-079 |
-| App_Requirements / App_Design §File Transfers | FR-080 – FR-086, FR-082→NFR-003a–NFR-003r, FR-086 impl. |
+| App_Requirements / App_Design §File Transfers | FR-080 – FR-086, FR-082→NFR-003a–NFR-003q, FR-086 impl. |
 | App_Design §Receiving / Sending data | FR-090 – FR-098 |
 | App_Requirements §Main Program GUI (Terminal/Disconnect buttons) | UIR-016, FR-097 |
 | App_Requirements §Serial Configuration Dialog | UIR-020 – UIR-034, IFR-002, IFR-003 |
@@ -996,7 +996,7 @@ future refactor in the Issue Resolution Log (OI-27).
 | v1.3 UI migration (PySide6 + Material) | UIR-070 – UIR-074, CR-012 – CR-014, NFR-004; revises STR-002, UIR-013, NFR-001 |
 | App_Design §DIR parsing algorithm | DR-001 – DR-032 |
 | App_Design §Project Structure / Class Files / Code Quality | CR-001 – CR-009 |
-| Deferred / as-built constraints (impl. survey) | CR-010, CR-011, NFR-001, NFR-002, NFR-003a – NFR-003r |
+| Deferred / as-built constraints (impl. survey) | CR-010, CR-011, NFR-001, NFR-002, NFR-003a – NFR-003q |
 | App_Design §Program state | FR-001 – FR-003 |
 | v1.8 file context-menu actions | FR-110 – FR-119, UIR-018, UIR-019, UIR-054 – UIR-057 |
 | v1.8.2 common dialog conventions | UIR-075 |

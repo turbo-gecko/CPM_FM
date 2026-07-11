@@ -778,7 +778,7 @@ _499 requirements across 62 sections._
 | NFR-003o | The wait for the CAN bytes to drain shall be time-bounded rather than an unbounded… | xmodem.py:_drain_tx, _abort; tests test_xmodem.py (does not hang when TX cannot drain) |
 | NFR-003p | When a transmitted packet is NAK'd or goes unanswered, the sender shall retransmit the same… | xmodem.py:send_file; tests test_xmodem.py (aborts after NAK exhaustion) |
 | NFR-003q | When the sender transmits EOT before any data packet, the receiver shall accept it as… | xmodem.py:receive_file; tests test_xmodem.py (empty transfer writes empty file) |
-| NFR-003r | On send, the sender shall not mistake a start-character-valued byte occurring in the receiver's pre-transfer… | xmodem.py:XModem.__init__, _wait_for_start_char, send_file; tests test_xmodem.py (skips start char embedded in banner; empty transfer over banner succeeds) |
+| NFR-003r | *(Removed v2.37.1… | — |
 
 ## A4. Project structure and module organisation
 
