@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.36.3**
+**Version 2.37.1**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -113,7 +113,7 @@ The **Help → Manual** item opens this user manual in a built-in viewer.
 ### Two-Pane File Browser
 
 - **Left pane — Host Files:** files in the current directory on your PC.
-- **Right pane — Remote Files:** files on the currently selected CP/M drive.
+- **Right pane — Remote Files:** files on the currently selected CP/M drive and user area.
 
 A draggable splitter sits between the panes so you can resize them.
 
@@ -427,11 +427,15 @@ Each pane has its own controls for navigating, filtering, and sorting.
 - **Filter field** — Type to narrow the list (supports wildcards and substring matching). The field shows a colored border while a filter is active; click the **X** to clear it.
 - **Sort dropdown** — Sort by **Name** or **Extension**.
 - **Sort direction** — Toggle ascending (↑) / descending (↓).
+- **User-area filter** — Appears only while a **disk image** is mounted in this pane (see [Opening a CP/M Disk Image](#opening-a-cpm-disk-image)). Choose **All** (the default) to see every user area, or pick one area to show only its files. It narrows the list on top of the name filter and sort, and affects only what is displayed — it does not move or transfer any file.
 - **Copy to Remote** — Transfer the selected files to the CP/M system.
 
 ### Remote Files Pane
 
 - **Drive dropdown** — Choose a CP/M drive, **A:** through **P:**. Selecting a drive switches to it; if the drive doesn't respond, a "Drive Not Found" dialog appears.
+- **User-area dropdown** — Choose a CP/M **user area**, **0** through **15** (next to the drive dropdown). CP/M divides each drive's directory into 16 user areas; a file lives in exactly one. Selecting an area issues a `USER` command to the remote and re-lists that area's files. Files you **Copy to Remote** are placed in the selected area, and files you **Copy to Host** are taken from it. The area starts at **0** when you connect. (On a plain CP/M 2.2 system the prompt does not show the area, so the app tracks it for you; on ZCPR/ZSDOS systems the prompt shows it, e.g. `A3>`.)
+
+  > **Transfers to a non-zero user area — important.** CP/M looks for a command (like your `PCGET`/`PCPUT` transfer program) in the *current* user area, falling back to user 0 only if that program is flagged **SYS**. So transferring into or out of a **non-zero** area works **only if your transfer program is reachable from that area** — normally that means it is a **SYS file in user 0** (the usual way system utilities are installed), which CP/M can then run from any area. If it is not, the transfer will fail to start (you will see the "No response from remote — check the … command" message). This affects only non-zero areas; **area 0 always works** (no `USER` command is issued and the program is found where it lives). cpm-fm cannot move a file between user areas on the CP/M side — there is no standard CP/M 2.2 command for that — so it relies on this. Listing any area (the dropdown) always works, since `DIR` is built into CP/M.
 - **Update** — Refresh the remote file list (issues the List Files command and parses the output).
 - **Filter / Sort** — Same controls as the Host pane.
 - **Copy to Host** — Download the selected files from CP/M.
@@ -447,6 +451,8 @@ You can browse the contents of a **CP/M disk image** — a raw-sector image of a
 Because a CP/M image does not record its own disk layout, the program **auto-detects** the geometry by matching the file size against a built-in database of common formats — standard 8-inch and 5.25-inch floppies, the **RomWBW** floppy and hard-disk formats (fd144/fd120/fd720/fd360, hd1k, hd512), and the RC2014 CompactFlash slice. When the layout is unambiguous it is used automatically and shown in the status bar; when two formats are equally plausible — or none is recognised — a small dialog asks you to pick the format to use. (For example, an 8 MB image could be either a RomWBW *hd1k* slice or an RC2014 slice, which share the same size, so you will be asked to choose.)
 
 The image's files are extracted to a temporary working folder that becomes the Host directory, so everything you can do with an ordinary host folder works unchanged: filter and sort the list, and **Copy to Remote** (or drag-and-drop) to send files straight to a connected CP/M machine. By default the original image file is left untouched — opening an image is a read-only view. (If you want to save a modified copy of the image, see [Saving a CP/M Disk Image](#saving-a-cpm-disk-image) below.) The temporary folder is discarded automatically when you open another image, choose **Config → New Config**, load a configuration, change the host directory, or exit.
+
+**User areas.** Each file in the list shows its CP/M **user area** as a leading tag (e.g. `U3  GAME.COM`); all areas are shown together by default. A **user-area filter** dropdown appears in the pane's filter/sort row while an image is mounted — leave it on **All** to see every area, or pick one area to show just its files (it lists only the areas that image actually uses). The filter only changes what is displayed; it resets to **All** when you close the image. When you **Copy to Remote** an image file to a connected CP/M machine, it is placed in **the same user area it came from in the image** (so a file from area 3 lands in area 3 on the remote — not whatever area the remote happened to be in). If the same filename exists in two areas, both are kept (the second is staged under a slightly altered name such as `FOO~3.COM`) so neither is lost, and each is written back to its own area when you save the image. (Advanced: set `image_area_mode` to `selected` in the config file to instead send every image file to the Remote pane's selected area — see [Section 18](#18-reference-default-settings).) Sending an image file to a **non-zero** area on a live CP/M machine carries the same requirement as any user-area transfer — your transfer program must be reachable from that area (a SYS file in user 0); see the note under [Remote Files Pane](#remote-files-pane). Area preservation **within** an image (saving, and copying between a host folder and an image mounted in the Remote pane) has no such limitation, since no CP/M program is involved.
 
 If your image uses an unusual layout that is not auto-detected, you can supply your own cpmtools-format `diskdefs` file (support for selecting one is being extended).
 
@@ -644,7 +650,7 @@ Switch languages at any time via **Config → Language**. The change is applied 
 
 ## 17. Tips and Troubleshooting
 
-- **A transfer never starts / times out.** Make sure the CP/M side launched its X-Modem helper. Increase the **Transfer Launch Delay** if your CP/M program is slow to start. If the remote never responds at all, the program now reports "No response from remote… check the Send to Remote / Receive from Remote command" instead of a generic failure — use the **Test** button beside those fields (Config → Remote) to check a command without running a real transfer.
+- **A transfer never starts / times out.** Make sure the CP/M side launched its X-Modem helper. Increase the **Transfer Launch Delay** if your CP/M program is slow to start. If the remote never responds at all, the program now reports "No response from remote… check the Send to Remote / Receive from Remote command" instead of a generic failure — use the **Test** button beside those fields (Config → Remote) to check a command without running a real transfer. If the failed transfer was targeting a **non-zero user area**, the message instead names that area ("…in user area 3 — the … command may not be reachable from user area 3…"), because the most likely cause there is that your transfer program is not reachable from that area (it must be present there or a **SYS file in user 0**); see the note under [Remote Files Pane](#remote-files-pane).
 - **The machine doesn't reach CP/M when you connect.** If it sits at a ROM monitor or boot menu, set up a **Boot Sequence** (see [Section 9](#9-booting-the-remote-into-cpm)); the program will run it automatically when the connect check finds no CP/M prompt, or you can run it on demand with the Terminal window's **Boot into CP/M** button.
 - **Characters get dropped during terminal use or transfers.** Increase **Msec per Char** and/or **Msec per Line**, or lower the baud rate.
 - **XMODEM-1K transfers are unreliable.** Raise the **Transfer Timeout** (try 1000 ms) so each larger 1024-byte block has time to arrive.
@@ -675,6 +681,8 @@ Switch languages at any time via **Config → Language**. The change is applied 
 | List Files Cmd | `DIR` |
 | Recv from Remote | `PCPUT $1` |
 | Send to Remote | `PCGET $1` |
+| User Area Cmd (`user_area_cmd`, config file only) | `USER $1` |
+| Disk-image transfer area (`image_area_mode`, config file only) | `match` (send each image file to its source area; `selected` uses the Remote pane's area) |
 | Use XMODEM-1K | OFF |
 | Recv / Send from Remote (1K) | *(blank)* |
 | Rename | `REN $2=$1` |

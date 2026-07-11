@@ -143,6 +143,8 @@ error.download_failed = 下載 {name} 失敗
 error.transfer_failed = 傳輸 {name} 失敗；忽略其餘檔案
 error.transfer_no_response_send = 傳輸 {name} 時遠端無回應——請檢查「設定 > 一般」中的「傳送至遠端」命令
 error.transfer_no_response_recv = 傳輸 {name} 時遠端無回應——請檢查「設定 > 一般」中的「從遠端接收」命令
+error.transfer_no_response_send_user = 傳輸 {name} 時遠端無回應（使用者區域 {area}）——「傳送至遠端」命令可能無法在使用者區域 {area} 使用。該命令必須存在於該區域，或以 SYS 屬性置於使用者 0（參見手冊第 17 節），或「設定 > 一般」中的命令有誤。
+error.transfer_no_response_recv_user = 傳輸 {name} 時遠端無回應（使用者區域 {area}）——「從遠端接收」命令可能無法在使用者區域 {area} 使用。該命令必須存在於該區域，或以 SYS 屬性置於使用者 0（參見手冊第 17 節），或「設定 > 一般」中的命令有誤。
 warning.select_upload = 請選擇一個或多個要發送嘅檔案
 warning.select_download = 請選擇一個或多個要下載嘅檔案
 warning.no_config_loaded = 未載入設定檔。設定只套用喺目前嘅工作階段。請用「設定 > 儲存設定」將佢哋寫入設定檔。
@@ -269,6 +271,8 @@ main.sort.name = 名稱
 main.sort.extension = 副檔名
 main.sort_by_tooltip = 排序方式
 main.sort_direction_tooltip = 切換升序/降序
+main.area_filter_all = 全部
+main.area_filter_tooltip = 顯示所有使用者區域的檔案，或篩選至某一區域
 
 # --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
 toolbar.backup = 備份

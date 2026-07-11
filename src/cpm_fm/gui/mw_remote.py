@@ -328,6 +328,9 @@ class _RemoteMixin(MainWindowMixinBase):
         if letter is None and not self._probe_cancel.is_set():
             text = self._capture_terminal_response("", cancel_event=self._probe_cancel)
             letter = CPMParser.drive_prompt_letter(text)
+        # FR-184/DR-051: opportunistically read the user area from a ZCPR-family
+        # prompt (None on CP/M 2.2); consumed by _on_connect_probe_ok.
+        self._probe_user_area = CPMParser.drive_prompt_user(text)
         return letter
 
     def _boot_sequence_configured(self) -> bool:
@@ -471,17 +474,27 @@ class _RemoteMixin(MainWindowMixinBase):
 
     def _on_connect_probe_ok(self, drive):
         """
-        Satisfies: FR-042.
+        Satisfies: FR-042, FR-184.
 
         Runs on the GUI thread (queued from the probe worker). Point the drive
         drop-down at the detected drive and populate the Remote Files list as
         the Update button would (FR-073). Setting the combo index
         programmatically does not fire its ``activated`` signal, so this does
         not trigger a second drive-change.
+
+        FR-184: initialise the tracked user area — to the area carried by a
+        ZCPR-family prompt (DR-051) when available, else 0 — and point the
+        user-area drop-down (UIR-118) at it.
         """
         index = ord(drive) - ord("A")
         if 0 <= index < self.drive_combo.count():
             self.drive_combo.setCurrentIndex(index)
+        self._remote_user = self._probe_user_area if self._probe_user_area is not None else 0
+        # FR-182: the remote is now in this area, so record it as applied — a
+        # first listing in the same area then issues no USER command.
+        self._applied_user_area = self._remote_user
+        if 0 <= self._remote_user < self.user_combo.count():
+            self.user_combo.setCurrentIndex(self._remote_user)
         self.refresh_remote_files()
 
     def _on_connect_probe_failed(self):
@@ -680,9 +693,56 @@ class _RemoteMixin(MainWindowMixinBase):
         drive = self.drive_combo.itemText(index)[0]  # 'A'..'P'
         threading.Thread(target=self._do_change_drive_logic, args=(drive,), daemon=True).start()
 
+    def change_user_area(self, index):
+        """Switch the remote (or mounted image) current user area (FR-181).
+
+        Mirrors :meth:`change_drive`: records the selected area as authoritative
+        (FR-184) and, on a live remote, re-lists the current drive on a worker
+        thread — the drive-change logic re-applies the user area (FR-182) before
+        listing. While a disk image is mounted in the Remote pane the listing is
+        local, so it re-filters the image by the selected area (FR-186) with no
+        serial I/O. Refuses on a live remote when the Terminal Port is closed
+        (consistent with FR-104).
+
+        Satisfies: FR-181, FR-184, FR-186.
+        """
+        self._remote_user = int(self.user_combo.itemText(index))
+        if self._remote_is_image():
+            self._list_image_remote()
+            return
+        if not self.serial_mgr.terminal_connected:
+            self.set_status(tr("status.terminal_not_open_list"))
+            self._clear_remote_files()
+            return
+        drive = self.drive_combo.currentText()[0]  # 'A'..'P'
+        threading.Thread(target=self._do_change_drive_logic, args=(drive,), daemon=True).start()
+
+    def _apply_remote_user_area(self):
+        """Set the remote's current user area to the tracked area (FR-182).
+
+        Issued **only when the tracked area (FR-184) differs from the area the
+        remote is already in** (``_applied_user_area``): so a listing in the
+        already-current area — the usual case, area 0 with the feature unused —
+        adds no command and leaves the existing listing flow unchanged. When they
+        differ, sends the configured user-area command (``user_area_cmd``, default
+        ``USER $1``) and captures the response so the CCP has returned to its
+        prompt before the caller lists or transfers, then records the new current
+        area. A no-op when the command is configured empty (the area is then
+        tracked only). Runs on a worker thread.
+
+        Satisfies: FR-182, FR-184.
+        """
+        if self._remote_user == self._applied_user_area:
+            return
+        cmd = str(self.settings.get("user_area_cmd", "USER $1")).strip()
+        if not cmd:
+            return
+        self._capture_terminal_response(cmd.replace("$1", str(self._remote_user)))
+        self._applied_user_area = self._remote_user
+
     def _do_change_drive_logic(self, drive):
         """
-        Satisfies: FR-100, FR-101, FR-102, FR-103.
+        Satisfies: FR-100, FR-101, FR-102, FR-103, FR-182.
 
         FR-100/FR-101: send "<letter>:" and capture the response. FR-102: if
         the new "<letter>>" drive prompt appears, populate the Remote Files
@@ -690,8 +750,13 @@ class _RemoteMixin(MainWindowMixinBase):
         clear the list and report "Drive not found". Runs on a worker thread,
         so calling _do_refresh_remote_logic directly is correct (it marshals
         its UI update via the remote_files_ready signal).
+
+        FR-182: the tracked user area (FR-184) is (re-)applied before the drive
+        change so the subsequent listing is scoped to the selected area even if
+        the remote's area was changed directly in the Terminal Window.
         """
         self.set_status(tr("status.changing_drive", drive=drive))
+        self._apply_remote_user_area()
         text = self._capture_terminal_response(f"{drive}:")
         if CPMParser.has_drive_prompt(text, drive):
             self._do_refresh_remote_logic()

@@ -143,6 +143,8 @@ error.download_failed = Errore download di {name}
 error.transfer_failed = Errore trasferimento di {name}; file rimanenti ignorati
 error.transfer_no_response_send = Nessuna risposta dal remoto per {name} - controlla il comando Invia al remoto in Config > Generale
 error.transfer_no_response_recv = Nessuna risposta dal remoto per {name} - controlla il comando Ricevi dal remoto in Config > Generale
+error.transfer_no_response_send_user = Nessuna risposta dal remoto per {name} nell'area utente {area} - il comando Invia al remoto potrebbe non essere raggiungibile dall'area utente {area}. Deve essere presente lì o avere l'attributo SYS nell'utente 0 (vedi manuale sezione 17), oppure il comando in Config > Generale è errato.
+error.transfer_no_response_recv_user = Nessuna risposta dal remoto per {name} nell'area utente {area} - il comando Ricevi dal remoto potrebbe non essere raggiungibile dall'area utente {area}. Deve essere presente lì o avere l'attributo SYS nell'utente 0 (vedi manuale sezione 17), oppure il comando in Config > Generale è errato.
 warning.select_upload = Selezionare uno o più file da inviare
 warning.select_download = Selezionare uno o più file da scaricare
 warning.no_config_loaded = Nessun file di configurazione caricato. Le impostazioni sono state applicate solo alla sessione corrente. Usare Configurazione > Salva configurazione per scriverle in un file di configurazione.
@@ -269,6 +271,8 @@ main.sort.name = Nome
 main.sort.extension = Estensione
 main.sort_by_tooltip = Ordina per
 main.sort_direction_tooltip = Alterna ordine crescente/decrescente
+main.area_filter_all = Tutte
+main.area_filter_tooltip = Mostra i file di tutte le aree utente, o filtra su una
 
 # --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
 toolbar.backup = Backup

@@ -143,6 +143,8 @@ error.download_failed = Herunterladen von {name} fehlgeschlagen
 error.transfer_failed = Übertragung von {name} fehlgeschlagen; restliche Dateien übersprungen
 error.transfer_no_response_send = Keine Antwort vom Remote-Rechner für {name} - prüfen Sie den Befehl "An Remote senden" unter Konfiguration > Allgemein
 error.transfer_no_response_recv = Keine Antwort vom Remote-Rechner für {name} - prüfen Sie den Befehl "Von Remote empfangen" unter Konfiguration > Allgemein
+error.transfer_no_response_send_user = Keine Antwort vom Remote-Rechner für {name} im Benutzerbereich {area} - der Befehl "An Remote senden" ist möglicherweise aus Benutzerbereich {area} nicht erreichbar. Er muss dort vorhanden oder in Benutzer 0 mit SYS-Attribut hinterlegt sein (siehe Handbuch Abschnitt 17), oder der Befehl unter Konfiguration > Allgemein ist falsch.
+error.transfer_no_response_recv_user = Keine Antwort vom Remote-Rechner für {name} im Benutzerbereich {area} - der Befehl "Von Remote empfangen" ist möglicherweise aus Benutzerbereich {area} nicht erreichbar. Er muss dort vorhanden oder in Benutzer 0 mit SYS-Attribut hinterlegt sein (siehe Handbuch Abschnitt 17), oder der Befehl unter Konfiguration > Allgemein ist falsch.
 warning.select_upload = Bitte eine oder mehrere Dateien zum Hochladen auswählen
 warning.select_download = Bitte eine oder mehrere Dateien zum Herunterladen auswählen
 warning.no_config_loaded = Es ist keine Konfigurationsdatei geladen. Die Einstellungen wurden nur auf die aktuelle Sitzung angewendet. Verwenden Sie Konfiguration > Konfiguration speichern, um sie in eine Konfigurationsdatei zu schreiben.
@@ -269,6 +271,8 @@ main.sort.name = Name
 main.sort.extension = Erweiterung
 main.sort_by_tooltip = Sortieren nach
 main.sort_direction_tooltip = Auf-/absteigende Reihenfolge umschalten
+main.area_filter_all = Alle
+main.area_filter_tooltip = Dateien aus allen Benutzerbereichen anzeigen oder auf einen filtern
 
 # --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
 toolbar.backup = Sichern

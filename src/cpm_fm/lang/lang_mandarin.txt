@@ -143,6 +143,8 @@ error.download_failed = 下载 {name} 失败
 error.transfer_failed = 传输 {name} 失败；忽略剩余文件
 error.transfer_no_response_send = {name} 传输时远程无响应——请检查"配置 > 通用"中的"发送到远程"命令
 error.transfer_no_response_recv = {name} 传输时远程无响应——请检查"配置 > 通用"中的"从远程接收"命令
+error.transfer_no_response_send_user = {name} 传输时远程无响应（用户区 {area}）——"发送到远程"命令可能无法在用户区 {area} 中使用。该命令必须存在于该区，或以 SYS 属性置于用户 0（参见手册第 17 节），或"配置 > 通用"中的命令有误。
+error.transfer_no_response_recv_user = {name} 传输时远程无响应（用户区 {area}）——"从远程接收"命令可能无法在用户区 {area} 中使用。该命令必须存在于该区，或以 SYS 属性置于用户 0（参见手册第 17 节），或"配置 > 通用"中的命令有误。
 warning.select_upload = 请选择一个或多个要发送的文件
 warning.select_download = 请选择一个或多个要下载的文件
 warning.no_config_loaded = 未加载配置文件。设置仅应用于当前会话。请使用“配置 > 保存配置”将其写入配置文件。
@@ -269,6 +271,8 @@ main.sort.name = 名称
 main.sort.extension = 扩展名
 main.sort_by_tooltip = 排序方式
 main.sort_direction_tooltip = 切换升序/降序
+main.area_filter_all = 全部
+main.area_filter_tooltip = 显示所有用户区的文件，或筛选至某一区
 
 # --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
 toolbar.backup = 备份

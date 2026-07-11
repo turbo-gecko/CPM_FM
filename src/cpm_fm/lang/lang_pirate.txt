@@ -148,6 +148,8 @@ error.download_failed = Draggin' in {name} failed
 error.transfer_failed = Loot haul of {name} failed; rest o' the booty skipped
 error.transfer_no_response_send = No word from the far shore for {name} - check yer Send to Remote command in Config > General
 error.transfer_no_response_recv = No word from the far shore for {name} - check yer Receive from Remote command in Config > General
+error.transfer_no_response_send_user = No word from the far shore for {name} in user area {area} - yer Send to Remote command may not be reachable from user area {area}. It must be stowed there or flagged SYS in user 0 (see manual section 17), or the command in Config > General be wrong.
+error.transfer_no_response_recv_user = No word from the far shore for {name} in user area {area} - yer Receive from Remote command may not be reachable from user area {area}. It must be stowed there or flagged SYS in user 0 (see manual section 17), or the command in Config > General be wrong.
 warning.select_upload = Hand over one or more loot items to upload!
 warning.select_download = Pick one or more treasures to bring home!
 warning.no_config_loaded = No chart be loaded, matey. Yer orders be set for this voyage only. Use Ship's Orders > Stash Charter to commit 'em to a chart.
@@ -274,6 +276,8 @@ main.sort.name = Name
 main.sort.extension = Tail End
 main.sort_by_tooltip = Sort by
 main.sort_direction_tooltip = Flip 'twixt high tide an' low
+main.area_filter_all = All Holds
+main.area_filter_tooltip = Show booty from all user holds, or narrow to one
 
 # --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
 toolbar.backup = Stow Booty

@@ -2,8 +2,15 @@ from __future__ import annotations
 
 import os
 
-from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QComboBox, QFileDialog, QHBoxLayout, QLineEdit, QToolButton
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtWidgets import (
+    QComboBox,
+    QFileDialog,
+    QHBoxLayout,
+    QLineEdit,
+    QListWidgetItem,
+    QToolButton,
+)
 
 from cpm_fm.gui.mw_base import MainWindowMixinBase
 from cpm_fm.utils.file_filter import SORT_EXTENSION, SORT_NAME, filter_and_sort
@@ -23,15 +30,17 @@ class _FilePanesMixin(MainWindowMixinBase):
     def _build_filter_sort_row(self, pane: str):
         """Build the filter field and sort controls for one file pane.
 
-        Returns ``(layout, filter_edit, sort_combo, dir_btn)``. ``pane`` is
-        "host" or "remote" and selects which view-apply slot the controls drive.
-        The filter field carries a built-in clear (X) button (FR-135) and its
-        input is debounced ~150 ms so a render is not run on every keystroke
-        (FR-131). The sort drop-down offers Name/Extension (FR-132, userData =
-        the SORT_* key) and the checkable direction button toggles
-        ascending/descending.
+        Returns ``(layout, filter_edit, sort_combo, dir_btn, area_combo)``.
+        ``pane`` is "host" or "remote" and selects which view-apply slot the
+        controls drive. The filter field carries a built-in clear (X) button
+        (FR-135) and its input is debounced ~150 ms so a render is not run on
+        every keystroke (FR-131). The sort drop-down offers Name/Extension
+        (FR-132, userData = the SORT_* key) and the checkable direction button
+        toggles ascending/descending. The user-area filter drop-down
+        (``area_combo``) is hidden unless a disk image is mounted in this pane
+        (UIR-120); it selects one CP/M user area to show, or All.
 
-        Satisfies: FR-130, FR-132, FR-135, UIR-079, UIR-080.
+        Satisfies: FR-130, FR-132, FR-135, FR-189, UIR-079, UIR-080, UIR-120.
         """
         row = QHBoxLayout()
 
@@ -40,6 +49,19 @@ class _FilePanesMixin(MainWindowMixinBase):
         self._register_text(filter_edit.setPlaceholderText, "main.filter_placeholder")
         self._register_text(filter_edit.setToolTip, "main.filter_tooltip")
         row.addWidget(filter_edit, 1)
+
+        # UIR-120: per-pane user-area filter, hidden until an image is mounted
+        # here. Populated on demand by _update_area_filter; an area change
+        # re-renders immediately (no debounce needed). It is built empty, so
+        # without a minimum contents length its size hint would be ~zero and the
+        # layout would leave it too narrow to read once populated; reserve room
+        # for the widest label (e.g. the "All" text) plus the drop-down arrow.
+        area_combo = QComboBox()
+        area_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+        area_combo.setMinimumContentsLength(6)
+        area_combo.setVisible(False)
+        self._register_text(area_combo.setToolTip, "main.area_filter_tooltip")
+        row.addWidget(area_combo)
 
         sort_combo = QComboBox()
         sort_combo.addItem(tr("main.sort.name"), SORT_NAME)
@@ -68,8 +90,10 @@ class _FilePanesMixin(MainWindowMixinBase):
         sort_combo.currentIndexChanged.connect(apply_fn)
         dir_btn.toggled.connect(lambda checked, b=dir_btn: self._update_sort_arrow(b, checked))
         dir_btn.toggled.connect(apply_fn)
+        # FR-189/UIR-120: an area-filter change re-renders immediately.
+        area_combo.currentIndexChanged.connect(apply_fn)
 
-        return row, filter_edit, sort_combo, dir_btn
+        return row, filter_edit, sort_combo, dir_btn, area_combo
 
     @staticmethod
     def _update_sort_arrow(button, checked: bool) -> None:
@@ -82,50 +106,141 @@ class _FilePanesMixin(MainWindowMixinBase):
         """
         button.setText("↓" if checked else "↑")
 
-    def _render_file_list(self, list_widget, names, filter_edit, sort_combo, dir_btn) -> None:
+    def _render_file_list(
+        self,
+        list_widget,
+        names,
+        filter_edit,
+        sort_combo,
+        dir_btn,
+        area_map=None,
+        area_filter=None,
+    ) -> None:
         """Filter+sort ``names`` per the pane's controls and show them.
 
         Applies the shared filter_and_sort logic (FR-133) and flags an active
-        (non-empty) filter with a coloured border on the field (UIR-079).
+        (non-empty) filter with a coloured border on the field (UIR-079). Each
+        row's real filename is stored in the item's ``UserRole`` so callers read
+        it back regardless of the display text; when ``area_map`` is given (an
+        image is mounted in this pane, FR-185) the row is prefixed with the CP/M
+        user area (``U3  FOO.COM``, UIR-119) while selection/drag/transfer keep
+        using the stored filename. When ``area_filter`` is a user area (not
+        ``None``) the list is first narrowed to files in that area (FR-189).
 
-        Satisfies: FR-130, FR-131, FR-132, FR-133, UIR-079.
+        Satisfies: FR-130, FR-131, FR-132, FR-133, FR-189, UIR-079, UIR-119, UIR-120.
         """
+        # FR-189: narrow to a single user area before the text filter/sort when
+        # the area filter is active (only meaningful with a mounted image).
+        if area_map is not None and area_filter is not None:
+            names = [n for n in names if area_map.get(n) == area_filter]
         pattern = filter_edit.text()
         key = sort_combo.currentData() or SORT_NAME
         descending = dir_btn.isChecked()
         visible = filter_and_sort(names, pattern, key=key, descending=descending)
         list_widget.clear()
-        list_widget.addItems(visible)
+        for name in visible:
+            item = QListWidgetItem()
+            # The stored filename is authoritative for selection/drag (UIR-119);
+            # the display text may carry the area prefix.
+            item.setData(Qt.ItemDataRole.UserRole, name)
+            if area_map is not None and name in area_map:
+                item.setText(f"U{area_map[name]:<2} {name}")
+            else:
+                item.setText(name)
+            list_widget.addItem(item)
         # UIR-079: a coloured border marks an active filter so it is obvious why
         # files may be hidden.
         active = bool(pattern.strip())
         filter_edit.setStyleSheet("QLineEdit { border: 1px solid #4caf50; }" if active else "")
 
+    def _pane_area_map(self, pane: str):
+        """Return the staged-name→area map when an image is mounted in ``pane``.
+
+        Drives the user-area column (UIR-119); ``None`` when no image is open or
+        the image is mounted in the other pane, so a real host/remote listing
+        shows plain filenames.
+
+        Satisfies: UIR-119, FR-185.
+        """
+        if self._image_workdir is None or self._image_pane != pane:
+            return None
+        return {staged: area for staged, (_cpm, area) in self._image_stage_map.items()}
+
+    def _area_filter_combo(self, pane: str):
+        """Return the user-area filter combo for ``pane`` ("host"/"remote").
+
+        Satisfies: UIR-120.
+        """
+        return self.host_area_filter if pane == "host" else self.remote_area_filter
+
+    def _update_area_filter(self, pane: str) -> None:
+        """Sync the pane's user-area filter combo with the mounted image (FR-189).
+
+        When an image is mounted in ``pane`` the combo is populated with **All**
+        (userData ``None``) followed by exactly the user areas present in the
+        image (sorted ascending, userData = the ``int`` area) and shown; the
+        current selection is preserved when that area is still present, else it
+        falls back to All. When no image is mounted here the combo is cleared and
+        hidden, so a stale area filter never survives to the next mount. Signals
+        are blocked while rebuilding so this does not trigger a render or recurse
+        through the ``currentIndexChanged`` slot.
+
+        Satisfies: FR-189, UIR-120.
+        """
+        combo = self._area_filter_combo(pane)
+        area_map = self._pane_area_map(pane)
+        combo.blockSignals(True)
+        try:
+            previous = combo.currentData()
+            combo.clear()
+            if area_map is None:
+                combo.setVisible(False)
+                return
+            combo.addItem(tr("main.area_filter_all"), None)
+            for area in sorted(set(area_map.values())):
+                # The area number is a datum, not translatable prose (CR-015).
+                combo.addItem(f"U{area}", area)
+            idx = combo.findData(previous) if previous is not None else 0
+            combo.setCurrentIndex(idx if idx >= 0 else 0)
+            combo.setVisible(True)
+        finally:
+            combo.blockSignals(False)
+        # The combo was built empty and hidden; invalidate its geometry so the
+        # row re-lays it at its now-populated size hint rather than the stale
+        # first-show hint (UIR-120).
+        combo.updateGeometry()
+
     def _apply_host_view(self) -> None:
         """Re-render the Host list from the current filter/sort controls (FR-133).
 
-        Satisfies: FR-133, FR-134.
+        Satisfies: FR-133, FR-134, FR-189.
         """
+        self._update_area_filter("host")
         self._render_file_list(
             self.host_list,
             self._host_files,
             self.host_filter,
             self.host_sort_combo,
             self.host_sort_dir_btn,
+            area_map=self._pane_area_map("host"),
+            area_filter=self.host_area_filter.currentData(),
         )
         self._persist_filter_sort()
 
     def _apply_remote_view(self) -> None:
         """Re-render the Remote list from the current filter/sort controls (FR-133).
 
-        Satisfies: FR-133, FR-134.
+        Satisfies: FR-133, FR-134, FR-189.
         """
+        self._update_area_filter("remote")
         self._render_file_list(
             self.remote_list,
             self._remote_files,
             self.remote_filter,
             self.remote_sort_combo,
             self.remote_sort_dir_btn,
+            area_map=self._pane_area_map("remote"),
+            area_filter=self.remote_area_filter.currentData(),
         )
         self._persist_filter_sort()
 

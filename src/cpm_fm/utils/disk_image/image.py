@@ -138,12 +138,15 @@ class CpmImage:
         """
         return filesystem.list_files(self._dir_entries, self.geom)
 
-    def read_file(self, name: str) -> bytes:
+    def read_file(self, name: str, user: int | None = None) -> bytes:
         """Return the byte content of ``name`` ("NAME.EXT", case-insensitive) — FR-171.
 
-        Satisfies: FR-171, DR-049.
+        When ``user`` is given the lookup is restricted to that user area so a
+        name present in more than one area reads the intended file (FR-185).
+
+        Satisfies: FR-171, FR-185, DR-049.
         """
-        return filesystem.read_file(self, self._dir_entries, name)
+        return filesystem.read_file(self, self._dir_entries, name, user)
 
     # --- write path (FR-174, DR-050) -----------------------------------------
 

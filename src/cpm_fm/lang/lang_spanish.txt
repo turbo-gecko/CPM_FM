@@ -143,6 +143,8 @@ error.download_failed = Error al descargar {name}
 error.transfer_failed = Error al transferir {name}; archivos restantes ignorados
 error.transfer_no_response_send = Sin respuesta del remoto para {name}: verifique el comando Enviar al remoto en Config > General
 error.transfer_no_response_recv = Sin respuesta del remoto para {name}: verifique el comando Recibir del remoto en Config > General
+error.transfer_no_response_send_user = Sin respuesta del remoto para {name} en el área de usuario {area}: es posible que el comando Enviar al remoto no sea accesible desde el área de usuario {area}. Debe estar presente allí o tener el atributo SYS en el usuario 0 (consulte la sección 17 del manual), o el comando en Config > General es incorrecto.
+error.transfer_no_response_recv_user = Sin respuesta del remoto para {name} en el área de usuario {area}: es posible que el comando Recibir del remoto no sea accesible desde el área de usuario {area}. Debe estar presente allí o tener el atributo SYS en el usuario 0 (consulte la sección 17 del manual), o el comando en Config > General es incorrecto.
 warning.select_upload = Por favor, seleccione uno o más archivos para enviar
 warning.select_download = Por favor, seleccione uno o más archivos para descargar
 warning.no_config_loaded = No hay ningún archivo de configuración cargado. Los ajustes se han aplicado solo a la sesión actual. Use Configuración > Guardar configuración para escribirlos en un archivo de configuración.
@@ -269,6 +271,8 @@ main.sort.name = Nombre
 main.sort.extension = Extensión
 main.sort_by_tooltip = Ordenar por
 main.sort_direction_tooltip = Alternar orden ascendente/descendente
+main.area_filter_all = Todas
+main.area_filter_tooltip = Mostrar archivos de todas las áreas de usuario, o filtrar a una
 
 # --- Backup / Restore (Feature: whole-drive backup and restore) ---------------
 toolbar.backup = Copia de seguridad

@@ -4,7 +4,7 @@ import re
 # user-area number (ZCPR-style), the drive letter, an optional user-area number,
 # then '>' (e.g. "A>", "A0>", "4A>"). Path-style prompts containing ':'
 # (e.g. "A0:BASE>") are intentionally not matched (DR-033).
-_DRIVE_PROMPT_RE = re.compile(r"^\d*([A-Za-z])\d*>")
+_DRIVE_PROMPT_RE = re.compile(r"^\d*([A-Za-z])(\d*)>")
 
 
 # CP/M 2.2 file names are upper-case 8.3 names drawn from a restricted
@@ -214,4 +214,30 @@ class CPMParser:
                 letter = match.group(1).upper()
                 if "A" <= letter <= "P":
                     return letter
+        return None
+
+    @staticmethod
+    def drive_prompt_user(text: str) -> int | None:
+        """Return the ZCPR user-area number of the first CP/M drive prompt in ``text``.
+
+        Applies the same matching rule as :meth:`drive_prompt_letter` (DR-033) and
+        returns the run of decimal digits immediately following the drive letter
+        (e.g. ``3`` for ``A3>``), which ZCPR-family CCPs embed in the prompt. Returns
+        ``None`` when no drive prompt is present, or when the first prompt carries no
+        trailing digits — as on CP/M 2.2, whose prompt (``A>``) never exposes the
+        user area. Used to initialise the tracked remote user area opportunistically
+        (FR-184).
+
+        Satisfies: DR-051, FR-184.
+        """
+        for line in text.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            match = _DRIVE_PROMPT_RE.match(line)
+            if match:
+                letter = match.group(1).upper()
+                if "A" <= letter <= "P":
+                    digits = match.group(2)
+                    return int(digits) if digits else None
         return None

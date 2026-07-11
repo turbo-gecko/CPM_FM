@@ -159,6 +159,18 @@ class CpmPeer:
         step(log, "change drive → %s: %s", letter, "ok" if ok else "FAILED")
         return ok
 
+    def set_user(self, area: int) -> bool:
+        """Switch the remote to user area ``area`` (FR-182). True if a prompt returned.
+
+        Sends the configured ``user_area_cmd`` (default ``USER $1``). CP/M user
+        areas are global across drives (FR-184), so this persists until changed.
+        """
+        template = self.settings.get("user_area_cmd", "USER $1")
+        text = self.capture(template.replace("$1", str(area)))
+        ok = CPMParser.drive_prompt_letter(text) is not None
+        step(log, "set user area → %d %s", area, "ok" if ok else "FAILED")
+        return ok
+
     def list(self, letter: str | None = None) -> dict[str, bool]:
         """Return the directory listing of ``letter`` (or the current drive)."""
         if letter is not None and not self.change_drive(letter):

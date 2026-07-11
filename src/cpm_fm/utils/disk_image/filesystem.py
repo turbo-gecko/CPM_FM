@@ -94,20 +94,24 @@ def list_files(entries: list[CpmDirEntry], geom: DiskDef) -> list[CpmFileEntry]:
     return [files[k] for k in order]
 
 
-def read_file(image: CpmImage, entries: list[CpmDirEntry], name: str) -> bytes:
+def read_file(
+    image: CpmImage, entries: list[CpmDirEntry], name: str, user: int | None = None
+) -> bytes:
     """Return the byte content of the file called ``name`` (FR-171).
 
     The file's extents are ordered by extent number; each extent contributes its
     used allocation blocks in order, and the whole is truncated to the record
     length implied by the final extent (DR-049). Lookup is case-insensitive on
-    the ``NAME.EXT`` form.
+    the ``NAME.EXT`` form. When ``user`` is given the match is further restricted
+    to that user area, so the same name in two areas (FR-185) reads the intended
+    file rather than whichever extent happens to be found first.
 
     Raises ``KeyError`` when no such file exists.
 
-    Satisfies: FR-171, DR-049.
+    Satisfies: FR-171, FR-185, DR-049.
     """
     target = name.upper()
-    matching = [e for e in entries if e.full_name == target]
+    matching = [e for e in entries if e.full_name == target and (user is None or e.user == user)]
     if not matching:
         raise KeyError(name)
 

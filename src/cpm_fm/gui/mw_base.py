@@ -51,6 +51,7 @@ class MainWindowMixinBase:
         _transfer_cancel: threading.Event
         _probe_cancel: threading.Event
         _probe_thread: threading.Thread | None
+        _probe_user_area: int | None
         _conflict_policy: str | None
         _conflict_answered: threading.Event
         _conflict_result: tuple[str, bool]
@@ -69,6 +70,8 @@ class MainWindowMixinBase:
         # Disk-image details view (FR-173/UIR-109): file metadata captured at open
         # time and the enable-toggled Image Details… menu action.
         _image_files: list[CpmFileEntry]
+        # FR-185: staged filename -> (CP/M name, user area) for the open image.
+        _image_stage_map: dict[str, tuple[str, int]]
         _image_details_action: QAction | None
         # Disk-image write (FR-174/UIR-110): the enable-toggled Save Image… action.
         _save_image_action: QAction | None
@@ -101,10 +104,20 @@ class MainWindowMixinBase:
         remote_sort_combo: QComboBox
         host_sort_dir_btn: QToolButton
         remote_sort_dir_btn: QToolButton
+        # UIR-120: per-pane user-area filter drop-down (hidden until an image is
+        # mounted in that pane).
+        host_area_filter: QComboBox
+        remote_area_filter: QComboBox
         _restoring_filter_sort: bool
         # UIR-017: remote drive-selection drop-down (disabled while a disk image
         # is mounted in the Remote pane, FR-176).
         drive_combo: QComboBox
+        # UIR-118: remote user-area (0–15) selection drop-down.
+        user_combo: QComboBox
+        # FR-184: the tracked, authoritative current remote user area (0–15).
+        _remote_user: int
+        # FR-182: the area the remote is believed to be in (issue-on-change).
+        _applied_user_area: int | None
 
         # --- cross-thread GUI-marshalling signals (NFR-004) ---
         # Typed ``Any``: a PySide ``Signal`` is a descriptor whose bound
@@ -163,6 +176,8 @@ class MainWindowMixinBase:
         def _image_is_dirty(self) -> bool: ...
         # Dual-pane mount (FR-176).
         def _remote_is_image(self) -> bool: ...
+        # Disk-image user areas (FR-185/FR-188).
+        def _host_image_entry(self, staged_name: str) -> tuple[str, int] | None: ...
         def _list_image_remote(self) -> None: ...
         def _copy_host_to_image(self, source_paths: list[str]) -> None: ...
         def _copy_image_to_host(self, names: list[str]) -> None: ...
@@ -170,6 +185,10 @@ class MainWindowMixinBase:
         def _update_host_group_title(self) -> None: ...
         def refresh_host_files(self) -> None: ...
         def refresh_remote_files(self) -> None: ...
+        # Remote user-area selection (FR-181–FR-184).
+        def change_user_area(self, index: int) -> None: ...
+        def _apply_remote_user_area(self) -> None: ...
+        def _apply_transfer_user_area(self, area: int) -> None: ...
         def _apply_remote_view(self) -> None: ...
         @staticmethod
         def _file_size(path: str) -> int: ...

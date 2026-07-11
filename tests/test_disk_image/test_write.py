@@ -45,6 +45,29 @@ def _roundtrip(geom, files, tmp_path, *, attrs=None):
     return CpmImage(bytearray(dest.read_bytes()), geom)
 
 
+def test_write_read_preserves_distinct_user_areas(tmp_path):
+    """The same name in two user areas round-trips independently.
+
+    Verifies: FR-185, FR-187, FR-171.
+    """
+    geom = _geom("ibm-3740")
+    content0 = b"area-0-content".ljust(128, b"\x00")  # record-aligned so no read padding
+    content3 = b"area-3-body!!".ljust(128, b"\x00")
+    img = CpmImage(_blank(geom), geom)
+    img.write_file("FOO.COM", content0, user=0)
+    img.write_file("FOO.COM", content3, user=3)
+    dest = tmp_path / "out.img"
+    img.save(dest)
+    reopened = CpmImage(bytearray(dest.read_bytes()), geom)
+
+    # FR-185/FR-187: both files survive with their own area and content.
+    by_user = {f.user: f for f in reopened.list_files() if f.name == "FOO.COM"}
+    assert set(by_user) == {0, 3}
+    # FR-185: a user-scoped read returns the intended file, not the first extent.
+    assert reopened.read_file("FOO.COM", user=0) == content0
+    assert reopened.read_file("FOO.COM", user=3) == content3
+
+
 def test_write_read_single_extent(tmp_path):
     """A small file written out reads back byte-exact.
 

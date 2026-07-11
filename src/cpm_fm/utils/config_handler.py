@@ -47,6 +47,13 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "list_files_cmd": "DIR",
     "recv_remote_cmd": "PCPUT $1",
     "send_remote_cmd": "PCGET $1",
+    # FR-182: the CCP command used to change the remote user area (0–15). The
+    # token $1 is replaced by the area number. USER is a CP/M CCP built-in.
+    "user_area_cmd": "USER $1",
+    # FR-188: how a disk-image file transfers to a live remote pick their user
+    # area — "match" sends each file to its own source area (default), "selected"
+    # uses the Remote pane's user-area drop-down.
+    "image_area_mode": "match",
     # XMODEM-1K mode. When `xmodem_1k` is ON, host->remote sends use 1024-byte
     # STX frames instead of 128-byte SOH (the receive side already auto-detects
     # frame size), and the `_1k` launch commands below replace the standard

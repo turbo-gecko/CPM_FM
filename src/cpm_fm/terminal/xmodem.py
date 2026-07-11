@@ -58,16 +58,6 @@ class XModem:
         # misconfigured launch command, as opposed to a failure once the
         # transfer was already underway. Left False for every other outcome.
         self.no_response = False
-        # NFR-003r: the transport line must be idle for at least this long
-        # *before* a candidate start character for it to be accepted. The
-        # receiver emits its real start char after a quiet gap (once its banner
-        # has printed and it has armed), whereas a like-valued byte in the banner
-        # (e.g. the 'C' in "...on COM0") is mid-burst with no preceding idle.
-        # This is the read-window used to detect that idle gap.
-        self.handshake_settle = 0.25
-        # NFR-003p: per-attempt wait for the EOT to be ACKed, bounded by the
-        # EOT retransmit loop in send_file.
-        self.eot_timeout = 2.0
 
     def _cancelled(self) -> bool:
         """Whether cancellation has been requested (FR-120).
@@ -229,52 +219,6 @@ class XModem:
                 return char
         return b""
 
-    def _wait_for_start_char(self, expected: tuple[bytes, ...], timeout: float) -> bytes:
-        """Wait for a genuine X-Modem start character, ignoring one that is
-        merely part of the receiver's pre-transfer console banner (b"" on
-        timeout/cancel).
-
-        X-Modem is receiver-driven: the sender waits for the receiver's start
-        character (``C``/NAK) before transmitting. On a shared Terminal/Transport
-        port the receiver's start-up banner is buffered ahead of that character,
-        and a printable ``C`` in the banner (e.g. the 'C' in "...on COM0" printed
-        by the RomWBW ``XM`` receiver) is indistinguishable, byte-for-byte, from
-        the CRC-mode request.
-
-        They differ in *timing*, not value: the banner is one continuous burst,
-        whereas the receiver emits its real start character — which it then polls
-        periodically (``XM`` sends the two bytes ``C`` ``K`` every few seconds) —
-        only after it has armed, i.e. after a quiet gap. So a candidate is
-        accepted only when the line was **idle immediately before it** (a read of
-        up to ``handshake_settle`` seconds returned nothing); a start-char-valued
-        byte embedded in the continuous banner has no preceding idle and is
-        skipped, with scanning continuing within the FR-160 handshake budget. A
-        trailing byte such as ``XM``'s ``K`` is left in the buffer and harmlessly
-        discarded by the subsequent packet/EOT acknowledgement wait. The line is
-        idle before the receiver's very first byte (the launch command has just
-        been issued), so a start character that arrives first — a quiet receiver
-        such as PCGET, whether it polls or sends its start char only once — is
-        accepted at once.
-
-        Satisfies: FR-120, FR-159, FR-160, NFR-003r.
-        """
-        deadline = time.time() + timeout
-        # The line was quiet before the receiver's first byte (the launch command
-        # has just gone out), so a start char arriving first is genuine.
-        idle_before = True
-        while time.time() < deadline:
-            # FR-120: bail out promptly when cancellation is requested.
-            if self._cancelled():
-                return b""
-            char = self._read_byte(timeout=min(self.handshake_settle, deadline - time.time()))
-            if char == b"":
-                idle_before = True  # the read window elapsed with no byte: line idle
-                continue
-            if char in expected and idle_before:
-                return char  # a start char preceded by an idle line: genuine
-            idle_before = False  # any other byte (banner text) breaks the idle run
-        return b""
-
     def _calculate_checksum(self, data: bytes) -> int:
         """Standard X-Modem checksum (sum of bytes, modulo 256).
 
@@ -327,7 +271,7 @@ class XModem:
         bytes framed with SOH. The frame size is independent of the CRC/checksum mode.
 
         Satisfies: FR-081, FR-082, FR-083, FR-086, FR-105, FR-120, FR-159, FR-160,
-            NFR-003a, NFR-003b, NFR-003c, NFR-003p, NFR-003r.
+            NFR-003a, NFR-003b, NFR-003c, NFR-003p.
         """
         if not os.path.exists(filepath):
             return False
@@ -346,11 +290,8 @@ class XModem:
 
         # 1. Wait for the receiver's start character and choose the mode from
         #    it. Receivers retransmit it periodically, so allow generous time
-        #    (FR-160: the dedicated, configurable handshake timeout). NFR-003r:
-        #    a candidate is confirmed only once the line falls idle, so a
-        #    printable 'C' in the receiver's start-up banner is not mistaken for
-        #    the CRC-mode request.
-        start = self._wait_for_start_char((b"C", self.NAK), timeout=self.handshake_timeout)
+        #    (FR-160: the dedicated, configurable handshake timeout).
+        start = self._wait_for_one_of((b"C", self.NAK), timeout=self.handshake_timeout)
         if start == b"":
             # FR-120: a cancellation during the handshake aborts the transfer.
             if self._cancelled():
@@ -413,21 +354,12 @@ class XModem:
             offset += frame_size
             packet_num = (packet_num + 1) % 256
 
-        # Send EOT, retransmitting until the receiver ACKs it (bounded, NFR-003p).
+        # Send EOT, retransmitting until the receiver ACKs it (bounded).
         for _ in range(10):
-            # FR-120: abort the EOT wait too when cancellation is requested.
-            if self._cancelled():
-                self._abort()
-                return False
             self._write(self.EOT)
-            if self._wait_for_one_of((self.ACK,), timeout=self.eot_timeout) == self.ACK:
-                return True
-        # EOT never acknowledged. For an empty transfer (no data packet) the EOT
-        # ACK is the only evidence of delivery, so this is a failure; for a
-        # non-empty transfer every data packet was already ACKed, so a lost
-        # EOT-ACK is tolerated (NFR-003q symmetry with receive_file's handling of
-        # a sender that goes silent after the last packet).
-        return blocks > 0
+            if self._wait_for_one_of((self.ACK,), timeout=2.0) == self.ACK:
+                break
+        return True
 
     def receive_file(self, save_path: str, use_1k: bool = False) -> bool:
         """Receives a file from Remote to Host (e.g. from CP/M PCPUT).

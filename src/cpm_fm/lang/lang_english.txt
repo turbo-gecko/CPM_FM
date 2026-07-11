@@ -55,6 +55,8 @@ main.sort.name = Name
 main.sort.extension = Extension
 main.sort_by_tooltip = Sort by
 main.sort_direction_tooltip = Toggle ascending/descending order
+main.area_filter_all = All
+main.area_filter_tooltip = Show files from all user areas, or filter to one
 
 # --- Connection indicators -----------------------------------------------------
 indicator.terminal = Terminal
@@ -168,6 +170,8 @@ error.download_failed = Download of {name} failed
 error.transfer_failed = Transfer of {name} failed; remaining files skipped
 error.transfer_no_response_send = No response from remote for {name} - check the Send to Remote command in Config > General
 error.transfer_no_response_recv = No response from remote for {name} - check the Receive from Remote command in Config > General
+error.transfer_no_response_send_user = No response from remote for {name} in user area {area} - the Send to Remote command may not be reachable from user area {area}. It must be present there or SYS-attributed in user 0 (see manual section 17), or the command in Config > General is wrong.
+error.transfer_no_response_recv_user = No response from remote for {name} in user area {area} - the Receive from Remote command may not be reachable from user area {area}. It must be present there or SYS-attributed in user 0 (see manual section 17), or the command in Config > General is wrong.
 warning.select_upload = Please select one or more files to upload
 warning.select_download = Please select one or more files to download
 warning.no_config_loaded = No configuration file is loaded. The settings have been applied to the current session only. Use Config > Save Config to write them to a configuration file.

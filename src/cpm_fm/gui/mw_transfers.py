@@ -4,6 +4,7 @@ import os
 import threading
 import time
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
 
 from cpm_fm.gui.mw_base import MainWindowMixinBase
@@ -33,7 +34,7 @@ class _TransfersMixin(MainWindowMixinBase):
         the rows and keep those that are selected.
         """
         return [
-            list_widget.item(row).text()
+            list_widget.item(row).data(Qt.ItemDataRole.UserRole) or list_widget.item(row).text()
             for row in range(list_widget.count())
             if list_widget.item(row).isSelected()
         ]
@@ -208,6 +209,33 @@ class _TransfersMixin(MainWindowMixinBase):
         if not template:
             return
         self.handle_terminal_send(template.replace("$1", filename))
+
+    def _apply_transfer_user_area(self, area: int) -> None:
+        """Set the remote user area before a transfer launch (FR-183).
+
+        Issued **only when ``area`` differs from the area the remote is already
+        in** (``_applied_user_area``, FR-184): so a transfer into the current
+        area — the usual case, area 0 with the feature unused — adds no command
+        and leaves the existing transfer flow unchanged. When they differ, sends
+        the configured user-area command (``user_area_cmd``, default ``USER $1``)
+        on the Terminal Port and waits the inter-file settle (FR-109) so the CCP
+        has returned to its prompt before the FR-087 launch command is issued —
+        otherwise the launch command's leading characters can be lost while CP/M
+        is still processing ``USER`` and not yet servicing its UART — then records
+        the new current area. A no-op when the command is configured empty (the
+        remote's current area is then used unchanged). Runs on the transfer worker
+        thread; ``handle_terminal_send`` is safe to call from there.
+
+        Satisfies: FR-183, FR-184.
+        """
+        if area == self._applied_user_area:
+            return
+        cmd = str(self.settings.get("user_area_cmd", "USER $1")).strip()
+        if not cmd:
+            return
+        self.handle_terminal_send(cmd.replace("$1", str(area)))
+        self._cancellable_sleep(self._interfile_delay())
+        self._applied_user_area = area
 
     def _launch_delay(self) -> float:
         """
