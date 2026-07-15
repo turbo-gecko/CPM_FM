@@ -11,7 +11,7 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 2.37.2 |
+| Version | 2.38.0 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
@@ -799,7 +799,7 @@ folder and a Remote-mounted image as a local bulk copy (FR-180).
 The following requirements define the algorithm for extracting remote file names from standard CP/M
 2.2 four-column `DIR` output. All testable requirements in §6.1–§6.3 (DR-001–DR-026, DR-033 and
 DR-033a) are verified by the unit tests in `tests/test_cpm_parser.py`, which cover line filtering, the
-standard drive-prefix and vertical-bar formats, single-file and extensionless entries, multi-token base
+standard drive-prefix, vertical-bar and prefix-less embedded-dot (QPM) formats, single-file and extensionless entries, multi-token base
 join, whitespace/CRLF robustness, de-duplication, empty/edge inputs, and drive-prompt detection
 (including ZCPR-style user-area prefixes) and drive-letter extraction.
 
@@ -813,6 +813,7 @@ join, whitespace/CRLF robustness, de-duplication, empty/edge inputs, and drive-p
 | DR-004 | The parser shall process only lines that start with the literal prefix `C:` (where `C` may be any drive letter). | Mandatory | T | App_Design §Identify file listing lines; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
 | DR-005 | The parser shall process every line that starts with the drive prefix (DR-004), whether or not it contains the separator sequence space-colon-space (" : "). The separator only delimits multiple file entries on a line (DR-011); a directory containing a single file produces a line with no separator, which shall still be processed. *(v1.3.3: fixes the defect where a directory with a single file showed no entries because the separator was wrongly required as a line filter.)* | Mandatory | T | App_Design §Identify file listing lines; impl. `cpm_parser.py:parse_dir_output` |
 | DR-006 | The parser shall additionally process file listing lines produced by CP/M variants (e.g. ZCPR/ZSDOS) that use the vertical bar `\|` as both the entry separator and a leading line marker, in place of the drive prefix and the space-colon-space delimiter. Such a line begins (after trimming) with `\|`, has no drive prefix, separates entries with `\|`, and presents each entry with a literal dot between the space-padded filename base and extension (e.g. `\|  ASM     .COM  \|  FILEATTR.COM`). Both this format and the standard drive-prefix format (DR-004/DR-005) shall be supported. | Mandatory | T | impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
+| DR-007 | The parser shall additionally process file listing lines that carry **no** drive prefix (DR-004) and **no** leading vertical bar (DR-006) but present each entry with the extension dot already embedded between a space-padded (up to 8-character) filename base and its (up to 3-character) extension, delimited by the space-colon-space sequence — the format produced by QPM and similar CP/M variants (e.g. `INFO    .COM : ASM     .COM : AUTOEXEC.QSB`). To avoid misreading arbitrary terminal output as a listing, a prefix-less line shall be treated as this format **only when every** space-colon-space-delimited entry matches the padded embedded-dot 8.3 shape. This format and the standard drive-prefix (DR-004/DR-005) and vertical-bar (DR-006) formats shall all be supported. *(v2.38.)* | Mandatory | T | impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
 
 ### 6.2 Entry extraction
 
@@ -824,6 +825,7 @@ join, whitespace/CRLF robustness, de-duplication, empty/edge inputs, and drive-p
 | DR-013 | For each normalised entry, the parser shall split into tokens by whitespace. If two or more tokens are present, the last token is the file extension and all preceding tokens are the filename base concatenated without spaces. If exactly one token is present, it is a filename with no extension (CP/M leaves the space-padded extension field blank, e.g. `LICENCE`). | Mandatory | T | App_Design §Parse filename and extension; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
 | DR-014 | The parser shall construct each canonical filename in the format `<filename_base>.<extension>`, except for an extensionless entry (DR-013) which is constructed as `<filename_base>` with no trailing dot, so the listed name matches the host filename. | Mandatory | T | App_Design §Construct full filename; impl. `cpm_parser.py:CPMParser`, `cpm_parser.py:parse_dir_output` |
 | DR-015 | For vertical-bar format lines (DR-006), where the dot delimiting the extension is already present in the output, the parser shall construct each canonical filename by removing all internal whitespace from the entry (the filename base is space-padded), yielding `<filename_base>.<extension>`. A trailing dot left by an empty extension field shall be removed so the result matches the extensionless convention of DR-014. | Mandatory | T | impl. `cpm_parser.py:parse_dir_output` |
+| DR-016 | For prefix-less embedded-dot format lines (DR-007), where the dot delimiting the extension is already present in the output, the parser shall construct each canonical filename by the same rule as the vertical-bar format (DR-015): remove all internal whitespace from the entry (the base is space-padded), yielding `<filename_base>.<extension>`, and remove a trailing dot left by an empty extension field so the result matches the extensionless convention of DR-014. *(v2.38.)* | Mandatory | T | impl. `cpm_parser.py:parse_dir_output` |
 
 ### 6.3 Output and robustness
 
@@ -844,7 +846,7 @@ join, whitespace/CRLF robustness, de-duplication, empty/edge inputs, and drive-p
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| DR-030 | The parser assumes input conforming to standard CP/M 2.2 `DIR` output format (8.3 filenames, space-padded). | Mandatory | A | App_Design §Constraints; impl. `cpm_parser.py:CPMParser` |
+| DR-030 | The parser assumes input conforming to standard CP/M 2.2 `DIR` output format (8.3 filenames, space-padded). Variant `DIR` formats produced by CP/M derivatives — the vertical-bar format (DR-006) and the prefix-less embedded-dot format (DR-007, e.g. QPM) — are also supported. | Mandatory | A | App_Design §Constraints; impl. `cpm_parser.py:CPMParser` |
 | DR-031 | The parser is not required to support long filenames or non-ASCII characters. | Optional | A | App_Design §Constraints; impl. `cpm_parser.py:CPMParser` |
 | DR-032 | The parser is not required to parse file sizes, dates, or attributes — only names and extensions. | Mandatory | A | App_Design §Constraints; impl. `cpm_parser.py:CPMParser` |
 
@@ -1038,6 +1040,7 @@ future refactor in the Issue Resolution Log (OI-27).
 | v2.35 CP/M disk image UX — separate image dir, KISS save, backup/restore to image | FR-179, FR-180, UIR-115; revises FR-150, FR-151, FR-171, FR-174, FR-176, FR-178, UIR-002, UIR-110, UIR-114, DR-050; removes `image_write_enabled` |
 | v2.36 Config menu & window reorganisation — new Remote Config dialog, field moves, scrollbars | FR-021d, UIR-116, UIR-117; revises UIR-002, UIR-003, UIR-041, UIR-044, UIR-047, UIR-048, UIR-058, UIR-059, UIR-089, UIR-090, UIR-103a, UIR-107, UIR-108, FR-006, FR-010, FR-013, FR-018, FR-019, FR-161 |
 | v2.37 CP/M user-area support (issues #7/#8) — remote area selector, area-scoped listing/transfer, disk-image area preservation and per-pane area filter | FR-181, FR-182, FR-183, FR-184, FR-185, FR-186, FR-187, FR-188, FR-189, UIR-118, UIR-119, UIR-120, DR-051; revises FR-159, FR-171, FR-174, UIR-012 |
+| v2.38 QPM DIR support — parse prefix-less embedded-dot directory listings | DR-007, DR-016; revises DR-030 |
 
 ---
 

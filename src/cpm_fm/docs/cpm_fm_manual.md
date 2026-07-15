@@ -1,6 +1,6 @@
 # CP/M File Manager — User Manual
 
-**Version 2.37.2**
+**Version 2.38.0**
 
 CP/M File Manager (`cpm-fm`) is a cross-platform desktop application for transferring and managing files between a modern host computer and a legacy **CP/M** (Control Program for Microcomputers) system over a serial connection. It uses the **X-Modem** protocol for reliable file transfer and presents a familiar two-pane file-browser interface with drag-and-drop, filtering, sorting, a built-in serial terminal, transfer history, and whole-drive backup/restore.
 
@@ -439,7 +439,7 @@ Each pane has its own controls for navigating, filtering, and sorting.
 - **User-area dropdown** — Choose a CP/M **user area**, **0** through **15** (next to the drive dropdown). CP/M divides each drive's directory into 16 user areas; a file lives in exactly one. Selecting an area issues a `USER` command to the remote and re-lists that area's files. Files you **Copy to Remote** are placed in the selected area, and files you **Copy to Host** are taken from it. The area starts at **0** when you connect. (On a plain CP/M 2.2 system the prompt does not show the area, so the app tracks it for you; on ZCPR/ZSDOS systems the prompt shows it, e.g. `A3>`.)
 
   > **Transfers to a non-zero user area — important.** CP/M looks for a command (like your `PCGET`/`PCPUT` transfer program) in the *current* user area, falling back to user 0 only if that program is flagged **SYS**. So transferring into or out of a **non-zero** area works **only if your transfer program is reachable from that area** — normally that means it is a **SYS file in user 0** (the usual way system utilities are installed), which CP/M can then run from any area. If it is not, the transfer will fail to start (you will see the "No response from remote — check the … command" message). This affects only non-zero areas; **area 0 always works** (no `USER` command is issued and the program is found where it lives). cpm-fm cannot move a file between user areas on the CP/M side — there is no standard CP/M 2.2 command for that — so it relies on this. Listing any area (the dropdown) always works, since `DIR` is built into CP/M.
-- **Update** — Refresh the remote file list (issues the List Files command and parses the output).
+- **Update** — Refresh the remote file list (issues the List Files command and parses the output). The parser understands the standard CP/M `DIR` layout as well as the variant listings produced by common CP/M derivatives — the vertical-bar format (ZCPR/ZSDOS) and the prefix-less, dotted format used by **QPM** (e.g. `INFO    .COM : ASM     .COM`) — so remote listings populate correctly across all three.
 - **Filter / Sort** — Same controls as the Host pane.
 - **Copy to Host** — Download the selected files from CP/M.
 

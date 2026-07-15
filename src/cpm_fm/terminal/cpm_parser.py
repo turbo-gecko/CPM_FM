@@ -6,6 +6,13 @@ import re
 # (e.g. "A0:BASE>") are intentionally not matched (DR-033).
 _DRIVE_PROMPT_RE = re.compile(r"^\d*([A-Za-z])(\d*)>")
 
+# Shape of a single entry in the prefix-less embedded-dot listing format (DR-007),
+# as produced by QPM and similar CP/M variants: a 1-8 character space-padded base,
+# a literal dot, then a 0-3 character extension (e.g. "INFO    .COM", "AUTOEXEC.QSB",
+# "NAME    ." for an extensionless file). A line is treated as this format only when
+# *every* ' : '-delimited entry matches, so ordinary terminal text is not misread.
+_EMBEDDED_DOT_ENTRY_RE = re.compile(r"^[^ .]{1,8} *\.[^ .]{0,3}$")
+
 
 # CP/M 2.2 file names are upper-case 8.3 names drawn from a restricted
 # character set. These characters are reserved by CP/M as command-line / FCB
@@ -82,7 +89,7 @@ class CPMParser:
         Parses the raw text output of a CP/M DIR command and returns a
         dictionary where keys are filenames in 'NAME.EXT' format.
 
-        Satisfies: FR-077, DR-001-DR-006, DR-010-DR-015, DR-020-DR-026.
+        Satisfies: FR-077, DR-001-DR-007, DR-010-DR-016, DR-020-DR-026.
         """
         filenames = {}
         lines = text.splitlines()
@@ -120,12 +127,22 @@ class CPMParser:
                     filenames[full_filename] = True
                 continue
 
-            # 2b. Identify file listing lines
-            # Must start with a drive identifier (e.g., 'C:'). The ' : ' sequence
-            # is only the delimiter *between* multiple entries on a line, so a
-            # directory containing a single file has no ' : ' — such lines must
-            # still be processed (DR-004/DR-005, DR-011).
+            # 2b. Prefix-less embedded-dot format (DR-007): CP/M variants such as
+            # QPM emit ' : '-delimited listing lines that carry no drive prefix and
+            # no leading '|', but already embed the extension dot (e.g.
+            # "INFO    .COM : ASM     .COM : AUTOEXEC.QSB"). A line with no drive
+            # prefix is treated as this format only when *every* ' : '-delimited
+            # entry has the padded 8.3 embedded-dot shape, so arbitrary terminal
+            # text is not misread as a listing (DR-007). Each entry is then
+            # processed like a vertical-bar entry — internal whitespace removed,
+            # trailing dot dropped (DR-016).
             if not (len(line) > 1 and line[0].isalpha() and line[1] == ":"):
+                entries = [e for e in (part.strip() for part in line.split(" : ")) if e]
+                if entries and all(_EMBEDDED_DOT_ENTRY_RE.match(e) for e in entries):
+                    for entry in entries:
+                        full_filename = "".join(entry.split()).rstrip(".")
+                        if full_filename:
+                            filenames[full_filename] = True
                 continue
 
             # 3. Strip drive identifier (e.g., remove 'C:')

@@ -33,6 +33,12 @@
     "DR-006": [
       "tests/test_cpm_parser.py:test_parse_dir_output_vertical_bar_format"
     ],
+    "DR-007": [
+      "tests/test_cpm_parser.py:test_parse_dir_output_ignores_prose_with_embedded_dot",
+      "tests/test_cpm_parser.py:test_parse_dir_output_qpm_embedded_dot_format",
+      "tests/test_cpm_parser.py:test_parse_dir_output_qpm_extensionless",
+      "tests/test_cpm_parser.py:test_parse_dir_output_qpm_single_entry"
+    ],
     "DR-010": [
       "tests/test_cpm_parser.py:test_parse_dir_output_strips_leading_drive_prefix"
     ],
@@ -49,12 +55,18 @@
       "tests/test_cpm_parser.py:test_parse_dir_output_single_extensionless_file"
     ],
     "DR-014": [
+      "tests/test_cpm_parser.py:test_parse_dir_output_qpm_extensionless",
       "tests/test_cpm_parser.py:test_parse_dir_output_vertical_bar_extensionless"
     ],
     "DR-015": [
       "tests/test_cpm_parser.py:test_parse_dir_output_bar_format_skips_dot_only_entry",
       "tests/test_cpm_parser.py:test_parse_dir_output_vertical_bar_extensionless",
       "tests/test_cpm_parser.py:test_parse_dir_output_vertical_bar_format"
+    ],
+    "DR-016": [
+      "tests/test_cpm_parser.py:test_parse_dir_output_qpm_embedded_dot_format",
+      "tests/test_cpm_parser.py:test_parse_dir_output_qpm_extensionless",
+      "tests/test_cpm_parser.py:test_parse_dir_output_qpm_single_entry"
     ],
     "DR-020": [
       "tests/test_cpm_parser.py:test_parse_dir_output_duplicate_filenames_overwrite"
@@ -73,7 +85,8 @@
       "tests/test_cpm_parser.py:test_parse_dir_output_never_raises_on_malformed_input"
     ],
     "DR-025": [
-      "tests/test_cpm_parser.py:test_parse_dir_output_ignores_prompts_and_empty"
+      "tests/test_cpm_parser.py:test_parse_dir_output_ignores_prompts_and_empty",
+      "tests/test_cpm_parser.py:test_parse_dir_output_ignores_prose_with_embedded_dot"
     ],
     "DR-026": [
       "tests/test_cpm_parser.py:test_parse_dir_output_tolerates_irregular_spacing_and_mixed_line_endings"

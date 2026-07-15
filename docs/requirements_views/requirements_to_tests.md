@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_301/500 requirements have a verifying test; 199 untested; 0 stale tag(s)._
+_303/502 requirements have a verifying test; 199 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -21,18 +21,20 @@ _301/500 requirements have a verifying test; 199 untested; 0 stale tag(s)._
 | DR-004 | `tests/test_cpm_parser.py:test_parse_dir_output_accepts_lowercase_drive_letter` |
 | DR-005 | `tests/test_cpm_parser.py:test_parse_dir_output_single_file_has_no_separator` |
 | DR-006 | `tests/test_cpm_parser.py:test_parse_dir_output_vertical_bar_format` |
+| DR-007 | `tests/test_cpm_parser.py:test_parse_dir_output_ignores_prose_with_embedded_dot`, `tests/test_cpm_parser.py:test_parse_dir_output_qpm_embedded_dot_format`, `tests/test_cpm_parser.py:test_parse_dir_output_qpm_extensionless`, `tests/test_cpm_parser.py:test_parse_dir_output_qpm_single_entry` |
 | DR-010 | `tests/test_cpm_parser.py:test_parse_dir_output_strips_leading_drive_prefix` |
 | DR-011 | `tests/test_cpm_parser.py:test_parse_dir_output_deduplicates_repeated_names`, `tests/test_cpm_parser.py:test_parse_dir_output_joins_multi_token_base`, `tests/test_cpm_parser.py:test_parse_dir_output_skips_empty_entry_between_delimiters` |
 | DR-012 | `tests/test_cpm_parser.py:test_parse_dir_output_collapses_internal_whitespace` |
 | DR-013 | `tests/test_cpm_parser.py:test_parse_dir_output_includes_extensionless_files`, `tests/test_cpm_parser.py:test_parse_dir_output_single_extensionless_file` |
-| DR-014 | `tests/test_cpm_parser.py:test_parse_dir_output_vertical_bar_extensionless` |
+| DR-014 | `tests/test_cpm_parser.py:test_parse_dir_output_qpm_extensionless`, `tests/test_cpm_parser.py:test_parse_dir_output_vertical_bar_extensionless` |
 | DR-015 | `tests/test_cpm_parser.py:test_parse_dir_output_bar_format_skips_dot_only_entry`, `tests/test_cpm_parser.py:test_parse_dir_output_vertical_bar_extensionless`, `tests/test_cpm_parser.py:test_parse_dir_output_vertical_bar_format` |
+| DR-016 | `tests/test_cpm_parser.py:test_parse_dir_output_qpm_embedded_dot_format`, `tests/test_cpm_parser.py:test_parse_dir_output_qpm_extensionless`, `tests/test_cpm_parser.py:test_parse_dir_output_qpm_single_entry` |
 | DR-020 | `tests/test_cpm_parser.py:test_parse_dir_output_duplicate_filenames_overwrite` |
 | DR-021 | `tests/test_cpm_parser.py:test_parse_dir_output_includes_extensionless_files` |
 | DR-022 | `tests/test_cpm_parser.py:test_parse_dir_output_preserves_filename_case` |
 | DR-023 | `tests/test_cpm_parser.py:test_parse_dir_output_includes_extensionless_files`, `tests/test_cpm_parser.py:test_parse_dir_output_single_extensionless_file` |
 | DR-024 | `tests/test_cpm_parser.py:test_parse_dir_output_never_raises_on_malformed_input` |
-| DR-025 | `tests/test_cpm_parser.py:test_parse_dir_output_ignores_prompts_and_empty` |
+| DR-025 | `tests/test_cpm_parser.py:test_parse_dir_output_ignores_prompts_and_empty`, `tests/test_cpm_parser.py:test_parse_dir_output_ignores_prose_with_embedded_dot` |
 | DR-026 | `tests/test_cpm_parser.py:test_parse_dir_output_tolerates_irregular_spacing_and_mixed_line_endings` |
 | DR-033 | `tests/test_cpm_parser.py:test_has_drive_prompt_accepts_zcpr_user_area`, `tests/test_cpm_parser.py:test_has_drive_prompt_detects_prompt`, `tests/test_cpm_parser.py:test_has_drive_prompt_ignores_path_style_prompt`, `tests/test_cpm_parser.py:test_has_drive_prompt_matches_lowercase_request`, `tests/test_cpm_parser.py:test_has_drive_prompt_matches_lowercase_response`, `tests/test_cpm_parser.py:test_has_drive_prompt_zcpr_matches_requested_drive_only` |
 | DR-033a | `tests/test_cpm_parser.py:test_drive_prompt_letter_extracts_plain_prompt`, `tests/test_cpm_parser.py:test_drive_prompt_letter_extracts_zcpr_prompt`, `tests/test_cpm_parser.py:test_drive_prompt_letter_none_when_absent`, `tests/test_cpm_parser.py:test_drive_prompt_letter_returns_first_prompt`, `tests/test_cpm_parser.py:test_drive_prompt_letter_upper_cases_result` |

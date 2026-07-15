@@ -146,6 +146,58 @@ def test_parse_dir_output_vertical_bar_extensionless():
     }
 
 
+def test_parse_dir_output_qpm_embedded_dot_format():
+    """Verifies: DR-007, DR-016."""
+    # DR-007/DR-016: QPM-style DIR has no drive prefix and no leading '|', uses
+    # ' : ' as the entry delimiter, and already embeds the extension dot between a
+    # space-padded base and its extension (real capture from QPM 2.71 on Z80-MBC2).
+    mock_output = """
+    A>DIR
+    INFO    .COM : ASM     .COM : AUTOEXEC.QSB : AUTOEXEC.TXT
+    FILEMAP .COM : DDT     .COM : NSWEEP  .COM : D       .COM
+    DUMP    .COM : UNLOAD  .COM : TE      .COM : COMPARE .COM
+    """
+    assert CPMParser.parse_dir_output(mock_output) == {
+        "INFO.COM": True,
+        "ASM.COM": True,
+        "AUTOEXEC.QSB": True,
+        "AUTOEXEC.TXT": True,
+        "FILEMAP.COM": True,
+        "DDT.COM": True,
+        "NSWEEP.COM": True,
+        "D.COM": True,
+        "DUMP.COM": True,
+        "UNLOAD.COM": True,
+        "TE.COM": True,
+        "COMPARE.COM": True,
+    }
+
+
+def test_parse_dir_output_qpm_single_entry():
+    """Verifies: DR-007, DR-016."""
+    # DR-007: a QPM directory with a single file has no ' : ' delimiter; the lone
+    # embedded-dot entry must still be recognised and extracted.
+    assert CPMParser.parse_dir_output("MYFILE  .TXT\n") == {"MYFILE.TXT": True}
+
+
+def test_parse_dir_output_qpm_extensionless():
+    """Verifies: DR-007, DR-016, DR-014."""
+    # DR-016: an empty extension field leaves a trailing dot, which is stripped so
+    # the name matches the extensionless convention (DR-014).
+    assert CPMParser.parse_dir_output("LICENCE .    : PIP     .COM\n") == {
+        "LICENCE": True,
+        "PIP.COM": True,
+    }
+
+
+def test_parse_dir_output_ignores_prose_with_embedded_dot():
+    """Verifies: DR-007, DR-025."""
+    # DR-007: the embedded-dot format is recognised only when *every* ' : '-
+    # delimited entry has the padded 8.3 shape, so ordinary terminal prose that
+    # merely contains a dot is not misread as a file listing.
+    assert CPMParser.parse_dir_output("See readme.txt for the full details\n") == {}
+
+
 def test_has_drive_prompt_detects_prompt():
     """Verifies: FR-102, DR-033."""
     # FR-102/DR-033: after "B:" the terminal answers with a "B>" prompt.

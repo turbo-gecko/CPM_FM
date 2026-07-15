@@ -7,8 +7,8 @@
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.55 |
-| Scorecard for plan version | 1.56 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.56 |
+| Scorecard for plan version | 1.57 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |
@@ -185,6 +185,7 @@ In the **Env** column note the connectivity option actually used (A/B/C) if it d
 | MT-R02 | Port closed → status msg, list cleared | FR-074/104 | | | |
 | MT-R03 | Capture wait handles slow/bursty output | FR-076 | | | |
 | MT-R04 | Live data path: extensionless / single file | FR-077/078, DR-013 | | | |
+| MT-R04a [QPM] | QPM prefix-less embedded-dot DIR parses | FR-077, DR-007/016 | | | |
 | MT-R05 | Select other drive lists it | FR-100/102 | | | |
 | MT-R06 | Nonexistent drive → "Drive X: not found" | FR-103 | | | |
 | MT-R07 | Update uses displayed drive (OI-22) | FR-073 | | | |

@@ -6,7 +6,7 @@
 Maps each source file to the requirement IDs it implements, derived from `Satisfies:` docstring tags in the code.
 Use this for **targeted work**: find the file you're editing, then read just those IDs in `requirements_index.md` or the full SRS — instead of loading the whole specification.
 
-_47 source files; 639 file→requirement links._
+_47 source files; 641 file→requirement links._
 
 | Source file | Requirement IDs |
 |-------------|-----------------|
@@ -38,7 +38,7 @@ _47 source files; 639 file→requirement links._
 | src/cpm_fm/gui/transfer_history_dialog.py | CR-015, FR-004, FR-143, FR-144, UIR-082, UIR-083 |
 | src/cpm_fm/gui/window_state.py | FR-004, FR-005, FR-006, FR-122, FR-124, FR-134, FR-168, UIR-069 |
 | src/cpm_fm/terminal/boot_sequence.py | FR-047 |
-| src/cpm_fm/terminal/cpm_parser.py | DR-001, DR-002, DR-003, DR-004, DR-005, DR-006, DR-010, DR-011, DR-012, DR-013, DR-014, DR-015, DR-020, DR-021, DR-022, DR-023, DR-024, DR-025, DR-026, DR-030, DR-031, DR-032, DR-033, DR-033a, DR-046, DR-051, FR-041, FR-042, FR-077, FR-101, FR-102, FR-148, FR-149, FR-184 |
+| src/cpm_fm/terminal/cpm_parser.py | DR-001, DR-002, DR-003, DR-004, DR-005, DR-006, DR-007, DR-010, DR-011, DR-012, DR-013, DR-014, DR-015, DR-016, DR-020, DR-021, DR-022, DR-023, DR-024, DR-025, DR-026, DR-030, DR-031, DR-032, DR-033, DR-033a, DR-046, DR-051, FR-041, FR-042, FR-077, FR-101, FR-102, FR-148, FR-149, FR-184 |
 | src/cpm_fm/terminal/serial_manager.py | FR-001, FR-002, FR-015, FR-030, FR-032, FR-033, FR-036, FR-037, FR-038, FR-040, FR-047, FR-050, FR-052, FR-055, FR-057, FR-083, FR-091, FR-096, IFR-001, IFR-002, NFR-001, NFR-002, UIR-028, UIR-032, UIR-033 |
 | src/cpm_fm/terminal/term_translate.py | FR-157, FR-157h, FR-157i, FR-157j, UIR-034 |
 | src/cpm_fm/terminal/vt100_engine.py | CR-014, FR-091, FR-091a, FR-095, FR-157, FR-157a, FR-157b, FR-157c, FR-157d, FR-157e, FR-157f, FR-157g, FR-157h, FR-157i, FR-157j, UIR-034, UIR-062 |

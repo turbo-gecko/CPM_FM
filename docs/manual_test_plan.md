@@ -4,9 +4,9 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.56 |
+| Version | 1.57 |
 | Status | Draft |
-| Date | 2026-07-12 |
+| Date | 2026-07-15 |
 | Traces to | `docs/cpm_fm_requirements.md` (SRS v2.25.0) |
 
 ---
@@ -311,6 +311,7 @@ Preconditions: connected to a CP/M peer with files on at least drive `A:`.
 | MT-R02 | FR-074, FR-104 | With the Terminal Port **closed**, press Update / select a drive. | Status bar: "Terminal port not connected - cannot read file list"; Remote list cleared; no hang. |
 | MT-R03 | FR-076 | Time a list refresh against a directory that prints slowly / in bursts. | The app waits ≥1 s, keeps waiting until output is idle ~0.5 s, and caps at ~10 s — no truncated listing for a slow directory. |
 | MT-R04 | FR-077, FR-078, DR-013 | List a drive containing an **extensionless** file and a **single-file** directory (if available). | Extensionless names appear without a trailing dot; a lone file still shows. (Parsing logic itself is unit-tested; this confirms the live capture feeds it correctly.) |
+| MT-R04a [QPM] | FR-077, DR-007, DR-016 | Connect to a **QPM** peer (e.g. QPM 2.71) and press **Update**. QPM's `DIR` output has no drive prefix and embeds the extension dot (e.g. `INFO    .COM : ASM     .COM : AUTOEXEC.QSB`). | The Remote Files list populates with every file (`INFO.COM`, `ASM.COM`, `AUTOEXEC.QSB`, …) — the QPM listing is parsed correctly, not left empty. Copy to Host of a listed file then succeeds. (Parsing logic is unit-tested; this confirms the live QPM capture feeds it correctly.) |
 | MT-R05 | FR-100, FR-102 | Select a different existing drive (e.g. `B:`) from the drop-down. | App sends `B:`; on seeing the `B>` prompt it lists that drive exactly as Update does. |
 | MT-R06 | FR-103 | Select a drive letter that does not exist on the remote. | Remote list cleared; a modal OK dialog "Drive `<letter>`: not found" (e.g. "Drive B: not found"). |
 | MT-R07 | FR-073 (OI-22) | In the Terminal Window type `A:` to change the remote drive directly; then in the main window, with `C:` shown in the drop-down, press Update. | Update first switches the remote to the **displayed** drive (`C:`) and lists that — the list matches the drop-down, not the drive typed in the terminal. |

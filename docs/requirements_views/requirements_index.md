@@ -6,7 +6,7 @@
 Terse, section-grouped summary of `docs/cpm_fm_requirements.md` (the canonical SRS) and its architecture companion `docs/cpm_fm_architecture.md` (the CR-/NFR- constraints).
 Each row gives a requirement ID, a ~15-word summary, and its code implementation.
 Read this for **broad understanding**; open the full SRS only when you need exact wording, priority, or verification method.
-_500 requirements across 62 sections._
+_502 requirements across 62 sections._
 
 
 ## 2. Stakeholder / Product Requirements
@@ -642,6 +642,7 @@ _500 requirements across 62 sections._
 | DR-004 | The parser shall process only lines that start with the literal prefix C… | cpm_parser.py:CPMParser, cpm_parser.py:parse_dir_output |
 | DR-005 | The parser shall process every line that starts with the drive prefix (DR-004), whether or… | cpm_parser.py:parse_dir_output |
 | DR-006 | The parser shall additionally process file listing lines produced by CP/M variants (e.g… | cpm_parser.py:CPMParser, cpm_parser.py:parse_dir_output |
+| DR-007 | The parser shall additionally process file listing lines that carry **no** drive prefix (DR-004) and… | cpm_parser.py:CPMParser, cpm_parser.py:parse_dir_output |
 
 ## 6.2 Entry extraction
 
@@ -653,6 +654,7 @@ _500 requirements across 62 sections._
 | DR-013 | For each normalised entry, the parser shall split into tokens by whitespace… | cpm_parser.py:CPMParser, cpm_parser.py:parse_dir_output |
 | DR-014 | The parser shall construct each canonical filename in the format <filename_base>.<extension>, except for an extensionless… | cpm_parser.py:CPMParser, cpm_parser.py:parse_dir_output |
 | DR-015 | For vertical-bar format lines (DR-006), where the dot delimiting the extension is already present in… | cpm_parser.py:parse_dir_output |
+| DR-016 | For prefix-less embedded-dot format lines (DR-007), where the dot delimiting the extension is already present… | cpm_parser.py:parse_dir_output |
 
 ## 6.3 Output and robustness
 
@@ -673,7 +675,7 @@ _500 requirements across 62 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| DR-030 | The parser assumes input conforming to standard CP/M 2.2 DIR output format (8.3 filenames, space-padded) | cpm_parser.py:CPMParser |
+| DR-030 | The parser assumes input conforming to standard CP/M 2.2 DIR output format (8.3 filenames, space-padded)… | cpm_parser.py:CPMParser |
 | DR-031 | The parser is not required to support long filenames or non-ASCII characters | cpm_parser.py:CPMParser |
 | DR-032 | The parser is not required to parse file sizes, dates, or attributes — only names… | cpm_parser.py:CPMParser |
 
