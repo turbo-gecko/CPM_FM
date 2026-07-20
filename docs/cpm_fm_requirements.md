@@ -11,11 +11,11 @@
 |-------|-------|
 | Document title | CP/M File Manager Software Requirements Specification (SRS) |
 | Document ID | CPM-FM-SRS |
-| Version | 2.38.0 |
+| Version | 2.38.1 |
 | Status | Reviewed |
 | Standard | ISO/IEC/IEEE 29148:2018 |
 | Owner | Project maintainer |
-| Date | 2026-07-11 |
+| Date | 2026-07-20 |
 | Source documents | `docs/legacy/App_Requirements.md`, `docs/legacy/App_Design.md` (archived) |
 
 ---
@@ -98,7 +98,7 @@ Priority is one of **Mandatory**, **Desirable**, or **Optional**.
 |----|-------------|----------|--------------|--------|
 | FR-001 | The application shall maintain a Terminal status flag indicating whether the Terminal Port is open and available for communication. The default value at startup shall be *not set* (false). | Mandatory | T | App_Design §Program state; impl. `serial_manager.py:__init__` |
 | FR-002 | The application shall maintain a Transport status flag indicating whether the Transport Port is open and available for communication. The default value at startup shall be *not set* (false). | Mandatory | T | App_Design §Program state; impl. `serial_manager.py:__init__` |
-| FR-003 | The application shall start in an unconfigured state, with serial and general settings populated only via Config > Load Config, the configuration dialogs, or the automatic reload of the last-used configuration file (FR-005). When no last-used configuration file is remembered, or the remembered file no longer exists or cannot be parsed, the application shall start unconfigured. | Mandatory | T | App_Design §Program state; CLAUDE.md; impl. `app.py:__init__` |
+| FR-003 | The application shall start in an unconfigured state, with serial and general settings populated only via Config > Load Config, the configuration dialogs, or the automatic reload of the last-used configuration file (FR-005). When no last-used configuration file is remembered, or the remembered file no longer exists or cannot be parsed, the application shall start unconfigured. | Mandatory | T | App_Design §Program state; impl. `app.py:__init__` |
 | FR-004 | On exit, the application shall persist the size and position (geometry) of each of its windows and dialogs — the main window, the Terminal Window, the Transfer History window, and the Serial, Terminal and General Configuration Dialogs — to host-native persistent storage, and shall restore each window's saved geometry the next time that window is shown. The Host/Remote splitter position is excluded (UIR-072). Geometry is stored via `QSettings` under organisation `turbo-gecko`, application `cpm-fm`. | Mandatory | T | impl. `app.py:__init__`, `app.py:closeEvent`, `config_dialogs.py:__init__`, `config_dialogs.py:done`, `window_state.py:WindowState`, `window_state.py:__init__`, `window_state.py:save_geometry`, `window_state.py:restore_geometry` |
 | FR-005 | The application shall remember the filesystem path of the most recently loaded (FR-010) or saved (FR-013) configuration file and, on the next startup, automatically reload and apply that file (subject to FR-003). The remembered path is persisted via `QSettings` alongside the window geometry (FR-004). | Mandatory | T | impl. `mw_config.py:load_config`, `mw_config.py:menu_save` |
 | FR-006 | The application shall remember the folder of the most recently loaded (FR-010) or saved (FR-013) configuration file and shall default the Load Config and Save Config dialogs (Config menu, UIR-003) to that folder. This remembered config folder is persisted via `QSettings` alongside the window geometry (FR-004) and is maintained separately from the Host Files directory (FR-060). When no config folder is remembered, the dialogs default to the host system's standard behaviour (current working directory). | Mandatory | T | impl. `mw_config.py:menu_load`, `mw_config.py:menu_save`, `window_state.py:last_config_dir` |
@@ -788,7 +788,7 @@ folder and a Remote-mounted image as a local bulk copy (FR-180).
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
 | IFR-001 | The application shall communicate with the remote CP/M system over a serial (RS-232 style) communications link. | Mandatory | T | App_Design §Purpose; impl. `serial_manager.py:SerialManager` |
-| IFR-002 | The application shall support configuring two logical serial ports — a Terminal Port and a Transport Port — which may map to the same physical port. | Mandatory | T | App_Requirements §Serial Configuration Dialog; CLAUDE.md; impl. `config_dialogs.py:SerialConfigDialog`, `serial_manager.py:SerialManager` |
+| IFR-002 | The application shall support configuring two logical serial ports — a Terminal Port and a Transport Port — which may map to the same physical port. | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `config_dialogs.py:SerialConfigDialog`, `serial_manager.py:SerialManager` |
 | IFR-003 | The application shall enumerate the serial ports installed on the host and present them for selection (UIR-022/UIR-023). Enumeration is via `pyserial`'s `list_ports.comports()`; the presented list is filtered and ordered by `port_filter.select_ports` so that, by default, unbacked legacy nodes are hidden and USB/hardware-backed ports are listed first, with a "Show all ports" override (UIR-121) for the full set. *(v2.37.2: default-active filtering added — GitHub issue #12.)* | Mandatory | T | App_Requirements §Serial Configuration Dialog; impl. `mw_config.py:menu_serial_config`, `utils/port_filter.py:select_ports`; tests `test_port_filter.py` |
 | IFR-004 | Configuration data shall be exchanged with the file system as JSON files. | Mandatory | T | App_Requirements §Load, §Save; impl. `config_handler.py:ConfigHandler`, `config_handler.py:load_json`, `config_handler.py:save_json`; tests `test_config_handler.py` |
 
@@ -944,7 +944,7 @@ join, whitespace/CRLF robustness, de-duplication, empty/edge inputs, and drive-p
 
 | ID | Requirement | Priority | Verification | Source |
 |----|-------------|----------|--------------|--------|
-| NFR-002 | The application shall support both the flat and nested JSON configuration file shapes for serial settings: it shall first normalise an optional outer `serial` sub-dict (falling back to the top-level dict when absent), then resolve each pyserial parameter from the accepted config key(s) below, in the order listed. Port: `terminal_port` (Terminal Port) / `transport_port` (Transport Port), falling back respectively to `transfer_port` / `terminal_port` when the primary key is absent. Baud rate: `speed`. Byte size: `data`, then `data_bits`. Stop bits: `stopbits`, then `stop_bits`. Parity: `parity` (case-insensitive `NONE`/`EVEN`/`ODD`/`MARK`/`SPACE`, defaulting to `NONE`). Flow control: `flow`, then `flow_control`. Per-port read timeout: `terminal_timeout_ms` (Terminal Port) / `transport_timeout_ms` (Transport Port). This list is exhaustive; any other key is ignored. | Mandatory | T | CLAUDE.md §Two config JSON formats; impl. `serial_manager.py:open_port`; tests `test_serial_manager.py` |
+| NFR-002 | The application shall support both the flat and nested JSON configuration file shapes for serial settings: it shall first normalise an optional outer `serial` sub-dict (falling back to the top-level dict when absent), then resolve each pyserial parameter from the accepted config key(s) below, in the order listed. Port: `terminal_port` (Terminal Port) / `transport_port` (Transport Port), falling back respectively to `transfer_port` / `terminal_port` when the primary key is absent. Baud rate: `speed`. Byte size: `data`, then `data_bits`. Stop bits: `stopbits`, then `stop_bits`. Parity: `parity` (case-insensitive `NONE`/`EVEN`/`ODD`/`MARK`/`SPACE`, defaulting to `NONE`). Flow control: `flow`, then `flow_control`. Per-port read timeout: `terminal_timeout_ms` (Terminal Port) / `transport_timeout_ms` (Transport Port). This list is exhaustive; any other key is ignored. | Mandatory | T | impl. `serial_manager.py:open_port`; tests `test_serial_manager.py:test_flow_control_nested_key`, `test_serial_manager.py:test_nested_key_names_are_honoured` |
 
 ### 8.1 X-Modem transfer protocol
 

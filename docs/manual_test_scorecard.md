@@ -2,13 +2,13 @@
 
 > Fill this out while running `docs/manual_test_plan.md`. The **Results tables** (§3) give a fast
 > pass/fail sweep; for **every Fail or Blocked**, also complete one **Fault Report** block (§4). The
-> Fault Report fields are chosen to give Claude what it needs to locate and fix the bug without a
+> Fault Report fields are chosen to give a developer or diagnostic agent what it needs to locate and fix the bug without a
 > back-and-forth — please be literal (paste exact text, don't paraphrase).
 
 | Field | Value |
 |-------|-------|
-| Scorecard version | 1.56 |
-| Scorecard for plan version | 1.57 (`docs/manual_test_plan.md`) |
+| Scorecard version | 1.57 |
+| Scorecard for plan version | 1.58 (`docs/manual_test_plan.md`) |
 | SRS version | (e.g. 2.11.0) |
 | Tester | |
 | Date(s) of run | |

@@ -125,7 +125,7 @@ adversarial — assume each missing case hides a fault:
   file, a full four-column page, more than one page.
 - **Error and exception paths:** does the code raise the right exception on bad
   input? Is timeout / NAK / retry-exhaustion in `xmodem.py` exercised? Are both
-  config shapes (flat *and* nested — see `CLAUDE.md`) tested for
+  config shapes (flat and nested, per NFR-002) tested for
   `open_port` / `validate_serial_settings`?
 - **State and ordering:** capture-buffer reset between refreshes, partial reads
   split across `_read_loop` polls, concurrent transfer + terminal use.

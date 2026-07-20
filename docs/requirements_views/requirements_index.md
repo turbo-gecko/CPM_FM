@@ -758,7 +758,7 @@ _502 requirements across 62 sections._
 
 | ID | Summary | Impl |
 |----|---------|------|
-| NFR-002 | The application shall support both the flat and nested JSON configuration file shapes for serial… | serial_manager.py:open_port; tests test_serial_manager.py |
+| NFR-002 | The application shall support both the flat and nested JSON configuration file shapes for serial… | serial_manager.py:open_port; tests test_serial_manager.py:test_flow_control_nested_key, test_serial_manager.py:test_nested_key_names_are_honoured |
 
 ## 8.1 X-Modem transfer protocol
 

@@ -19,11 +19,10 @@ through it (see Commands below; a PreToolUse hook blocks bare invocations). The 
 
 > **MANDATORY: use the `.venv` interpreter for everything Python.** Run every `python`, `pip`,
 > `pytest`, `mypy`, and `ruff` command as `.venv/Scripts/python.exe -m <tool> …` — never the bare
-> command, which may resolve to the wrong interpreter. A PreToolUse hook
-> (`.claude/hooks/require-venv.sh`, wired in `.claude/settings.json`) **blocks** bare
-> `python`/`pip`/`pytest`/`mypy`/`ruff` and tells you the correct form. The commands below already use
-> the required form; keep it when copying them. (The block matches the command's leading token, so
-> also avoid hiding a bare tool behind a `cd … &&` prefix — invoke the `.venv` interpreter directly.)
+> command, which may resolve to the wrong interpreter. This repository rule applies regardless of
+> whether the active development tool enforces it automatically. The commands below already use the
+> required form; keep it when copying them, and invoke the `.venv` interpreter directly rather than
+> hiding a bare tool behind a shell prefix.
 
 Install (editable, with dev tools): `.venv/Scripts/python.exe -m pip install -e .[dev]`
 

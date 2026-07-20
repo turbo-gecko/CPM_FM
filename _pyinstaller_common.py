@@ -123,7 +123,7 @@ HIDDEN_IMPORTS = [
 ]
 
 #: Large optional libraries the app never uses. ``wx`` is present but unused in
-#: the dev venv (see CLAUDE.md); ``tkinter`` was fully removed at the v1.3 Qt
+#: the development environment; ``tkinter`` was fully removed at the v1.3 Qt
 #: migration. Excluding these keeps the bundle small.
 EXCLUDES = [
     "tkinter",

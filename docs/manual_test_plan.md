@@ -4,10 +4,10 @@
 |-------|-------|
 | Document title | CP/M File Manager Manual Test Plan |
 | Document ID | CPM-FM-MTP |
-| Version | 1.57 |
+| Version | 1.58 |
 | Status | Draft |
-| Date | 2026-07-15 |
-| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.25.0) |
+| Date | 2026-07-20 |
+| Traces to | `docs/cpm_fm_requirements.md` (SRS v2.38.1) |
 
 ---
 

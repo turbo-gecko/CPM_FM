@@ -238,21 +238,21 @@ invoked.
 > `Workflows/`, and the views. This README is for humans and is **not** a context source
 > for the AI tools; the AI-facing docs deliberately do not reference it.
 
-### Claude Code vs Cline — the differences
+### AI development tools
 
-Both assistants drive the same repo, but they discover context and run workflows
-differently:
+All development assistants use the same repository rules; only their loading mechanisms and tool
+vocabulary differ:
 
-| Aspect | Claude Code | Cline |
-|--------|-------------|-------|
-| Auto-loaded project guide | [`AGENTS.md`](AGENTS.md) | [`.clinerules/`](.clinerules/) (`requirements-context.md`, `tooling_notes.md`) |
-| Repo workflows in [`Workflows/`](Workflows/) | Point the assistant at the workflow file (or ask it to follow that workflow) | Invoked as slash-command workflows (e.g. `/requirements-check`) |
-| Permissions / settings | [`.claude/settings.local.json`](.claude/settings.local.json) command allowlist | Cline's own auto-approve settings |
-| Tool vocabulary | Built-in `Bash` / `Read` / `Edit` tools | Cline tools (`run_commands`, `read_files`, `search_codebase`, …) documented in [`tooling_notes.md`](.clinerules/tooling_notes.md) |
+| Aspect | Project convention |
+|--------|--------------------|
+| Authoritative project guide | [`AGENTS.md`](../AGENTS.md) |
+| Repo workflows | Follow the definitions in [`Workflows/`](../Workflows/) directly or through an integration-provided command. |
+| Tool-specific adapters | [`.codex/`](../.codex/) and [`.clinerules/`](../.clinerules/) may provide loading or environment hints; neither overrides `AGENTS.md`. |
+| Permissions and tool vocabulary | Supplied by the active development environment rather than defined as project requirements. |
 
-`AGENTS.md` and `.clinerules/requirements-context.md` are deliberately kept in agreement
-on the shared facts (the `context-budget-audit` workflow checks this) — so the *guidance*
-is the same regardless of which tool reads it; only the loading mechanism differs.
+`AGENTS.md` and `.clinerules/requirements-context.md` are deliberately kept in agreement on shared
+facts (the `context-budget-audit` workflow checks this), so the guidance remains consistent regardless
+of which development tool loads it.
 
 ### The repo workflows
 
@@ -384,4 +384,3 @@ architecture description) are the authoritative, traceable specifications; every
 under `docs/requirements_views/` is generated from them. See
 [Developer Workflow](#keeping-requirements-code-tests-and-docs-in-sync) for how they fit
 together.
-
