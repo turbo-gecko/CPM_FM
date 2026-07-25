@@ -153,7 +153,7 @@ def test_round_trip_exactly_128_bytes(peer, scratch_drive, tmp_path):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-T17", "FR-082", "NFR-003b")
+@pytest.mark.req("FR-082", "NFR-003b")
 def test_round_trip_exactly_1024_bytes(request, peer, scratch_drive, tmp_path):
     """A 1024-byte file with 1K mode transfers in a single 1K frame.
 
@@ -179,7 +179,7 @@ def test_round_trip_exactly_1024_bytes(request, peer, scratch_drive, tmp_path):
 
 @pytest.mark.hil
 @pytest.mark.two_port
-@pytest.mark.mt("MT-T18", "FR-082", "FR-120")
+@pytest.mark.req("FR-082", "FR-120")
 def test_recv_port_closed_mid_transfer_graceful_failure(peer, scratch_drive, tmp_path):
     """Closing the transport port mid-download fails gracefully (no crash).
 

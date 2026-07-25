@@ -90,7 +90,7 @@ def test_skip_existing_remote_file(gui, scratch_drive, monkeypatch, conflict_spy
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-CF08", "FR-147")
+@pytest.mark.req("FR-147")
 def test_conflict_apply_to_all_persists_across_batch(
     gui, scratch_drive, monkeypatch, conflict_spy, tmp_path
 ):

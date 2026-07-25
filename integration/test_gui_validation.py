@@ -85,7 +85,7 @@ def test_invalid_name_skip_does_not_upload(gui, scratch_drive, monkeypatch, inva
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-FV08", "FR-148", "FR-149")
+@pytest.mark.req("FR-148", "FR-149")
 def test_invalid_name_special_chars_sanitized(
     gui, scratch_drive, monkeypatch, invalid_spy, tmp_path
 ):

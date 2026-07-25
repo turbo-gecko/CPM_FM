@@ -23,7 +23,7 @@ log = get_logger("smoke")
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-SMOKE", "FR-041", "FR-042")
+@pytest.mark.req("FR-041", "FR-042")
 def test_peer_connects_and_sees_ccp_prompt(target, settings_copy):
     """Verifies the bench is reachable: a bare EOL yields a CP/M drive prompt.
 

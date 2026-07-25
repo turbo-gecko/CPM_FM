@@ -80,7 +80,7 @@ def test_reconnect_after_disconnect(gui):
 
 @pytest.mark.hil
 @pytest.mark.two_port
-@pytest.mark.mt("MT-C16", "FR-039", "FR-046")
+@pytest.mark.req("FR-039", "FR-046")
 def test_connect_transport_open_failure_reports_error_and_skips_probe(gui, monkeypatch):
     """A Transport Port open failure reports the FR-039 error and skips the probe.
 
@@ -134,7 +134,7 @@ def test_connect_transport_open_failure_reports_error_and_skips_probe(gui, monke
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-C17", "FR-050", "NFR-004")
+@pytest.mark.req("FR-050", "NFR-004")
 def test_rapid_disconnect_during_probe_no_crash(gui):
     """Disconnecting during the post-connect probe leaves clean state.
 

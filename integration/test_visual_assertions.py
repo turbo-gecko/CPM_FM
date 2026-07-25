@@ -22,54 +22,54 @@ pytestmark = pytest.mark.visual
 
 
 @pytest.mark.mt("MT-S01", "FR-125", "UIR-078")
-def test_window_title_contains_app_name(vwin):
+def test_window_title_contains_app_name(gui_no_target):
     """Verifies: FR-125."""
-    assert APP_NAME in vwin.windowTitle()
+    assert APP_NAME in gui_no_target.windowTitle()
 
 
 @pytest.mark.mt("MT-S03", "FR-070")
-def test_remote_list_empty_at_startup(vwin):
+def test_remote_list_empty_at_startup(gui_no_target):
     """Verifies: FR-070."""
-    assert vwin.remote_list.count() == 0
+    assert gui_no_target.remote_list.count() == 0
 
 
 @pytest.mark.mt("MT-G01", "UIR-004")
-def test_menubar_has_file_and_help(vwin):
+def test_menubar_has_file_and_help(gui_no_target):
     """Verifies: UIR-004."""
-    titles = [m.title() for m in vwin.menuBar().findChildren(QMenu)]
+    titles = [m.title() for m in gui_no_target.menuBar().findChildren(QMenu)]
     assert "File" in titles and "Help" in titles
-    help_menu = next(m for m in vwin.menuBar().findChildren(QMenu) if m.title() == "Help")
+    help_menu = next(m for m in gui_no_target.menuBar().findChildren(QMenu) if m.title() == "Help")
     labels = [a.text() for a in help_menu.actions()]
     assert "About" in labels and "Manual" in labels
 
 
 @pytest.mark.mt("MT-G05", "UIR-017")
-def test_drive_combo_lists_a_to_p(vwin):
+def test_drive_combo_lists_a_to_p(gui_no_target):
     """Verifies: UIR-017."""
-    items = [vwin.drive_combo.itemText(i) for i in range(vwin.drive_combo.count())]
+    items = [gui_no_target.drive_combo.itemText(i) for i in range(gui_no_target.drive_combo.count())]
     assert items == [f"{chr(c)}:" for c in range(ord("A"), ord("P") + 1)]
 
 
 @pytest.mark.mt("MT-G07", "UIR-018", "UIR-019")
-def test_lists_have_context_menus(vwin):
+def test_lists_have_context_menus(gui_no_target):
     """Verifies: UIR-018, UIR-019."""
-    assert vwin.host_list.contextMenuPolicy() == Qt.ContextMenuPolicy.CustomContextMenu
-    assert vwin.remote_list.contextMenuPolicy() == Qt.ContextMenuPolicy.CustomContextMenu
+    assert gui_no_target.host_list.contextMenuPolicy() == Qt.ContextMenuPolicy.CustomContextMenu
+    assert gui_no_target.remote_list.contextMenuPolicy() == Qt.ContextMenuPolicy.CustomContextMenu
 
 
 @pytest.mark.mt("MT-G03", "UIR-014")
-def test_main_panes_have_push_buttons(vwin):
+def test_main_panes_have_push_buttons(gui_no_target):
     """The host and remote panes each expose action push buttons.
 
     Verifies: UIR-014.
     """
-    assert vwin.host_group.findChildren(QPushButton)
-    remote_group = vwin.remote_list.parentWidget()
+    assert gui_no_target.host_group.findChildren(QPushButton)
+    remote_group = gui_no_target.remote_list.parentWidget()
     assert remote_group.findChildren(QPushButton)
 
 
 @pytest.mark.mt("MT-V08", "UIR-070", "UIR-073")
-def test_material_theme_applied(vwin, qapp):
+def test_material_theme_applied(gui_no_target, qapp):
     """A Material stylesheet is applied to the application.
 
     Verifies: UIR-070, UIR-073.
@@ -78,7 +78,7 @@ def test_material_theme_applied(vwin, qapp):
 
 
 @pytest.mark.mt("MT-W13", "UIR-064", "UIR-069", "UIR-106")
-def test_terminal_window_has_no_control_row_and_font_in_context_menu(vwin):
+def test_terminal_window_has_no_control_row_and_font_in_context_menu(gui_no_target):
     """The Terminal Window has no control-row buttons; Font is in the context menu.
 
     The v2.25 cleanup removed the Clear/Boot/Macros/Local-Echo/Autoscroll/Font
@@ -91,8 +91,8 @@ def test_terminal_window_has_no_control_row_and_font_in_context_menu(vwin):
     """
     from cpm_fm.utils.i18n import tr
 
-    vwin.show_terminal()
-    term = vwin.terminal_win
+    gui_no_target.show_terminal()
+    term = gui_no_target.terminal_win
     assert term is not None
     # UIR-064: no control-row buttons remain on the window.
     assert term.findChildren(QPushButton) == []
@@ -106,7 +106,7 @@ def test_terminal_window_has_no_control_row_and_font_in_context_menu(vwin):
 
 
 @pytest.mark.mt("MT-W13", "UIR-069")
-def test_font_dialog_lists_usable_under_material_theme(vwin, qapp):
+def test_font_dialog_lists_usable_under_material_theme(gui_no_target, qapp):
     """The font dialog's family/style/size lists are usable under the app theme.
 
     Built against the real applied Material stylesheet (UIR-070), whose fixed
@@ -118,8 +118,8 @@ def test_font_dialog_lists_usable_under_material_theme(vwin, qapp):
     from PySide6.QtWidgets import QListView
 
     assert qapp.styleSheet().strip() != ""  # the Material theme is genuinely applied
-    vwin.show_terminal()
-    dlg = vwin.terminal_win._build_font_dialog()
+    gui_no_target.show_terminal()
+    dlg = gui_no_target.terminal_win._build_font_dialog()
     try:
         dlg.show()
         qapp.processEvents()

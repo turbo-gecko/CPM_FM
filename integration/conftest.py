@@ -101,6 +101,7 @@ def pytest_configure(config):
         ("visual", "widget-tree/look-and-feel assertion, no peer required"),
         ("best_effort", "hardware/timing-dependent; may end Blocked"),
         ("mt", 'MT-ID + requirement tagging: @pytest.mark.mt("MT-T03", "FR-081")'),
+        ("gui_integration", "GUI integration tests without hardware (target-free)"),
     ]:
         config.addinivalue_line("markers", f"{name}: {desc}")
 
@@ -330,7 +331,7 @@ def gui(target, qapp, settings_copy, tmp_path):
 
 
 @pytest.fixture
-def vwin(qapp, tmp_path):
+def gui_no_target(qapp, tmp_path):
     """A built-but-unconnected ``MainWindow`` for visual/widget-tree assertions.
 
     No serial port is opened (no peer needed), so this fixture is independent of
