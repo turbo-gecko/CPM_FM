@@ -1,12 +1,13 @@
 {
   "version": "2.1",
   "generated": "auto",
-  "total_tests": 58,
+  "total_tests": 59,
   "tiers": {
-    "hil": 46,
+    "hil": 47,
     "visual": 12
   },
   "evidence_classification": {
+    "supplementary": 1,
     "partial": 52,
     "equivalent": 6
   },
@@ -203,6 +204,12 @@
       ],
       "count": 1
     },
+    "MT-T06": {
+      "tests": [
+        "integration/test_batch_transfer.py::test_batch_transfer_sequential_multi_file[rc2014]"
+      ],
+      "count": 1
+    },
     "MT-T10": {
       "tests": [
         "integration/test_protocol_transfers.py::test_round_trip_1k[rc2014]",
@@ -333,6 +340,7 @@
     "FR-100",
     "FR-101",
     "FR-102",
+    "FR-105",
     "FR-106",
     "FR-107",
     "FR-111",
@@ -394,6 +402,25 @@
     "UIR-107"
   ],
   "tests": [
+    {
+      "nodeid": "integration/test_batch_transfer.py::test_batch_transfer_sequential_multi_file[rc2014]",
+      "file": "test_batch_transfer.py",
+      "test": "test_batch_transfer_sequential_multi_file",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt",
+        "req"
+      ],
+      "manual_id": "MT-T06",
+      "requirements": [
+        "FR-105",
+        "FR-106",
+        "FR-107"
+      ],
+      "evidence": "supplementary",
+      "gated": []
+    },
     {
       "nodeid": "integration/test_context_menu.py::test_remote_delete_removes_file[rc2014]",
       "file": "test_context_menu.py",
