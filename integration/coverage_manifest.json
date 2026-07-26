@@ -1,9 +1,9 @@
 {
   "version": "2.1",
   "generated": "auto",
-  "total_tests": 62,
+  "total_tests": 65,
   "tiers": {
-    "hil": 50,
+    "hil": 53,
     "visual": 12
   },
   "evidence_classification": {
@@ -326,6 +326,19 @@
         "integration/test_terminal_window.py::test_terminal_context_menu_macros_submenu_runs_over_serial[rc2014]"
       ],
       "count": 1
+    },
+    "MT-T08": {
+      "tests": [
+        "integration/test_inter_file_wait.py::test_inter_file_wait_and_post_final_settle[rc2014]",
+        "integration/test_inter_file_wait.py::test_inter_file_wait_terminal_shows_prompt_between_files[rc2014]"
+      ],
+      "count": 2
+    },
+    "MT-T11": {
+      "tests": [
+        "integration/test_ui_responsive.py::test_ui_responsive_during_large_transfer[rc2014]"
+      ],
+      "count": 1
     }
   },
   "requirement_ids": [
@@ -419,7 +432,9 @@
     "UIR-102",
     "UIR-105",
     "UIR-106",
-    "UIR-107"
+    "UIR-107",
+    "FR-109",
+    "NFR-001"
   ],
   "tests": [
     {
@@ -1548,6 +1563,57 @@
       "manual_id": "MT-V12",
       "requirements": [
         "UIR-076"
+      ],
+      "evidence": "partial",
+      "gated": []
+    },
+    {
+      "nodeid": "integration/test_inter_file_wait.py::test_inter_file_wait_and_post_final_settle[rc2014]",
+      "file": "test_inter_file_wait.py",
+      "test": "test_inter_file_wait_and_post_final_settle",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt",
+        "req"
+      ],
+      "manual_id": "MT-T08",
+      "requirements": [
+        "FR-109"
+      ],
+      "evidence": "partial",
+      "gated": []
+    },
+    {
+      "nodeid": "integration/test_inter_file_wait.py::test_inter_file_wait_terminal_shows_prompt_between_files[rc2014]",
+      "file": "test_inter_file_wait.py",
+      "test": "test_inter_file_wait_terminal_shows_prompt_between_files",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt",
+        "req"
+      ],
+      "manual_id": "MT-T08",
+      "requirements": [
+        "FR-109"
+      ],
+      "evidence": "partial",
+      "gated": []
+    },
+    {
+      "nodeid": "integration/test_ui_responsive.py::test_ui_responsive_during_large_transfer[rc2014]",
+      "file": "test_ui_responsive.py",
+      "test": "test_ui_responsive_during_large_transfer",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt",
+        "req"
+      ],
+      "manual_id": "MT-T11",
+      "requirements": [
+        "NFR-001"
       ],
       "evidence": "partial",
       "gated": []
