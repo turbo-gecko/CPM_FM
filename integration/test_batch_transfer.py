@@ -36,6 +36,7 @@ def test_batch_transfer_sequential_multi_file(
     answer_conflict(monkeypatch, action=OVERWRITE)  # overwrite existing files
     assert gui.connect()[0] == "ok"
     gui.set_drive(scratch_drive)
+    gui.quiesce()  # drive change runs on a worker thread; wait for it
 
     # Create three uniquely-named host files (CP/M 8.3 compliant).
     names = ["BATCH1.TXT", "BATCH2.DAT", "BATCH3.BIN"]
