@@ -42,8 +42,13 @@ def test_batch_transfer_sequential_multi_file(
     for i, name in enumerate(names):
         (tmp_path / "host" / name).write_bytes(f"batch file {i}\r\n".encode())
 
-    # Upload all three at once via Copy to Remote.
+    # Upload all three at once via Copy to Remote (triggers worker thread).
     gui.upload(names)
+
+    # Slow RC2014 targets may need more than the default 15 s quiesce window
+    # for a full batch of X-Modem transfers; re-quiesce with a longer timeout
+    # so the remote-list refresh that follows the batch also completes.
+    gui.quiesce(timeout=60)
 
     # After the batch completes, every file should be listed on the remote side.
     remote = gui.remote_names()
