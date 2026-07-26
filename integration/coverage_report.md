@@ -1,13 +1,13 @@
 # Integration Test Coverage Report
 
 **Generated from:** `integration/coverage_manifest.json` v2.1
-**Total automated tests:** 60
+**Total automated tests:** 61
 
 ## Test Tiers
 
 | Tier | Count |
 |---|---:|
-| hil | 48 |
+| hil | 49 |
 | visual | 12 |
 
 ## Evidence Classification
@@ -16,10 +16,10 @@
 |---|---:|
 | equivalent | 6 |
 | partial | 52 |
-| supplementary | 2 |
+| supplementary | 3 |
 | manual-only | 0 |
 
-## Manual ID Coverage (50 unique IDs)
+## Manual ID Coverage (51 unique IDs)
 
 | MT-ID | Tests | Evidence |
 |---|---|---|
@@ -58,6 +58,7 @@
 | MT-T06 | 1 | partial |
 | MT-T07 | 1 | partial |
 | MT-T10 | 2 | partial |
+| MT-T13 | 1 | partial |
 | MT-T15 | 1 | partial |
 | MT-T16 | 1 | partial |
 | MT-TH01 | 1 | partial |
@@ -74,9 +75,9 @@
 | MT-W19 | 1 | partial |
 | MT-W20 | 1 | partial |
 
-## Requirements Covered (90 unique)
+## Requirements Covered (91 unique)
 
-`DR-033a` `FR-017a` `FR-030` `FR-037` `FR-039` `FR-041` `FR-042` `FR-046` `FR-050` `FR-054` `FR-055` `FR-058` `FR-070` `FR-077` `FR-078` `FR-079` `FR-081` `FR-082` `FR-083` `FR-091` `FR-091a` `FR-094` `FR-095` `FR-096` `FR-097` `FR-099` `FR-100` `FR-101` `FR-102` `FR-105` `FR-106` `FR-107` `FR-108` `FR-111` `FR-114` `FR-117` `FR-118` `FR-120` `FR-125` `FR-137` `FR-138` `FR-140` `FR-142` `FR-145` `FR-146` `FR-147` `FR-148` `FR-149` `FR-150` `FR-151` `FR-152` `FR-153` `FR-153e` `FR-154` `FR-157` `FR-162` `FR-165` `FR-166` `FR-167` `FR-181` `FR-182` `FR-183` `FR-184` `NFR-003b` `NFR-003c` `NFR-003d` `NFR-003e` `NFR-003f` `NFR-003q` `NFR-004` `UIR-004` `UIR-014` `UIR-017` `UIR-018` `UIR-019` `UIR-034` `UIR-064` `UIR-069` `UIR-070` `UIR-073` `UIR-076` `UIR-078` `UIR-091` `UIR-099` `UIR-100` `UIR-101` `UIR-102` `UIR-105` `UIR-106` `UIR-107` 
+`DR-033a` `FR-017a` `FR-030` `FR-037` `FR-039` `FR-041` `FR-042` `FR-046` `FR-050` `FR-054` `FR-055` `FR-058` `FR-070` `FR-077` `FR-078` `FR-079` `FR-081` `FR-082` `FR-083` `FR-091` `FR-091a` `FR-094` `FR-095` `FR-096` `FR-097` `FR-099` `FR-100` `FR-101` `FR-102` `FR-105` `FR-106` `FR-107` `FR-108` `FR-111` `FR-114` `FR-117` `FR-118` `FR-120` `FR-125` `FR-137` `FR-138` `FR-140` `FR-142` `FR-145` `FR-146` `FR-147` `FR-148` `FR-149` `FR-150` `FR-151` `FR-152` `FR-153` `FR-153e` `FR-154` `FR-157` `FR-162` `FR-165` `FR-166` `FR-167` `FR-181` `FR-182` `FR-183` `FR-184` `NFR-003b` `NFR-003c` `NFR-003d` `NFR-003e` `NFR-003f` `NFR-003m` `NFR-003q` `NFR-004` `UIR-004` `UIR-014` `UIR-017` `UIR-018` `UIR-019` `UIR-034` `UIR-064` `UIR-069` `UIR-070` `UIR-073` `UIR-076` `UIR-078` `UIR-091` `UIR-099` `UIR-100` `UIR-101` `UIR-102` `UIR-105` `UIR-106` `UIR-107` 
 
 ## Test Inventory
 
@@ -84,6 +85,7 @@
 |---|---|---|---|---|---|
 | `test_batch_transfer_sequential_multi_file` | hil | MT-T06 | FR-105, FR-106, FR-107 | supplementary | — |
 | `test_batch_abort_on_mid_file_failure` | hil | MT-T07 | FR-108 | supplementary | — |
+| `test_cancel_upload_while_transferring` | hil | MT-T13 | FR-120, NFR-003m | supplementary | — |
 | `test_remote_delete_removes_file` | hil | MT-F08 | FR-111, FR-117, FR-118 | partial | — |
 | `test_remote_rename_changes_name` | hil | MT-F07 | FR-111, FR-114, FR-117 | partial | — |
 | `test_restore_wipes_scratch_then_uploads` | hil | MT-BR05 | FR-151, FR-152, FR-153, FR-154 | partial | destructive |

@@ -1,13 +1,13 @@
 {
   "version": "2.1",
   "generated": "auto",
-  "total_tests": 60,
+  "total_tests": 61,
   "tiers": {
-    "hil": 48,
+    "hil": 49,
     "visual": 12
   },
   "evidence_classification": {
-    "supplementary": 2,
+    "supplementary": 3,
     "partial": 52,
     "equivalent": 6
   },
@@ -223,6 +223,12 @@
       ],
       "count": 2
     },
+    "MT-T13": {
+      "tests": [
+        "integration/test_cancel_transfer.py::test_cancel_upload_while_transferring[rc2014]"
+      ],
+      "count": 1
+    },
     "MT-T15": {
       "tests": [
         "integration/test_protocol_transfers.py::test_round_trip_zero_byte_file[rc2014]"
@@ -385,6 +391,7 @@
     "NFR-003d",
     "NFR-003e",
     "NFR-003f",
+    "NFR-003m",
     "NFR-003q",
     "NFR-004",
     "UIR-004",
@@ -441,6 +448,24 @@
       "manual_id": "MT-T07",
       "requirements": [
         "FR-108"
+      ],
+      "evidence": "supplementary",
+      "gated": []
+    },
+    {
+      "nodeid": "integration/test_cancel_transfer.py::test_cancel_upload_while_transferring[rc2014]",
+      "file": "test_cancel_transfer.py",
+      "test": "test_cancel_upload_while_transferring",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt",
+        "req"
+      ],
+      "manual_id": "MT-T13",
+      "requirements": [
+        "FR-120",
+        "NFR-003m"
       ],
       "evidence": "supplementary",
       "gated": []
