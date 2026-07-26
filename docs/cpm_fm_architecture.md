@@ -42,7 +42,7 @@ As of v1.3 the GUI is implemented with **PySide6 (Qt for Python)** using a Mater
 layout under `src/cpm_fm/`. `app.py:MainWindow` (a `QMainWindow` subclass) is the hub that owns all
 components and wires UI events to them; `app.py:main` creates the `QApplication`, applies the theme,
 shows the window, and runs `app.exec()` — it is the entry point for both the `cpm-fm` launcher and
-`python -m cpm_fm` (CR-002).
+`.venv/Scripts/python.exe -m cpm_fm` (CR-002).
 
 ## A2. Layered structure
 
@@ -85,7 +85,7 @@ threads in `terminal/` (serial reads, X-Modem transfers) push results back to th
     text to the `on_data_received` callback.
   - `xmodem.py` — `XModem` is a hand-rolled X-Modem implementation (128-byte SOH-framed packets by
     default, with selectable XMODEM-1K 1024-byte STX framing; both checksum and CRC error-check modes
-    selected by the receiver-driven handshake — see NFR-003a–NFR-003o). `send_file`/`receive_file` are blocking
+    selected by the receiver-driven handshake — see NFR-003a–NFR-003q). `send_file`/`receive_file` are blocking
     and run on worker threads.
   - `cpm_parser.py` — `CPMParser.parse_dir_output` is a pure static method that scrapes filenames from
     CP/M 2.2 four-column `DIR` output (DR-001–DR-033); the most-tested logic in the codebase.

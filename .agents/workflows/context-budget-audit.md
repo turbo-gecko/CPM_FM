@@ -1,4 +1,5 @@
 ---
+name: context-budget-audit
 description: Periodic audit that the project's docs and source stay optimized for small/local-LLM context windows
 ---
 
@@ -14,29 +15,32 @@ back-matter) and guidance was added so agents load slim views instead of the ful
 catches regression of that work — docs creeping back up, views drifting, oversized source files, or
 guidance falling out of alignment.
 
-## Budgets (baseline as of 2026-06-27)
+## Budgets
 
-| Artifact | Budget (warn if exceeded) | Baseline |
-|----------|---------------------------|----------|
-| `docs/cpm_fm_requirements.md` (SRS) | ≤ 40K tokens / ≤ 800 lines | ~36K / 725 |
-| `docs/cpm_fm_architecture.md` (architecture companion) | ≤ 6K tokens / ≤ 250 lines | ~3.3K / 146 |
-| `docs/requirements_views/requirements_index.md` | ≤ 16K tokens | ~13K |
-| `docs/requirements_views/code_to_requirements.md` | ≤ 4K tokens | ~1K |
-| `AGENTS.md` | ≤ 3.5K tokens / ≤ 200 lines | ~2.1K / ~123 |
-| `.clinerules/requirements-context.md` | ≤ 1K tokens | ~0.6K |
-| any single `src/**/*.py` | ≤ 500 lines | `app.py` is a known 3,041-line outlier (see deferred plan) |
+| Artifact | Budget (warn if exceeded) |
+|----------|---------------------------|
+| `docs/cpm_fm_requirements.md` | ≤ 70K tokens / ≤ 1,200 lines |
+| `docs/cpm_fm_architecture.md` | ≤ 6K tokens / ≤ 250 lines |
+| `docs/requirements_views/requirements_index.md` | ≤ 30K tokens |
+| `docs/requirements_views/code_to_requirements.md` | ≤ 4K tokens |
+| `AGENTS.md` | ≤ 5K tokens / ≤ 220 lines |
+| `.agents/README.md` | ≤ 1K tokens |
+| any single `src/**/*.py` | ≤ 1,200 lines |
+
+Record measured values in each audit report rather than embedding a dated
+baseline here. Compare trends with the previous recorded audit when available.
 
 Token estimate used throughout: **bytes ÷ 4** (rough but consistent with how these budgets were set).
 
 ## Step 1: Verify the generated views are in sync
-- Run `python tools/traceability_sync/generate_views.py --check`.
+- Run `.venv/Scripts/python.exe tools/traceability_sync/generate_views.py --check`.
 - **FAIL** if it exits non-zero (the committed views are stale). Remediation: run
-  `python tools/traceability_sync/generate_views.py` and commit `docs/requirements_views/`.
+  `.venv/Scripts/python.exe tools/traceability_sync/generate_views.py` and commit `docs/requirements_views/`.
 - This is the single most important check — stale views silently mislead every agent that trusts them.
 
 ## Step 2: Measure document sizes against the budgets
 - For each artifact in the Budgets table, measure bytes and lines and compare. Example (cross-platform):
-  `python -c "import os; [print(f'{p}: {os.path.getsize(p)//4} tok, {sum(1 for _ in open(p,encoding=\"utf-8\"))} lines') for p in ['docs/cpm_fm_requirements.md','docs/cpm_fm_architecture.md','docs/requirements_views/requirements_index.md','docs/requirements_views/code_to_requirements.md','AGENTS.md','.clinerules/requirements-context.md']]"`
+  `.venv/Scripts/python.exe -c "import os; [print(f'{p}: {os.path.getsize(p)//4} tok, {sum(1 for _ in open(p,encoding=\"utf-8\"))} lines') for p in ['docs/cpm_fm_requirements.md','docs/cpm_fm_architecture.md','docs/requirements_views/requirements_index.md','docs/requirements_views/code_to_requirements.md','AGENTS.md','.agents/README.md']]"`
 - **WARN** for any artifact over budget. Compare against the baseline column: flag anything that has
   grown materially since, not just absolute breaches.
 - Remediation if the SRS is over budget: extract the next-heaviest back-matter to a companion file
@@ -51,24 +55,21 @@ Token estimate used throughout: **bytes ÷ 4** (rough but consistent with how th
   step 7a in `AGENTS.md`.
 
 ## Step 4: Scan source files for oversized modules (code-side context cost)
-- List every `src/**/*.py` over 500 lines (e.g. `find src -name '*.py' | xargs wc -l | sort -rn`).
-- `app.py` is the known outlier with an existing decomposition plan at
-  `temp/file-size-optimization-plan.md` — note its current size and whether the plan should be
-  scheduled, but do not treat it as a new finding.
-- **WARN** for any *new* file that has grown past ~500 lines. Remediation: propose a cohesive split
+- List every `src/**/*.py` over 1,200 lines using a platform-appropriate read-only command.
+- **WARN** for any file that exceeds the budget. Remediation: propose a cohesive split
   (see the decomposition plan's mixin approach for the pattern).
 
 ## Step 5: Check guidance is present and aligned
-- `AGENTS.md` and `.clinerules/requirements-context.md` must agree on the shared facts (they are
-  deliberately kept in lockstep): the three view files, the two companion files, the
-  `generate_views.py` regeneration command, and the SRS/index token figures.
+- `AGENTS.md` and `.agents/README.md` must agree on the canonical AI-asset
+  locations and responsibilities. Skills and workflows must point back to
+  `AGENTS.md` rather than copy its repository policy.
 - **WARN** if they disagree (e.g. one cites a stale token figure or omits a file the other names).
   Remediation: mirror the change into both. If you edit one, edit the other.
-- Confirm both still tell agents to (a) consult the views first, (b) never hand-edit
-  `docs/requirements_views/`, and (c) treat the companion files as historical/append-only.
+- Confirm the applicable guidance still tells agents to consult the views first,
+  never hand-edit generated views, and treat companion files as append-only.
 
 ## Step 6: Look for stale or broken file references in the docs
-- Grep the docs and `AGENTS.md`/`.clinerules` for paths that no longer exist — especially
+- Grep the docs, `AGENTS.md`, and `.agents/` for paths that no longer exist — especially
   `examples/*.json` filenames, `app.py:<method>` citations whose method has moved, and links to
   renamed/removed files.
 - **WARN** per broken reference. Remediation: update to the current path, or remove if obsolete.
@@ -77,7 +78,7 @@ Token estimate used throughout: **bytes ÷ 4** (rough but consistent with how th
 
 ## Step 7: Spot-check traceability-tag coverage (keeps the views accurate)
 - The views are only as good as the code's `Satisfies:` tags. Compare tag count to method count in the
-  larger modules (e.g. `app.py`) and run `python tools/traceability_sync/agent_toolset.py` to confirm
+  larger modules and run `.venv/Scripts/python.exe tools/traceability_sync/agent_toolset.py` to confirm
   it reports no orphaned or undiscovered requirements.
 - **WARN** if coverage has dropped (new methods without `Satisfies:` tags) or the tool reports drift.
   Remediation: add the missing tags, then regenerate the views (Step 1 remediation).

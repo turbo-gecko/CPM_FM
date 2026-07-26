@@ -10,117 +10,118 @@ requirement, and that trace is mechanically enforced (a stale trace fails CI).
 ### One-time environment setup
 
 ```bash
-python -m pip install -e .[dev]   # editable install + dev tools
-pre-commit install                # install the local git hooks (see below)
+.venv/Scripts/python.exe -m pip install -e .[dev]
+.venv/Scripts/python.exe -m pre_commit install
 ```
 
-The pre-commit hooks ([`.pre-commit-config.yaml`](.pre-commit-config.yaml)) mirror the
+The pre-commit hooks ([`.pre-commit-config.yaml`](../.pre-commit-config.yaml)) mirror the
 CI lint and trace-freshness gates so drift is caught before a push rather than failing
 CI. They reuse the tools installed by `.[dev]`, so the hook versions always match the
 project's pins. Run them by hand at any time with:
 
 ```bash
-pre-commit run --all-files
+.venv/Scripts/python.exe -m pre_commit run --all-files
 ```
 
 ### Build, test, and the quality gate
 
-The inner development loop is four commands. CI runs all of them on Python 3.12
-([`.github/workflows/ci.yml`](.github/workflows/ci.yml)); the pre-commit hooks run the
+The inner development loop uses the following quality gates. CI runs all of them on Python 3.12
+([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)); the pre-commit hooks run the
 lint and trace-freshness checks locally.
 
 ```bash
-pytest                                                   # full test suite (-q is set in pyproject.toml)
-ruff check src tests                                     # lint
-ruff format src tests                                    # format (CI uses --check; drop it to apply)
-mypy src                                                 # type-check
-python tools/traceability_sync/generate_views.py --check # fail if the generated views are stale
+.venv/Scripts/python.exe -m pytest
+.venv/Scripts/python.exe -m ruff check src tests
+.venv/Scripts/python.exe -m ruff format --check src tests
+.venv/Scripts/python.exe -m mypy src
+.venv/Scripts/python.exe tools/traceability_sync/generate_views.py --check
+.venv/Scripts/python.exe tools/ai/validate.py
 ```
 
 Useful narrower invocations:
 
 ```bash
-pytest tests/test_cpm_parser.py                                            # one file
-pytest tests/test_cpm_parser.py::test_parse_dir_output_extracts_filenames # one test
-ruff format --check src tests                                              # verify formatting without editing
+.venv/Scripts/python.exe -m pytest tests/test_cpm_parser.py
+.venv/Scripts/python.exe -m pytest tests/test_cpm_parser.py::test_parse_dir_output_extracts_filenames
+.venv/Scripts/python.exe -m ruff format --check src tests
 ```
 
-On Windows, prefer the array/sequential PowerShell forms documented in
-[`.clinerules/tooling_notes.md`](.clinerules/tooling_notes.md) (e.g. activate the venv
-and run pytest in a single chained call). For building a redistributable executable,
-see [Building a standalone package](#building-a-standalone-package).
+Invoke `.venv/Scripts/python.exe` directly rather than relying on activation or
+`PATH`. For building a redistributable executable, see
+[Building a standalone package](#building-a-standalone-package).
 
 #### Integration (hardware-in-the-loop) suite
 
-The [`integration/`](integration/) suite drives the **real** app against a **real CP/M
+The [`integration/`](../integration/) suite drives the **real** app against a **real CP/M
 machine** over serial — X-Modem protocol round-trips, the GUI over real serial, and
 widget-tree look-and-feel assertions. It is **bench-only**: not run by CI or the default
 `pytest` (the root run's `testpaths` is `tests/`), and it needs a configured target
 (`integration/hil_config.json`, gitignored). Run it explicitly when hardware is connected:
 
 ```bash
-pytest integration/                    # default target; --target / --all-targets pick rigs
-pytest integration/ --run-destructive  # also the backup/restore (whole-drive-wipe) cases
-python integration/run.py              # interactive target picker
+.venv/Scripts/python.exe -m pytest integration/
+.venv/Scripts/python.exe -m pytest integration/ --run-destructive
+.venv/Scripts/python.exe integration/run.py
 ```
 
-See [`integration/README.md`](integration/README.md) for wiring, target setup, and the
+See [`integration/README.md`](../integration/README.md) for wiring, target setup, and the
 manual-vs-automated split. It is additive test infrastructure and defines no requirements.
 
 ### Keeping requirements, code, tests, and docs in sync
 
 The authoritative documents are:
 
-- [`docs/cpm_fm_requirements.md`](docs/cpm_fm_requirements.md) — the **Software
+- [`docs/cpm_fm_requirements.md`](cpm_fm_requirements.md) — the **Software
   Requirements Specification** (ISO/IEC/IEEE 29148), source of truth for most
   requirements (`FR-`/`UIR-`/`DR-`/`STR-` and the behavioural `CR-`/`NFR-` plus the
   X-Modem `NFR-003*`).
-- [`docs/cpm_fm_architecture.md`](docs/cpm_fm_architecture.md) — the **Software
+- [`docs/cpm_fm_architecture.md`](cpm_fm_architecture.md) — the **Software
   Architecture Description**, source of truth for the architectural constraints
   (`CR-001`–`CR-009`, `CR-012`–`CR-014`) and architectural NFRs (`NFR-001`, `NFR-004`,
   `NFR-005`). Edit these `CR-`/`NFR-` requirements here, not in the SRS.
 
 Traceability is bidirectional and tag-based: each implementing function carries a
 `Satisfies:` docstring tag citing requirement IDs, and each test carries a `Verifies:`
-tag. The read-only views under [`docs/requirements_views/`](docs/requirements_views/) are
+tag. The read-only views under [`docs/requirements_views/`](requirements_views/) are
 **generated** from the two specs plus those tags by
-[`tools/traceability_sync/generate_views.py`](tools/traceability_sync/generate_views.py)
+[`tools/traceability_sync/generate_views.py`](../tools/traceability_sync/generate_views.py)
 — never hand-edit them.
 
 **When you add or change a requirement, follow every step in order** (this is the
-mandatory workflow; see [`AGENTS.md`](AGENTS.md) for the agent-facing version):
+mandatory workflow; see [`AGENTS.md`](../AGENTS.md) for the agent-facing version):
 
 1. **Edit the spec.** Add/modify the requirement in `docs/cpm_fm_requirements.md` — or,
    for an architectural `CR-`/`NFR-` constraint, in `docs/cpm_fm_architecture.md`.
 2. **Implement the change.** In every new/changed function, add or update a `Satisfies:`
    docstring tag citing the requirement ID(s).
 3. **Update the spec's traceability** mapping to the new/changed functions, then
-   **regenerate the views**: `python tools/traceability_sync/generate_views.py` and
+   **regenerate the views**: `.venv/Scripts/python.exe tools/traceability_sync/generate_views.py` and
    commit `docs/requirements_views/`.
 4. **Add/update tests** for the new behaviour, tagging each test docstring with a
-   `Verifies:` line citing the requirement ID(s). Run `pytest`, then check coverage:
-   `python tools/traceability_sync/agent_toolset.py --coverage` (lists requirements with
+   `Verifies:` line citing the requirement ID(s). Run
+   `.venv/Scripts/python.exe -m pytest`, then check coverage:
+   `.venv/Scripts/python.exe tools/traceability_sync/agent_toolset.py --coverage` (lists requirements with
    no verifying test and any stale tags).
-5. **Update the integration (HIL) suite** ([`integration/`](integration/)) when the change
+5. **Update the integration (HIL) suite** ([`integration/`](../integration/)) when the change
    touches behaviour it covers — the X-Modem protocol round-trips, the GUI-over-real-serial
    flows, or the widget-tree look-and-feel. Add/adjust the relevant `integration/test_*.py`
    with accurate `@pytest.mark.mt("MT-..", "FR-..")` tags and verify with a bench run
-   (`pytest integration/`; add `--run-destructive` for backup/restore) when hardware is
+   (`.venv/Scripts/python.exe -m pytest integration/`; add `--run-destructive` for backup/restore) when hardware is
    available, or note that the bench run is pending. The HIL suite needs a real CP/M peer,
    so it is **not** run by CI or the default `pytest`; state explicitly when no integration
    change is needed rather than skipping it.
 6. **Iterate steps 2–4** until the suite is green and the trace is clean
    (`generate_views.py --check` exits 0, no stale tags).
-7. **Update the manual test plan** ([`docs/manual_test_plan.md`](docs/manual_test_plan.md))
+7. **Update the manual test plan** ([`docs/manual_test_plan.md`](manual_test_plan.md))
    and bump its plan version.
 8. **Update the manual test scorecard**
-   ([`docs/manual_test_scorecard.md`](docs/manual_test_scorecard.md)) to match, bumping
+   ([`docs/manual_test_scorecard.md`](manual_test_scorecard.md)) to match, bumping
    its score version.
-9. **Record the change:** bump [`src/version.txt`](src/version.txt) and the SRS version
+9. **Record the change:** bump [`src/version.txt`](../src/version.txt) and the SRS version
    field (DR-040/DR-041), add a row to
-   [`docs/requirements_change_history.md`](docs/requirements_change_history.md), and — if
+   [`docs/requirements_change_history.md`](requirements_change_history.md), and — if
    a review resolved an ambiguity or gap — an entry in
-   [`docs/requirements_issue_log.md`](docs/requirements_issue_log.md).
+   [`docs/requirements_issue_log.md`](requirements_issue_log.md).
 
 > The `agent_toolset.py` helper can also rewrite the spec's `Source:` cells to match the
 > code's `Satisfies:` tags. It is report-only by default; preview with `--dry-run`, then
@@ -155,10 +156,11 @@ flowchart LR
     A[Edit] --> B[ruff check src tests]
     B --> C[ruff format --check src tests]
     C --> D[generate_views.py --check]
-    D --> E[pytest]
-    E --> F{All pass?}
-    F -- No --> A
-    F -- Yes --> G[Commit / push]
+    D --> E[validate AI assets]
+    E --> F[pytest]
+    F --> G{All pass?}
+    G -- No --> A
+    G -- Yes --> H[Commit / push]
 ```
 
 #### How the traceability views are produced
@@ -176,10 +178,10 @@ flowchart LR
 
 > **More diagrams:** the X-Modem protocol requirements (`NFR-003*`) are already
 > illustrated with sequence diagrams (128-byte and 1K transfers) in
-> [`docs/xmodem_specs.md`](docs/xmodem_specs.md), and the runtime layering
+> [`docs/xmodem_specs.md`](xmodem_specs.md), and the runtime layering
 > (`gui/` → `terminal/` + `utils/`) — showing the `CR-014` rule that `terminal/` and
 > `utils/` import no GUI toolkit, plus the signal-based threading/decoupling model — is
-> diagrammed in [`docs/cpm_fm_architecture.md`](docs/cpm_fm_architecture.md) §A2.
+> diagrammed in [`docs/cpm_fm_architecture.md`](cpm_fm_architecture.md) §A2.
 
 ## Developer Workflow (AI Assisted)
 
@@ -218,24 +220,23 @@ flowchart LR
 The repository is set up so AI coding assistants can do real work without loading the
 whole (large) SRS into context, and so their changes stay traceable. The same build and
 test commands from [Developer Workflow](#build-test-and-the-quality-gate) apply — the
-assistant runs `pytest`, `generate_views.py --check`, `ruff`, and `mypy` exactly as a
+assistant runs the same pytest, traceability, Ruff, and mypy commands as a
 human would; what differs is the context the tool is given and how the repo workflows are
 invoked.
 
 ### What the AI reads
 
-- [`AGENTS.md`](AGENTS.md) — the agent-facing project guide: commands, the architecture
+- [`AGENTS.md`](../AGENTS.md) — the agent-facing project guide: commands, the architecture
   summary, the threading rules, and the mandatory requirement-change workflow.
-- [`.clinerules/`](.clinerules/) — context-budget guidance
-  (`requirements-context.md`: *use the slim generated views, don't read the whole spec*)
-  and environment notes (`tooling_notes.md`).
-- [`docs/requirements_views/`](docs/requirements_views/) — the slim, generated views the
+- [`.agents/`](../.agents/) — the vendor-neutral catalog of specialized agent
+  profiles, open-format Agent Skills, and project workflows.
+- [`docs/requirements_views/`](requirements_views/) — the slim, generated views the
   guidance points the AI at: `requirements_index.md` for broad understanding,
   `code_to_requirements.md` to find the IDs a file implements, and
   `requirements_to_tests.md` to check a requirement's test coverage.
 
-> Everything an AI needs lives in these files — `AGENTS.md`, `.clinerules/`,
-> `Workflows/`, and the views. This README is for humans and is **not** a context source
+> Everything an AI needs lives in `AGENTS.md`, `.agents/`, and the generated
+> views. This guide is for humans and is **not** a mandatory context source
 > for the AI tools; the AI-facing docs deliberately do not reference it.
 
 ### AI development tools
@@ -246,41 +247,47 @@ vocabulary differ:
 | Aspect | Project convention |
 |--------|--------------------|
 | Authoritative project guide | [`AGENTS.md`](../AGENTS.md) |
-| Repo workflows | Follow the definitions in [`Workflows/`](../Workflows/) directly or through an integration-provided command. |
-| Tool-specific adapters | [`.codex/`](../.codex/) and [`.clinerules/`](../.clinerules/) may provide loading or environment hints; neither overrides `AGENTS.md`. |
+| Canonical AI assets | [`.agents/`](../.agents/) contains agents, skills, workflows, and their catalog. |
+| Tool-specific adapters | Directories such as [`.codex/`](../.codex/) may provide loading hints only; they never override `AGENTS.md` or `.agents/`. |
 | Permissions and tool vocabulary | Supplied by the active development environment rather than defined as project requirements. |
 
-`AGENTS.md` and `.clinerules/requirements-context.md` are deliberately kept in agreement on shared
-facts (the `context-budget-audit` workflow checks this), so the guidance remains consistent regardless
-of which development tool loads it.
+The split is deliberate: agents define who performs work, skills provide
+reusable expertise, and workflows define ordered project procedures and gates.
+The `context-budget-audit` workflow checks that these layers point to the
+authoritative guidance instead of duplicating it.
+
+AI-asset and adapter-only changes are developer tooling changes; they do not
+bump the application or SRS version unless application requirements or behavior
+also change.
 
 ### The repo workflows
 
-[`Workflows/`](Workflows/) holds five multi-agent workflow definitions. Each is a
-read-and-report / plan-then-ask procedure — the requirement-touching ones **stop and ask
-for explicit approval before changing anything**:
+[`.agents/workflows/`](../.agents/workflows/) holds eight project workflows:
 
 | Workflow | Use it to… |
 |----------|-----------|
-| [`requirements-check`](Workflows/requirements-check.md) | Review/edit requirements against ISO/IEC/IEEE 29148; the front door for any **spec** edit. |
-| [`code-requirements-align`](Workflows/code-requirements-align.md) | Audit two-way traceability — find unimplemented requirements, orphan code, divergences, and untested requirements. |
-| [`defect-investigator`](Workflows/defect-investigator.md) | Investigate a defect: reproduce, write a failing test, fix, verify. |
-| [`test-quality-checker`](Workflows/test-quality-checker.md) | Adversarially audit test *quality* (not just coverage) and propose high-value tests. |
-| [`context-budget-audit`](Workflows/context-budget-audit.md) | Periodic health check that docs/source stay small enough for small/local-LLM context windows. |
+| [`requirements-change`](../.agents/workflows/requirements-change.md) | Review or edit requirements; the front door for any specification change. |
+| [`code-requirements-align`](../.agents/workflows/code-requirements-align.md) | Audit two-way implementation and verification traceability. |
+| [`defect-investigation`](../.agents/workflows/defect-investigation.md) | Reproduce, test, root-cause, fix, and verify a defect. |
+| [`test-case-implementation`](../.agents/workflows/test-case-implementation.md) | Implement and prove multiple tests one at a time. |
+| [`test-quality-audit`](../.agents/workflows/test-quality-audit.md) | Adversarially audit test quality and missing boundaries. |
+| [`context-budget-audit`](../.agents/workflows/context-budget-audit.md) | Check AI-facing context size and stale references. |
+| [`pre-commit-checks`](../.agents/workflows/pre-commit-checks.md) | Run the local lint, format, and view-freshness gate. |
+| [`handoff`](../.agents/workflows/handoff.md) | Record concise session state for a fresh agent. |
 
 ### The AI-assisted loop
 
 ```mermaid
 flowchart TD
-    A[Developer states task] --> B[AI loads AGENTS.md / .clinerules<br/>+ slim requirements views]
+    A[Developer states task] --> B[AI loads AGENTS.md<br/>+ relevant .agents asset]
     B --> C{Task type?}
-    C -- Spec change --> D[requirements-check workflow]
+    C -- Spec change --> D[requirements-change workflow]
     C -- Trace audit --> E[code-requirements-align workflow]
-    C -- Defect --> F[defect-investigator workflow]
-    C -- Test quality --> G[test-quality-checker workflow]
+    C -- Defect --> F[defect-investigation workflow]
+    C -- Test quality --> G[test-quality-audit workflow]
     D --> H[AI reports findings + plan]
     E --> H
-    F --> I[AI implements + runs pytest / views --check]
+    F --> I[AI implements + runs project quality gates]
     G --> H
     H --> J{Developer approves?}
     J -- No --> A
@@ -296,13 +303,13 @@ flowchart TD
 ```mermaid
 flowchart TD
     Q[What do you need?] --> A{Changing a<br/>requirement?}
-    A -- Yes --> R[requirements-check]
+    A -- Yes --> R[requirements-change]
     A -- No --> B{Code and spec<br/>out of sync?}
     B -- Yes --> C[code-requirements-align]
     B -- No --> D{Investigating<br/>a bug?}
-    D -- Yes --> E[defect-investigator]
+    D -- Yes --> E[defect-investigation]
     D -- No --> F{Worried about<br/>test quality?}
-    F -- Yes --> G[test-quality-checker]
+    F -- Yes --> G[test-quality-audit]
     F -- No --> H{Docs/source<br/>getting bloated?}
     H -- Yes --> I[context-budget-audit]
     H -- No --> J[Use the manual workflow directly]
@@ -332,8 +339,8 @@ sequenceDiagram
 Standalone executables are built with [PyInstaller](https://pyinstaller.org/):
 
 ```bash
-python -m pip install -e .[build]   # adds PyInstaller
-python build_dist.py                # builds for the current OS
+.venv/Scripts/python.exe -m pip install -e .[build]
+.venv/Scripts/python.exe build_dist.py
 ```
 
 Output lands in `dist/`: a single `cpm-fm.exe` on Windows, a single `cpm-fm`
@@ -361,7 +368,7 @@ src/cpm_fm/          application package (src-layout)
   docs/              bundled user manual (cpm_fm_manual.md), shown by Help > Manual
 tests/               pytest suite (each test tagged with Verifies: requirement IDs)
 integration/         bench-only hardware-in-the-loop (HIL) suite, separate from tests/;
-                     run with `pytest integration/` (needs a real CP/M peer)
+                     run with `.venv/Scripts/python.exe -m pytest integration/`
   helpers/           peer + GUI drivers, config/settings-copy/integrity/dialogs/results
   test_*.py          protocol, GUI, and visual tiers (tagged with MT-IDs + requirement IDs)
   run.py             interactive target picker
@@ -370,12 +377,12 @@ integration/         bench-only hardware-in-the-loop (HIL) suite, separate from 
 examples/            sample serial/general settings JSON
 tools/               developer tooling, incl. traceability_sync/ (view generator,
                      coverage/trace helper)
-Workflows/           AI multi-agent workflow definitions (see Developer Workflow (AI Assisted))
+.agents/             vendor-neutral agents, open-format skills, workflows, and catalog
 docs/                requirements (SRS) + architecture description, generated requirement
                      views, manual test plan/scorecard, change history, issue log, and
                      legacy design docs
 AGENTS.md            agent-facing project guide
-.clinerules/         Cline context-budget rules and environment notes
+.codex/              optional Codex loading adapter
 build_dist.py        PyInstaller driver; pyinstaller_*.spec + _pyinstaller_common.py
 ```
 

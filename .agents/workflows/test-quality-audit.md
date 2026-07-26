@@ -1,8 +1,11 @@
 ---
+name: test-quality-audit
 description: Aggressively audits the quality of the unit test suite against unit-testing best practices (Pylons / Tres Seaver guidelines), assuming the code is faulty, then reports weaknesses and proposes high-value tests that test to 'not fail' and exercise boundary conditions
 ---
 
-# Test Quality Checker Workflow
+# Test Quality Audit Workflow
+
+Required skill: `python-testing`.
 
 This workflow audits the **quality** of the existing unit tests — not merely
 their existence or their line coverage. Its job is to find faults: in the code
@@ -86,8 +89,9 @@ Judge every existing and proposed test against these rules:
 ## Step 2: Establish a Baseline
 
 - Run the suite and capture the current state:
-  - `pytest` — confirm it passes and note timing.
-  - Generate coverage if available: `pytest --cov=cpm_fm --cov-report=term-missing`
+  - `.venv/Scripts/python.exe -m pytest` — confirm it passes and note timing.
+  - Generate coverage if available:
+    `.venv/Scripts/python.exe -m pytest --cov=cpm_fm --cov-report=term-missing`
     (note any missing-line ranges, but treat coverage as a *lead*, not a verdict).
 - Build an inventory of every test: file, test name, the unit it targets, and the
   single thing it claims to verify.
@@ -187,17 +191,17 @@ For the confirmed gaps and weak tests, write concrete proposals:
 - Present the findings table and the proposed tests, then explicitly ask the user
   whether to (a) add the proposed tests, (b) strengthen the weak tests, and/or
   (c) investigate any *real code faults* this audit uncovered via the
-  `defect-investigator` workflow.
+  `defect-investigation` workflow.
 - Only after explicit approval may you write or modify tests/code. If the user
   approves only part, do only that part.
 
 ## Step 9: If Approved — Implement and Verify
 
 - Add/strengthen the approved tests.
-- Run `pytest`; confirm new fault-detecting tests fail before the fix and pass
+- Run `.venv/Scripts/python.exe -m pytest`; confirm new fault-detecting tests fail before the fix and pass
   after, and that the full suite stays green with no regressions.
 - If the audit revealed a genuine code defect (not just a test gap), hand it to the
-  `defect-investigator` workflow rather than patching ad hoc here.
+  `defect-investigation` workflow rather than patching ad hoc here.
 
 ## Notes
 

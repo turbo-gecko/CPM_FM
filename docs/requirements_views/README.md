@@ -8,7 +8,7 @@ loading the full SRS into context.
 
 | File | What it is | Use it for |
 |------|------------|------------|
-| `requirements_index.md` | Section-grouped, one-line-per-requirement summary (~13K tokens). | **Broad** understanding of what the system requires. |
+| `requirements_index.md` | Section-grouped, one-line-per-requirement summary (~25K tokens). | **Broad** understanding of what the system requires. |
 | `code_to_requirements.md` | Each source file → the requirement IDs it implements (from code `Satisfies:` tags). | **Targeted** work: find the file you're editing, then read just those IDs. |
 | `code_to_requirements.json` | The same map, machine-readable. | Tooling / scripts (drift checks, PR-impact lookups). |
 | `requirements_to_tests.md` | Each requirement ID → the test(s) that verify it (from test `Verifies:` tags), plus untested-requirement and stale-tag lists. | Checking which requirements have automated test coverage. |
@@ -25,7 +25,7 @@ manual edit will be overwritten. The single source of truth is
 ## Regenerating
 
 ```sh
-python tools/traceability_sync/generate_views.py
+.venv/Scripts/python.exe tools/traceability_sync/generate_views.py
 ```
 
 Run this after changing the spec, any code `Satisfies:` tag, or any test
@@ -34,5 +34,5 @@ Run this after changing the spec, any code `Satisfies:` tag, or any test
 hook):
 
 ```sh
-python tools/traceability_sync/generate_views.py --check   # exit 1 if stale
+.venv/Scripts/python.exe tools/traceability_sync/generate_views.py --check
 ```

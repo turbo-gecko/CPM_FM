@@ -1,4 +1,5 @@
 ---
+name: code-requirements-align
 description: Two-way traceability audit between the SRS (and its architecture companion) and the implementation — finds unimplemented requirements, orphan code, divergences, and requirements with no test coverage, using the traceability_sync tools as the mechanical first pass, then reports findings and plans fixes (with explicit user approval before any change)
 ---
 
@@ -16,14 +17,16 @@ tag-level trace; the agent does the semantic verification the tools cannot
 (reading the code against the "shall" wording, judging partial implementations,
 and finding truly untagged orphan behaviour).
 
+Required skill: `requirements-traceability`.
+
 ## Document & code layout (read this first)
 
 The requirements are split across several files — know the layout before you
-start (it mirrors the `requirements-check` workflow):
+start (it mirrors the `requirements-change` workflow):
 
 - **`docs/cpm_fm_requirements.md`** — the SRS, source of truth for most
   requirements (`FR-`/`UIR-`/`IFR-`/`DR-`/`STR-` plus the behavioural `CR-010`,
-  `CR-011`, `CR-015`, `NFR-002` and the X-Modem `NFR-003a`–`NFR-003o`).
+  `CR-011`, `CR-015`, `NFR-002` and the X-Modem `NFR-003a`–`NFR-003q`).
 - **`docs/cpm_fm_architecture.md`** — the architecture companion, source of truth
   for the architectural constraints `CR-001`–`CR-009`, `CR-012`–`CR-014` and the
   architectural NFRs `NFR-001`, `NFR-004`, `NFR-005`. **You must read this file
@@ -38,7 +41,7 @@ start (it mirrors the `requirements-check` workflow):
     test `Verifies:` tags), plus an **Untested requirements** list and a **Stale
     tags** list.
   Never hand-edit the views; regenerate them with
-  `python tools/traceability_sync/generate_views.py`.
+  `.venv/Scripts/python.exe tools/traceability_sync/generate_views.py`.
 - `docs/requirements_change_history.md` and `docs/requirements_issue_log.md` are
   the §11/§10 companions (historical; rarely needed for an audit).
 
@@ -65,10 +68,10 @@ the test function. See `AGENTS.md` for the authoritative map.
 Run the traceability tooling from the repo root and capture the output — this is
 the candidate list you will verify, not the verdict:
 
-- `python tools/traceability_sync/generate_views.py --check` — confirms the views
+- `.venv/Scripts/python.exe tools/traceability_sync/generate_views.py --check` — confirms the views
   are fresh and that every requirements table is structurally valid (exit non-zero
   means stale views or a malformed table row — resolve that first).
-- `python tools/traceability_sync/agent_toolset.py` — prints the Traceability
+- `.venv/Scripts/python.exe tools/traceability_sync/agent_toolset.py` — prints the Traceability
   Update Plan from code `Satisfies:` tags. Map its sections onto the finding
   types, **as leads to verify**:
   - `[POTENTIAL REMOVALS/ORPHANS]` (`to_remove`) → candidate **Unimplemented**:
@@ -77,7 +80,7 @@ the candidate list you will verify, not the verdict:
     `Satisfies:` tag citing an ID absent from both spec files.
   - `[MODIFICATIONS]` (`to_update`) → a **stale citation**: code satisfies the
     requirement but the Source cell does not cite it.
-- `python tools/traceability_sync/agent_toolset.py --coverage` — prints
+- `.venv/Scripts/python.exe tools/traceability_sync/agent_toolset.py --coverage` — prints
   requirement→test coverage from `Verifies:` tags: the **Untested requirements**
   and any **stale `Verifies:` tags** (citing an undefined ID).
 
@@ -158,8 +161,8 @@ Using `requirements_to_tests.md` and the `--coverage` output from Step 2:
   change.
 - This workflow checks *coverage/traceability* of tests to requirements. For a
   deep, adversarial audit of test *quality* (weak assertions, missing boundaries),
-  defer to the `test-quality-checker` workflow; for chasing a real code fault a
-  test uncovers, defer to `defect-investigator`. Note the hand-off rather than
+  defer to the `test-quality-audit` workflow; for chasing a real code fault a
+  test uncovers, defer to `defect-investigation`. Note the hand-off rather than
   duplicating those audits here.
 
 ## Step 7: Clarify with the User Where Requirements Are Lacking
@@ -175,7 +178,7 @@ ask targeted questions, citing specific IDs and `file:line`, e.g.:
   add the requirement, or drop/retag the test?"
 
 If the requirements document itself needs editing, that is governed by the
-`requirements-check` workflow — note it, but do not edit the spec here without
+`requirements-change` workflow — note it, but do not edit the spec here without
 the user's direction.
 
 ## Step 8: Report the Findings Table
@@ -205,7 +208,7 @@ For the findings the user confirms are in scope, produce a concrete, ordered pla
   it will be verified (which tests to add/run).
 - For any code change that adds or changes a `Satisfies:` tag, a Source citation,
   or a test `Verifies:` tag, the item must include: regenerate the views
-  (`python tools/traceability_sync/generate_views.py`) and re-run
+  (`.venv/Scripts/python.exe tools/traceability_sync/generate_views.py`) and re-run
   `generate_views.py --check` + `agent_toolset.py --coverage` to confirm the trace
   is clean.
 - For any plan item that changes user-visible behaviour, include a step to update
@@ -216,11 +219,11 @@ For the findings the user confirms are in scope, produce a concrete, ordered pla
   (protocol round-trips, GUI-over-real-serial flows, widget-tree look-and-feel),
   include a step to update the relevant `integration/test_*.py` case(s) with
   accurate `@pytest.mark.mt(...)` tags and to verify them with a bench run
-  (`pytest integration/`, plus `--run-destructive` for backup/restore) when
+  (`.venv/Scripts/python.exe -m pytest integration/`, plus `--run-destructive` for backup/restore) when
   hardware is available — or to record that the bench run is pending. State when
   no integration change is needed rather than omitting it.
 - Route any *spec* edit (new/changed requirement, resolved ambiguity) through the
-  `requirements-check` workflow, not this one.
+  `requirements-change` workflow, not this one.
 - Sequence by dependency and risk; call out items blocked pending Step 7
   clarifications.
 

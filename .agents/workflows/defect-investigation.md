@@ -1,8 +1,12 @@
 ---
+name: defect-investigation
 description: Investigates, reproduces, tests, and fixes a defect — root-causes it, writes a failing Verifies:-tagged test that proves it, plans a minimal upstream fix, then STOPS for explicit user approval before applying the fix and verifying (suite green, views fresh, lint/hooks clean)
 ---
 
-# Defect Investigator Workflow
+# Defect Investigation Workflow
+
+Required skills: `python-engineering`, `python-testing`, and
+`requirements-traceability`.
 
 This workflow guides a systematic defect investigation: reproduce the defect,
 capture it in a failing test, root-cause it, plan a minimal fix, **stop for
@@ -17,7 +21,7 @@ the fix that makes it pass waits for approval.
 ## Document & code layout (read this first)
 
 Know the layout before you start (it mirrors the `code-requirements-align` and
-`requirements-check` workflows):
+`requirements-change` workflows):
 
 - **`docs/cpm_fm_requirements.md`** — the SRS, source of truth for most
   requirements (`FR-`/`UIR-`/`IFR-`/`DR-`/`STR-` plus the behavioural `CR-010`,
@@ -35,7 +39,7 @@ Know the layout before you start (it mirrors the `code-requirements-align` and
     test `Verifies:` tags), plus an **Untested requirements** list and a **Stale
     tags** list.
   Never hand-edit the views; regenerate them with
-  `python tools/traceability_sync/generate_views.py`.
+  `.venv/Scripts/python.exe tools/traceability_sync/generate_views.py`.
 
 Traceability tags are the contract: implementation is tagged with a `Satisfies:`
 docstring tag on the satisfying class/function; tests are tagged with a
@@ -55,7 +59,7 @@ The code is `src/`-layout under `src/cpm_fm/`.
   `requirements_index.md`) — this anchors the test's `Verifies:` tag later.
 
 ## Step 2: Analyze Why Tests Missed the Defect (tool-first, then manual)
-- **Tool-first pass:** run `python tools/traceability_sync/agent_toolset.py
+- **Tool-first pass:** run `.venv/Scripts/python.exe tools/traceability_sync/agent_toolset.py
   --coverage` from the repo root. If the violated requirement is already in the
   **Untested requirements** list, that *mechanically confirms* the coverage gap —
   no test exercised it. Also note any **stale `Verifies:` tags** in the affected
@@ -67,7 +71,7 @@ The code is `src/`-layout under `src/cpm_fm/`.
     test data, or mock configurations were inadequate.
   - A requirement can be "covered" by a tagged-but-weak test — flag that.
 - For a deep, adversarial audit of test *quality* (weak assertions, missing
-  boundaries) beyond this defect, hand off to the `test-quality-checker` workflow.
+  boundaries) beyond this defect, hand off to the `test-quality-audit` workflow.
 
 ## Step 3: Create or Update Unit Tests (test-first, tagged)
 - Identify the test file(s) under `tests/` that should cover the defect scenario,
@@ -80,7 +84,7 @@ The code is `src/`-layout under `src/cpm_fm/`.
   gap in the views.
 
 ## Step 4: Run New Unit Tests (confirm red)
-- Execute the new test(s) with `pytest`.
+- Execute the new test(s) with `.venv/Scripts/python.exe -m pytest`.
 - Confirm they **fail** — this is the evidence the test detects the defect.
   Document the failure output.
 - If a test passes unexpectedly, the test doesn't reproduce the defect — revise
@@ -96,7 +100,7 @@ The code is `src/`-layout under `src/cpm_fm/`.
 - If, while root-causing, you find the requirement itself is **ambiguous,
   incomplete, contradictory, or silent** on the correct behaviour, do **not**
   guess and do **not** edit the spec here. Pause, cite the specific ID and
-  `file:line`, and route the spec change through the `requirements-check`
+  `file:line`, and route the spec change through the `requirements-change`
   workflow.
 
 ## Step 6: STOP — Present Findings and Request Explicit Permission
@@ -118,16 +122,17 @@ The code is `src/`-layout under `src/cpm_fm/`.
 
 ## Step 8: Verify the Fix (suite, views, lint/hooks all clean)
 - Rerun the new test(s) and confirm they now **pass** (red → green).
-- Run the **full** suite (`pytest`) to catch regressions.
+- Run the **full** suite (`.venv/Scripts/python.exe -m pytest`) to catch regressions.
 - **Regenerate the traceability views**:
-  `python tools/traceability_sync/generate_views.py`, then confirm freshness with
-  `python tools/traceability_sync/generate_views.py --check` (must exit 0 — CI and
+  `.venv/Scripts/python.exe tools/traceability_sync/generate_views.py`, then confirm freshness with
+  `.venv/Scripts/python.exe tools/traceability_sync/generate_views.py --check` (must exit 0 — CI and
   the pre-commit hook enforce this).
-- Re-run `python tools/traceability_sync/agent_toolset.py --coverage` and confirm
+- Re-run `.venv/Scripts/python.exe tools/traceability_sync/agent_toolset.py --coverage` and confirm
   the previously-untested requirement is now covered and there are **no new stale
   tags**.
 - **Lint/format clean** (the pre-commit hooks and CI gate on these):
-  `ruff check src tests` and `ruff format --check src tests`.
+  `.venv/Scripts/python.exe -m ruff check src tests` and
+  `.venv/Scripts/python.exe -m ruff format --check src tests`.
 - Document the fix and the coverage improvement (requirement now verified).
 
 ## Step 9: Check Requirement Documents (verify alignment; hand off edits)
@@ -137,7 +142,7 @@ The code is `src/`-layout under `src/cpm_fm/`.
 - Verify the fix doesn't violate any other existing requirement.
 - If the defect revealed a **gap or ambiguity** in the requirements, do **not**
   edit the spec in this workflow — note it and route the change through the
-  `requirements-check` workflow. For a broader traceability audit (orphan code,
+  `requirements-change` workflow. For a broader traceability audit (orphan code,
   unimplemented requirements), hand off to `code-requirements-align`.
 - **If the fix changed user-visible behaviour**, update the end-user manual
   (`src/cpm_fm/docs/cpm_fm_manual.md`) — the affected section(s), Table of
@@ -154,6 +159,6 @@ The code is `src/`-layout under `src/cpm_fm/`.
   requirement-bearing element carries a `Satisfies:` tag; views are regenerated
   and `--check`-clean before you call the work done.
 - Always cite requirement IDs and `file:line` so the investigation is traceable.
-- Spec edits go through `requirements-check`; test-quality audits through
-  `test-quality-checker`; broad traceability audits through
+- Spec edits go through `requirements-change`; test-quality audits through
+  `test-quality-audit`; broad traceability audits through
   `code-requirements-align`.

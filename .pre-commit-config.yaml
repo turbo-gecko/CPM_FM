@@ -49,3 +49,10 @@ repos:
         language: system
         pass_filenames: false
         files: ^(src/.*\.py|docs/.*\.md|tools/traceability_sync/.*\.py)$
+
+      - id: ai-assets-valid
+        name: AI assets valid
+        entry: .venv\\Scripts\\python.exe tools/ai/validate.py
+        language: system
+        pass_filenames: false
+        files: ^(\.agents/.*\.md|AGENTS\.md|docs/dev_guideline\.md|docs/requirements_views/README\.md|tools/ai/validate\.py)$

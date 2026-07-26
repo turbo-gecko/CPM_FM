@@ -105,6 +105,10 @@ decoupled from the GUI so they are unit-testable without a running Qt app:
 [`docs/cpm_fm_architecture.md`](../docs/cpm_fm_architecture.md) before making
 non-trivial changes.** Two rules are load-bearing:
 
+AI assistants should also use the vendor-neutral
+[`.agents/` catalog](../.agents/README.md) to select relevant specialized
+agents, skills, and project workflows.
+
 - **No GUI-toolkit imports in `terminal/` or `utils/`** (constraint CR-014).
 - **The threading model (NFR-001/NFR-004):** serial reads and both transfer
   directions run off the Qt GUI thread on daemon threads. Any UI update from a

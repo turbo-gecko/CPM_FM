@@ -1,4 +1,5 @@
 ---
+name: handoff
 description: Session-handoff generator — writes a concise summary of the current conversation to temp/ so a fresh agent can continue the work, linking to existing artifacts instead of duplicating them
 ---
 
@@ -129,4 +130,4 @@ the heading, so the reader knows it was considered.
 | Workflow | Relationship |
 |----------|-------------|
 | `pre-commit-checks` | Run before handing off if the session left committable changes, so the next agent inherits a clean tree |
-| `requirements-check` / `code-requirements-align` | If the session changed requirements, reference the resulting SRS/view state rather than re-summarising it in the handoff. This step is optional and user approval must be given before executing these workflows. |
+| `requirements-change` / `code-requirements-align` | If the session changed requirements, reference the resulting SRS/view state rather than re-summarising it in the handoff. This step is optional and user approval must be given before executing these workflows. |

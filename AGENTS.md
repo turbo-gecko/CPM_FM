@@ -89,7 +89,7 @@ ISO/IEC/IEEE 29148 SRS with uniquely identified, traceable requirements (`FR-`/`
 architectural design constraints (CR-001–CR-009, CR-012–CR-014) and architectural NFRs (NFR-001,
 NFR-004, NFR-005), extracted from the SRS with IDs unchanged. Edit architectural `CR-`/`NFR-`
 requirements there; the remaining behavioural constraints (CR-010, CR-011, CR-015, NFR-002) and the
-X-Modem protocol requirements (NFR-003a–NFR-003o, SRS §8.1) stay in the SRS. `docs/legacy/App_Requirements.md` and
+X-Modem protocol requirements (NFR-003a–NFR-003q, SRS §8.1) stay in the SRS. `docs/legacy/App_Requirements.md` and
 `docs/legacy/App_Design.md` are the original source documents it was consolidated from; they are
 **archived** for history but are **superseded** where they conflict (e.g. they call Copy to Remote/Host
 empty stubs, but the SRS and code implement working X-Modem transfers — see `FR-080`–`FR-085`,
@@ -98,17 +98,22 @@ The SRS's §10 **Issue Resolution Log** and §11 **Change History** live in comp
 (`docs/requirements_issue_log.md`, `docs/requirements_change_history.md`) to keep the spec small; the
 SRS keeps a one-line stub pointing to each. Both are historical/append-only — you rarely need to read
 them, and they are excluded from the generated views.
-`Workflows/` holds repo-specific multi-agent workflow definitions (`requirements-check`,
-`code-requirements-align`, `defect-investigator`, `test-quality-checker`) for checking code and tests
-against the SRS, plus `context-budget-audit` (run occasionally to confirm docs/source stay optimized
-for small-LLM context windows).
+`.agents/` is the vendor-neutral canonical home for specialized agent profiles,
+open-format Agent Skills, and repo-specific workflows; see `.agents/README.md`
+for the catalog and responsibility split. Vendor-specific directories such as
+`.codex/` are adapters only and never override this file. Requirement edits use
+the `requirements-change` workflow; other available audits and operational
+workflows are listed in the catalog. Changes confined to `.agents/` or
+vendor-adapter guidance are developer-tooling changes and do not trigger an
+application/SRS version bump unless application requirements or behavior also
+change.
 
 **Requirement views (`docs/requirements_views/`) — consult first to save context.** The full SRS is
-large; you rarely need it whole. Two generated, read-only views (from
+large; you rarely need it whole. Three generated, read-only views (from
 `tools/traceability_sync/generate_views.py`, derived from the SRS **and** the architecture companion
 plus code `Satisfies:` tags — the index covers every `FR-`/`UIR-`/`DR-`/`CR-`/`NFR-` requirement from
 both files):
-- `requirements_index.md` — terse one-line-per-requirement summary (~13K tokens); use for **broad**
+- `requirements_index.md` — terse one-line-per-requirement summary (~25K tokens); use for **broad**
   understanding.
 - `code_to_requirements.md` (+ `.json`) — source file → requirement IDs it implements (from code
   `Satisfies:` tags); use for **targeted** work (look up the file you're editing, read just those IDs).
@@ -132,13 +137,13 @@ not stop short:
 2. **Implement the changes.** In every new or changed function, update the docstring with a
    `Satisfies:` tag citing the relevant requirement ID(s).
 3. **Update the requirements** with the traceability mapping to the new and changed functions.
-3a. **Regenerate the views** — run `python tools/traceability_sync/generate_views.py` and commit
+3a. **Regenerate the views** — run `.venv/Scripts/python.exe tools/traceability_sync/generate_views.py` and commit
    `docs/requirements_views/` (see "Requirement views" above; never hand-edit them). The views derive
    from the specs, code `Satisfies:` tags, **and** test `Verifies:` tags.
 4. **Add or update the tests** for the new/changed behaviour, and tag each test function's docstring
    with a `Verifies:` line citing the requirement ID(s) it exercises (the test-suite counterpart of
-   `Satisfies:`). Then **run the unit tests** (`pytest`). Check coverage with
-   `python tools/traceability_sync/agent_toolset.py --coverage` — it lists requirements with no
+   `Satisfies:`). Then **run the unit tests** (`.venv/Scripts/python.exe -m pytest`). Check coverage with
+   `.venv/Scripts/python.exe tools/traceability_sync/agent_toolset.py --coverage` — it lists requirements with no
    verifying test and any stale `Verifies:` tags.
 4a. **Update the integration (HIL) test suite** (`integration/`) when the change touches behaviour it
    exercises — the X-Modem protocol round-trips, the GUI-over-real-serial flows (connect/disconnect,
@@ -148,7 +153,7 @@ not stop short:
    `@pytest.mark.mt("MT-..", "FR-..")` MT-ID/requirement tags accurate, and update
    `integration/README.md` if the manual-vs-automated split changes. The HIL suite needs a real CP/M
    peer, so it is **not** part of the default `pytest` run or CI — verify it with a bench run
-   (`pytest integration/`, plus `--run-destructive` for the backup/restore cases) when hardware is
+   (`.venv/Scripts/python.exe -m pytest integration/`, plus `--run-destructive` for the backup/restore cases) when hardware is
    available, and record the outcome. If hardware is not at hand, state in the step-8 summary that the
    integration update is written but its bench run is pending. If the change touches no HIL-covered
    behaviour (e.g. a pure architecture `CR-`/`NFR-` constraint with no protocol/GUI effect), state

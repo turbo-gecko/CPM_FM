@@ -37,5 +37,8 @@ jobs:
         # tags. Fix locally with: python tools/traceability_sync/generate_views.py
         run: python tools/traceability_sync/generate_views.py --check
 
+      - name: Validate AI assets
+        run: python tools/ai/validate.py
+
       - name: Test
         run: pytest
