@@ -1,13 +1,13 @@
 {
   "version": "2.1",
   "generated": "auto",
-  "total_tests": 59,
+  "total_tests": 60,
   "tiers": {
-    "hil": 47,
+    "hil": 48,
     "visual": 12
   },
   "evidence_classification": {
-    "supplementary": 1,
+    "supplementary": 2,
     "partial": 52,
     "equivalent": 6
   },
@@ -210,6 +210,12 @@
       ],
       "count": 1
     },
+    "MT-T07": {
+      "tests": [
+        "integration/test_batch_transfer.py::test_batch_abort_on_mid_file_failure[rc2014]"
+      ],
+      "count": 1
+    },
     "MT-T10": {
       "tests": [
         "integration/test_protocol_transfers.py::test_round_trip_1k[rc2014]",
@@ -343,6 +349,7 @@
     "FR-105",
     "FR-106",
     "FR-107",
+    "FR-108",
     "FR-111",
     "FR-114",
     "FR-117",
@@ -417,6 +424,23 @@
         "FR-105",
         "FR-106",
         "FR-107"
+      ],
+      "evidence": "supplementary",
+      "gated": []
+    },
+    {
+      "nodeid": "integration/test_batch_transfer.py::test_batch_abort_on_mid_file_failure[rc2014]",
+      "file": "test_batch_transfer.py",
+      "test": "test_batch_abort_on_mid_file_failure",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt",
+        "req"
+      ],
+      "manual_id": "MT-T07",
+      "requirements": [
+        "FR-108"
       ],
       "evidence": "supplementary",
       "gated": []
