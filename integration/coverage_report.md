@@ -1,13 +1,13 @@
 # Integration Test Coverage Report
 
 **Generated from:** `integration/coverage_manifest.json` v2.1
-**Total automated tests:** 61
+**Total automated tests:** 62
 
 ## Test Tiers
 
 | Tier | Count |
 |---|---:|
-| hil | 49 |
+| hil | 50 |
 | visual | 12 |
 
 ## Evidence Classification
@@ -16,10 +16,10 @@
 |---|---:|
 | equivalent | 6 |
 | partial | 52 |
-| supplementary | 3 |
+| supplementary | 4 |
 | manual-only | 0 |
 
-## Manual ID Coverage (51 unique IDs)
+## Manual ID Coverage (52 unique IDs)
 
 | MT-ID | Tests | Evidence |
 |---|---|---|
@@ -59,6 +59,7 @@
 | MT-T07 | 1 | partial |
 | MT-T10 | 2 | partial |
 | MT-T13 | 1 | partial |
+| MT-T14 | 1 | partial |
 | MT-T15 | 1 | partial |
 | MT-T16 | 1 | partial |
 | MT-TH01 | 1 | partial |
@@ -85,6 +86,7 @@
 |---|---|---|---|---|---|
 | `test_batch_transfer_sequential_multi_file` | hil | MT-T06 | FR-105, FR-106, FR-107 | supplementary | — |
 | `test_batch_abort_on_mid_file_failure` | hil | MT-T07 | FR-108 | supplementary | — |
+| `test_cancel_during_later_batch_file` | hil | MT-T14 | FR-120 | supplementary | — |
 | `test_cancel_upload_while_transferring` | hil | MT-T13 | FR-120, NFR-003m | supplementary | — |
 | `test_remote_delete_removes_file` | hil | MT-F08 | FR-111, FR-117, FR-118 | partial | — |
 | `test_remote_rename_changes_name` | hil | MT-F07 | FR-111, FR-114, FR-117 | partial | — |

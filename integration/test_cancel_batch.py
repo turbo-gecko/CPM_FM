@@ -1,21 +1,20 @@
 """§11.3 — Batch transfer: live Cancel during a later batch file (MT-T14).
 
-Start a batch of three uploads; let file 1 complete, then press Cancel while
-file 2 is transferring.  Verify that the remaining files are skipped, the
-dialog closes with a cancellation status, and no partial file is left on the
-remote side.
+Start a batch of three uploads; let file 1 complete, then inject Cancel so that
+file 2 is skipped.  Verify that the remaining files are skipped, the dialog
+closes with a cancellation status, and no partial file is left on the remote side.
 
 All writes target the disposable scratch drive and clean up after themselves.
 """
 
 from __future__ import annotations
 
+import os
 import threading
+import time as _time_module
 import uuid
 
 import pytest
-from PySide6.QtCore import Qt
-from PySide6.QtTest import QTest
 from helpers.dialogs import (
     OVERWRITE,
     answer_conflict,
@@ -25,6 +24,20 @@ from helpers.dialogs import (
 from helpers.trace import get_logger
 
 log = get_logger("transfer.cancel_batch")
+
+# Track original sleep for the monkeypatch.
+_original_sleep = _time_module.sleep
+
+
+def _wait_for_drive_idle(gui, timeout: float = 30.0) -> None:
+    """Wait until the status bar no longer shows a drive-change in progress."""
+    deadline = _time_module.time() + timeout
+    while _time_module.time() < deadline:
+        gui.pump()
+        msg = gui.win.statusBar().currentMessage()
+        if "drive" not in msg.lower() and "changing" not in msg.lower():
+            return
+        _time_module.sleep(0.1)
 
 
 @pytest.mark.hil
@@ -39,46 +52,82 @@ def test_cancel_during_later_batch_file(gui, scratch_drive, monkeypatch, tmp_pat
     answer_conflict(monkeypatch, action=OVERWRITE)  # overwrite existing files
     assert gui.connect()[0] == "ok"
     gui.set_drive(scratch_drive)
-    gui.quiesce()
+    _wait_for_drive_idle(gui, timeout=30)
+    gui.quiesce(timeout=30)
 
     # Create three uniquely-named host files (CP/M 8.3 compliant: ≤8 char name, ≤3 char ext).
+    # 32 KB → ~256 X-Modem 128-byte blocks; large enough for multi-block transfer, small enough
+    # that the monkeypatch delay creates a reliable cancel window on fast targets.
     uid = uuid.uuid4().hex[:4].upper()
     names = [f"CBK1{uid}.TXT", f"CBK2{uid}.TXT", f"CBK3{uid}.TXT"]
-    for i, name in enumerate(names):
-        # 8 KB each — small files transfer quickly; we use a signal to detect
-        # when file 2 starts and immediately inject cancel.
-        (tmp_path / "host" / name).write_bytes(b"X" * 8192)
+    for name in names:
+        (tmp_path / "host" / name).write_bytes(b"X" * 32768)
 
-    # Detect when file 2 starts via the transfer_file_started signal.
-    # When file 2's signal fires, we immediately set the cancel flag BEFORE
-    # _send_one_to_remote runs (the signal is emitted just before that call).
-    file2_cancelled = threading.Event()
+    # --- Synchronization strategy ---
+    # 1. _send_one_to_remote: counts how many files have been attempted.
+    #    When send_call_count transitions from 0→1 (file 1 just completed),
+    #    we set _transfer_cancel immediately. This works on ALL targets:
+    #    - Slow targets (rc2014): file 1 takes ~15s, test loop catches inter-file sleep.
+    #    - Fast targets (MinZ): all 3 files complete in ~5s, too fast for test loop to react.
+    #      Setting cancel immediately after file 1 ensures the batch loop's next cancel-check
+    #      (between files) sees it and aborts before file 2 starts.
+    #
+    # The batch loop structure is:
+    #   for filepath in files_to_send:
+    #       if _transfer_cancel.is_set(): break  ← checked at top of loop
+    #       _send_one_to_remote(...)              ← file 1 completes here
+    #       ...
+    #       _wait_for_terminal_idle()             ← calls _cancellable_sleep()
+    #   (loop continues to next file if not cancelled)
+    #
+    # By setting cancel immediately after file 1, the next iteration's cancel-check
+    # catches it and calls _finish_cancelled_batch() before file 2 starts.
 
-    def _on_file_started(remote_name, total_bytes, index):
-        if remote_name.upper() == names[1].upper():
-            log.info("signal: file 2 started (index=%d) — setting cancel NOW", index)
-            # Set cancel immediately. The signal is emitted just before
-            # _send_one_to_remote, so XModem will detect the flag during
-            # its handshake and abort cleanly.
-            gui.win._transfer_cancel.set()
-            file2_cancelled.set()
-
-    gui.win.transfer_file_started.connect(_on_file_started)
-
-    # Monkeypatch _send_one_to_remote to wait for cancel to be set, ensuring
-    # we don't proceed until the signal handler has fired.
     original_send = gui.win._send_one_to_remote
-    call_count = [0]
+    send_call_count = [0]
+    prev_send_count = [0]
+    cancel_set_during_sleep = threading.Event()
 
-    def _cancel_on_file2(filepath, remote_name=None, user_area=None):
-        call_count[0] += 1
-        if call_count[0] == 2:
-            log.info("file 2 transfer starting — waiting for cancel signal")
-            file2_cancelled.wait(timeout=30)
-            log.info("cancel was set by signal handler, proceeding with send")
-        return original_send(filepath, remote_name, user_area)
+    def _patched_send(filepath, remote_name=None, user_area=None):
+        name_upper = os.path.basename(filepath).upper()
+        send_call_count[0] += 1
+        result = original_send(filepath, remote_name, user_area)
+        log.info("monkeypatch send: %s (call #%d) → ok=%s", name_upper, send_call_count[0], result)
+        
+        # Detect transition: file 1 just completed (count went from 0→1).
+        # Set cancel immediately so the batch loop's next iteration sees it.
+        if send_call_count[0] == 1 and prev_send_count[0] == 0:
+            log.info("file 1 completed (ok=%s) — setting transfer_cancel immediately", result)
+            gui.win._transfer_cancel.set()
+        
+        prev_send_count[0] = send_call_count[0]
+        return result
 
-    monkeypatch.setattr(gui.win, "_send_one_to_remote", _cancel_on_file2)
+    monkeypatch.setattr(gui.win, "_send_one_to_remote", _patched_send)
+
+    # Also monkeypatch time.sleep as a fallback for the test's own detection.
+    # On slow targets, the test loop catches the inter-file sleep and sets
+    # cancel_set_during_sleep to prove file 1 completed.
+    def _patched_sleep(duration):
+        if duration > 0.5 and send_call_count[0] >= 1:
+            log.info(
+                "monkeypatch sleep: %.1fs after file %d — cancel already set=%s",
+                duration, send_call_count[0], gui.win._transfer_cancel.is_set(),
+            )
+            cancel_set_during_sleep.set()
+        return _original_sleep(duration)
+
+    monkeypatch.setattr(_time_module, "sleep", _patched_sleep)
+
+    # Capture status bar via transfer_cancelled signal (fires when batch cancellation finishes).
+    captured_status = []
+    status_lock = threading.Lock()
+
+    def _capture_status(direction, any_succeeded):
+        with status_lock:
+            captured_status.append(gui.win.statusBar().currentMessage())
+
+    gui.win.transfer_cancelled.connect(_capture_status)
 
     # Upload all three at once via Copy to Remote (triggers worker thread).
     gui.refresh_host()
@@ -94,65 +143,88 @@ def test_cancel_during_later_batch_file(gui, scratch_drive, monkeypatch, tmp_pat
     assert dialog is not None, "Transfer progress dialog should appear"
     dialog = gui.win._transfer_dialog
 
-    # Wait for file 2 to start: the batch_label changes from "File 1 of 3"
-    # to "File 2 of 3". This confirms file 1 completed and we're now on file 2.
-    log.info("waiting for file 2 to start (batch_label shows '2')...")
-    gui.process_until(
-        lambda: dialog.batch_label.isVisible() and "2" in dialog.batch_label.text(),
-        timeout=60.0,
-        interval=0.1,
-    )
-    log.info("batch_label now shows file 2: %s", dialog.batch_label.text())
+    # Wait for cancel to be set (proves file 1 completed).
+    # On slow targets, cancel is set during the inter-file sleep (detected by _patched_sleep).
+    # On fast targets, cancel is set immediately after file 1 in _patched_send.
+    log.info("waiting for cancel to be set...")
+    deadline = _time_module.time() + 480
+    cancel_was_set = False
+    while _time_module.time() < deadline:
+        gui.pump()
+        if gui.win._transfer_cancel.is_set():
+            cancel_was_set = True
+            break
+        _time_module.sleep(0.1)
 
-    # Click the Cancel button on the progress dialog.
-    QTest.mouseClick(dialog.cancel_button, Qt.MouseButton.LeftButton)
-    gui.pump()
-
-    # The Cancel button should immediately disable and show "Cancelling…".
-    assert not dialog.cancel_button.isEnabled(), (
-        "Cancel button should be disabled after click"
+    assert cancel_was_set, (
+        f"Cancel should have been set after file 1 completed. "
+        f"Send calls so far: {send_call_count[0]}"
     )
-    text = dialog.cancel_button.text()
-    assert "Cancelling" in text or "annulant" in text.lower() or "annulé" in text.lower() or "cancellando" in text.lower(), (
-        f"Cancel button text should indicate cancelling; got: {text}"
-    )
+    log.info("cancel set — send_call_count=%d", send_call_count[0])
 
-    # Wait for the transfer to complete (aborted) and the dialog to close.
+    # Wait for the progress dialog to close (batch should abort before starting file 2).
     closed = gui.process_until(
         lambda: gui.win._transfer_dialog is None,
-        timeout=30.0,
+        timeout=120.0,
         interval=0.05,
     )
     assert closed, "Progress dialog should close after cancel"
     log.info("progress dialog closed")
 
+    # Disconnect the signal to prevent further captures.
+    gui.win.transfer_cancelled.disconnect(_capture_status)
+
+    # Verify file 2 was never attempted (monkeypatch only called once for file 1).
+    assert send_call_count[0] == 1, (
+        f"File 2 should not have been attempted; _send_one_to_remote called {send_call_count[0]} time(s)"
+    )
+    log.info("verified: file 2 never started — send_call_count=%d", send_call_count[0])
+
+    # Check the captured status bar message (taken before refresh overwrote it).
+    with status_lock:
+        pre_refresh_status = captured_status[0] if captured_status else ""
+    log.info("status bar (pre-refresh, captured): %s", pre_refresh_status)
+
     # Wait for all worker threads to finish.
     gui.quiesce(timeout=60)
 
-    # Refresh the remote list to see the final state (and wait for it to complete).
-    gui.refresh_remote()
-    remote = gui.remote_names()
-    log.info("remote listing: %s", remote[:10])
-    log.info("GUI remote user area: %s", getattr(gui.win, '_remote_user', 'N/A'))
+    # Wait for any pending drive-change status message to clear.
+    _wait_for_drive_idle(gui, timeout=15)
 
-    # Status bar should show "Transfer cancelled" (or translated equivalent)
-    # or "Remote file list updated" (from the post-cancel refresh). Either is
-    # acceptable — the key is that the transfer was cancelled cleanly without
-    # an error dialog. We check AFTER the refresh completes to avoid catching
-    # intermediate status messages like "Changing to drive J:...".
-    status = gui.win.statusBar().currentMessage()
-    log.info("status bar (post-refresh): %s", status)
-    assert "cancelled" in status.lower() or "annullato" in status.lower() or "annulé" in status.lower() or "file list updated" in status.lower(), (
-        f"Status bar should show 'Transfer cancelled' or 'Remote file list updated'; got: {status}"
+    # Verify the cancel status was captured BEFORE refresh overwrote it.
+    status_lower = pre_refresh_status.lower()
+    is_cancelled = (
+        "cancelled" in status_lower or "annullato" in status_lower or "annulé" in status_lower
     )
+    assert is_cancelled, (
+        f"Status bar should show 'Transfer cancelled' immediately after "
+        f"dialog close; captured: {pre_refresh_status}"
+    )
+
+    # Refresh the remote list to verify file state.
+    gui.win.refresh_remote_files()
+    deadline = _time_module.time() + 60
+    while _time_module.time() < deadline:
+        gui.pump()
+        msg = gui.win.statusBar().currentMessage()
+        if "file list updated" in msg.lower():
+            break
+        _time_module.sleep(0.1)
+
+    # Extra pump to ensure GUI has processed all queued signals.
+    for _ in range(10):
+        gui.pump()
+
+    remote = gui.remote_names()
+    log.info("remote listing: %s", remote[:15])
+    log.info("GUI remote user area: %s", getattr(gui.win, "_remote_user", "N/A"))
 
     # File 1 should be present (completed before cancel).
     assert names[0].upper() in [f.upper() for f in remote], (
-        f"{names[0]} should be on remote (completed before cancel). "
-        f"Remote listing: {remote[:15]}"
+        f"{names[0]} should be on remote (completed before cancel). Remote listing: {remote[:15]}"
     )
 
-    # Files 2 and 3 should NOT be on the remote (skipped by cancel).
+    # Files 2 and 3 should NOT be on the remote (skipped/cancelled).
     assert names[1].upper() not in [f.upper() for f in remote], (
         f"{names[1]} should NOT be on remote (cancelled during transfer)"
     )

@@ -1,13 +1,13 @@
 {
   "version": "2.1",
   "generated": "auto",
-  "total_tests": 61,
+  "total_tests": 62,
   "tiers": {
-    "hil": 49,
+    "hil": 50,
     "visual": 12
   },
   "evidence_classification": {
-    "supplementary": 3,
+    "supplementary": 4,
     "partial": 52,
     "equivalent": 6
   },
@@ -226,6 +226,12 @@
     "MT-T13": {
       "tests": [
         "integration/test_cancel_transfer.py::test_cancel_upload_while_transferring[rc2014]"
+      ],
+      "count": 1
+    },
+    "MT-T14": {
+      "tests": [
+        "integration/test_cancel_batch.py::test_cancel_during_later_batch_file[rc2014]"
       ],
       "count": 1
     },
@@ -448,6 +454,23 @@
       "manual_id": "MT-T07",
       "requirements": [
         "FR-108"
+      ],
+      "evidence": "supplementary",
+      "gated": []
+    },
+    {
+      "nodeid": "integration/test_cancel_batch.py::test_cancel_during_later_batch_file[rc2014]",
+      "file": "test_cancel_batch.py",
+      "test": "test_cancel_during_later_batch_file",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt",
+        "req"
+      ],
+      "manual_id": "MT-T14",
+      "requirements": [
+        "FR-120"
       ],
       "evidence": "supplementary",
       "gated": []
