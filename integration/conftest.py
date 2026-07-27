@@ -227,6 +227,40 @@ def _user_area_baseline(request):
     yield
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _scratch_drive_baseline(request):
+    """Wipe every selected target's scratch drive before any test runs.
+
+    Fast targets (MinZ, eZT-RCB) can fill their SD-card scratch drives during a
+    long session; subsequent uploads silently fail with X-Modem write errors when
+    the drive is full. This fixture connects to each target once, up front, and
+    erases all files from the declared scratch drive so every test starts with a
+    clean slate — mirroring the per-test erase-before pattern used in protocol
+    tests but applied globally to prevent spurious failures.
+
+    Skipped silently when a target has no ``scratch_drive`` configured or when
+    the connection fails (unreachable hardware → tests auto-skip).
+    """
+    targets = getattr(request.config, "_hil_targets", None) or []
+    for target in targets:
+        if not target.scratch_drive:
+            continue
+        try:
+            from helpers.peer import CpmPeer, PeerError
+
+            p = CpmPeer(target.load_settings())
+            try:
+                p.connect()
+                p.set_user(0)
+                p.wipe_drive(target.scratch_drive)
+            finally:
+                p.close()
+        except (PeerError, OSError) as e:
+            log.warning("scratch-drive baseline skipped for %s: %s", target.name, e)
+        _await_port_free(target.load_settings())
+    yield
+
+
 @pytest.fixture(scope="module")
 def peer(target):
     """A connected :class:`CpmPeer` for the target, shared across a test module.
