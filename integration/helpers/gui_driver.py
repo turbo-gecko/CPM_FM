@@ -143,18 +143,25 @@ class GuiDriver:
 
     def remote_names(self) -> list[str]:
         lst = self.win.remote_list
-        return [lst.item(i).text() for i in range(lst.count())]
+        return [
+            lst.item(i).data(Qt.ItemDataRole.UserRole) or lst.item(i).text()
+            for i in range(lst.count())
+        ]
 
     def host_names(self) -> list[str]:
         lst = self.win.host_list
-        return [lst.item(i).text() for i in range(lst.count())]
+        return [
+            lst.item(i).data(Qt.ItemDataRole.UserRole) or lst.item(i).text()
+            for i in range(lst.count())
+        ]
 
     def _select(self, list_widget, names: list[str]) -> None:
         wanted = {n.upper() for n in names}
         list_widget.clearSelection()
         for i in range(list_widget.count()):
             item = list_widget.item(i)
-            if item.text().upper() in wanted:
+            canonical_name = item.data(Qt.ItemDataRole.UserRole) or item.text()
+            if canonical_name.upper() in wanted:
                 item.setSelected(True)
         self.pump()
 
@@ -182,13 +189,19 @@ class GuiDriver:
         self.win.refresh_host_files()
         self.quiesce()
 
-    def upload(self, names: list[str]) -> None:
-        """Select host files and Copy to Remote (real worker thread)."""
+    def upload(self, names: list[str], quiesce_timeout: float = 15.0) -> None:
+        """Select host files and Copy to Remote (real worker thread).
+
+        Args:
+            names: List of filenames to upload.
+            quiesce_timeout: Seconds to wait for transfers to complete. Use 60+
+                for slow targets or large files.
+        """
         step(log, "upload %s", names)
         self.refresh_host()
         self.select_host(names)
         self.win.do_copy_to_remote()
-        self.quiesce()
+        self.quiesce(timeout=quiesce_timeout)
 
     def download(self, names: list[str]) -> None:
         """Select remote files and Copy to Host (real worker thread)."""
