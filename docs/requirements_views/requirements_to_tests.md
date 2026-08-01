@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_303/502 requirements have a verifying test; 199 untested; 0 stale tag(s)._
+_305/502 requirements have a verifying test; 197 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -95,6 +95,8 @@ _303/502 requirements have a verifying test; 199 untested; 0 stale tag(s)._
 | FR-063 | `tests/test_gui_smoke.py:test_host_update_button_refreshes_host_only` |
 | FR-070 | `tests/test_gui_smoke.py:test_main_window_constructs` |
 | FR-073 | `tests/test_gui_smoke.py:test_update_switches_to_displayed_drive_first` |
+| FR-075 | `tests/test_gui_smoke.py:test_capture_terminal_response_serializes_concurrent_callers` |
+| FR-076 | `tests/test_gui_smoke.py:test_capture_terminal_response_serializes_concurrent_callers` |
 | FR-078 | `tests/test_file_filter.py:test_filter_and_sort_default_is_name_ascending_no_filter`, `tests/test_gui_smoke.py:test_default_remote_list_is_name_ascending` |
 | FR-080 | `tests/test_backup_restore.py:test_do_backup_requires_connection`, `tests/test_gui_smoke.py:test_retransfer_blocked_when_not_connected` |
 | FR-081 | `tests/test_xmodem.py:test_send_file_returns_false_when_file_missing` |
@@ -365,8 +367,6 @@ These defined requirements have no `Verifies:` test tag:
 - FR-071
 - FR-072
 - FR-074
-- FR-075
-- FR-076
 - FR-077
 - FR-079
 - FR-083

@@ -391,6 +391,12 @@
     "FR-073": [
       "tests/test_gui_smoke.py:test_update_switches_to_displayed_drive_first"
     ],
+    "FR-075": [
+      "tests/test_gui_smoke.py:test_capture_terminal_response_serializes_concurrent_callers"
+    ],
+    "FR-076": [
+      "tests/test_gui_smoke.py:test_capture_terminal_response_serializes_concurrent_callers"
+    ],
     "FR-078": [
       "tests/test_file_filter.py:test_filter_and_sort_default_is_name_ascending_no_filter",
       "tests/test_gui_smoke.py:test_default_remote_list_is_name_ascending"
@@ -1568,8 +1574,6 @@
     "FR-071",
     "FR-072",
     "FR-074",
-    "FR-075",
-    "FR-076",
     "FR-077",
     "FR-079",
     "FR-083",

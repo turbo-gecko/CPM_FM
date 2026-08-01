@@ -134,6 +134,5 @@ def test_conflict_apply_to_all_persists_across_batch(
 
     # Clean up
     answer_file_action(monkeypatch, accepted=True)
-    gui.win._remote_delete(name1)
-    gui.win._remote_delete(name2)
-    gui.quiesce()
+    gui.win._remote_delete([name1, name2])
+    assert gui.quiesce(), "remote-delete cleanup worker did not quiesce"

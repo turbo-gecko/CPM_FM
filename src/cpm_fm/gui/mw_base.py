@@ -43,6 +43,7 @@ class MainWindowMixinBase:
         _local_echo: bool
         _remote_capture_buffer: str
         _capture_active: bool
+        _terminal_capture_lock: threading.Lock
         _term_engine: VT100Engine
         # The non-modal Terminal Window (UIR-060) and Transfer History window
         # (UIR-083), created on first use; None until then.

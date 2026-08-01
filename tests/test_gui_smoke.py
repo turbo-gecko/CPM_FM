@@ -7,6 +7,7 @@ Run headless via the ``QT_QPA_PLATFORM=offscreen`` environment variable (set in 
 
 import os
 import tempfile
+import threading
 import time
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -2573,6 +2574,48 @@ def test_capture_terminal_response_probe_cancel_bails_early(qapp, monkeypatch, s
         monkeypatch.setattr(win, "handle_terminal_send", lambda *a, **k: None)
         win._probe_cancel.set()
         assert win._capture_terminal_response("", cancel_event=win._probe_cancel) == ""
+    finally:
+        win.close()
+
+
+def test_capture_terminal_response_serializes_concurrent_callers(qapp, monkeypatch, state):
+    """Verifies: FR-075, FR-076."""
+    # Each command must retain exclusive ownership of the shared capture buffer
+    # until its response has gone idle; otherwise concurrent workers can issue
+    # overlapping serial writes and consume one another's response bytes.
+    win = MainWindow(state)
+    first_send_started = threading.Event()
+    release_first_send = threading.Event()
+    second_send_started = threading.Event()
+    calls: list[str] = []
+
+    def fake_send(command: str, append_eol: bool = True) -> None:
+        calls.append(command)
+        if len(calls) == 1:
+            first_send_started.set()
+            release_first_send.wait(timeout=1.0)
+        else:
+            second_send_started.set()
+
+    try:
+        monkeypatch.setattr(win, "handle_terminal_send", fake_send)
+        monkeypatch.setattr("cpm_fm.gui.mw_remote.time.sleep", lambda _secs: None)
+        first = threading.Thread(target=win._capture_terminal_response, args=("ERA A.TXT",))
+        second = threading.Thread(target=win._capture_terminal_response, args=("ERA B.TXT",))
+        first.start()
+        assert first_send_started.wait(timeout=1.0)
+        second.start()
+        try:
+            assert not second_send_started.wait(timeout=0.1), (
+                "a second terminal capture started before the first released the shared buffer"
+            )
+        finally:
+            release_first_send.set()
+            first.join(timeout=1.0)
+            second.join(timeout=1.0)
+        assert second_send_started.is_set()
+        assert not first.is_alive()
+        assert not second.is_alive()
     finally:
         win.close()
 

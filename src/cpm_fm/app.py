@@ -175,6 +175,10 @@ class MainWindow(
 
         # UI State
         self.terminal_win: TerminalWindow | None = None
+        # FR-075/FR-076: every terminal-response capture uses the same buffer
+        # and active flag. Serialize complete capture cycles so independently
+        # launched workers cannot overlap writes or consume each other's bytes.
+        self._terminal_capture_lock = threading.Lock()
         # UIR-082/FR-168: the non-modal Transfer History window, reused across
         # openings (created on first use) and restored on start-up if it was open.
         self._history_dialog: TransferHistoryDialog | None = None

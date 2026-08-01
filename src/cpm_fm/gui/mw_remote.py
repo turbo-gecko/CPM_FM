@@ -430,19 +430,20 @@ class _RemoteMixin(MainWindowMixinBase):
 
         Satisfies: FR-047.
         """
-        self._remote_capture_buffer = ""
-        self._capture_active = True
-        waited = 0.0
-        poll = 0.05
-        found = False
-        while waited < timeout:
-            if target in self._remote_capture_buffer:
-                found = True
-                break
-            time.sleep(poll)
-            waited += poll
-        self._capture_active = False
-        return found
+        with self._terminal_capture_lock:
+            self._remote_capture_buffer = ""
+            self._capture_active = True
+            try:
+                waited = 0.0
+                poll = 0.05
+                while waited < timeout:
+                    if target in self._remote_capture_buffer:
+                        return True
+                    time.sleep(poll)
+                    waited += poll
+                return False
+            finally:
+                self._capture_active = False
 
     def do_boot_sequence(self):
         """Manually run the boot sequence from the Terminal Window (FR-049).
@@ -637,33 +638,36 @@ class _RemoteMixin(MainWindowMixinBase):
         during the probe wakes it promptly (FR-050). When it is supplied the
         waits are cancellable regardless of ``cancellable``.
         """
-        self._remote_capture_buffer = ""
-        self._capture_active = True
-        eol_char = EOL_MAP.get(self.settings.get("eol", "CR"), "\r")
-        self.handle_terminal_send(command + eol_char)
+        with self._terminal_capture_lock:
+            self._remote_capture_buffer = ""
+            self._capture_active = True
+            try:
+                eol_char = EOL_MAP.get(self.settings.get("eol", "CR"), "\r")
+                self.handle_terminal_send(command + eol_char)
 
-        def _settle(secs: float) -> bool:
-            # Returns True when the wait should stop early (cancellation).
-            if cancel_event is not None:
-                return self._cancellable_sleep(secs, cancel_event)
-            if cancellable:
-                return self._cancellable_sleep(secs)
-            time.sleep(secs)
-            return False
+                def _settle(secs: float) -> bool:
+                    # Returns True when the wait should stop early (cancellation).
+                    if cancel_event is not None:
+                        return self._cancellable_sleep(secs, cancel_event)
+                    if cancellable:
+                        return self._cancellable_sleep(secs)
+                    time.sleep(secs)
+                    return False
 
-        idle_window = 0.5
-        max_wait = 10.0
-        if not _settle(1.0):
-            waited = 1.0
-            while waited < max_wait:
-                prev_len = len(self._remote_capture_buffer)
-                if _settle(idle_window):
-                    break
-                waited += idle_window
-                if len(self._remote_capture_buffer) == prev_len:
-                    break
-        self._capture_active = False
-        return self._remote_capture_buffer
+                idle_window = 0.5
+                max_wait = 10.0
+                if not _settle(1.0):
+                    waited = 1.0
+                    while waited < max_wait:
+                        prev_len = len(self._remote_capture_buffer)
+                        if _settle(idle_window):
+                            break
+                        waited += idle_window
+                        if len(self._remote_capture_buffer) == prev_len:
+                            break
+                return self._remote_capture_buffer
+            finally:
+                self._capture_active = False
 
     def _do_refresh_remote_logic(self):
         """
