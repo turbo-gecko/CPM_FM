@@ -1,14 +1,14 @@
 # Integration Test Coverage Report
 
 **Generated from:** `integration/coverage_manifest.json` v3.0
-**Total collected test functions:** 85
+**Total collected test functions:** 107
 **Execution status:** Not run by this generator; physical outcomes remain in `integration/results/runs_ledger.json`.
 
 ## Test Tiers
 
 | Tier | Count |
 |---|---:|
-| gui-integration | 17 |
+| gui-integration | 39 |
 | hil | 56 |
 | visual | 12 |
 
@@ -17,14 +17,14 @@
 | Classification | Count |
 |---|---:|
 | equivalent | 0 |
-| partial | 68 |
+| partial | 90 |
 | supplementary | 17 |
 | manual-only | 0 |
 
 ## Manual Scenario Decisions
 
 - Manual plan cases: **217**
-- Cases with reviewed automated support: **62** (**28.6%** raw mapped-case ratio)
+- Cases with reviewed automated support: **79** (**36.4%** raw mapped-case ratio)
 - Every remaining case has an explicit `manual-only` decision in the manifest.
 
 | MT-ID | Tests | Best evidence | Manual retained |
@@ -58,9 +58,26 @@
 | MT-CF05 | 1 | partial | yes |
 | MT-D03 | 1 | partial | yes |
 | MT-D06 | 1 | partial | yes |
+| MT-DI01 | 1 | partial | yes |
+| MT-DI02 | 1 | partial | yes |
+| MT-DI03 | 1 | partial | yes |
 | MT-DI04 | 1 | partial | yes |
+| MT-DI05 | 1 | partial | yes |
+| MT-DI06 | 1 | partial | yes |
+| MT-DI07 | 1 | partial | yes |
+| MT-DI08 | 1 | partial | yes |
+| MT-DI10 | 2 | partial | yes |
+| MT-DI12 | 2 | partial | yes |
+| MT-DI13 | 1 | partial | yes |
 | MT-DI14 | 1 | partial | yes |
-| MT-DI21 | 1 | partial | yes |
+| MT-DI15 | 2 | partial | yes |
+| MT-DI16 | 2 | partial | yes |
+| MT-DI17 | 1 | partial | yes |
+| MT-DI18 | 1 | partial | yes |
+| MT-DI19 | 1 | partial | yes |
+| MT-DI20 | 1 | partial | yes |
+| MT-DI21 | 2 | partial | yes |
+| MT-DI22 | 1 | partial | yes |
 | MT-F01 | 1 | partial | yes |
 | MT-F06 | 2 | partial | yes |
 | MT-FV02 | 1 | partial | yes |
@@ -135,6 +152,28 @@
 | `test_disk_image_host_mount_copy_to_remote` | hil | MT-DI04 | FR-106, FR-145, FR-171 | partial | — |
 | `test_disk_image_user_area_transfer_preserves_source` | hil | MT-DI21 | FR-188 | partial | — |
 | `test_remote_image_mount_refuses_connect` | hil | MT-DI14 | FR-176 | partial | — |
+| `test_change_directory_discards_image_workdir_and_repaints_host_pane` | gui-integration | MT-DI06 | FR-171 | partial | — |
+| `test_clean_image_change_directory_does_not_prompt` | gui-integration | MT-DI12 | FR-175, UIR-111 | partial | — |
+| `test_close_dirty_image_cancel_keeps_mount_open` | gui-integration | MT-DI15 | FR-177, UIR-113 | partial | — |
+| `test_close_image_restores_selected_pane_state` | gui-integration | MT-DI15 | FR-177, UIR-113 | partial | — |
+| `test_config_labels_and_named_versus_new_image_save_behavior` | gui-integration | MT-DI18 | FR-174 | partial | — |
+| `test_dirty_image_change_directory_uses_real_unsaved_dialog` | gui-integration | MT-DI12 | FR-175, UIR-111 | partial | — |
+| `test_image_area_filter_scopes_combines_and_resets` | gui-integration | MT-DI22 | FR-189, UIR-120 | partial | — |
+| `test_image_details_action_enabled_only_while_image_is_open` | gui-integration | MT-DI08 | FR-173, UIR-109 | partial | — |
+| `test_image_details_action_opens_real_read_only_table` | gui-integration | MT-DI07 | FR-173, UIR-109 | partial | — |
+| `test_image_directory_persists_and_remote_mount_survives_host_directory_change` | gui-integration | MT-DI17 | FR-176, FR-179 | partial | — |
+| `test_multi_area_image_disambiguates_names_and_details` | gui-integration | MT-DI20 | FR-185, FR-186, UIR-119 | partial | — |
+| `test_multi_area_save_reopen_preserves_areas_and_content` | gui-integration | MT-DI21 | FR-187 | partial | — |
+| `test_new_image_action_creates_empty_selected_pane` | gui-integration | MT-DI16 | FR-178, UIR-114 | partial | — |
+| `test_new_remote_image_copy_first_save_as_and_reopen` | gui-integration | MT-DI16 | FR-178, UIR-114 | partial | — |
+| `test_open_disk_image_action_lists_real_fixture` | gui-integration | MT-DI01 | FR-169, UIR-108 | partial | — |
+| `test_remote_image_backup_and_restore_are_confirmed_local_mirrors` | gui-integration | MT-DI19 | FR-180 | partial | — |
+| `test_remote_mounted_image_uses_real_dialog_copy_buttons_and_save` | gui-integration | MT-DI13 | FR-176, UIR-112 | partial | — |
+| `test_save_image_failure_is_transactional` | gui-integration | MT-DI10 | DR-050, FR-174 | partial | — |
+| `test_save_image_in_place_reopens_with_exact_working_file_set` | gui-integration | MT-DI10 | DR-050, FR-174 | partial | — |
+| `test_unique_image_geometry_is_detected_without_prompt` | gui-integration | MT-DI02 | FR-170 | partial | — |
+| `test_unmatched_image_geometry_selection_and_cancel_preserve_current_pane` | gui-integration | MT-DI03 | FR-170 | partial | — |
+| `test_unreadable_image_error_preserves_current_host_pane` | gui-integration | MT-DI05 | FR-172 | partial | — |
 | `test_drop_cancelled_does_not_transfer` | hil | MT-D06 | FR-137 | partial | — |
 | `test_internal_drop_host_to_remote_uploads` | hil | MT-D03 | FR-137, FR-138 | partial | — |
 | `test_upload_records_history_entry` | hil | — | FR-140, FR-142 | supplementary | — |

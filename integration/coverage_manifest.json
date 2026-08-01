@@ -2,21 +2,21 @@
   "version": "3.0",
   "generated": "deterministic",
   "semantic_review": "completed-2026-08-01",
-  "total_tests": 85,
+  "total_tests": 107,
   "tiers": {
-    "gui-integration": 17,
+    "gui-integration": 39,
     "hil": 56,
     "visual": 12
   },
   "evidence_classification": {
     "equivalent": 0,
-    "partial": 68,
+    "partial": 90,
     "supplementary": 17,
     "manual-only": 0
   },
   "manual_plan_total": 217,
-  "manual_ids_with_automated_support": 62,
-  "raw_mapped_case_ratio": 28.6,
+  "manual_ids_with_automated_support": 79,
+  "raw_mapped_case_ratio": 36.4,
   "manual_coverage_decisions": {
     "MT-BR01": {
       "status": "automated-support",
@@ -379,25 +379,31 @@
       "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI01": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_open_disk_image_action_lists_real_fixture"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI02": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_unique_image_geometry_is_detected_without_prompt"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI03": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_unmatched_image_geometry_selection_and_cancel_preserve_current_pane"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI04": {
       "status": "automated-support",
@@ -409,39 +415,50 @@
       "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI05": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_unreadable_image_error_preserves_current_host_pane"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI06": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_change_directory_discards_image_workdir_and_repaints_host_pane"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI07": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_image_details_action_opens_real_read_only_table"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI08": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_image_details_action_enabled_only_while_image_is_open"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI10": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_save_image_failure_is_transactional",
+        "integration/test_gui_disk_image_target_free.py::test_save_image_in_place_reopens_with_exact_working_file_set"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI11": {
       "status": "manual-only",
@@ -451,18 +468,23 @@
       "note": "No semantically matching integration test is currently mapped."
     },
     "MT-DI12": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_clean_image_change_directory_does_not_prompt",
+        "integration/test_gui_disk_image_target_free.py::test_dirty_image_change_directory_uses_real_unsaved_dialog"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI13": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_remote_mounted_image_uses_real_dialog_copy_buttons_and_save"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI14": {
       "status": "automated-support",
@@ -474,62 +496,79 @@
       "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI15": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_close_dirty_image_cancel_keeps_mount_open",
+        "integration/test_gui_disk_image_target_free.py::test_close_image_restores_selected_pane_state"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI16": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_new_image_action_creates_empty_selected_pane",
+        "integration/test_gui_disk_image_target_free.py::test_new_remote_image_copy_first_save_as_and_reopen"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI17": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_image_directory_persists_and_remote_mount_survives_host_directory_change"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI18": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_config_labels_and_named_versus_new_image_save_behavior"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI19": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_remote_image_backup_and_restore_are_confirmed_local_mirrors"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI20": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_multi_area_image_disambiguates_names_and_details"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI21": {
       "status": "automated-support",
       "tests": [
-        "integration/test_gui_disk_image.py::test_disk_image_user_area_transfer_preserves_source"
+        "integration/test_gui_disk_image.py::test_disk_image_user_area_transfer_preserves_source",
+        "integration/test_gui_disk_image_target_free.py::test_multi_area_save_reopen_preserves_areas_and_content"
       ],
       "best_evidence": "partial",
       "manual_still_required": true,
       "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-DI22": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_disk_image_target_free.py::test_image_area_filter_scopes_combines_and_resets"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-F01": {
       "status": "automated-support",
@@ -1672,6 +1711,7 @@
     "CR-010",
     "DR-033",
     "DR-033a",
+    "DR-050",
     "FR-017a",
     "FR-030",
     "FR-031",
@@ -1743,13 +1783,27 @@
     "FR-165",
     "FR-166",
     "FR-167",
+    "FR-169",
+    "FR-170",
     "FR-171",
+    "FR-172",
+    "FR-173",
+    "FR-174",
+    "FR-175",
     "FR-176",
+    "FR-177",
+    "FR-178",
+    "FR-179",
+    "FR-180",
     "FR-181",
     "FR-182",
     "FR-183",
     "FR-184",
+    "FR-185",
+    "FR-186",
+    "FR-187",
     "FR-188",
+    "FR-189",
     "NFR-001",
     "NFR-003b",
     "NFR-003c",
@@ -1780,7 +1834,15 @@
     "UIR-102",
     "UIR-105",
     "UIR-106",
-    "UIR-107"
+    "UIR-107",
+    "UIR-108",
+    "UIR-109",
+    "UIR-111",
+    "UIR-112",
+    "UIR-113",
+    "UIR-114",
+    "UIR-119",
+    "UIR-120"
   ],
   "tests": [
     {
@@ -2904,6 +2966,615 @@
       "semantic_review": "reviewed-2026-08-01",
       "verifies": [
         "FR-176"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_change_directory_discards_image_workdir_and_repaints_host_pane",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 234,
+      "test": "test_change_directory_discards_image_workdir_and_repaints_host_pane",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI06",
+      "requirements": [
+        "FR-171"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-171"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_clean_image_change_directory_does_not_prompt",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 844,
+      "test": "test_clean_image_change_directory_does_not_prompt",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI12",
+      "requirements": [
+        "FR-175",
+        "UIR-111"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-175",
+        "UIR-111"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_close_dirty_image_cancel_keeps_mount_open",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 797,
+      "test": "test_close_dirty_image_cancel_keeps_mount_open",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI15",
+      "requirements": [
+        "FR-177",
+        "UIR-113"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-177",
+        "UIR-113"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_close_image_restores_selected_pane_state",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 742,
+      "test": "test_close_image_restores_selected_pane_state",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt",
+        "parametrize"
+      ],
+      "manual_id": "MT-DI15",
+      "requirements": [
+        "FR-177",
+        "UIR-113"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-177",
+        "UIR-113"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_config_labels_and_named_versus_new_image_save_behavior",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 1137,
+      "test": "test_config_labels_and_named_versus_new_image_save_behavior",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI18",
+      "requirements": [
+        "FR-174"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-174"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_dirty_image_change_directory_uses_real_unsaved_dialog",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 493,
+      "test": "test_dirty_image_change_directory_uses_real_unsaved_dialog",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt",
+        "parametrize"
+      ],
+      "manual_id": "MT-DI12",
+      "requirements": [
+        "FR-175",
+        "UIR-111"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-175",
+        "UIR-111"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_image_area_filter_scopes_combines_and_resets",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 1477,
+      "test": "test_image_area_filter_scopes_combines_and_resets",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt",
+        "parametrize"
+      ],
+      "manual_id": "MT-DI22",
+      "requirements": [
+        "FR-189",
+        "UIR-120"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-189",
+        "UIR-120"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_image_details_action_enabled_only_while_image_is_open",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 360,
+      "test": "test_image_details_action_enabled_only_while_image_is_open",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI08",
+      "requirements": [
+        "FR-173",
+        "UIR-109"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-173",
+        "UIR-109"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_image_details_action_opens_real_read_only_table",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 292,
+      "test": "test_image_details_action_opens_real_read_only_table",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI07",
+      "requirements": [
+        "FR-173",
+        "UIR-109"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-173",
+        "UIR-109"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_image_directory_persists_and_remote_mount_survives_host_directory_change",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 1040,
+      "test": "test_image_directory_persists_and_remote_mount_survives_host_directory_change",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI17",
+      "requirements": [
+        "FR-176",
+        "FR-179"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-176",
+        "FR-179"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_multi_area_image_disambiguates_names_and_details",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 1344,
+      "test": "test_multi_area_image_disambiguates_names_and_details",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI20",
+      "requirements": [
+        "FR-185",
+        "FR-186",
+        "UIR-119"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-185",
+        "FR-186",
+        "UIR-119"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_multi_area_save_reopen_preserves_areas_and_content",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 1429,
+      "test": "test_multi_area_save_reopen_preserves_areas_and_content",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI21",
+      "requirements": [
+        "FR-187"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-187"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_new_image_action_creates_empty_selected_pane",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 888,
+      "test": "test_new_image_action_creates_empty_selected_pane",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt",
+        "parametrize"
+      ],
+      "manual_id": "MT-DI16",
+      "requirements": [
+        "FR-178",
+        "UIR-114"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-178",
+        "UIR-114"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_new_remote_image_copy_first_save_as_and_reopen",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 955,
+      "test": "test_new_remote_image_copy_first_save_as_and_reopen",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI16",
+      "requirements": [
+        "FR-178",
+        "UIR-114"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-178",
+        "UIR-114"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_open_disk_image_action_lists_real_fixture",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 41,
+      "test": "test_open_disk_image_action_lists_real_fixture",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI01",
+      "requirements": [
+        "FR-169",
+        "UIR-108"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-169",
+        "UIR-108"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_remote_image_backup_and_restore_are_confirmed_local_mirrors",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 1219,
+      "test": "test_remote_image_backup_and_restore_are_confirmed_local_mirrors",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI19",
+      "requirements": [
+        "FR-180"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-180"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_remote_mounted_image_uses_real_dialog_copy_buttons_and_save",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 598,
+      "test": "test_remote_mounted_image_uses_real_dialog_copy_buttons_and_save",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI13",
+      "requirements": [
+        "FR-176",
+        "UIR-112"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-176",
+        "UIR-112"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_save_image_failure_is_transactional",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 455,
+      "test": "test_save_image_failure_is_transactional",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt",
+        "parametrize"
+      ],
+      "manual_id": "MT-DI10",
+      "requirements": [
+        "DR-050",
+        "FR-174"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "DR-050",
+        "FR-174"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_save_image_in_place_reopens_with_exact_working_file_set",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 384,
+      "test": "test_save_image_in_place_reopens_with_exact_working_file_set",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI10",
+      "requirements": [
+        "DR-050",
+        "FR-174"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "DR-050",
+        "FR-174"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_unique_image_geometry_is_detected_without_prompt",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 88,
+      "test": "test_unique_image_geometry_is_detected_without_prompt",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI02",
+      "requirements": [
+        "FR-170"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-170"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_unmatched_image_geometry_selection_and_cancel_preserve_current_pane",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 117,
+      "test": "test_unmatched_image_geometry_selection_and_cancel_preserve_current_pane",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI03",
+      "requirements": [
+        "FR-170"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-170"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image_target_free.py::test_unreadable_image_error_preserves_current_host_pane",
+      "file": "test_gui_disk_image_target_free.py",
+      "line": 189,
+      "test": "test_unreadable_image_error_preserves_current_host_pane",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-DI05",
+      "requirements": [
+        "FR-172"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-172"
       ]
     },
     {

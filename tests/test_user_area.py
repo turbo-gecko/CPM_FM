@@ -468,6 +468,26 @@ def test_area_filter_populated_with_present_areas(qapp, state, tmp_path):
         win.close()
 
 
+def test_cleanup_remote_image_hides_and_resets_area_filter(qapp, state, tmp_path):
+    """Verifies: FR-189, UIR-120."""
+    win = MainWindow(state)
+    try:
+        _arm_remote_image_areas(win, tmp_path)
+        win._update_area_filter("remote")
+        combo = win.remote_area_filter
+        combo.setCurrentIndex(combo.findData(3))
+        assert not combo.isHidden()
+        assert combo.currentData() == 3
+
+        win._cleanup_image_workdir()
+
+        assert combo.isHidden()
+        assert combo.count() == 0
+        assert combo.currentData() is None
+    finally:
+        win.close()
+
+
 def test_area_filter_narrows_listing_to_selected_area(qapp, state, tmp_path):
     """Verifies: FR-189."""
     win = MainWindow(state)

@@ -846,9 +846,10 @@ class _DiskImageMixin(MainWindowMixinBase):
         """Remove the current image working directory, if any (FR-016, FR-019, FR-171).
 
         Called when opening another image, on File > New, on Close Disk Image…
-        (FR-177), and on application exit.
+        (FR-177), and on application exit. Both pane area filters are reset when
+        the image state is cleared (FR-189, UIR-120).
 
-        Satisfies: FR-171, FR-176, FR-177.
+        Satisfies: FR-171, FR-176, FR-177, FR-189, UIR-120.
         """
         # FR-176: note a Remote-pane mount before clearing state, so the Remote
         # pane can be reset to a real-device view below.
@@ -876,6 +877,10 @@ class _DiskImageMixin(MainWindowMixinBase):
         # Image Details… action. FR-185: drop the staged-name→area map too.
         self._image_files = []
         self._image_stage_map = {}
+        # FR-189/UIR-120: neither pane has a mounted image now. Clear and hide
+        # both filters so a Remote-side close cannot leave stale area choices.
+        self._update_area_filter("host")
+        self._update_area_filter("remote")
         if self._image_details_action is not None:
             self._image_details_action.setEnabled(False)
         # UIR-113: no image open → Close Disk Image… is disabled too.

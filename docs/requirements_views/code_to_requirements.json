@@ -266,13 +266,15 @@
     "FR-186",
     "FR-187",
     "FR-188",
+    "FR-189",
     "UIR-108",
     "UIR-109",
     "UIR-110",
     "UIR-111",
     "UIR-112",
     "UIR-113",
-    "UIR-114"
+    "UIR-114",
+    "UIR-120"
   ],
   "src/cpm_fm/gui/mw_file_panes.py": [
     "FR-017",

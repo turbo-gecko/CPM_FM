@@ -213,7 +213,7 @@ _305/502 requirements have a verifying test; 197 untested; 0 stale tag(s)._
 | FR-186 | `tests/test_user_area.py:test_pane_area_map_only_for_mounted_pane` |
 | FR-187 | `tests/test_disk_image/test_write.py:test_write_read_preserves_distinct_user_areas` |
 | FR-188 | `tests/test_user_area.py:test_image_to_remote_matches_source_area`, `tests/test_user_area.py:test_image_to_remote_selected_mode_uses_selected_area` |
-| FR-189 | `tests/test_user_area.py:test_area_filter_all_shows_every_area`, `tests/test_user_area.py:test_area_filter_narrows_listing_to_selected_area`, `tests/test_user_area.py:test_area_filter_populated_with_present_areas`, `tests/test_user_area.py:test_open_image_preserves_area_map_end_to_end` |
+| FR-189 | `tests/test_user_area.py:test_area_filter_all_shows_every_area`, `tests/test_user_area.py:test_area_filter_narrows_listing_to_selected_area`, `tests/test_user_area.py:test_area_filter_populated_with_present_areas`, `tests/test_user_area.py:test_cleanup_remote_image_hides_and_resets_area_filter`, `tests/test_user_area.py:test_open_image_preserves_area_map_end_to_end` |
 | IFR-003 | `tests/test_port_filter.py:test_always_include_appends_absent_configured_port`, `tests/test_port_filter.py:test_always_include_keeps_configured_phantom_port`, `tests/test_port_filter.py:test_empty_after_filtering_falls_back_to_all`, `tests/test_port_filter.py:test_is_phantom_distinguishes_usb_from_legacy`, `tests/test_port_filter.py:test_no_ports_returns_empty_list`, `tests/test_port_filter.py:test_phantom_ports_hidden_by_default`, `tests/test_port_filter.py:test_plain_string_devices_supported`, `tests/test_port_filter.py:test_usb_ports_sorted_before_legacy_naturally` |
 | IFR-004 | `tests/test_config_handler.py:test_load_json_malformed_returns_empty`, `tests/test_config_handler.py:test_load_json_reads_valid_object`, `tests/test_config_handler.py:test_save_json_to_unwritable_path_returns_false` |
 | NFR-001 | `tests/test_vt100_engine.py:test_escape_sequence_split_across_feeds`, `tests/test_vt100_engine.py:test_utf8_multibyte_split_across_feeds` |
@@ -315,7 +315,7 @@ _305/502 requirements have a verifying test; 197 untested; 0 stale tag(s)._
 | UIR-117 | `tests/test_gui_smoke.py:test_general_config_trimmed_fields`, `tests/test_gui_smoke.py:test_remote_config_fields_ungrouped` |
 | UIR-118 | `tests/test_user_area.py:test_user_combo_lists_0_to_15` |
 | UIR-119 | `tests/test_user_area.py:test_pane_area_map_only_for_mounted_pane`, `tests/test_user_area.py:test_render_shows_area_prefix_but_keeps_name` |
-| UIR-120 | `tests/test_user_area.py:test_area_filter_hidden_without_image`, `tests/test_user_area.py:test_area_filter_populated_with_present_areas`, `tests/test_user_area.py:test_open_image_preserves_area_map_end_to_end` |
+| UIR-120 | `tests/test_user_area.py:test_area_filter_hidden_without_image`, `tests/test_user_area.py:test_area_filter_populated_with_present_areas`, `tests/test_user_area.py:test_cleanup_remote_image_hides_and_resets_area_filter`, `tests/test_user_area.py:test_open_image_preserves_area_map_end_to_end` |
 | UIR-121 | `tests/test_gui_smoke.py:test_serial_dialog_show_all_ports_toggle`, `tests/test_port_filter.py:test_show_all_reveals_phantom_ports` |
 
 ## Untested requirements

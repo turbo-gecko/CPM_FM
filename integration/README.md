@@ -19,6 +19,7 @@ invocation: `.venv/Scripts/python.exe -m pytest integration/`.
 > disconnected-port rejection for both whole-drive actions; and MT-BR07 covers
 > Restore filename validation, all without touching hardware. The planned
 > connection/recovery and backup/restore automation backlogs are complete.
+> The planned disk-image target-free backlog is also complete through MT-DI22.
 > Destructive MT-BR09 passes on all five physical targets at clean commit
 > `cadda8d`.
 > See `temp/integration_test_harness_plan.md` for the audited evidence matrix.
@@ -102,6 +103,23 @@ error dialog or lingering worker. MT-BR07 drives the real invalid-name dialog
 through Rename, Skip, and Cancel and verifies the production batch/history
 outcomes. These manual cases remain required for physical peer and genuinely
 free/busy/failing-port evidence.
+
+The same lane supplies target-free disk-image evidence for MT-DI01--DI03,
+DI05--DI08, the local portions of DI10 and DI12, DI13, DI15--DI20, and the
+local save/reopen portion of DI21, plus DI22. These cases drive the real
+File-menu actions, CP/M image parser/extractor/writer, geometry-selection
+contract, Host pane, Change Directory button, in-place save and reopen,
+transactional write failures, the Save/Discard/Cancel dialog, status bar,
+action enablement, Remote-mount dialog, local Copy buttons, dual-pane close
+restoration, new-image creation in both panes, first Save-As path adoption,
+independent image-directory persistence, named-versus-new save behavior,
+confirmed local image Backup/Restore mirroring, temporary-directory cleanup,
+multi-user-area rendering and duplicate-name disambiguation, area-preserving
+save/reopen, user-area filtering in both panes and its close-time reset, and
+the read-only Image Details dialog against deterministic IBM-3740 images
+containing known files. Native file choices are made
+deterministic for headless CI; the manual cases remain retained for
+operator-observed menu/dialog and filesystem evidence.
 
 MT-BR09 additionally runs as destructive HIL: Restore with an empty temporary
 host directory still wipes the nominated scratch drive, starts no transfer

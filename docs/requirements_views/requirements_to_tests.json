@@ -1114,6 +1114,7 @@
       "tests/test_user_area.py:test_area_filter_all_shows_every_area",
       "tests/test_user_area.py:test_area_filter_narrows_listing_to_selected_area",
       "tests/test_user_area.py:test_area_filter_populated_with_present_areas",
+      "tests/test_user_area.py:test_cleanup_remote_image_hides_and_resets_area_filter",
       "tests/test_user_area.py:test_open_image_preserves_area_map_end_to_end"
     ],
     "IFR-003": [
@@ -1521,6 +1522,7 @@
     "UIR-120": [
       "tests/test_user_area.py:test_area_filter_hidden_without_image",
       "tests/test_user_area.py:test_area_filter_populated_with_present_areas",
+      "tests/test_user_area.py:test_cleanup_remote_image_hides_and_resets_area_filter",
       "tests/test_user_area.py:test_open_image_preserves_area_map_end_to_end"
     ],
     "UIR-121": [

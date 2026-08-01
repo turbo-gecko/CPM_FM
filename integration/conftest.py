@@ -427,6 +427,11 @@ def gui_no_target(qapp, tmp_path):
     try:
         yield win
     finally:
+        # Tests intentionally exercise dirty-image prompts. Pytest may restore
+        # their dialog monkeypatches before this fixture closes the window, so
+        # remove the temporary image state first to prevent a real modal prompt
+        # from blocking headless teardown and to guarantee workdir cleanup.
+        win._cleanup_image_workdir()
         win.close()
         win.deleteLater()
         qapp.processEvents()
