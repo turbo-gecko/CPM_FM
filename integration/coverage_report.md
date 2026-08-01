@@ -1,14 +1,15 @@
 # Integration Test Coverage Report
 
 **Generated from:** `integration/coverage_manifest.json` v3.0
-**Total collected test functions:** 68
+**Total collected test functions:** 70
 **Execution status:** Not run by this generator; physical outcomes remain in `integration/results/runs_ledger.json`.
 
 ## Test Tiers
 
 | Tier | Count |
 |---|---:|
-| hil | 56 |
+| gui-integration | 3 |
+| hil | 55 |
 | visual | 12 |
 
 ## Evidence Classification
@@ -16,14 +17,14 @@
 | Classification | Count |
 |---|---:|
 | equivalent | 0 |
-| partial | 50 |
-| supplementary | 18 |
+| partial | 53 |
+| supplementary | 17 |
 | manual-only | 0 |
 
 ## Manual Scenario Decisions
 
 - Manual plan cases: **217**
-- Cases with reviewed automated support: **44** (**20.3%** raw mapped-case ratio)
+- Cases with reviewed automated support: **47** (**21.7%** raw mapped-case ratio)
 - Every remaining case has an explicit `manual-only` decision in the manifest.
 
 | MT-ID | Tests | Best evidence | Manual retained |
@@ -32,6 +33,9 @@
 | MT-BR05 | 1 | partial | yes |
 | MT-BR10 | 1 | partial | yes |
 | MT-C01 | 1 | partial | yes |
+| MT-C02 | 1 | partial | yes |
+| MT-C03 | 1 | partial | yes |
+| MT-C04 | 1 | partial | yes |
 | MT-C09 | 1 | partial | yes |
 | MT-C18 | 1 | partial | yes |
 | MT-C19 | 1 | partial | yes |
@@ -90,12 +94,14 @@
 | `test_overwrite_existing_remote_file` | hil | MT-CF04 | FR-145, FR-146 | partial | — |
 | `test_skip_existing_remote_file` | hil | MT-CF04 | FR-145, FR-147 | partial | — |
 | `test_connect_opens_ports_and_probes` | hil | MT-C01 | FR-030, FR-037, FR-041, FR-042 | partial | — |
-| `test_connect_transport_open_failure_reports_error_and_skips_probe` | hil | — | FR-039, FR-046 | supplementary | two_port |
 | `test_disconnect_closes_ports_and_clears_list` | hil | MT-C09 | FR-050, FR-054, FR-055, FR-058 | partial | — |
 | `test_disconnect_prompt_with_ports_swapped` | hil | MT-C18 | FR-030, FR-050 | partial | two_port |
 | `test_load_config_while_connected_closes_ports` | hil | MT-C19 | FR-017a, FR-050 | partial | — |
 | `test_rapid_disconnect_during_probe_no_crash` | hil | — | FR-050, NFR-004 | supplementary | — |
 | `test_reconnect_after_disconnect` | hil | — | FR-030, FR-050 | supplementary | — |
+| `test_bad_terminal_port_reports_error_and_stays_disconnected` | gui-integration | MT-C02 | FR-031, FR-033 | partial | — |
+| `test_bad_transport_port_reports_error_and_skips_probe` | gui-integration | MT-C04 | FR-039, FR-046 | partial | — |
+| `test_distinct_terminal_and_transport_ports_connect_both` | gui-integration | MT-C03 | FR-038, FR-040, UIR-074 | partial | — |
 | `test_disk_image_host_mount_copy_to_remote` | hil | MT-DI04 | FR-106, FR-145, FR-171 | partial | — |
 | `test_disk_image_user_area_transfer_preserves_source` | hil | MT-DI21 | FR-188 | partial | — |
 | `test_remote_image_mount_refuses_connect` | hil | MT-DI14 | FR-176 | partial | — |

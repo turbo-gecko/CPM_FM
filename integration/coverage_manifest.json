@@ -2,20 +2,21 @@
   "version": "3.0",
   "generated": "deterministic",
   "semantic_review": "completed-2026-08-01",
-  "total_tests": 68,
+  "total_tests": 70,
   "tiers": {
-    "hil": 56,
+    "gui-integration": 3,
+    "hil": 55,
     "visual": 12
   },
   "evidence_classification": {
     "equivalent": 0,
-    "partial": 50,
-    "supplementary": 18,
+    "partial": 53,
+    "supplementary": 17,
     "manual-only": 0
   },
   "manual_plan_total": 217,
-  "manual_ids_with_automated_support": 44,
-  "raw_mapped_case_ratio": 20.3,
+  "manual_ids_with_automated_support": 47,
+  "raw_mapped_case_ratio": 21.7,
   "manual_coverage_decisions": {
     "MT-BR01": {
       "status": "manual-only",
@@ -103,25 +104,31 @@
       "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-C02": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_connect_target_free.py::test_bad_terminal_port_reports_error_and_stays_disconnected"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-C03": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_connect_target_free.py::test_distinct_terminal_and_transport_ports_connect_both"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-C04": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_connect_target_free.py::test_bad_transport_port_reports_error_and_skips_probe"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-C05": {
       "status": "manual-only",
@@ -1635,8 +1642,12 @@
     "DR-033a",
     "FR-017a",
     "FR-030",
+    "FR-031",
+    "FR-033",
     "FR-037",
+    "FR-038",
     "FR-039",
+    "FR-040",
     "FR-041",
     "FR-042",
     "FR-046",
@@ -1719,6 +1730,7 @@
     "UIR-069",
     "UIR-070",
     "UIR-073",
+    "UIR-074",
     "UIR-076",
     "UIR-091",
     "UIR-099",
@@ -2083,7 +2095,7 @@
     {
       "nodeid": "integration/test_gui_connect.py::test_connect_opens_ports_and_probes",
       "file": "test_gui_connect.py",
-      "line": 34,
+      "line": 33,
       "test": "test_connect_opens_ports_and_probes",
       "tier": "hil",
       "markers": [
@@ -2113,39 +2125,9 @@
       ]
     },
     {
-      "nodeid": "integration/test_gui_connect.py::test_connect_transport_open_failure_reports_error_and_skips_probe",
-      "file": "test_gui_connect.py",
-      "line": 84,
-      "test": "test_connect_transport_open_failure_reports_error_and_skips_probe",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "two_port"
-      ],
-      "manual_id": null,
-      "requirements": [
-        "FR-039",
-        "FR-046"
-      ],
-      "evidence": "supplementary",
-      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
-      "manual_still_required": true,
-      "gated": [
-        "two_port"
-      ],
-      "collection_status": "collected",
-      "execution_status": "not-run-by-coverage-generator",
-      "bench_evidence": "integration/results/runs_ledger.json",
-      "semantic_review": "reviewed-2026-08-01",
-      "verifies": [
-        "FR-039",
-        "FR-046"
-      ]
-    },
-    {
       "nodeid": "integration/test_gui_connect.py::test_disconnect_closes_ports_and_clears_list",
       "file": "test_gui_connect.py",
-      "line": 50,
+      "line": 49,
       "test": "test_disconnect_closes_ports_and_clears_list",
       "tier": "hil",
       "markers": [
@@ -2177,7 +2159,7 @@
     {
       "nodeid": "integration/test_gui_connect.py::test_disconnect_prompt_with_ports_swapped",
       "file": "test_gui_connect.py",
-      "line": 160,
+      "line": 104,
       "test": "test_disconnect_prompt_with_ports_swapped",
       "tier": "hil",
       "markers": [
@@ -2208,7 +2190,7 @@
     {
       "nodeid": "integration/test_gui_connect.py::test_load_config_while_connected_closes_ports",
       "file": "test_gui_connect.py",
-      "line": 210,
+      "line": 154,
       "test": "test_load_config_while_connected_closes_ports",
       "tier": "hil",
       "markers": [
@@ -2236,7 +2218,7 @@
     {
       "nodeid": "integration/test_gui_connect.py::test_rapid_disconnect_during_probe_no_crash",
       "file": "test_gui_connect.py",
-      "line": 138,
+      "line": 82,
       "test": "test_rapid_disconnect_during_probe_no_crash",
       "tier": "hil",
       "markers": [
@@ -2263,7 +2245,7 @@
     {
       "nodeid": "integration/test_gui_connect.py::test_reconnect_after_disconnect",
       "file": "test_gui_connect.py",
-      "line": 69,
+      "line": 68,
       "test": "test_reconnect_after_disconnect",
       "tier": "hil",
       "markers": [
@@ -2285,6 +2267,92 @@
       "verifies": [
         "FR-030",
         "FR-050"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_connect_target_free.py::test_bad_terminal_port_reports_error_and_stays_disconnected",
+      "file": "test_gui_connect_target_free.py",
+      "line": 18,
+      "test": "test_bad_terminal_port_reports_error_and_stays_disconnected",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-C02",
+      "requirements": [
+        "FR-031",
+        "FR-033"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-031",
+        "FR-033"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_connect_target_free.py::test_bad_transport_port_reports_error_and_skips_probe",
+      "file": "test_gui_connect_target_free.py",
+      "line": 90,
+      "test": "test_bad_transport_port_reports_error_and_skips_probe",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-C04",
+      "requirements": [
+        "FR-039",
+        "FR-046"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-039",
+        "FR-046"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_connect_target_free.py::test_distinct_terminal_and_transport_ports_connect_both",
+      "file": "test_gui_connect_target_free.py",
+      "line": 50,
+      "test": "test_distinct_terminal_and_transport_ports_connect_both",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-C03",
+      "requirements": [
+        "FR-038",
+        "FR-040",
+        "UIR-074"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-038",
+        "FR-040",
+        "UIR-074"
       ]
     },
     {

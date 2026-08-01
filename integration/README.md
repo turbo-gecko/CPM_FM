@@ -9,9 +9,10 @@ It is **separate** from the unit suite. The default `pytest` (root) only collect
 `tests/` and never touches hardware; this suite is an explicit, separate
 invocation: `.venv/Scripts/python.exe -m pytest integration/`.
 
-> Status: **Phase 0 complete (2026-08-01).** Static validation, the target-free
-> tier, and a destructive five-target physical sweep all pass on the corrected
-> working tree. Phase 1 remains partial; later phases continue incrementally.
+> Status: **Phase 0 complete (2026-08-01).** Static validation and the
+> target-free tier pass; MT-CF05 also passes on all five physical targets at
+> clean commit `84f0be5`. Phase 1 remains partial, with MT-C02--MT-C04 now
+> covered in the target-free GUI tier; later scenarios continue incrementally.
 > See `temp/integration_test_harness_plan.md` for the audited evidence matrix.
 
 ## Quick start
@@ -39,7 +40,7 @@ Bench-only metadata per target:
 |---|---|
 | `settings_file` | Path (absolute, or relative to repo root) to the **read-only** app config. |
 | `two_port` | `true` when Terminal/Transport are distinct ports (gates `two_port` cases). |
-| `spare_port` | A real-but-free port for the bad/busy-port error cases (`null` ⇒ those skip). |
+| `spare_port` | Reserved bench metadata for future controlled physical port-fault cases; the deterministic MT-C02/MT-C04 CI cases inject failure at the serial boundary. |
 | `scratch_drive` | The **disposable** CP/M drive for all destructive write testing. Must differ from `connect_drive` or destructive tests refuse to run. |
 | `connect_drive` | The **declared protected** home/working drive. The destructive guard compares `scratch_drive` against this (not the live prompt), so a scratch drive can never coincide with the drive you consider precious. |
 | `has_1k_sender` / `has_checksum_sender` | Per-target X-Modem sender capabilities; gate the MT-T10 1K / checksum variants. The 128-byte CRC path runs on every target. |
@@ -70,6 +71,11 @@ Target-free and traceability gates:
 .venv/Scripts/python.exe -m pytest integration/ --collect-only -q
 .venv/Scripts/python.exe -m integration.generate_coverage --check
 ```
+
+The `gui_integration` lane drives the real offscreen `MainWindow` but replaces
+the operating-system serial boundary. MT-C02--MT-C04 therefore verify the
+dialogs, workflow, flags, indicators, and probe gating deterministically while
+their manual cases remain required for evidence from genuinely free/busy ports.
 
 ### Watching a run
 
@@ -135,4 +141,5 @@ The harness writes its **own** `report.md`/`run.json` only.
 - True pixel rendering — we assert the widget tree / stylesheet / layout, not
   screenshots.
 - Best-effort / hardware-specific: MT-P05 (flow-control peer), MT-C10 (forced
-  close failure) — opt-in, may end **Blocked**.
+  close failure) — opt-in, may end **Blocked**. Real free/busy-port observation
+  for MT-C02--MT-C04 also remains manual despite deterministic GUI coverage.
