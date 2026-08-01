@@ -6,14 +6,14 @@ with the corresponding ``--target`` flags.
 
 Run it as either::
 
-    python integration/run.py
-    python -m integration.run        # from the repo root
+    .venv/Scripts/python.exe integration/run.py
+    .venv/Scripts/python.exe -m integration.run        # from the repo root
 
 Extra pytest arguments are forwarded verbatim. The ``--`` separator is optional,
 so both of these work the same::
 
-    python integration/run.py --run-destructive
-    python integration/run.py -- -k transfers --run-destructive
+    .venv/Scripts/python.exe integration/run.py --run-destructive
+    .venv/Scripts/python.exe integration/run.py -- -k transfers --run-destructive
 """
 
 from __future__ import annotations

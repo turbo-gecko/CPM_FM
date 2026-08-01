@@ -46,7 +46,7 @@ def test_connect_opens_ports_and_probes(gui):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-C05", "FR-050", "FR-054", "FR-055", "FR-058")
+@pytest.mark.mt("MT-C09", "FR-050", "FR-054", "FR-055", "FR-058")
 def test_disconnect_closes_ports_and_clears_list(gui):
     """Disconnect drops both status flags and clears the Remote Files list.
 
@@ -65,7 +65,7 @@ def test_disconnect_closes_ports_and_clears_list(gui):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-C06", "FR-030", "FR-050")
+@pytest.mark.req("FR-030", "FR-050")
 def test_reconnect_after_disconnect(gui):
     """The port can be reopened after a clean disconnect (no leaked handle).
 

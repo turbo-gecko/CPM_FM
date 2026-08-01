@@ -13,7 +13,7 @@ from helpers.dialogs import answer_file_action, silence_message_boxes
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-TH01", "FR-140", "FR-142")
+@pytest.mark.req("FR-140", "FR-142")
 def test_upload_records_history_entry(gui, scratch_drive, monkeypatch, tmp_path):
     """A successful upload appends a success record naming the file.
 

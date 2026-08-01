@@ -10,16 +10,13 @@ All writes target the disposable scratch drive and clean up after themselves.
 
 from __future__ import annotations
 
-import time
 import uuid
 
+import pytest
+from helpers.dialogs import silence_message_boxes
+from helpers.trace import get_logger
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
-import pytest
-from helpers.dialogs import (
-    silence_message_boxes,
-)
-from helpers.trace import get_logger
 
 log = get_logger("transfer.cancel")
 
@@ -87,10 +84,9 @@ def test_cancel_upload_while_transferring(gui, scratch_drive, monkeypatch, tmp_p
     log.info("Cancel clicked")
 
     # The Cancel button should immediately disable and show "Cancelling…".
-    assert not dialog.cancel_button.isEnabled(), (
-        "Cancel button should be disabled after click"
-    )
-    assert "Cancelling" in dialog.cancel_button.text() or "annulant" in dialog.cancel_button.text().lower(), (
+    assert not dialog.cancel_button.isEnabled(), "Cancel button should be disabled after click"
+    cancel_text = dialog.cancel_button.text()
+    assert "Cancelling" in cancel_text or "annulant" in cancel_text.lower(), (
         f"Cancel button text should indicate cancelling; got: {dialog.cancel_button.text()}"
     )
 
@@ -119,7 +115,8 @@ def test_cancel_upload_while_transferring(gui, scratch_drive, monkeypatch, tmp_p
     log.info("status bar: %s", status)
     # The status bar shows the translation of "status.transfer_cancelled".
     # Check that it's not the generic "Transfer failed" or an error message.
-    assert "cancelled" in status.lower() or "annullato" in status.lower() or "annulé" in status.lower(), (
+    status_lower = status.lower()
+    assert any(word in status_lower for word in ("cancelled", "annullato", "annulé")), (
         f"Status bar should show 'Transfer cancelled'; got: {status}"
     )
 

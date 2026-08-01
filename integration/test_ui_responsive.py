@@ -12,8 +12,6 @@ from __future__ import annotations
 import time
 
 import pytest
-from PySide6.QtCore import Qt
-from PySide6.QtTest import QTest
 from helpers.dialogs import (
     OVERWRITE,
     answer_conflict,
@@ -21,15 +19,15 @@ from helpers.dialogs import (
     silence_message_boxes,
 )
 from helpers.trace import get_logger
+from PySide6.QtCore import Qt
+from PySide6.QtTest import QTest
 
 log = get_logger("transfer.ui_responsive")
 
 
 @pytest.mark.hil
 @pytest.mark.mt("MT-T11", "NFR-001")
-def test_ui_responsive_during_large_transfer(
-    gui, scratch_drive, monkeypatch, tmp_path, target
-):
+def test_ui_responsive_during_large_transfer(gui, scratch_drive, monkeypatch, tmp_path, target):
     """UI stays responsive during a large file transfer; progress keeps updating.
 
     Verifies: NFR-001.
@@ -99,7 +97,11 @@ def test_ui_responsive_during_large_transfer(
             log.info("progress updated to %d", current_progress)
             initial_progress = current_progress
 
-    log.info("UI exercise done (%.1fs), dialog still open=%s", time.time() - start, gui.win._transfer_dialog is not None)
+    log.info(
+        "UI exercise done (%.1fs), dialog still open=%s",
+        time.time() - start,
+        gui.win._transfer_dialog is not None,
+    )
 
     # Wait for the transfer to complete and the dialog to close.
     log.info("waiting for dialog to close after UI exercise...")
@@ -108,6 +110,7 @@ def test_ui_responsive_during_large_transfer(
         timeout=180.0,
         interval=0.05,
     )
+    assert closed, "progress dialog did not close after the UI exercise"
 
     # Wait for the remote-list refresh to complete.
     gui.quiesce(timeout=60)

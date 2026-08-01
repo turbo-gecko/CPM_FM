@@ -186,7 +186,7 @@ def test_remote_image_mount_refuses_connect(gui, monkeypatch, tmp_path):
     gui.disconnect()
 
 
-"""§11.8 — disk image: Host-side mount, Copy to Remote preserves source user area (MT-DI21a).
+"""§11.8 — disk image: Host-side mount, Copy to Remote preserves source user area (MT-DI21).
 
 Tests that when a Host-mounted multi-area disk image is opened and a file from
 user area 3 is copied to the remote via X-Modem, it arrives in area 3 rather than
@@ -197,7 +197,7 @@ All writes target the disposable scratch drive and clean up after themselves.
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-DI21a", "FR-188")
+@pytest.mark.mt("MT-DI21", "FR-188")
 def test_disk_image_user_area_transfer_preserves_source(gui, scratch_drive, monkeypatch, tmp_path):
     """Host-mounted multi-area image: Copy to Remote sends file to its source area.
 
@@ -220,7 +220,7 @@ def test_disk_image_user_area_transfer_preserves_source(gui, scratch_drive, monk
     image_path = tmp_path / "multi_area.img"
     files_by_area = {
         0: {"HELLO.TXT": b"area0 content"},
-        3: {"AREATEST.COM": b"area3 content for MT-DI21a"},
+        3: {"AREATEST.COM": b"area3 content for MT-DI21"},
     }
     create_multi_area_image(image_path, files_by_area)
 

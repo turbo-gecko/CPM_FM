@@ -34,7 +34,7 @@ def conflict_spy(gui):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-CF01", "FR-145", "FR-146")
+@pytest.mark.mt("MT-CF04", "FR-145", "FR-146")
 def test_overwrite_existing_remote_file(gui, scratch_drive, monkeypatch, conflict_spy, tmp_path):
     """A second upload of the same name prompts, and Overwrite replaces it.
 
@@ -62,7 +62,7 @@ def test_overwrite_existing_remote_file(gui, scratch_drive, monkeypatch, conflic
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-CF02", "FR-145", "FR-147")
+@pytest.mark.mt("MT-CF04", "FR-145", "FR-147")
 def test_skip_existing_remote_file(gui, scratch_drive, monkeypatch, conflict_spy, tmp_path):
     """Skip on a conflict leaves the existing remote file and records a skip.
 
@@ -90,7 +90,7 @@ def test_skip_existing_remote_file(gui, scratch_drive, monkeypatch, conflict_spy
 
 
 @pytest.mark.hil
-@pytest.mark.req("FR-147")
+@pytest.mark.mt("MT-CF05", "FR-147")
 def test_conflict_apply_to_all_persists_across_batch(
     gui, scratch_drive, monkeypatch, conflict_spy, tmp_path
 ):

@@ -71,7 +71,7 @@ def test_terminal_window_keyboard_input(gui):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-W05", "FR-095")
+@pytest.mark.mt("MT-W06", "FR-095")
 def test_terminal_window_clear(gui):
     """The Terminal Window Clear empties the receive area.
 
@@ -251,7 +251,7 @@ def test_terminal_context_menu_macros_submenu_runs_over_serial(gui):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-W10", "FR-157")
+@pytest.mark.req("FR-157")
 def test_terminal_vt100_escape_sequences_render_without_crash(gui):
     """VT-100 escape sequences (cursor move, clear, SGR attributes) render without crash.
 

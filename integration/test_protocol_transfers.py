@@ -55,7 +55,7 @@ def test_round_trip_sample_files(peer, scratch_drive, samples, tmp_path):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-T04", "FR-099", "FR-106", "FR-107")
+@pytest.mark.req("FR-099", "FR-106", "FR-107")
 def test_uploaded_file_visible_then_removable(peer, scratch_drive, samples, tmp_path):
     """An uploaded file appears in the listing and can be erased again.
 
@@ -99,7 +99,7 @@ def test_round_trip_checksum(request, peer, scratch_drive, samples, tmp_path):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-T15", "FR-081", "NFR-003q")
+@pytest.mark.req("FR-081", "NFR-003q")
 def test_round_trip_zero_byte_file(peer, scratch_drive, tmp_path):
     """A zero-byte file round-trips as an empty file on receivers that support it.
 
@@ -132,7 +132,7 @@ def test_round_trip_zero_byte_file(peer, scratch_drive, tmp_path):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-T16", "FR-082", "NFR-003c")
+@pytest.mark.req("FR-082", "NFR-003c")
 def test_round_trip_exactly_128_bytes(peer, scratch_drive, tmp_path):
     """A 128-byte file transfers in a single frame (no extra frames added).
 

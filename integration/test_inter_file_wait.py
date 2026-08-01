@@ -28,9 +28,7 @@ log = get_logger("transfer.interfile")
 
 @pytest.mark.hil
 @pytest.mark.mt("MT-T08", "FR-109")
-def test_inter_file_wait_and_post_final_settle(
-    gui, scratch_drive, monkeypatch, tmp_path, target
-):
+def test_inter_file_wait_and_post_final_settle(gui, scratch_drive, monkeypatch, tmp_path, target):
     """Three-file batch: CCP prompt returns between files; all appear after final settle.
 
     Verifies: FR-109.
@@ -86,7 +84,7 @@ def test_inter_file_wait_and_post_final_settle(
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-T08", "FR-109")
+@pytest.mark.req("FR-109")
 def test_inter_file_wait_terminal_shows_prompt_between_files(
     gui, scratch_drive, monkeypatch, tmp_path, target
 ):
@@ -112,8 +110,6 @@ def test_inter_file_wait_terminal_shows_prompt_between_files(
     gui.win.show_terminal()
     term = gui.win.terminal_win
     assert term is not None, "terminal window was not created"
-
-    from cpm_fm.terminal.cpm_parser import CPMParser
 
     def _screen_text(term) -> str:
         return "\n".join(term.engine.display)

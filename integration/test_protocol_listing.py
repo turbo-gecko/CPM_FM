@@ -1,10 +1,11 @@
 """§10 — remote listing tier (MT-R*).
 
 Capture/idle-timeout, drive selection, and DIR-output parsing against the live
-peer. Read-only: these tests do not write to the remote.
+peer. The empty-directory case is destructive and explicitly gated; other
+listing cases clean up only the files they create.
 
-The empty-directory (MT-R08) and single-file (MT-R09) edge cases verify the
-parser handles degenerate inputs correctly.
+The empty-directory and single-file edge cases verify the parser handles
+degenerate inputs correctly.
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ log = get_logger("listing")
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-R03", "FR-041", "DR-033a")
+@pytest.mark.req("FR-041", "DR-033a")
 def test_detect_current_drive(peer):
     """A bare EOL yields a CP/M drive prompt; its letter is detected.
 
@@ -53,12 +54,14 @@ def test_dir_listing_parses(peer, scratch_drive):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-R08", "FR-077")
+@pytest.mark.destructive
+@pytest.mark.req("FR-077")
 def test_dir_listing_empty_directory(peer, scratch_drive):
     """An empty directory returns an empty dict (not None or an error).
 
     Verifies: FR-077.
     """
+    log.warning("DESTRUCTIVE WIPE: target scratch drive=%s: user=0", scratch_drive)
     peer.wipe_drive(scratch_drive)
     listing = peer.list(scratch_drive)
     assert listing == {}, f"expected empty dict for empty dir, got {listing!r}"
@@ -66,7 +69,8 @@ def test_dir_listing_empty_directory(peer, scratch_drive):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-R09", "FR-077")
+@pytest.mark.destructive
+@pytest.mark.mt("MT-R04", "FR-077")
 def test_dir_listing_single_file(peer, scratch_drive, tmp_path):
     """A directory with exactly one file returns a mapping with one entry.
 
@@ -74,7 +78,8 @@ def test_dir_listing_single_file(peer, scratch_drive, tmp_path):
     """
     name = "SINGLE.TXT"
     (tmp_path / name).write_bytes(b"one file\r\n")
-    peer.erase(name, letter=scratch_drive)
+    log.warning("DESTRUCTIVE WIPE: target scratch drive=%s: user=0", scratch_drive)
+    peer.wipe_drive(scratch_drive)
     upload_ok = peer.send_file(str(tmp_path / name), letter=scratch_drive)
     assert upload_ok, f"seed upload of {name} failed"
     listing = peer.list(scratch_drive)
@@ -135,8 +140,7 @@ def test_transfer_targets_selected_user_area(peer, scratch_drive, tmp_path):
         # the documented best-effort limit, not a defect.
         if not peer.send_file(str(tmp_path / name), letter=scratch_drive):
             pytest.skip(
-                "BLOCKED: transfer utility not reachable from user area 3 "
-                "(best-effort, FR-183)"
+                "BLOCKED: transfer utility not reachable from user area 3 (best-effort, FR-183)"
             )
         peer.set_user(3)
         in_area_3 = name.upper() in {n.upper() for n in peer.list()}
@@ -144,8 +148,7 @@ def test_transfer_targets_selected_user_area(peer, scratch_drive, tmp_path):
         in_area_0 = name.upper() in {n.upper() for n in peer.list()}
         if not in_area_3:
             pytest.skip(
-                "BLOCKED: target did not place the file in user area 3 "
-                "(best-effort, FR-183)"
+                "BLOCKED: target did not place the file in user area 3 (best-effort, FR-183)"
             )
         assert not in_area_0, "file leaked into area 0"
     finally:

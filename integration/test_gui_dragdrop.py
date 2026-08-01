@@ -11,7 +11,7 @@ from helpers.dialogs import answer_confirm, answer_file_action, silence_message_
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-D01", "FR-137", "FR-138")
+@pytest.mark.mt("MT-D03", "FR-137", "FR-138")
 def test_internal_drop_host_to_remote_uploads(gui, scratch_drive, monkeypatch, tmp_path):
     """Dropping a host file onto the Remote pane uploads it after confirmation.
 
@@ -42,7 +42,7 @@ def test_internal_drop_host_to_remote_uploads(gui, scratch_drive, monkeypatch, t
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-D05", "FR-137")
+@pytest.mark.mt("MT-D06", "FR-137")
 def test_drop_cancelled_does_not_transfer(gui, scratch_drive, monkeypatch, tmp_path):
     """Declining the drag-and-drop confirmation transfers nothing.
 

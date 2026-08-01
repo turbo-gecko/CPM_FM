@@ -10,8 +10,10 @@ from __future__ import annotations
 
 import pytest
 from helpers.dialogs import answer_confirm, answer_file_action, silence_message_boxes
+from helpers.trace import get_logger
 
 pytestmark = [pytest.mark.hil, pytest.mark.destructive]
+log = get_logger("backup-restore")
 
 
 def _clear_remote(gui, monkeypatch, name):
@@ -45,6 +47,7 @@ def test_restore_wipes_scratch_then_uploads(gui, scratch_drive, monkeypatch, tmp
     assert leftover in gui.remote_names()
     (host / leftover).unlink()  # remove from host so Restore won't re-upload it
 
+    log.warning("DESTRUCTIVE WIPE: Restore target=%s: user=0", scratch_drive)
     gui.win.do_restore()
     gui.quiesce(timeout=60.0)
 
@@ -96,6 +99,7 @@ def test_restore_erase_all_sequence_wipes_scratch(gui, scratch_drive, monkeypatc
     assert leftover in gui.remote_names()
     (host / leftover).unlink()  # remove from host so Restore won't re-upload it
 
+    log.warning("DESTRUCTIVE WIPE: Restore Erase-All target=%s: user=0", scratch_drive)
     gui.win.do_restore()
     gui.quiesce(timeout=60.0)
 
@@ -108,11 +112,11 @@ def test_restore_erase_all_sequence_wipes_scratch(gui, scratch_drive, monkeypatc
         _clear_remote(gui, monkeypatch, fname)
 
 
-@pytest.mark.mt("MT-BR02", "FR-150", "FR-152", "FR-154")
+@pytest.mark.mt("MT-BR03", "FR-150", "FR-153", "FR-154")
 def test_backup_downloads_remote_to_host(gui, scratch_drive, monkeypatch, tmp_path):
     """Backup wipes the host dir then downloads every scratch-drive file.
 
-    Verifies: FR-150, FR-152, FR-154.
+    Verifies: FR-150, FR-153, FR-154.
     """
     import os
 
@@ -134,6 +138,7 @@ def test_backup_downloads_remote_to_host(gui, scratch_drive, monkeypatch, tmp_pa
     # A junk host file that Backup must wipe before downloading.
     (host / "JUNK.TXT").write_bytes(b"delete me\r\n")
 
+    log.warning("DESTRUCTIVE WIPE: Backup host directory=%s", host)
     gui.win.do_backup()
     gui.quiesce(timeout=60.0)
 

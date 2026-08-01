@@ -1,344 +1,1634 @@
 {
-  "version": "2.1",
-  "generated": "auto",
-  "total_tests": 65,
+  "version": "3.0",
+  "generated": "deterministic",
+  "semantic_review": "completed-2026-08-01",
+  "total_tests": 68,
   "tiers": {
-    "hil": 53,
+    "hil": 56,
     "visual": 12
   },
   "evidence_classification": {
-    "supplementary": 4,
-    "partial": 52,
-    "equivalent": 6
+    "equivalent": 0,
+    "partial": 50,
+    "supplementary": 18,
+    "manual-only": 0
   },
-  "manual_id_coverage": {
+  "manual_plan_total": 217,
+  "manual_ids_with_automated_support": 44,
+  "raw_mapped_case_ratio": 20.3,
+  "manual_coverage_decisions": {
+    "MT-BR01": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
     "MT-BR02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-BR03": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_gui_backup_restore.py::test_backup_downloads_remote_to_host[rc2014]"
+        "integration/test_gui_backup_restore.py::test_backup_downloads_remote_to_host"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-BR04": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-BR05": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_gui_backup_restore.py::test_restore_wipes_scratch_then_uploads[rc2014]"
+        "integration/test_gui_backup_restore.py::test_restore_wipes_scratch_then_uploads"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-BR06": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-BR07": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-BR08": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-BR09": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-BR10": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_gui_backup_restore.py::test_restore_erase_all_sequence_wipes_scratch[rc2014]"
+        "integration/test_gui_backup_restore.py::test_restore_erase_all_sequence_wipes_scratch"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-C01": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_gui_connect.py::test_connect_opens_ports_and_probes[rc2014]"
+        "integration/test_gui_connect.py::test_connect_opens_ports_and_probes"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-C02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-C03": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-C04": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-C05": {
-      "tests": [
-        "integration/test_gui_connect.py::test_disconnect_closes_ports_and_clears_list[rc2014]"
-      ],
-      "count": 1
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-C06": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-C07": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-C08": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-C09": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_gui_connect.py::test_reconnect_after_disconnect[rc2014]"
+        "integration/test_gui_connect.py::test_disconnect_closes_ports_and_clears_list"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-C10": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-C11": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-C12": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-C12a": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-C12b": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-C12c": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-C13": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-C14": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-C15": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-C18": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_gui_connect.py::test_disconnect_prompt_with_ports_swapped[rc2014]"
+        "integration/test_gui_connect.py::test_disconnect_prompt_with_ports_swapped"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-C19": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_gui_connect.py::test_load_config_while_connected_closes_ports[rc2014]"
+        "integration/test_gui_connect.py::test_load_config_while_connected_closes_ports"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-CF01": {
-      "tests": [
-        "integration/test_gui_conflict.py::test_overwrite_existing_remote_file[rc2014]"
-      ],
-      "count": 1
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-CF02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-CF03": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-CF04": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_gui_conflict.py::test_skip_existing_remote_file[rc2014]"
+        "integration/test_gui_conflict.py::test_overwrite_existing_remote_file",
+        "integration/test_gui_conflict.py::test_skip_existing_remote_file"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-CF05": {
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_conflict.py::test_conflict_apply_to_all_persists_across_batch"
+      ],
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-CF06": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-CF07": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-D01": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-D02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-D03": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_gui_dragdrop.py::test_internal_drop_host_to_remote_uploads[rc2014]"
+        "integration/test_gui_dragdrop.py::test_internal_drop_host_to_remote_uploads"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-D04": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-D05": {
-      "tests": [
-        "integration/test_gui_dragdrop.py::test_drop_cancelled_does_not_transfer[rc2014]"
-      ],
-      "count": 1
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
-    "MT-F07": {
+    "MT-D06": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_context_menu.py::test_remote_rename_changes_name[rc2014]"
+        "integration/test_gui_dragdrop.py::test_drop_cancelled_does_not_transfer"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
-    "MT-F08": {
+    "MT-DI01": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI03": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI04": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_context_menu.py::test_remote_delete_removes_file[rc2014]"
+        "integration/test_gui_disk_image.py::test_disk_image_host_mount_copy_to_remote"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
-    "MT-FV01": {
+    "MT-DI05": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI06": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI07": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI08": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI10": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI11": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI12": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI13": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI14": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_gui_validation.py::test_invalid_name_rename_uploads_conforming[rc2014]"
+        "integration/test_gui_disk_image.py::test_remote_image_mount_refuses_connect"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
-    "MT-FV02": {
+    "MT-DI15": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI16": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI17": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI18": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI19": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI20": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-DI21": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_gui_validation.py::test_invalid_name_skip_does_not_upload[rc2014]"
+        "integration/test_gui_disk_image.py::test_disk_image_user_area_transfer_preserves_source"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
-    "MT-G01": {
-      "tests": [
-        "integration/test_visual_assertions.py::test_menubar_has_file_and_help"
-      ],
-      "count": 1
+    "MT-DI22": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
-    "MT-G03": {
-      "tests": [
-        "integration/test_visual_assertions.py::test_main_panes_have_push_buttons"
-      ],
-      "count": 1
-    },
-    "MT-G05": {
-      "tests": [
-        "integration/test_visual_assertions.py::test_drive_combo_lists_a_to_p"
-      ],
-      "count": 1
-    },
-    "MT-G07": {
+    "MT-F01": {
+      "status": "automated-support",
       "tests": [
         "integration/test_visual_assertions.py::test_lists_have_context_menus"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-F01a": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-F02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-F03": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-F04": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-F05": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-F05a": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-F06": {
+      "status": "automated-support",
+      "tests": [
+        "integration/test_context_menu.py::test_remote_delete_removes_file",
+        "integration/test_context_menu.py::test_remote_rename_changes_name"
+      ],
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-F06a": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-F07": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-F08": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-F09": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-FS01": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-FS02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-FS03": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-FS04": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-FS05": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-FS06": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-FS07": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-FS08": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-FS09": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-FV01": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-FV02": {
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_validation.py::test_invalid_name_rename_uploads_conforming"
+      ],
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-FV03": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-FV04": {
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_validation.py::test_invalid_name_skip_does_not_upload"
+      ],
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-FV05": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-FV06": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-FV07": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G01": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G03": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G04": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G05": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G06": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G07": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G08": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G09": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G10": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G11": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G12": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G12a": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G13": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G14": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G15": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G20": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G21": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G22": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-G23": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-H01": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-H02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-H03": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-H04": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-I01": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-I02": {
+      "status": "automated-support",
+      "tests": [
+        "integration/test_visual_assertions.py::test_language_menu_switch_retranslates_ui"
+      ],
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-I03": {
-      "tests": [
-        "integration/test_visual_assertions.py::test_about_dialog_contents"
-      ],
-      "count": 1
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-I04": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-I05": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-I06": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-L01": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-L02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-L03": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-L04": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-L05": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-L06": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-L07": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-L08": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-L09": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-L10": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-L11": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-L12": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-L13": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-L14": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-L15": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-N01": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-N02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-N03": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-P01": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-P01a": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-P01b": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-P02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-P03": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-P04": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-P05": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-P06": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-R01": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_protocol_listing.py::test_dir_listing_parses[rc2014]"
+        "integration/test_protocol_listing.py::test_dir_listing_parses"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-R02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-R03": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-R04": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_protocol_listing.py::test_detect_current_drive[rc2014]"
+        "integration/test_protocol_listing.py::test_dir_listing_single_file"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-R04a": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-R05": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_protocol_listing.py::test_change_to_scratch_drive[rc2014]"
+        "integration/test_protocol_listing.py::test_change_to_scratch_drive"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
-    "MT-R08": {
-      "tests": [
-        "integration/test_protocol_listing.py::test_dir_listing_empty_directory[rc2014]"
-      ],
-      "count": 1
+    "MT-R06": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
-    "MT-R09": {
-      "tests": [
-        "integration/test_protocol_listing.py::test_dir_listing_single_file[rc2014]"
-      ],
-      "count": 1
+    "MT-R07": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-R10": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_protocol_listing.py::test_user_area_switch_lists[rc2014]"
+        "integration/test_protocol_listing.py::test_user_area_switch_lists"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-R11": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_protocol_listing.py::test_transfer_targets_selected_user_area[rc2014]"
+        "integration/test_protocol_listing.py::test_transfer_targets_selected_user_area"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-R12": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-S01": {
-      "tests": [
-        "integration/test_visual_assertions.py::test_window_title_contains_app_name"
-      ],
-      "count": 1
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
-    "MT-S03": {
+    "MT-S02": {
+      "status": "automated-support",
       "tests": [
         "integration/test_visual_assertions.py::test_remote_list_empty_at_startup"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-S03": {
+      "status": "automated-support",
+      "tests": [
+        "integration/test_visual_assertions.py::test_menubar_has_file_and_help"
+      ],
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-S04": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-S05": {
+      "status": "automated-support",
+      "tests": [
+        "integration/test_visual_assertions.py::test_drive_combo_lists_a_to_p",
+        "integration/test_visual_assertions.py::test_main_panes_have_push_buttons"
+      ],
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-T01": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-T02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-T03": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_protocol_transfers.py::test_round_trip_sample_files[rc2014]"
+        "integration/test_protocol_transfers.py::test_round_trip_sample_files"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-T04": {
-      "tests": [
-        "integration/test_protocol_transfers.py::test_uploaded_file_visible_then_removable[rc2014]"
-      ],
-      "count": 1
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-T05": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-T06": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_batch_transfer.py::test_batch_transfer_sequential_multi_file[rc2014]"
+        "integration/test_batch_transfer.py::test_batch_transfer_sequential_multi_file"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-T07": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_batch_transfer.py::test_batch_abort_on_mid_file_failure[rc2014]"
+        "integration/test_batch_transfer.py::test_batch_abort_on_mid_file_failure"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-T08": {
+      "status": "automated-support",
+      "tests": [
+        "integration/test_inter_file_wait.py::test_inter_file_wait_and_post_final_settle"
+      ],
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-T09": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-T10": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_protocol_transfers.py::test_round_trip_1k[rc2014]",
-        "integration/test_protocol_transfers.py::test_round_trip_checksum[rc2014]"
+        "integration/test_protocol_transfers.py::test_round_trip_1k",
+        "integration/test_protocol_transfers.py::test_round_trip_checksum"
       ],
-      "count": 2
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-T11": {
+      "status": "automated-support",
+      "tests": [
+        "integration/test_ui_responsive.py::test_ui_responsive_during_large_transfer"
+      ],
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-T12": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-T13": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_cancel_transfer.py::test_cancel_upload_while_transferring[rc2014]"
+        "integration/test_cancel_transfer.py::test_cancel_upload_while_transferring"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-T14": {
-      "tests": [
-        "integration/test_cancel_batch.py::test_cancel_during_later_batch_file[rc2014]"
-      ],
-      "count": 1
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-T15": {
-      "tests": [
-        "integration/test_protocol_transfers.py::test_round_trip_zero_byte_file[rc2014]"
-      ],
-      "count": 1
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-T16": {
-      "tests": [
-        "integration/test_protocol_transfers.py::test_round_trip_exactly_128_bytes[rc2014]"
-      ],
-      "count": 1
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-TH01": {
-      "tests": [
-        "integration/test_gui_history.py::test_upload_records_history_entry[rc2014]"
-      ],
-      "count": 1
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
-    "MT-V08": {
+    "MT-TH02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-TH03": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-TH04": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-TH05": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-TH06": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-V01": {
+      "status": "automated-support",
       "tests": [
         "integration/test_visual_assertions.py::test_material_theme_applied"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-V02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-V03": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-V04": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-V05": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-V06": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-V07": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-V08": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-V09": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-V10": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_visual_assertions.py::test_manual_dialog_renders"
+        "integration/test_visual_assertions.py::test_about_dialog_contents"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-V11": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-V12": {
-      "tests": [
-        "integration/test_visual_assertions.py::test_i18n_language_switch_updates_ui"
-      ],
-      "count": 1
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-W01": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_terminal_window.py::test_terminal_window_shows_live_response[rc2014]"
+        "integration/test_terminal_window.py::test_terminal_window_shows_live_response"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-W02": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-W03": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_terminal_window.py::test_terminal_window_keyboard_input[rc2014]"
+        "integration/test_terminal_window.py::test_terminal_window_keyboard_input"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-W04": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-W05": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-W06": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_terminal_window.py::test_terminal_window_clear[rc2014]"
+        "integration/test_terminal_window.py::test_terminal_window_clear"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-W07": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-W08": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-W09": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-W10": {
-      "tests": [
-        "integration/test_terminal_window.py::test_terminal_vt100_escape_sequences_render_without_crash[rc2014]"
-      ],
-      "count": 1
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-W11": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
+    },
+    "MT-W12": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-W13": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_visual_assertions.py::test_terminal_window_has_no_control_row_and_font_in_context_menu",
-        "integration/test_visual_assertions.py::test_font_dialog_lists_usable_under_material_theme"
+        "integration/test_visual_assertions.py::test_font_dialog_lists_usable_under_material_theme",
+        "integration/test_visual_assertions.py::test_terminal_window_has_no_control_row_and_font_in_context_menu"
       ],
-      "count": 2
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
+    },
+    "MT-W16": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     },
     "MT-W17": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_terminal_window.py::test_terminal_context_menu_copy_selection[rc2014]",
-        "integration/test_terminal_window.py::test_terminal_context_menu_paste_sends_over_serial[rc2014]"
+        "integration/test_terminal_window.py::test_terminal_context_menu_copy_selection",
+        "integration/test_terminal_window.py::test_terminal_context_menu_paste_sends_over_serial"
       ],
-      "count": 2
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-W18": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_terminal_window.py::test_terminal_context_menu_reset_size[rc2014]"
+        "integration/test_terminal_window.py::test_terminal_context_menu_reset_size"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-W19": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_terminal_window.py::test_terminal_context_menu_terminal_type_submenu[rc2014]"
+        "integration/test_terminal_window.py::test_terminal_context_menu_terminal_type_submenu"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-W20": {
+      "status": "automated-support",
       "tests": [
-        "integration/test_terminal_window.py::test_terminal_context_menu_macros_submenu_runs_over_serial[rc2014]"
+        "integration/test_terminal_window.py::test_terminal_context_menu_macros_submenu_runs_over_serial"
       ],
-      "count": 1
+      "best_evidence": "partial",
+      "manual_still_required": true,
+      "note": "Reviewed automated support; see per-test rationale."
     },
-    "MT-T08": {
-      "tests": [
-        "integration/test_inter_file_wait.py::test_inter_file_wait_and_post_final_settle[rc2014]",
-        "integration/test_inter_file_wait.py::test_inter_file_wait_terminal_shows_prompt_between_files[rc2014]"
-      ],
-      "count": 2
-    },
-    "MT-T11": {
-      "tests": [
-        "integration/test_ui_responsive.py::test_ui_responsive_during_large_transfer[rc2014]"
-      ],
-      "count": 1
+    "MT-W21": {
+      "status": "manual-only",
+      "tests": [],
+      "best_evidence": "manual-only",
+      "manual_still_required": true,
+      "note": "No semantically matching integration test is currently mapped."
     }
   },
   "requirement_ids": [
@@ -375,11 +1665,13 @@
     "FR-106",
     "FR-107",
     "FR-108",
+    "FR-109",
     "FR-111",
     "FR-114",
     "FR-117",
     "FR-118",
     "FR-120",
+    "FR-123",
     "FR-125",
     "FR-137",
     "FR-138",
@@ -401,10 +1693,14 @@
     "FR-165",
     "FR-166",
     "FR-167",
+    "FR-171",
+    "FR-176",
     "FR-181",
     "FR-182",
     "FR-183",
     "FR-184",
+    "FR-188",
+    "NFR-001",
     "NFR-003b",
     "NFR-003c",
     "NFR-003d",
@@ -424,7 +1720,6 @@
     "UIR-070",
     "UIR-073",
     "UIR-076",
-    "UIR-078",
     "UIR-091",
     "UIR-099",
     "UIR-100",
@@ -432,20 +1727,44 @@
     "UIR-102",
     "UIR-105",
     "UIR-106",
-    "UIR-107",
-    "FR-109",
-    "NFR-001"
+    "UIR-107"
   ],
   "tests": [
     {
-      "nodeid": "integration/test_batch_transfer.py::test_batch_transfer_sequential_multi_file[rc2014]",
+      "nodeid": "integration/test_batch_transfer.py::test_batch_abort_on_mid_file_failure",
       "file": "test_batch_transfer.py",
+      "line": 61,
+      "test": "test_batch_abort_on_mid_file_failure",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-T07",
+      "requirements": [
+        "FR-108"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-108"
+      ]
+    },
+    {
+      "nodeid": "integration/test_batch_transfer.py::test_batch_transfer_sequential_multi_file",
+      "file": "test_batch_transfer.py",
+      "line": 27,
       "test": "test_batch_transfer_sequential_multi_file",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
       "manual_id": "MT-T06",
       "requirements": [
@@ -453,109 +1772,207 @@
         "FR-106",
         "FR-107"
       ],
-      "evidence": "supplementary",
-      "gated": []
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-105",
+        "FR-106",
+        "FR-107"
+      ]
     },
     {
-      "nodeid": "integration/test_batch_transfer.py::test_batch_abort_on_mid_file_failure[rc2014]",
-      "file": "test_batch_transfer.py",
-      "test": "test_batch_abort_on_mid_file_failure",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-T07",
-      "requirements": [
-        "FR-108"
-      ],
-      "evidence": "supplementary",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_cancel_batch.py::test_cancel_during_later_batch_file[rc2014]",
+      "nodeid": "integration/test_cancel_batch.py::test_cancel_during_later_batch_file",
       "file": "test_cancel_batch.py",
+      "line": 45,
       "test": "test_cancel_during_later_batch_file",
       "tier": "hil",
       "markers": [
-        "hil",
-        "mt",
-        "req"
+        "hil"
       ],
-      "manual_id": "MT-T14",
+      "manual_id": null,
       "requirements": [
         "FR-120"
       ],
       "evidence": "supplementary",
-      "gated": []
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-120"
+      ]
     },
     {
-      "nodeid": "integration/test_cancel_transfer.py::test_cancel_upload_while_transferring[rc2014]",
+      "nodeid": "integration/test_cancel_transfer.py::test_cancel_upload_while_transferring",
       "file": "test_cancel_transfer.py",
+      "line": 26,
       "test": "test_cancel_upload_while_transferring",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
       "manual_id": "MT-T13",
       "requirements": [
         "FR-120",
         "NFR-003m"
       ],
-      "evidence": "supplementary",
-      "gated": []
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-120",
+        "NFR-003m"
+      ]
     },
     {
-      "nodeid": "integration/test_context_menu.py::test_remote_delete_removes_file[rc2014]",
+      "nodeid": "integration/test_context_menu.py::test_remote_delete_removes_file",
       "file": "test_context_menu.py",
+      "line": 28,
       "test": "test_remote_delete_removes_file",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
-      "manual_id": "MT-F08",
+      "manual_id": "MT-F06",
       "requirements": [
         "FR-111",
         "FR-117",
         "FR-118"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-111",
+        "FR-117",
+        "FR-118"
+      ]
     },
     {
-      "nodeid": "integration/test_context_menu.py::test_remote_rename_changes_name[rc2014]",
+      "nodeid": "integration/test_context_menu.py::test_remote_rename_changes_name",
       "file": "test_context_menu.py",
+      "line": 46,
       "test": "test_remote_rename_changes_name",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
-      "manual_id": "MT-F07",
+      "manual_id": "MT-F06",
       "requirements": [
         "FR-111",
         "FR-114",
         "FR-117"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-111",
+        "FR-114",
+        "FR-117"
+      ]
     },
     {
-      "nodeid": "integration/test_gui_backup_restore.py::test_restore_wipes_scratch_then_uploads[rc2014]",
+      "nodeid": "integration/test_gui_backup_restore.py::test_backup_downloads_remote_to_host",
       "file": "test_gui_backup_restore.py",
+      "line": 116,
+      "test": "test_backup_downloads_remote_to_host",
+      "tier": "hil",
+      "markers": [
+        "destructive",
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-BR03",
+      "requirements": [
+        "FR-150",
+        "FR-153",
+        "FR-154"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [
+        "destructive"
+      ],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-150",
+        "FR-153",
+        "FR-154"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_backup_restore.py::test_restore_erase_all_sequence_wipes_scratch",
+      "file": "test_gui_backup_restore.py",
+      "line": 64,
+      "test": "test_restore_erase_all_sequence_wipes_scratch",
+      "tier": "hil",
+      "markers": [
+        "destructive",
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-BR10",
+      "requirements": [
+        "FR-153e",
+        "UIR-107"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [
+        "destructive"
+      ],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-153e",
+        "UIR-107"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_backup_restore.py::test_restore_wipes_scratch_then_uploads",
+      "file": "test_gui_backup_restore.py",
+      "line": 27,
       "test": "test_restore_wipes_scratch_then_uploads",
       "tier": "hil",
       "markers": [
         "destructive",
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
       "manual_id": "MT-BR05",
       "requirements": [
@@ -565,114 +1982,113 @@
         "FR-154"
       ],
       "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
       "gated": [
         "destructive"
-      ]
-    },
-    {
-      "nodeid": "integration/test_gui_backup_restore.py::test_restore_erase_all_sequence_wipes_scratch[rc2014]",
-      "file": "test_gui_backup_restore.py",
-      "test": "test_restore_erase_all_sequence_wipes_scratch",
-      "tier": "hil",
-      "markers": [
-        "destructive",
-        "hil",
-        "mt",
-        "req"
       ],
-      "manual_id": "MT-BR10",
-      "requirements": [
-        "FR-153e",
-        "UIR-107"
-      ],
-      "evidence": "partial",
-      "gated": [
-        "destructive"
-      ]
-    },
-    {
-      "nodeid": "integration/test_gui_backup_restore.py::test_backup_downloads_remote_to_host[rc2014]",
-      "file": "test_gui_backup_restore.py",
-      "test": "test_backup_downloads_remote_to_host",
-      "tier": "hil",
-      "markers": [
-        "destructive",
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-BR02",
-      "requirements": [
-        "FR-150",
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-151",
         "FR-152",
+        "FR-153",
         "FR-154"
-      ],
-      "evidence": "partial",
-      "gated": [
-        "destructive"
       ]
     },
     {
-      "nodeid": "integration/test_gui_conflict.py::test_overwrite_existing_remote_file[rc2014]",
+      "nodeid": "integration/test_gui_conflict.py::test_conflict_apply_to_all_persists_across_batch",
       "file": "test_gui_conflict.py",
+      "line": 94,
+      "test": "test_conflict_apply_to_all_persists_across_batch",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-CF05",
+      "requirements": [
+        "FR-147"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-147"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_conflict.py::test_overwrite_existing_remote_file",
+      "file": "test_gui_conflict.py",
+      "line": 38,
       "test": "test_overwrite_existing_remote_file",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
-      "manual_id": "MT-CF01",
+      "manual_id": "MT-CF04",
       "requirements": [
         "FR-145",
         "FR-146"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-145",
+        "FR-146"
+      ]
     },
     {
-      "nodeid": "integration/test_gui_conflict.py::test_skip_existing_remote_file[rc2014]",
+      "nodeid": "integration/test_gui_conflict.py::test_skip_existing_remote_file",
       "file": "test_gui_conflict.py",
+      "line": 66,
       "test": "test_skip_existing_remote_file",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
-      "manual_id": "MT-CF02",
+      "manual_id": "MT-CF04",
       "requirements": [
         "FR-145",
         "FR-147"
       ],
       "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_gui_conflict.py::test_conflict_apply_to_all_persists_across_batch[rc2014]",
-      "file": "test_gui_conflict.py",
-      "test": "test_conflict_apply_to_all_persists_across_batch",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "req"
-      ],
-      "manual_id": null,
-      "requirements": [
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-145",
         "FR-147"
-      ],
-      "evidence": "partial",
-      "gated": []
+      ]
     },
     {
-      "nodeid": "integration/test_gui_connect.py::test_connect_opens_ports_and_probes[rc2014]",
+      "nodeid": "integration/test_gui_connect.py::test_connect_opens_ports_and_probes",
       "file": "test_gui_connect.py",
+      "line": 34,
       "test": "test_connect_opens_ports_and_probes",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
       "manual_id": "MT-C01",
       "requirements": [
@@ -681,55 +2097,29 @@
         "FR-041",
         "FR-042"
       ],
-      "evidence": "equivalent",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_gui_connect.py::test_disconnect_closes_ports_and_clears_list[rc2014]",
-      "file": "test_gui_connect.py",
-      "test": "test_disconnect_closes_ports_and_clears_list",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-C05",
-      "requirements": [
-        "FR-050",
-        "FR-054",
-        "FR-055",
-        "FR-058"
-      ],
-      "evidence": "equivalent",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_gui_connect.py::test_reconnect_after_disconnect[rc2014]",
-      "file": "test_gui_connect.py",
-      "test": "test_reconnect_after_disconnect",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-C06",
-      "requirements": [
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
         "FR-030",
-        "FR-050"
-      ],
-      "evidence": "equivalent",
-      "gated": []
+        "FR-037",
+        "FR-041",
+        "FR-042"
+      ]
     },
     {
-      "nodeid": "integration/test_gui_connect.py::test_connect_transport_open_failure_reports_error_and_skips_probe[rc2014]",
+      "nodeid": "integration/test_gui_connect.py::test_connect_transport_open_failure_reports_error_and_skips_probe",
       "file": "test_gui_connect.py",
+      "line": 84,
       "test": "test_connect_transport_open_failure_reports_error_and_skips_probe",
       "tier": "hil",
       "markers": [
         "hil",
-        "req",
         "two_port"
       ],
       "manual_id": null,
@@ -737,37 +2127,62 @@
         "FR-039",
         "FR-046"
       ],
-      "evidence": "partial",
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
       "gated": [
         "two_port"
+      ],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-039",
+        "FR-046"
       ]
     },
     {
-      "nodeid": "integration/test_gui_connect.py::test_rapid_disconnect_during_probe_no_crash[rc2014]",
+      "nodeid": "integration/test_gui_connect.py::test_disconnect_closes_ports_and_clears_list",
       "file": "test_gui_connect.py",
-      "test": "test_rapid_disconnect_during_probe_no_crash",
+      "line": 50,
+      "test": "test_disconnect_closes_ports_and_clears_list",
       "tier": "hil",
       "markers": [
         "hil",
-        "req"
+        "mt"
       ],
-      "manual_id": null,
+      "manual_id": "MT-C09",
       "requirements": [
         "FR-050",
-        "NFR-004"
+        "FR-054",
+        "FR-055",
+        "FR-058"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-050",
+        "FR-054",
+        "FR-055",
+        "FR-058"
+      ]
     },
     {
-      "nodeid": "integration/test_gui_connect.py::test_disconnect_prompt_with_ports_swapped[rc2014]",
+      "nodeid": "integration/test_gui_connect.py::test_disconnect_prompt_with_ports_swapped",
       "file": "test_gui_connect.py",
+      "line": 160,
       "test": "test_disconnect_prompt_with_ports_swapped",
       "tier": "hil",
       "markers": [
         "hil",
         "mt",
-        "req",
         "two_port"
       ],
       "manual_id": "MT-C18",
@@ -776,19 +2191,29 @@
         "FR-050"
       ],
       "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
       "gated": [
         "two_port"
+      ],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-030",
+        "FR-050"
       ]
     },
     {
-      "nodeid": "integration/test_gui_connect.py::test_load_config_while_connected_closes_ports[rc2014]",
+      "nodeid": "integration/test_gui_connect.py::test_load_config_while_connected_closes_ports",
       "file": "test_gui_connect.py",
+      "line": 210,
       "test": "test_load_config_while_connected_closes_ports",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
       "manual_id": "MT-C19",
       "requirements": [
@@ -796,140 +2221,376 @@
         "FR-050"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-017a",
+        "FR-050"
+      ]
     },
     {
-      "nodeid": "integration/test_gui_dragdrop.py::test_internal_drop_host_to_remote_uploads[rc2014]",
+      "nodeid": "integration/test_gui_connect.py::test_rapid_disconnect_during_probe_no_crash",
+      "file": "test_gui_connect.py",
+      "line": 138,
+      "test": "test_rapid_disconnect_during_probe_no_crash",
+      "tier": "hil",
+      "markers": [
+        "hil"
+      ],
+      "manual_id": null,
+      "requirements": [
+        "FR-050",
+        "NFR-004"
+      ],
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-050",
+        "NFR-004"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_connect.py::test_reconnect_after_disconnect",
+      "file": "test_gui_connect.py",
+      "line": 69,
+      "test": "test_reconnect_after_disconnect",
+      "tier": "hil",
+      "markers": [
+        "hil"
+      ],
+      "manual_id": null,
+      "requirements": [
+        "FR-030",
+        "FR-050"
+      ],
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-030",
+        "FR-050"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image.py::test_disk_image_host_mount_copy_to_remote",
+      "file": "test_gui_disk_image.py",
+      "line": 28,
+      "test": "test_disk_image_host_mount_copy_to_remote",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-DI04",
+      "requirements": [
+        "FR-106",
+        "FR-145",
+        "FR-171"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-106",
+        "FR-145",
+        "FR-171"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image.py::test_disk_image_user_area_transfer_preserves_source",
+      "file": "test_gui_disk_image.py",
+      "line": 201,
+      "test": "test_disk_image_user_area_transfer_preserves_source",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-DI21",
+      "requirements": [
+        "FR-188"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-188"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_disk_image.py::test_remote_image_mount_refuses_connect",
+      "file": "test_gui_disk_image.py",
+      "line": 111,
+      "test": "test_remote_image_mount_refuses_connect",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-DI14",
+      "requirements": [
+        "FR-176"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-176"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_dragdrop.py::test_drop_cancelled_does_not_transfer",
       "file": "test_gui_dragdrop.py",
+      "line": 46,
+      "test": "test_drop_cancelled_does_not_transfer",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-D06",
+      "requirements": [
+        "FR-137"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-137"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_dragdrop.py::test_internal_drop_host_to_remote_uploads",
+      "file": "test_gui_dragdrop.py",
+      "line": 15,
       "test": "test_internal_drop_host_to_remote_uploads",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
-      "manual_id": "MT-D01",
+      "manual_id": "MT-D03",
       "requirements": [
         "FR-137",
         "FR-138"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-137",
+        "FR-138"
+      ]
     },
     {
-      "nodeid": "integration/test_gui_dragdrop.py::test_drop_cancelled_does_not_transfer[rc2014]",
-      "file": "test_gui_dragdrop.py",
-      "test": "test_drop_cancelled_does_not_transfer",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-D05",
-      "requirements": [
-        "FR-137"
-      ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_gui_history.py::test_upload_records_history_entry[rc2014]",
+      "nodeid": "integration/test_gui_history.py::test_upload_records_history_entry",
       "file": "test_gui_history.py",
+      "line": 17,
       "test": "test_upload_records_history_entry",
       "tier": "hil",
       "markers": [
-        "hil",
-        "mt",
-        "req"
+        "hil"
       ],
-      "manual_id": "MT-TH01",
+      "manual_id": null,
       "requirements": [
         "FR-140",
         "FR-142"
       ],
-      "evidence": "partial",
-      "gated": []
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-140",
+        "FR-142"
+      ]
     },
     {
-      "nodeid": "integration/test_gui_validation.py::test_invalid_name_rename_uploads_conforming[rc2014]",
+      "nodeid": "integration/test_gui_validation.py::test_invalid_name_rename_uploads_conforming",
       "file": "test_gui_validation.py",
+      "line": 32,
       "test": "test_invalid_name_rename_uploads_conforming",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
-      "manual_id": "MT-FV01",
+      "manual_id": "MT-FV02",
       "requirements": [
         "FR-148",
         "FR-149"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-148",
+        "FR-149"
+      ]
     },
     {
-      "nodeid": "integration/test_gui_validation.py::test_invalid_name_skip_does_not_upload[rc2014]",
+      "nodeid": "integration/test_gui_validation.py::test_invalid_name_skip_does_not_upload",
       "file": "test_gui_validation.py",
+      "line": 65,
       "test": "test_invalid_name_skip_does_not_upload",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
-      "manual_id": "MT-FV02",
+      "manual_id": "MT-FV04",
       "requirements": [
-        "FR-148"
+        "FR-149"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-149"
+      ]
     },
     {
-      "nodeid": "integration/test_gui_validation.py::test_invalid_name_special_chars_sanitized[rc2014]",
+      "nodeid": "integration/test_gui_validation.py::test_invalid_name_special_chars_sanitized",
       "file": "test_gui_validation.py",
+      "line": 89,
       "test": "test_invalid_name_special_chars_sanitized",
       "tier": "hil",
       "markers": [
-        "hil",
-        "req"
+        "hil"
       ],
       "manual_id": null,
       "requirements": [
         "FR-148",
         "FR-149"
       ],
-      "evidence": "partial",
-      "gated": []
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-148",
+        "FR-149"
+      ]
     },
     {
-      "nodeid": "integration/test_protocol_listing.py::test_detect_current_drive[rc2014]",
-      "file": "test_protocol_listing.py",
-      "test": "test_detect_current_drive",
+      "nodeid": "integration/test_inter_file_wait.py::test_inter_file_wait_and_post_final_settle",
+      "file": "test_inter_file_wait.py",
+      "line": 31,
+      "test": "test_inter_file_wait_and_post_final_settle",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
-      "manual_id": "MT-R03",
+      "manual_id": "MT-T08",
       "requirements": [
-        "DR-033a",
-        "FR-041"
+        "FR-109"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-109"
+      ]
     },
     {
-      "nodeid": "integration/test_protocol_listing.py::test_change_to_scratch_drive[rc2014]",
+      "nodeid": "integration/test_inter_file_wait.py::test_inter_file_wait_terminal_shows_prompt_between_files",
+      "file": "test_inter_file_wait.py",
+      "line": 88,
+      "test": "test_inter_file_wait_terminal_shows_prompt_between_files",
+      "tier": "hil",
+      "markers": [
+        "hil"
+      ],
+      "manual_id": null,
+      "requirements": [
+        "FR-109"
+      ],
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-109"
+      ]
+    },
+    {
+      "nodeid": "integration/test_protocol_listing.py::test_change_to_scratch_drive",
       "file": "test_protocol_listing.py",
+      "line": 33,
       "test": "test_change_to_scratch_drive",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
       "manual_id": "MT-R05",
       "requirements": [
@@ -938,17 +2599,83 @@
         "FR-102"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-100",
+        "FR-101",
+        "FR-102"
+      ]
     },
     {
-      "nodeid": "integration/test_protocol_listing.py::test_dir_listing_parses[rc2014]",
+      "nodeid": "integration/test_protocol_listing.py::test_detect_current_drive",
       "file": "test_protocol_listing.py",
+      "line": 21,
+      "test": "test_detect_current_drive",
+      "tier": "hil",
+      "markers": [
+        "hil"
+      ],
+      "manual_id": null,
+      "requirements": [
+        "DR-033a",
+        "FR-041"
+      ],
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "DR-033a",
+        "FR-041"
+      ]
+    },
+    {
+      "nodeid": "integration/test_protocol_listing.py::test_dir_listing_empty_directory",
+      "file": "test_protocol_listing.py",
+      "line": 59,
+      "test": "test_dir_listing_empty_directory",
+      "tier": "hil",
+      "markers": [
+        "destructive",
+        "hil"
+      ],
+      "manual_id": null,
+      "requirements": [
+        "FR-077"
+      ],
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [
+        "destructive"
+      ],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-077"
+      ]
+    },
+    {
+      "nodeid": "integration/test_protocol_listing.py::test_dir_listing_parses",
+      "file": "test_protocol_listing.py",
+      "line": 43,
       "test": "test_dir_listing_parses",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
       "manual_id": "MT-R01",
       "requirements": [
@@ -956,70 +2683,58 @@
         "FR-078",
         "FR-079"
       ],
-      "evidence": "equivalent",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_protocol_listing.py::test_dir_listing_empty_directory[rc2014]",
-      "file": "test_protocol_listing.py",
-      "test": "test_dir_listing_empty_directory",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-R08",
-      "requirements": [
-        "FR-077"
-      ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-077",
+        "FR-078",
+        "FR-079"
+      ]
     },
     {
-      "nodeid": "integration/test_protocol_listing.py::test_dir_listing_single_file[rc2014]",
+      "nodeid": "integration/test_protocol_listing.py::test_dir_listing_single_file",
       "file": "test_protocol_listing.py",
+      "line": 74,
       "test": "test_dir_listing_single_file",
       "tier": "hil",
       "markers": [
+        "destructive",
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
-      "manual_id": "MT-R09",
+      "manual_id": "MT-R04",
       "requirements": [
         "FR-077"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [
+        "destructive"
+      ],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-077"
+      ]
     },
     {
-      "nodeid": "integration/test_protocol_listing.py::test_user_area_switch_lists[rc2014]",
+      "nodeid": "integration/test_protocol_listing.py::test_transfer_targets_selected_user_area",
       "file": "test_protocol_listing.py",
-      "test": "test_user_area_switch_lists",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-R10",
-      "requirements": [
-        "FR-181",
-        "FR-182"
-      ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_protocol_listing.py::test_transfer_targets_selected_user_area[rc2014]",
-      "file": "test_protocol_listing.py",
+      "line": 113,
       "test": "test_transfer_targets_selected_user_area",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
       "manual_id": "MT-R11",
       "requirements": [
@@ -1027,55 +2742,85 @@
         "FR-184"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-183",
+        "FR-184"
+      ]
     },
     {
-      "nodeid": "integration/test_protocol_transfers.py::test_round_trip_sample_files[rc2014]",
-      "file": "test_protocol_transfers.py",
-      "test": "test_round_trip_sample_files",
+      "nodeid": "integration/test_protocol_listing.py::test_user_area_switch_lists",
+      "file": "test_protocol_listing.py",
+      "line": 94,
+      "test": "test_user_area_switch_lists",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
-      "manual_id": "MT-T03",
+      "manual_id": "MT-R10",
       "requirements": [
-        "FR-081",
+        "FR-181",
+        "FR-182"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-181",
+        "FR-182"
+      ]
+    },
+    {
+      "nodeid": "integration/test_protocol_transfers.py::test_recv_port_closed_mid_transfer_graceful_failure",
+      "file": "test_protocol_transfers.py",
+      "line": 183,
+      "test": "test_recv_port_closed_mid_transfer_graceful_failure",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "two_port"
+      ],
+      "manual_id": null,
+      "requirements": [
         "FR-082",
-        "FR-083"
+        "FR-120"
       ],
-      "evidence": "equivalent",
-      "gated": []
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [
+        "two_port"
+      ],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-082",
+        "FR-120"
+      ]
     },
     {
-      "nodeid": "integration/test_protocol_transfers.py::test_uploaded_file_visible_then_removable[rc2014]",
+      "nodeid": "integration/test_protocol_transfers.py::test_round_trip_1k",
       "file": "test_protocol_transfers.py",
-      "test": "test_uploaded_file_visible_then_removable",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-T04",
-      "requirements": [
-        "FR-099",
-        "FR-106",
-        "FR-107"
-      ],
-      "evidence": "equivalent",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_protocol_transfers.py::test_round_trip_1k[rc2014]",
-      "file": "test_protocol_transfers.py",
+      "line": 75,
       "test": "test_round_trip_1k",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
       "manual_id": "MT-T10",
       "requirements": [
@@ -1084,17 +2829,28 @@
         "NFR-003e"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-082",
+        "NFR-003b",
+        "NFR-003e"
+      ]
     },
     {
-      "nodeid": "integration/test_protocol_transfers.py::test_round_trip_checksum[rc2014]",
+      "nodeid": "integration/test_protocol_transfers.py::test_round_trip_checksum",
       "file": "test_protocol_transfers.py",
+      "line": 89,
       "test": "test_round_trip_checksum",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
       "manual_id": "MT-T10",
       "requirements": [
@@ -1103,161 +2859,195 @@
         "NFR-003f"
       ],
       "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_protocol_transfers.py::test_round_trip_zero_byte_file[rc2014]",
-      "file": "test_protocol_transfers.py",
-      "test": "test_round_trip_zero_byte_file",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-T15",
-      "requirements": [
-        "FR-081",
-        "NFR-003q"
-      ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_protocol_transfers.py::test_round_trip_exactly_128_bytes[rc2014]",
-      "file": "test_protocol_transfers.py",
-      "test": "test_round_trip_exactly_128_bytes",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-T16",
-      "requirements": [
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
         "FR-082",
-        "NFR-003c"
-      ],
-      "evidence": "partial",
-      "gated": []
+        "NFR-003d",
+        "NFR-003f"
+      ]
     },
     {
-      "nodeid": "integration/test_protocol_transfers.py::test_round_trip_exactly_1024_bytes[rc2014]",
+      "nodeid": "integration/test_protocol_transfers.py::test_round_trip_exactly_1024_bytes",
       "file": "test_protocol_transfers.py",
+      "line": 157,
       "test": "test_round_trip_exactly_1024_bytes",
       "tier": "hil",
       "markers": [
-        "hil",
-        "req"
+        "hil"
       ],
       "manual_id": null,
       "requirements": [
         "FR-082",
         "NFR-003b"
       ],
-      "evidence": "partial",
-      "gated": []
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-082",
+        "NFR-003b"
+      ]
     },
     {
-      "nodeid": "integration/test_protocol_transfers.py::test_recv_port_closed_mid_transfer_graceful_failure[rc2014]",
+      "nodeid": "integration/test_protocol_transfers.py::test_round_trip_exactly_128_bytes",
       "file": "test_protocol_transfers.py",
-      "test": "test_recv_port_closed_mid_transfer_graceful_failure",
+      "line": 136,
+      "test": "test_round_trip_exactly_128_bytes",
       "tier": "hil",
       "markers": [
-        "hil",
-        "req",
-        "two_port"
+        "hil"
       ],
       "manual_id": null,
       "requirements": [
         "FR-082",
-        "FR-120"
+        "NFR-003c"
       ],
-      "evidence": "partial",
-      "gated": [
-        "two_port"
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-082",
+        "NFR-003c"
       ]
     },
     {
-      "nodeid": "integration/test_smoke.py::test_peer_connects_and_sees_ccp_prompt[rc2014]",
-      "file": "test_smoke.py",
-      "test": "test_peer_connects_and_sees_ccp_prompt",
+      "nodeid": "integration/test_protocol_transfers.py::test_round_trip_sample_files",
+      "file": "test_protocol_transfers.py",
+      "line": 47,
+      "test": "test_round_trip_sample_files",
       "tier": "hil",
       "markers": [
         "hil",
-        "req"
+        "mt"
+      ],
+      "manual_id": "MT-T03",
+      "requirements": [
+        "FR-081",
+        "FR-082",
+        "FR-083"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-081",
+        "FR-082",
+        "FR-083"
+      ]
+    },
+    {
+      "nodeid": "integration/test_protocol_transfers.py::test_round_trip_zero_byte_file",
+      "file": "test_protocol_transfers.py",
+      "line": 103,
+      "test": "test_round_trip_zero_byte_file",
+      "tier": "hil",
+      "markers": [
+        "hil"
+      ],
+      "manual_id": null,
+      "requirements": [
+        "FR-081",
+        "NFR-003q"
+      ],
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-081",
+        "NFR-003q"
+      ]
+    },
+    {
+      "nodeid": "integration/test_protocol_transfers.py::test_uploaded_file_visible_then_removable",
+      "file": "test_protocol_transfers.py",
+      "line": 59,
+      "test": "test_uploaded_file_visible_then_removable",
+      "tier": "hil",
+      "markers": [
+        "hil"
+      ],
+      "manual_id": null,
+      "requirements": [
+        "FR-099",
+        "FR-106",
+        "FR-107"
+      ],
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-099",
+        "FR-106",
+        "FR-107"
+      ]
+    },
+    {
+      "nodeid": "integration/test_smoke.py::test_peer_connects_and_sees_ccp_prompt",
+      "file": "test_smoke.py",
+      "line": 27,
+      "test": "test_peer_connects_and_sees_ccp_prompt",
+      "tier": "hil",
+      "markers": [
+        "hil"
       ],
       "manual_id": null,
       "requirements": [
         "FR-041",
         "FR-042"
       ],
-      "evidence": "partial",
-      "gated": []
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-041",
+        "FR-042"
+      ]
     },
     {
-      "nodeid": "integration/test_terminal_window.py::test_terminal_window_shows_live_response[rc2014]",
+      "nodeid": "integration/test_terminal_window.py::test_terminal_context_menu_copy_selection",
       "file": "test_terminal_window.py",
-      "test": "test_terminal_window_shows_live_response",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-W01",
-      "requirements": [
-        "FR-091",
-        "FR-094",
-        "FR-097"
-      ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_terminal_window.py::test_terminal_window_keyboard_input[rc2014]",
-      "file": "test_terminal_window.py",
-      "test": "test_terminal_window_keyboard_input",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-W03",
-      "requirements": [
-        "FR-094",
-        "FR-096"
-      ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_terminal_window.py::test_terminal_window_clear[rc2014]",
-      "file": "test_terminal_window.py",
-      "test": "test_terminal_window_clear",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-W05",
-      "requirements": [
-        "FR-095"
-      ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_terminal_window.py::test_terminal_context_menu_copy_selection[rc2014]",
-      "file": "test_terminal_window.py",
+      "line": 94,
       "test": "test_terminal_context_menu_copy_selection",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
       "manual_id": "MT-W17",
       "requirements": [
@@ -1267,71 +3057,29 @@
         "UIR-105"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-165",
+        "UIR-099",
+        "UIR-100",
+        "UIR-105"
+      ]
     },
     {
-      "nodeid": "integration/test_terminal_window.py::test_terminal_context_menu_paste_sends_over_serial[rc2014]",
+      "nodeid": "integration/test_terminal_window.py::test_terminal_context_menu_macros_submenu_runs_over_serial",
       "file": "test_terminal_window.py",
-      "test": "test_terminal_context_menu_paste_sends_over_serial",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-W17",
-      "requirements": [
-        "FR-094",
-        "FR-166"
-      ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_terminal_window.py::test_terminal_context_menu_reset_size[rc2014]",
-      "file": "test_terminal_window.py",
-      "test": "test_terminal_context_menu_reset_size",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-W18",
-      "requirements": [
-        "FR-091a",
-        "FR-167"
-      ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_terminal_window.py::test_terminal_context_menu_terminal_type_submenu[rc2014]",
-      "file": "test_terminal_window.py",
-      "test": "test_terminal_context_menu_terminal_type_submenu",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-W19",
-      "requirements": [
-        "UIR-034",
-        "UIR-101"
-      ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_terminal_window.py::test_terminal_context_menu_macros_submenu_runs_over_serial[rc2014]",
-      "file": "test_terminal_window.py",
+      "line": 217,
       "test": "test_terminal_context_menu_macros_submenu_runs_over_serial",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
       "manual_id": "MT-W20",
       "requirements": [
@@ -1339,155 +3087,510 @@
         "UIR-102"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-162",
+        "UIR-102"
+      ]
     },
     {
-      "nodeid": "integration/test_terminal_window.py::test_terminal_vt100_escape_sequences_render_without_crash[rc2014]",
+      "nodeid": "integration/test_terminal_window.py::test_terminal_context_menu_paste_sends_over_serial",
       "file": "test_terminal_window.py",
-      "test": "test_terminal_vt100_escape_sequences_render_without_crash",
+      "line": 139,
+      "test": "test_terminal_context_menu_paste_sends_over_serial",
       "tier": "hil",
       "markers": [
         "hil",
-        "mt",
-        "req"
+        "mt"
       ],
-      "manual_id": "MT-W10",
+      "manual_id": "MT-W17",
+      "requirements": [
+        "FR-094",
+        "FR-166"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-094",
+        "FR-166"
+      ]
+    },
+    {
+      "nodeid": "integration/test_terminal_window.py::test_terminal_context_menu_reset_size",
+      "file": "test_terminal_window.py",
+      "line": 166,
+      "test": "test_terminal_context_menu_reset_size",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-W18",
+      "requirements": [
+        "FR-091a",
+        "FR-167"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-091a",
+        "FR-167"
+      ]
+    },
+    {
+      "nodeid": "integration/test_terminal_window.py::test_terminal_context_menu_terminal_type_submenu",
+      "file": "test_terminal_window.py",
+      "line": 188,
+      "test": "test_terminal_context_menu_terminal_type_submenu",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-W19",
+      "requirements": [
+        "UIR-034",
+        "UIR-101"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "UIR-034",
+        "UIR-101"
+      ]
+    },
+    {
+      "nodeid": "integration/test_terminal_window.py::test_terminal_vt100_escape_sequences_render_without_crash",
+      "file": "test_terminal_window.py",
+      "line": 255,
+      "test": "test_terminal_vt100_escape_sequences_render_without_crash",
+      "tier": "hil",
+      "markers": [
+        "hil"
+      ],
+      "manual_id": null,
       "requirements": [
         "FR-157"
       ],
-      "evidence": "partial",
-      "gated": []
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-157"
+      ]
     },
     {
-      "nodeid": "integration/test_visual_assertions.py::test_window_title_contains_app_name",
+      "nodeid": "integration/test_terminal_window.py::test_terminal_window_clear",
+      "file": "test_terminal_window.py",
+      "line": 75,
+      "test": "test_terminal_window_clear",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-W06",
+      "requirements": [
+        "FR-095"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-095"
+      ]
+    },
+    {
+      "nodeid": "integration/test_terminal_window.py::test_terminal_window_keyboard_input",
+      "file": "test_terminal_window.py",
+      "line": 50,
+      "test": "test_terminal_window_keyboard_input",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-W03",
+      "requirements": [
+        "FR-094",
+        "FR-096"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-094",
+        "FR-096"
+      ]
+    },
+    {
+      "nodeid": "integration/test_terminal_window.py::test_terminal_window_shows_live_response",
+      "file": "test_terminal_window.py",
+      "line": 29,
+      "test": "test_terminal_window_shows_live_response",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-W01",
+      "requirements": [
+        "FR-091",
+        "FR-094",
+        "FR-097"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-091",
+        "FR-094",
+        "FR-097"
+      ]
+    },
+    {
+      "nodeid": "integration/test_ui_responsive.py::test_ui_responsive_during_large_transfer",
+      "file": "test_ui_responsive.py",
+      "line": 30,
+      "test": "test_ui_responsive_during_large_transfer",
+      "tier": "hil",
+      "markers": [
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-T11",
+      "requirements": [
+        "NFR-001"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "NFR-001"
+      ]
+    },
+    {
+      "nodeid": "integration/test_visual_assertions.py::test_about_dialog_contents",
       "file": "test_visual_assertions.py",
-      "test": "test_window_title_contains_app_name",
+      "line": 136,
+      "test": "test_about_dialog_contents",
       "tier": "visual",
       "markers": [
         "mt",
-        "req",
         "visual"
       ],
-      "manual_id": "MT-S01",
+      "manual_id": "MT-V10",
       "requirements": [
-        "FR-125",
-        "UIR-078"
+        "UIR-076"
       ],
       "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_visual_assertions.py::test_remote_list_empty_at_startup",
-      "file": "test_visual_assertions.py",
-      "test": "test_remote_list_empty_at_startup",
-      "tier": "visual",
-      "markers": [
-        "mt",
-        "req",
-        "visual"
-      ],
-      "manual_id": "MT-S03",
-      "requirements": [
-        "FR-070"
-      ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_visual_assertions.py::test_menubar_has_file_and_help",
-      "file": "test_visual_assertions.py",
-      "test": "test_menubar_has_file_and_help",
-      "tier": "visual",
-      "markers": [
-        "mt",
-        "req",
-        "visual"
-      ],
-      "manual_id": "MT-G01",
-      "requirements": [
-        "UIR-004"
-      ],
-      "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "UIR-076"
+      ]
     },
     {
       "nodeid": "integration/test_visual_assertions.py::test_drive_combo_lists_a_to_p",
       "file": "test_visual_assertions.py",
+      "line": 47,
       "test": "test_drive_combo_lists_a_to_p",
       "tier": "visual",
       "markers": [
         "mt",
-        "req",
         "visual"
       ],
-      "manual_id": "MT-G05",
+      "manual_id": "MT-S05",
       "requirements": [
         "UIR-017"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "UIR-017"
+      ]
+    },
+    {
+      "nodeid": "integration/test_visual_assertions.py::test_font_dialog_lists_usable_under_material_theme",
+      "file": "test_visual_assertions.py",
+      "line": 111,
+      "test": "test_font_dialog_lists_usable_under_material_theme",
+      "tier": "visual",
+      "markers": [
+        "mt",
+        "visual"
+      ],
+      "manual_id": "MT-W13",
+      "requirements": [
+        "UIR-069",
+        "UIR-070"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "UIR-069",
+        "UIR-070"
+      ]
+    },
+    {
+      "nodeid": "integration/test_visual_assertions.py::test_language_menu_switch_retranslates_ui",
+      "file": "test_visual_assertions.py",
+      "line": 169,
+      "test": "test_language_menu_switch_retranslates_ui",
+      "tier": "visual",
+      "markers": [
+        "mt",
+        "visual"
+      ],
+      "manual_id": "MT-I02",
+      "requirements": [
+        "FR-123"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-123"
+      ]
     },
     {
       "nodeid": "integration/test_visual_assertions.py::test_lists_have_context_menus",
       "file": "test_visual_assertions.py",
+      "line": 56,
       "test": "test_lists_have_context_menus",
       "tier": "visual",
       "markers": [
         "mt",
-        "req",
         "visual"
       ],
-      "manual_id": "MT-G07",
+      "manual_id": "MT-F01",
       "requirements": [
         "UIR-018",
         "UIR-019"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "UIR-018",
+        "UIR-019"
+      ]
     },
     {
       "nodeid": "integration/test_visual_assertions.py::test_main_panes_have_push_buttons",
       "file": "test_visual_assertions.py",
+      "line": 63,
       "test": "test_main_panes_have_push_buttons",
       "tier": "visual",
       "markers": [
         "mt",
-        "req",
         "visual"
       ],
-      "manual_id": "MT-G03",
+      "manual_id": "MT-S05",
       "requirements": [
         "UIR-014"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "UIR-014"
+      ]
+    },
+    {
+      "nodeid": "integration/test_visual_assertions.py::test_manual_dialog_renders",
+      "file": "test_visual_assertions.py",
+      "line": 154,
+      "test": "test_manual_dialog_renders",
+      "tier": "visual",
+      "markers": [
+        "visual"
+      ],
+      "manual_id": null,
+      "requirements": [
+        "UIR-091"
+      ],
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "UIR-091"
+      ]
     },
     {
       "nodeid": "integration/test_visual_assertions.py::test_material_theme_applied",
       "file": "test_visual_assertions.py",
+      "line": 74,
       "test": "test_material_theme_applied",
       "tier": "visual",
       "markers": [
         "mt",
-        "req",
         "visual"
       ],
-      "manual_id": "MT-V08",
+      "manual_id": "MT-V01",
       "requirements": [
         "UIR-070",
         "UIR-073"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "UIR-070",
+        "UIR-073"
+      ]
+    },
+    {
+      "nodeid": "integration/test_visual_assertions.py::test_menubar_has_file_and_help",
+      "file": "test_visual_assertions.py",
+      "line": 37,
+      "test": "test_menubar_has_file_and_help",
+      "tier": "visual",
+      "markers": [
+        "mt",
+        "visual"
+      ],
+      "manual_id": "MT-S03",
+      "requirements": [
+        "UIR-004"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "UIR-004"
+      ]
+    },
+    {
+      "nodeid": "integration/test_visual_assertions.py::test_remote_list_empty_at_startup",
+      "file": "test_visual_assertions.py",
+      "line": 31,
+      "test": "test_remote_list_empty_at_startup",
+      "tier": "visual",
+      "markers": [
+        "mt",
+        "visual"
+      ],
+      "manual_id": "MT-S02",
+      "requirements": [
+        "FR-070"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-070"
+      ]
     },
     {
       "nodeid": "integration/test_visual_assertions.py::test_terminal_window_has_no_control_row_and_font_in_context_menu",
       "file": "test_visual_assertions.py",
+      "line": 83,
       "test": "test_terminal_window_has_no_control_row_and_font_in_context_menu",
       "tier": "visual",
       "markers": [
         "mt",
-        "req",
         "visual"
       ],
       "manual_id": "MT-W13",
@@ -1497,126 +3600,43 @@
         "UIR-106"
       ],
       "evidence": "partial",
-      "gated": []
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "UIR-064",
+        "UIR-069",
+        "UIR-106"
+      ]
     },
     {
-      "nodeid": "integration/test_visual_assertions.py::test_font_dialog_lists_usable_under_material_theme",
+      "nodeid": "integration/test_visual_assertions.py::test_window_title_contains_app_name",
       "file": "test_visual_assertions.py",
-      "test": "test_font_dialog_lists_usable_under_material_theme",
+      "line": 25,
+      "test": "test_window_title_contains_app_name",
       "tier": "visual",
       "markers": [
-        "mt",
-        "req",
         "visual"
       ],
-      "manual_id": "MT-W13",
+      "manual_id": null,
       "requirements": [
-        "UIR-069"
+        "FR-125"
       ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_visual_assertions.py::test_about_dialog_contents",
-      "file": "test_visual_assertions.py",
-      "test": "test_about_dialog_contents",
-      "tier": "visual",
-      "markers": [
-        "mt",
-        "req",
-        "visual"
-      ],
-      "manual_id": "MT-I03",
-      "requirements": [
-        "UIR-076"
-      ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_visual_assertions.py::test_manual_dialog_renders",
-      "file": "test_visual_assertions.py",
-      "test": "test_manual_dialog_renders",
-      "tier": "visual",
-      "markers": [
-        "mt",
-        "req",
-        "visual"
-      ],
-      "manual_id": "MT-V09",
-      "requirements": [
-        "UIR-091"
-      ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_visual_assertions.py::test_i18n_language_switch_updates_ui",
-      "file": "test_visual_assertions.py",
-      "test": "test_i18n_language_switch_updates_ui",
-      "tier": "visual",
-      "markers": [
-        "mt",
-        "req",
-        "visual"
-      ],
-      "manual_id": "MT-V12",
-      "requirements": [
-        "UIR-076"
-      ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_inter_file_wait.py::test_inter_file_wait_and_post_final_settle[rc2014]",
-      "file": "test_inter_file_wait.py",
-      "test": "test_inter_file_wait_and_post_final_settle",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-T08",
-      "requirements": [
-        "FR-109"
-      ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_inter_file_wait.py::test_inter_file_wait_terminal_shows_prompt_between_files[rc2014]",
-      "file": "test_inter_file_wait.py",
-      "test": "test_inter_file_wait_terminal_shows_prompt_between_files",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-T08",
-      "requirements": [
-        "FR-109"
-      ],
-      "evidence": "partial",
-      "gated": []
-    },
-    {
-      "nodeid": "integration/test_ui_responsive.py::test_ui_responsive_during_large_transfer[rc2014]",
-      "file": "test_ui_responsive.py",
-      "test": "test_ui_responsive_during_large_transfer",
-      "tier": "hil",
-      "markers": [
-        "hil",
-        "mt",
-        "req"
-      ],
-      "manual_id": "MT-T11",
-      "requirements": [
-        "NFR-001"
-      ],
-      "evidence": "partial",
-      "gated": []
+      "evidence": "supplementary",
+      "evidence_rationale": "Requirement evidence only; this test is not mapped to a manual workflow.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-125"
+      ]
     }
   ]
 }

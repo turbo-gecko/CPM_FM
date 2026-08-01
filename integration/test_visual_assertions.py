@@ -21,19 +21,19 @@ log = get_logger("visual")
 pytestmark = pytest.mark.visual
 
 
-@pytest.mark.mt("MT-S01", "FR-125", "UIR-078")
+@pytest.mark.req("FR-125")
 def test_window_title_contains_app_name(gui_no_target):
     """Verifies: FR-125."""
     assert APP_NAME in gui_no_target.windowTitle()
 
 
-@pytest.mark.mt("MT-S03", "FR-070")
+@pytest.mark.mt("MT-S02", "FR-070")
 def test_remote_list_empty_at_startup(gui_no_target):
     """Verifies: FR-070."""
     assert gui_no_target.remote_list.count() == 0
 
 
-@pytest.mark.mt("MT-G01", "UIR-004")
+@pytest.mark.mt("MT-S03", "UIR-004")
 def test_menubar_has_file_and_help(gui_no_target):
     """Verifies: UIR-004."""
     titles = [m.title() for m in gui_no_target.menuBar().findChildren(QMenu)]
@@ -43,21 +43,23 @@ def test_menubar_has_file_and_help(gui_no_target):
     assert "About" in labels and "Manual" in labels
 
 
-@pytest.mark.mt("MT-G05", "UIR-017")
+@pytest.mark.mt("MT-S05", "UIR-017")
 def test_drive_combo_lists_a_to_p(gui_no_target):
     """Verifies: UIR-017."""
-    items = [gui_no_target.drive_combo.itemText(i) for i in range(gui_no_target.drive_combo.count())]
+    items = [
+        gui_no_target.drive_combo.itemText(i) for i in range(gui_no_target.drive_combo.count())
+    ]
     assert items == [f"{chr(c)}:" for c in range(ord("A"), ord("P") + 1)]
 
 
-@pytest.mark.mt("MT-G07", "UIR-018", "UIR-019")
+@pytest.mark.mt("MT-F01", "UIR-018", "UIR-019")
 def test_lists_have_context_menus(gui_no_target):
     """Verifies: UIR-018, UIR-019."""
     assert gui_no_target.host_list.contextMenuPolicy() == Qt.ContextMenuPolicy.CustomContextMenu
     assert gui_no_target.remote_list.contextMenuPolicy() == Qt.ContextMenuPolicy.CustomContextMenu
 
 
-@pytest.mark.mt("MT-G03", "UIR-014")
+@pytest.mark.mt("MT-S05", "UIR-014")
 def test_main_panes_have_push_buttons(gui_no_target):
     """The host and remote panes each expose action push buttons.
 
@@ -68,7 +70,7 @@ def test_main_panes_have_push_buttons(gui_no_target):
     assert remote_group.findChildren(QPushButton)
 
 
-@pytest.mark.mt("MT-V08", "UIR-070", "UIR-073")
+@pytest.mark.mt("MT-V01", "UIR-070", "UIR-073")
 def test_material_theme_applied(gui_no_target, qapp):
     """A Material stylesheet is applied to the application.
 
@@ -105,7 +107,7 @@ def test_terminal_window_has_no_control_row_and_font_in_context_menu(gui_no_targ
     )
 
 
-@pytest.mark.mt("MT-W13", "UIR-069")
+@pytest.mark.mt("MT-W13", "UIR-069", "UIR-070")
 def test_font_dialog_lists_usable_under_material_theme(gui_no_target, qapp):
     """The font dialog's family/style/size lists are usable under the app theme.
 
@@ -130,7 +132,7 @@ def test_font_dialog_lists_usable_under_material_theme(gui_no_target, qapp):
         dlg.deleteLater()
 
 
-@pytest.mark.mt("MT-I03", "UIR-076")
+@pytest.mark.mt("MT-V10", "UIR-076")
 def test_about_dialog_contents(qapp):
     """Verifies: UIR-076."""
     from PySide6.QtWidgets import QLabel, QPushButton
@@ -148,7 +150,7 @@ def test_about_dialog_contents(qapp):
         dlg.deleteLater()
 
 
-@pytest.mark.mt("MT-V09", "UIR-091")
+@pytest.mark.req("UIR-091")
 def test_manual_dialog_renders(qapp):
     """Verifies: UIR-091."""
     from cpm_fm.gui.manual_dialog import load_manual_markdown, render_manual_html
@@ -163,11 +165,11 @@ def test_manual_dialog_renders(qapp):
     assert toc_links and all(link in heading_ids for link in toc_links)
 
 
-@pytest.mark.mt("MT-V12", "UIR-076")
-def test_i18n_language_switch_updates_ui(qapp, tmp_path):
+@pytest.mark.mt("MT-I02", "FR-123")
+def test_language_menu_switch_retranslates_ui(qapp, tmp_path):
     """Switching to a non-English language updates UI element texts.
 
-    Verifies: UIR-076.
+    Verifies: FR-123.
     """
     from PySide6.QtCore import QSettings
     from PySide6.QtWidgets import QMenu
@@ -199,26 +201,22 @@ def test_i18n_language_switch_updates_ui(qapp, tmp_path):
             (m for m in win.menuBar().findChildren(QMenu) if m.title() == "Help"), None
         )
         assert help_menu_en is not None, "Help menu not found"
+        title_en = help_menu_en.title()
         actions_en = [a.text() for a in help_menu_en.actions()]
 
-        # Switch language
-        i18n.set_language(non_en)
+        # Use the real menu action path: it changes the active language,
+        # persists the choice, checks the action, and re-translates live.
+        win.menu_set_language(non_en)
+        qapp.processEvents()
 
-        # The window title should change (it contains the app name which may be translated)
-        # We verify the i18n system actually changed the active language
         assert i18n.current_language() == non_en
+        assert win._language_actions[non_en].isChecked()
 
-        # Re-fetch menu texts — they should be different from English
-        help_menu_new = next(
-            (m for m in win.menuBar().findChildren(QMenu) if m.title() == "Help"), None
-        )
-        assert help_menu_new is not None
-        actions_new = [a.text() for a in help_menu_new.actions()]
-
-        # At least some menu items should have changed (or the menu title itself)
-        # This is a weak but meaningful assertion: the i18n system is active
+        title_new = help_menu_en.title()
+        actions_new = [a.text() for a in help_menu_en.actions()]
         log.debug("English actions: %s", actions_en)
         log.debug("%s actions: %s", non_en, actions_new)
+        assert (title_new, actions_new) != (title_en, actions_en)
     finally:
         i18n.set_language(i18n.DEFAULT_LANGUAGE)
         win.close()

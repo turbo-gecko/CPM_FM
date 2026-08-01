@@ -41,7 +41,7 @@ def _wait_for_drive_idle(gui, timeout: float = 30.0) -> None:
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-T14", "FR-120")
+@pytest.mark.req("FR-120")
 def test_cancel_during_later_batch_file(gui, scratch_drive, monkeypatch, tmp_path, target):
     """Cancel during file 2 of a 3-file batch; file 1 already completed.
 
@@ -93,13 +93,13 @@ def test_cancel_during_later_batch_file(gui, scratch_drive, monkeypatch, tmp_pat
         send_call_count[0] += 1
         result = original_send(filepath, remote_name, user_area)
         log.info("monkeypatch send: %s (call #%d) → ok=%s", name_upper, send_call_count[0], result)
-        
+
         # Detect transition: file 1 just completed (count went from 0→1).
         # Set cancel immediately so the batch loop's next iteration sees it.
         if send_call_count[0] == 1 and prev_send_count[0] == 0:
             log.info("file 1 completed (ok=%s) — setting transfer_cancel immediately", result)
             gui.win._transfer_cancel.set()
-        
+
         prev_send_count[0] = send_call_count[0]
         return result
 
@@ -112,7 +112,9 @@ def test_cancel_during_later_batch_file(gui, scratch_drive, monkeypatch, tmp_pat
         if duration > 0.5 and send_call_count[0] >= 1:
             log.info(
                 "monkeypatch sleep: %.1fs after file %d — cancel already set=%s",
-                duration, send_call_count[0], gui.win._transfer_cancel.is_set(),
+                duration,
+                send_call_count[0],
+                gui.win._transfer_cancel.is_set(),
             )
             cancel_set_during_sleep.set()
         return _original_sleep(duration)
@@ -176,7 +178,8 @@ def test_cancel_during_later_batch_file(gui, scratch_drive, monkeypatch, tmp_pat
 
     # Verify file 2 was never attempted (monkeypatch only called once for file 1).
     assert send_call_count[0] == 1, (
-        f"File 2 should not have been attempted; _send_one_to_remote called {send_call_count[0]} time(s)"
+        "File 2 should not have been attempted; _send_one_to_remote called "
+        f"{send_call_count[0]} time(s)"
     )
     log.info("verified: file 2 never started — send_call_count=%d", send_call_count[0])
 

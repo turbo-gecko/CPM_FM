@@ -24,7 +24,7 @@ def _seed(gui, scratch, monkeypatch, name, tmp_path, data=b"ctx payload\r\n"):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-F08", "FR-111", "FR-117", "FR-118")
+@pytest.mark.mt("MT-F06", "FR-111", "FR-117", "FR-118")
 def test_remote_delete_removes_file(gui, scratch_drive, monkeypatch, tmp_path):
     """Remote Delete erases the file and refreshes the listing.
 
@@ -42,7 +42,7 @@ def test_remote_delete_removes_file(gui, scratch_drive, monkeypatch, tmp_path):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-F07", "FR-111", "FR-114", "FR-117")
+@pytest.mark.mt("MT-F06", "FR-111", "FR-114", "FR-117")
 def test_remote_rename_changes_name(gui, scratch_drive, monkeypatch, tmp_path):
     """Remote Rename renames the file on the remote and refreshes.
 

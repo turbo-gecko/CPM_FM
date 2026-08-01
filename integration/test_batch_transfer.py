@@ -24,9 +24,7 @@ log = get_logger("transfer.batch")
 
 @pytest.mark.hil
 @pytest.mark.mt("MT-T06", "FR-105", "FR-106", "FR-107")
-def test_batch_transfer_sequential_multi_file(
-    gui, scratch_drive, monkeypatch, tmp_path
-):
+def test_batch_transfer_sequential_multi_file(gui, scratch_drive, monkeypatch, tmp_path):
     """Three host files upload sequentially in a single batch and all appear on remote.
 
     Verifies: FR-105, FR-106, FR-107.
@@ -107,7 +105,9 @@ def test_batch_abort_on_mid_file_failure(gui, scratch_drive, monkeypatch, tmp_pa
 
     # The error dialog should name the failed file (FAIL2.TXT).
     error_messages = [args for kind, args in error_fired if kind == "critical"]
-    assert len(error_messages) >= 1, f"expected at least one critical error dialog, got {error_fired}"
+    assert len(error_messages) >= 1, (
+        f"expected at least one critical error dialog, got {error_fired}"
+    )
     combined = " ".join(str(m) for m in error_messages)
     assert "FAIL2.TXT" in combined or "fail2.txt" in combined.lower(), (
         f"error dialog should name the failed file; got: {error_messages}"

@@ -29,13 +29,22 @@ jobs:
 
       - name: Lint
         run: |
-          ruff check src tests
-          ruff format --check src tests
+          ruff check src tests integration
+          ruff format --check src tests integration
 
       - name: Check requirement views are in sync
         # Fails if docs/requirements_views/ is stale vs the SRS or code Satisfies:
         # tags. Fix locally with: python tools/traceability_sync/generate_views.py
         run: python tools/traceability_sync/generate_views.py --check
+
+      - name: Validate integration evidence mapping
+        run: python -m integration.generate_coverage --check
+
+      - name: Collect integration suite
+        run: pytest integration/ --collect-only -q
+
+      - name: Run target-free integration tiers
+        run: pytest integration/ -m "visual or gui_integration"
 
       - name: Validate AI assets
         run: python tools/ai/validate.py

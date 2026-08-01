@@ -2,26 +2,29 @@
 
 This suite drives the **real** `cpm-fm` code against a **real CP/M machine** on
 the bench: protocol round-trips, the GUI over real serial, and widget-level
-look-and-feel assertions. It automates the bulk of `docs/manual_test_plan.md`.
+look-and-feel assertions. Its current MT mappings support part of
+`docs/manual_test_plan.md`; they do not replace retained manual evidence.
 
 It is **separate** from the unit suite. The default `pytest` (root) only collects
 `tests/` and never touches hardware; this suite is an explicit, separate
-invocation: `pytest integration/`.
+invocation: `.venv/Scripts/python.exe -m pytest integration/`.
 
-> Status: **Phase 0 scaffolding**. Later phases (protocol, GUI, destructive,
-> visual) are added incrementally — see `temp/integration_test_harness_plan.md`.
+> Status: **Phase 0 complete (2026-08-01).** Static validation, the target-free
+> tier, and a destructive five-target physical sweep all pass on the corrected
+> working tree. Phase 1 remains partial; later phases continue incrementally.
+> See `temp/integration_test_harness_plan.md` for the audited evidence matrix.
 
 ## Quick start
 
-1. Install dev deps: `python -m pip install -e .[dev]`
+1. Install dev deps: `.venv/Scripts/python.exe -m pip install -e .[dev]`
 2. Copy the config template and edit it for your bench:
    `cp integration/hil_config.example.json integration/hil_config.json`
    (`hil_config.json` is gitignored — it holds your local ports/paths/drives.)
 3. Wire up and power on the CP/M machine; confirm the serial port number.
 4. Run the connectivity smoke test:
-   `pytest integration/ -k smoke`
+   `.venv/Scripts/python.exe -m pytest integration/ -k smoke`
 5. Use the interactive launcher to pick targets:
-   `python integration/run.py`   (or `python -m integration.run`)
+   `.venv/Scripts/python.exe integration/run.py`
 
 ## Configuration (`hil_config.json`)
 
@@ -50,15 +53,23 @@ teardown that the original's SHA-256 is unchanged.
 
 ## Running
 
-```
-pytest integration/                       # default target (default_target)
-pytest integration/ --target rc2014       # one target
-pytest integration/ --target a --target b # several
-pytest integration/ --all-targets         # every registered target
-pytest integration/ --run-destructive     # also run destructive backup/restore
+```text
+.venv/Scripts/python.exe -m pytest integration/                       # default target
+.venv/Scripts/python.exe -m pytest integration/ --target rc2014       # one target
+.venv/Scripts/python.exe -m pytest integration/ --target a --target b # several
+.venv/Scripts/python.exe -m pytest integration/ --all-targets         # every target
+.venv/Scripts/python.exe -m pytest integration/ --run-destructive     # destructive
 ```
 
 Results print labelled by target, e.g. `test_smoke.py::...[rc2014]`.
+
+Target-free and traceability gates:
+
+```text
+.venv/Scripts/python.exe -m pytest integration/ -m "visual or gui_integration"
+.venv/Scripts/python.exe -m pytest integration/ --collect-only -q
+.venv/Scripts/python.exe -m integration.generate_coverage --check
+```
 
 ### Watching a run
 
@@ -77,8 +88,9 @@ as it does it:
 12:04:39 INFO    hil.peer: send HELLO.TXT → OK
 ```
 
-- Quieter: `pytest integration/ --log-cli-level=WARNING` (only timeout/quiesce
-  warnings — the most useful lines when a run *hangs*).
+- Quieter (only timeout/quiesce warnings — the most useful lines when a run
+  *hangs*):
+  `.venv/Scripts/python.exe -m pytest integration/ --log-cli-level=WARNING`
 - Noisier: `--log-cli-level=DEBUG` adds raw line I/O (`→ "DIR"`) and capture
   byte counts/timings.
 - The same trace is captured into each run's `results/<target>/<run>/console.log`
@@ -86,13 +98,16 @@ as it does it:
   fact even if the live log was quieted.
 
 Flags pass through the launcher (the `--` separator is optional):
-`python integration/run.py --log-cli-level=DEBUG`.
+`.venv/Scripts/python.exe integration/run.py --log-cli-level=DEBUG`.
 
 ## Safety
 
-- Destructive tests are **double-gated**: they need `--run-destructive` **and** a
-  `scratch_drive` that differs from the live connect drive. Every wipe/seed is
-  issued explicitly against `scratch_drive:`.
+- Every whole-drive wipe is **double-gated** by
+  `--run-destructive` and a configured `scratch_drive` that differs from the
+  declared protected `connect_drive`, with live preflight and trace evidence.
+- The coverage validator statically rejects `wipe_drive`, Backup, or Restore
+  calls outside a destructive-marked test. Target-free selections do not open
+  serial hardware even when a local `hil_config.json` exists.
 - Originals are read-only references; all mutation is on per-test copies.
 
 ## Results & history (plan §7)

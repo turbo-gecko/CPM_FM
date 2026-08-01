@@ -28,7 +28,7 @@ def invalid_spy(gui):
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-FV01", "FR-148", "FR-149")
+@pytest.mark.mt("MT-FV02", "FR-148", "FR-149")
 def test_invalid_name_rename_uploads_conforming(
     gui, scratch_drive, monkeypatch, invalid_spy, tmp_path
 ):
@@ -61,11 +61,11 @@ def test_invalid_name_rename_uploads_conforming(
 
 
 @pytest.mark.hil
-@pytest.mark.mt("MT-FV02", "FR-148")
+@pytest.mark.mt("MT-FV04", "FR-149")
 def test_invalid_name_skip_does_not_upload(gui, scratch_drive, monkeypatch, invalid_spy, tmp_path):
     """Skipping the name prompt leaves nothing uploaded.
 
-    Verifies: FR-148.
+    Verifies: FR-149.
     """
     suggested = CPMParser.suggest_8_3(BAD_NAME)
     silence_message_boxes(monkeypatch)

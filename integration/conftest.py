@@ -182,13 +182,80 @@ def _hil_gate(request):
             pytest.skip("destructive tests require --run-destructive")
         if not target.scratch_drive:
             pytest.skip(f"target {target.name!r} defines no scratch_drive")
+        if not target.connect_drive:
+            pytest.skip(
+                f"target {target.name!r} defines no protected connect_drive — "
+                "refusing destructive run"
+            )
         # Safety: the disposable scratch drive must differ from the declared
         # protected home drive, or a real data drive could be wiped.
-        if target.connect_drive and (target.scratch_drive.upper() == target.connect_drive.upper()):
+        if target.scratch_drive.upper() == target.connect_drive.upper():
             pytest.skip(
                 f"scratch_drive {target.scratch_drive!r} equals the protected "
                 f"connect_drive {target.connect_drive!r} — refusing destructive run"
             )
+        if "peer" in item.fixturenames:
+            # Protocol-tier tests already hold the module-scoped serial peer.
+            # Reuse it: opening a second connection to a single-port target
+            # would make the safety check block itself.
+            _confirm_destructive_peer(request.getfixturevalue("peer"), target)
+        else:
+            _run_destructive_preflight(target)
+
+
+def _confirm_destructive_peer(peer, target) -> None:
+    """Select and verify the disposable drive through a connected peer."""
+    from helpers.peer import PeerError
+
+    try:
+        if not peer.set_user(0):
+            pytest.skip(f"BLOCKED: destructive preflight could not select user 0 on {target.name}")
+        if not peer.change_drive(target.scratch_drive):
+            pytest.skip(
+                f"BLOCKED: destructive preflight could not select "
+                f"{target.scratch_drive}: on {target.name}"
+            )
+        live_drive = peer.detect_drive()
+        if live_drive != target.scratch_drive.upper():
+            pytest.skip(
+                f"BLOCKED: destructive preflight expected {target.scratch_drive}: "
+                f"but observed {live_drive or 'no prompt'}"
+            )
+        log.warning(
+            "DESTRUCTIVE PREFLIGHT CONFIRMED: target=%s drive=%s: user=0",
+            target.name,
+            target.scratch_drive,
+        )
+    except (PeerError, OSError) as exc:
+        pytest.skip(f"BLOCKED: destructive preflight failed on {target.name}: {exc}")
+
+
+def _run_destructive_preflight(target) -> None:
+    """Confirm the live target is on its nominated disposable drive/user area.
+
+    This runs only for tests carrying ``destructive`` and only after
+    ``--run-destructive`` plus the declared-drive guard have passed. It opens a
+    short-lived peer connection, selects user area 0 and the scratch drive, and
+    verifies the live prompt before the destructive test fixture can open the
+    port.
+    """
+    from helpers.peer import CpmPeer, PeerError
+
+    settings = target.load_settings()
+    # A preceding GUI worker can release a shared Windows COM handle slightly
+    # after its test teardown completes.  Wait before the safety probe as well
+    # as after it so a transient handle-release race cannot silently turn a
+    # required destructive case into BLOCKED evidence.
+    _await_port_free(settings)
+    peer = CpmPeer(settings)
+    try:
+        peer.connect()
+        _confirm_destructive_peer(peer, target)
+    except (PeerError, OSError) as exc:
+        pytest.skip(f"BLOCKED: destructive preflight failed on {target.name}: {exc}")
+    finally:
+        peer.close()
+        _await_port_free(settings)
 
 
 # --------------------------------------------------------------------------- #
@@ -210,7 +277,13 @@ def _user_area_baseline(request):
     session step additionally covers the first module (typically a GUI-tier one
     that does not use ``peer``) against a box left dirty by an earlier run.
     """
-    targets = getattr(request.config, "_hil_targets", None) or []
+    # A target-free ``visual`` / ``gui_integration`` selection must never touch
+    # serial hardware merely because the developer has a local hil_config.json.
+    needs_hardware = any(
+        any(item.get_closest_marker(name) for name in ("hil", "two_port", "destructive"))
+        for item in request.session.items
+    )
+    targets = (getattr(request.config, "_hil_targets", None) or []) if needs_hardware else []
     for target in targets:
         try:
             from helpers.peer import CpmPeer, PeerError
@@ -223,40 +296,6 @@ def _user_area_baseline(request):
                 p.close()
         except (PeerError, OSError) as e:  # unreachable target → per-test gate skips it
             log.warning("user-area baseline skipped for %s: %s", target.name, e)
-        _await_port_free(target.load_settings())
-    yield
-
-
-@pytest.fixture(scope="session", autouse=True)
-def _scratch_drive_baseline(request):
-    """Wipe every selected target's scratch drive before any test runs.
-
-    Fast targets (MinZ, eZT-RCB) can fill their SD-card scratch drives during a
-    long session; subsequent uploads silently fail with X-Modem write errors when
-    the drive is full. This fixture connects to each target once, up front, and
-    erases all files from the declared scratch drive so every test starts with a
-    clean slate — mirroring the per-test erase-before pattern used in protocol
-    tests but applied globally to prevent spurious failures.
-
-    Skipped silently when a target has no ``scratch_drive`` configured or when
-    the connection fails (unreachable hardware → tests auto-skip).
-    """
-    targets = getattr(request.config, "_hil_targets", None) or []
-    for target in targets:
-        if not target.scratch_drive:
-            continue
-        try:
-            from helpers.peer import CpmPeer, PeerError
-
-            p = CpmPeer(target.load_settings())
-            try:
-                p.connect()
-                p.set_user(0)
-                p.wipe_drive(target.scratch_drive)
-            finally:
-                p.close()
-        except (PeerError, OSError) as e:
-            log.warning("scratch-drive baseline skipped for %s: %s", target.name, e)
         _await_port_free(target.load_settings())
     yield
 
