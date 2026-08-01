@@ -19,8 +19,8 @@ invocation: `.venv/Scripts/python.exe -m pytest integration/`.
 > disconnected-port rejection for both whole-drive actions; and MT-BR07 covers
 > Restore filename validation, all without touching hardware. The planned
 > connection/recovery and backup/restore automation backlogs are complete.
-> Destructive MT-BR09 passes on all five physical targets on the current working
-> tree; a clean-revision evidence repeat remains pending.
+> Destructive MT-BR09 passes on all five physical targets at clean commit
+> `cadda8d`.
 > See `temp/integration_test_harness_plan.md` for the audited evidence matrix.
 
 ## Quick start
@@ -106,8 +106,8 @@ free/busy/failing-port evidence.
 MT-BR09 additionally runs as destructive HIL: Restore with an empty temporary
 host directory still wipes the nominated scratch drive, starts no transfer
 batch, reports "Nothing to transfer", and refreshes to an empty Remote pane. It
-passed on all five configured targets on 2026-08-01; see the result ledger and
-the audited plan for the per-target artifact paths.
+passed on all five configured targets at clean commit `cadda8d` on 2026-08-01;
+see the result ledger and the audited plan for the per-target artifact paths.
 
 ### Watching a run
 
