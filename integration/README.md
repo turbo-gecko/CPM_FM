@@ -48,6 +48,7 @@ Bench-only metadata per target:
 | Field | Meaning |
 |---|---|
 | `settings_file` | Path (absolute, or relative to repo root) to the **read-only** app config. |
+| `cpm_type` | CP/M family used to gate specialized Phase 3 tests. Allowed values are `2.2`, `ZSDOS`, `ZCPR`, and `QPM`; omitted defaults to `2.2`. `ZSDOS` uses the same base test selection as `2.2`; `ZCPR` represents ZCPR/NZCOM. |
 | `two_port` | `true` when Terminal/Transport are distinct ports (gates `two_port` cases). |
 | `spare_port` | Reserved bench metadata for future controlled physical port-fault cases; the deterministic MT-C02/MT-C04 CI cases inject failure at the serial boundary. |
 | `scratch_drive` | The **disposable** CP/M drive for all destructive write testing. Must differ from `connect_drive` or destructive tests refuse to run. |

@@ -31,6 +31,7 @@ HIL_CONFIG_EXAMPLE = INTEGRATION_DIR / "hil_config.example.json"
 # here (rather than imported) so the protocol tier stays free of any GUI import
 # (CR-014).
 EOL_MAP = {"CR": "\r", "LF": "\n", "CRLF": "\r\n"}
+CPM_TYPES = ("2.2", "ZSDOS", "ZCPR", "QPM")
 
 
 class HilConfigError(RuntimeError):
@@ -44,6 +45,9 @@ class Target:
     name: str
     description: str = ""
     settings_file: str = ""
+    # Phase 3 operating-system capability. 2.2 is the backward-compatible
+    # default; ZSDOS uses the same base test selection.
+    cpm_type: str = "2.2"
     two_port: bool = False
     spare_port: str | None = None
     scratch_drive: str | None = None
@@ -92,10 +96,17 @@ class HilConfig:
 
 
 def _target_from_spec(name: str, spec: dict[str, Any]) -> Target:
+    cpm_type = spec.get("cpm_type", "2.2")
+    if cpm_type not in CPM_TYPES:
+        allowed = ", ".join(CPM_TYPES)
+        raise HilConfigError(
+            f"invalid cpm_type for target {name!r}: {cpm_type!r}; allowed values: {allowed}"
+        )
     return Target(
         name=name,
         description=str(spec.get("description", "")),
         settings_file=str(spec.get("settings_file", "")),
+        cpm_type=cpm_type,
         two_port=bool(spec.get("two_port", False)),
         spare_port=spec.get("spare_port"),
         scratch_drive=spec.get("scratch_drive"),

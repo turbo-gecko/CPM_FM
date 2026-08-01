@@ -5,6 +5,7 @@
     "rc2014": {
       "description": "RC2014 Z80 Pro, CP/M (single shared serial port)",
       "settings_file": "examples/RC2014_Z_Pro.json",
+      "cpm_type": "2.2",
       "two_port": false,
       "spare_port": null,
       "scratch_drive": "J",
@@ -14,8 +15,9 @@
       "flow_control_peer": false
     },
     "scz180": {
-      "description": "SC126 Z180, CP/M 3 (two-port example)",
+      "description": "SC126 Z180, CP/M 2.2-compatible (two-port example)",
       "settings_file": "C:/cpm-bench/scz180.json",
+      "cpm_type": "2.2",
       "two_port": true,
       "spare_port": "COM9",
       "scratch_drive": "C",
