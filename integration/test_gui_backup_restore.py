@@ -8,9 +8,13 @@ the operator-nominated disposable scratch drive.
 
 from __future__ import annotations
 
+import uuid
+
 import pytest
 from helpers.dialogs import answer_confirm, answer_file_action, silence_message_boxes
 from helpers.trace import get_logger
+
+from cpm_fm.utils.i18n import tr
 
 pytestmark = [pytest.mark.hil, pytest.mark.destructive]
 log = get_logger("backup-restore")
@@ -110,6 +114,61 @@ def test_restore_erase_all_sequence_wipes_scratch(gui, scratch_drive, monkeypatc
     # cleanup
     for fname in payload:
         _clear_remote(gui, monkeypatch, fname)
+
+
+@pytest.mark.mt("MT-BR09", "FR-154")
+def test_restore_empty_host_still_wipes_scratch(gui, scratch_drive, monkeypatch, tmp_path):
+    """Restore with an empty host still wipes and refreshes the scratch drive.
+
+    Verifies: FR-154.
+    """
+    message_boxes = silence_message_boxes(monkeypatch)
+    answer_confirm(monkeypatch, gui.win, accept=True)
+    assert gui.connect()[0] == "ok"
+    gui.set_drive(scratch_drive)
+    assert gui.win.drive_combo.currentText() == f"{scratch_drive}:"  # safety: on scratch
+
+    host = tmp_path / "host"
+    seed = f"E{uuid.uuid4().hex[:7].upper()}.TXT"
+    (host / seed).write_bytes(b"MT-BR09 scratch seed\r\n")
+
+    try:
+        gui.upload([seed])
+        assert seed in gui.remote_names(), "scratch seed upload did not become visible"
+
+        (host / seed).unlink()
+        gui.refresh_host()
+        assert gui.host_names() == [], "Restore source must be an empty host directory"
+
+        history_before = gui.win.transfer_history.get_entries()
+        batch_starts: list[tuple[str, int]] = []
+        statuses: list[str] = []
+        gui.win.batch_started.connect(
+            lambda direction, count: batch_starts.append((direction, count))
+        )
+        gui.win.status_changed.connect(statuses.append)
+
+        log.warning(
+            "DESTRUCTIVE WIPE: empty-source Restore target=%s: user=0 seed=%s",
+            scratch_drive,
+            seed,
+        )
+        gui.win.do_restore()
+        assert gui.quiesce(timeout=60.0), "empty-source Restore worker did not quiesce"
+
+        assert gui.remote_names() == [], "empty-source Restore did not leave the pane empty"
+        assert seed not in gui.remote_names(), "empty-source Restore did not wipe the seed"
+        assert tr("status.nothing_to_transfer") in statuses
+        assert batch_starts == [], "empty-source Restore unexpectedly started a transfer batch"
+        assert gui.win.transfer_history.get_entries() == history_before
+        assert message_boxes == []
+    finally:
+        # Failure-safe cleanup: regardless of where the assertion path stops,
+        # re-list the nominated disposable drive and remove every remaining file.
+        gui.refresh_remote()
+        for name in list(gui.remote_names()):
+            _clear_remote(gui, monkeypatch, name)
+        assert gui.remote_names() == [], "MT-BR09 cleanup could not empty the scratch drive"
 
 
 @pytest.mark.mt("MT-BR03", "FR-150", "FR-153", "FR-154")

@@ -1,15 +1,15 @@
 # Integration Test Coverage Report
 
 **Generated from:** `integration/coverage_manifest.json` v3.0
-**Total collected test functions:** 78
+**Total collected test functions:** 85
 **Execution status:** Not run by this generator; physical outcomes remain in `integration/results/runs_ledger.json`.
 
 ## Test Tiers
 
 | Tier | Count |
 |---|---:|
-| gui-integration | 11 |
-| hil | 55 |
+| gui-integration | 17 |
+| hil | 56 |
 | visual | 12 |
 
 ## Evidence Classification
@@ -17,20 +17,27 @@
 | Classification | Count |
 |---|---:|
 | equivalent | 0 |
-| partial | 61 |
+| partial | 68 |
 | supplementary | 17 |
 | manual-only | 0 |
 
 ## Manual Scenario Decisions
 
 - Manual plan cases: **217**
-- Cases with reviewed automated support: **55** (**25.3%** raw mapped-case ratio)
+- Cases with reviewed automated support: **62** (**28.6%** raw mapped-case ratio)
 - Every remaining case has an explicit `manual-only` decision in the manifest.
 
 | MT-ID | Tests | Best evidence | Manual retained |
 |---|---:|---|---|
+| MT-BR01 | 1 | partial | yes |
+| MT-BR02 | 1 | partial | yes |
 | MT-BR03 | 1 | partial | yes |
+| MT-BR04 | 1 | partial | yes |
 | MT-BR05 | 1 | partial | yes |
+| MT-BR06 | 1 | partial | yes |
+| MT-BR07 | 1 | partial | yes |
+| MT-BR08 | 1 | partial | yes |
+| MT-BR09 | 1 | partial | yes |
 | MT-BR10 | 1 | partial | yes |
 | MT-C01 | 1 | partial | yes |
 | MT-C02 | 1 | partial | yes |
@@ -96,8 +103,15 @@
 | `test_remote_delete_removes_file` | hil | MT-F06 | FR-111, FR-117, FR-118 | partial | — |
 | `test_remote_rename_changes_name` | hil | MT-F06 | FR-111, FR-114, FR-117 | partial | — |
 | `test_backup_downloads_remote_to_host` | hil | MT-BR03 | FR-150, FR-153, FR-154 | partial | destructive |
+| `test_restore_empty_host_still_wipes_scratch` | hil | MT-BR09 | FR-154 | partial | destructive |
 | `test_restore_erase_all_sequence_wipes_scratch` | hil | MT-BR10 | FR-153e, UIR-107 | partial | destructive |
 | `test_restore_wipes_scratch_then_uploads` | hil | MT-BR05 | FR-151, FR-152, FR-153, FR-154 | partial | destructive |
+| `test_backup_refreshes_both_panes_before_real_confirmation` | gui-integration | MT-BR01 | FR-150, FR-152, UIR-088 | partial | — |
+| `test_backup_rejection_preserves_host_and_terminates_worker` | gui-integration | MT-BR02 | FR-152 | partial | — |
+| `test_disconnected_port_blocks_backup_and_restore_before_any_action` | gui-integration | MT-BR08 | CR-010, FR-080 | partial | — |
+| `test_restore_invalid_filename_uses_real_validation_actions` | gui-integration | MT-BR07 | FR-148, FR-149, FR-151 | partial | — |
+| `test_restore_progress_cancel_stops_remaining_batch_without_error` | gui-integration | MT-BR06 | FR-120, FR-154 | partial | — |
+| `test_restore_refreshes_remote_before_confirmation_and_cancel_preserves_it` | gui-integration | MT-BR04 | FR-151, FR-152, UIR-088 | partial | — |
 | `test_conflict_apply_to_all_persists_across_batch` | hil | MT-CF05 | FR-147 | partial | — |
 | `test_overwrite_existing_remote_file` | hil | MT-CF04 | FR-145, FR-146 | partial | — |
 | `test_skip_existing_remote_file` | hil | MT-CF04 | FR-145, FR-147 | partial | — |

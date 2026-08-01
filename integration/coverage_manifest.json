@@ -2,35 +2,39 @@
   "version": "3.0",
   "generated": "deterministic",
   "semantic_review": "completed-2026-08-01",
-  "total_tests": 78,
+  "total_tests": 85,
   "tiers": {
-    "gui-integration": 11,
-    "hil": 55,
+    "gui-integration": 17,
+    "hil": 56,
     "visual": 12
   },
   "evidence_classification": {
     "equivalent": 0,
-    "partial": 61,
+    "partial": 68,
     "supplementary": 17,
     "manual-only": 0
   },
   "manual_plan_total": 217,
-  "manual_ids_with_automated_support": 55,
-  "raw_mapped_case_ratio": 25.3,
+  "manual_ids_with_automated_support": 62,
+  "raw_mapped_case_ratio": 28.6,
   "manual_coverage_decisions": {
     "MT-BR01": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_backup_restore_target_free.py::test_backup_refreshes_both_panes_before_real_confirmation"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-BR02": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_backup_restore_target_free.py::test_backup_rejection_preserves_host_and_terminates_worker"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-BR03": {
       "status": "automated-support",
@@ -42,11 +46,13 @@
       "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-BR04": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_backup_restore_target_free.py::test_restore_refreshes_remote_before_confirmation_and_cancel_preserves_it"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-BR05": {
       "status": "automated-support",
@@ -58,32 +64,40 @@
       "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-BR06": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_backup_restore_target_free.py::test_restore_progress_cancel_stops_remaining_batch_without_error"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-BR07": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_backup_restore_target_free.py::test_restore_invalid_filename_uses_real_validation_actions"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-BR08": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_backup_restore_target_free.py::test_disconnected_port_blocks_backup_and_restore_before_any_action"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-BR09": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_backup_restore.py::test_restore_empty_host_still_wipes_scratch"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-BR10": {
       "status": "automated-support",
@@ -1655,6 +1669,7 @@
     }
   },
   "requirement_ids": [
+    "CR-010",
     "DR-033",
     "DR-033a",
     "FR-017a",
@@ -1682,6 +1697,7 @@
     "FR-077",
     "FR-078",
     "FR-079",
+    "FR-080",
     "FR-081",
     "FR-082",
     "FR-083",
@@ -1755,6 +1771,7 @@
     "UIR-073",
     "UIR-074",
     "UIR-076",
+    "UIR-088",
     "UIR-091",
     "UIR-092",
     "UIR-099",
@@ -1938,7 +1955,7 @@
     {
       "nodeid": "integration/test_gui_backup_restore.py::test_backup_downloads_remote_to_host",
       "file": "test_gui_backup_restore.py",
-      "line": 116,
+      "line": 175,
       "test": "test_backup_downloads_remote_to_host",
       "tier": "hil",
       "markers": [
@@ -1969,9 +1986,38 @@
       ]
     },
     {
+      "nodeid": "integration/test_gui_backup_restore.py::test_restore_empty_host_still_wipes_scratch",
+      "file": "test_gui_backup_restore.py",
+      "line": 120,
+      "test": "test_restore_empty_host_still_wipes_scratch",
+      "tier": "hil",
+      "markers": [
+        "destructive",
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-BR09",
+      "requirements": [
+        "FR-154"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [
+        "destructive"
+      ],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-154"
+      ]
+    },
+    {
       "nodeid": "integration/test_gui_backup_restore.py::test_restore_erase_all_sequence_wipes_scratch",
       "file": "test_gui_backup_restore.py",
-      "line": 64,
+      "line": 68,
       "test": "test_restore_erase_all_sequence_wipes_scratch",
       "tier": "hil",
       "markers": [
@@ -2002,7 +2048,7 @@
     {
       "nodeid": "integration/test_gui_backup_restore.py::test_restore_wipes_scratch_then_uploads",
       "file": "test_gui_backup_restore.py",
-      "line": 27,
+      "line": 31,
       "test": "test_restore_wipes_scratch_then_uploads",
       "tier": "hil",
       "markers": [
@@ -2032,6 +2078,181 @@
         "FR-152",
         "FR-153",
         "FR-154"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_backup_restore_target_free.py::test_backup_refreshes_both_panes_before_real_confirmation",
+      "file": "test_gui_backup_restore_target_free.py",
+      "line": 20,
+      "test": "test_backup_refreshes_both_panes_before_real_confirmation",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-BR01",
+      "requirements": [
+        "FR-150",
+        "FR-152",
+        "UIR-088"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-150",
+        "FR-152",
+        "UIR-088"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_backup_restore_target_free.py::test_backup_rejection_preserves_host_and_terminates_worker",
+      "file": "test_gui_backup_restore_target_free.py",
+      "line": 128,
+      "test": "test_backup_rejection_preserves_host_and_terminates_worker",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt",
+        "parametrize"
+      ],
+      "manual_id": "MT-BR02",
+      "requirements": [
+        "FR-152"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-152"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_backup_restore_target_free.py::test_disconnected_port_blocks_backup_and_restore_before_any_action",
+      "file": "test_gui_backup_restore_target_free.py",
+      "line": 618,
+      "test": "test_disconnected_port_blocks_backup_and_restore_before_any_action",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt",
+        "parametrize"
+      ],
+      "manual_id": "MT-BR08",
+      "requirements": [
+        "CR-010",
+        "FR-080"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "CR-010",
+        "FR-080"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_backup_restore_target_free.py::test_restore_invalid_filename_uses_real_validation_actions",
+      "file": "test_gui_backup_restore_target_free.py",
+      "line": 448,
+      "test": "test_restore_invalid_filename_uses_real_validation_actions",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt",
+        "parametrize"
+      ],
+      "manual_id": "MT-BR07",
+      "requirements": [
+        "FR-148",
+        "FR-149",
+        "FR-151"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-148",
+        "FR-149",
+        "FR-151"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_backup_restore_target_free.py::test_restore_progress_cancel_stops_remaining_batch_without_error",
+      "file": "test_gui_backup_restore_target_free.py",
+      "line": 324,
+      "test": "test_restore_progress_cancel_stops_remaining_batch_without_error",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-BR06",
+      "requirements": [
+        "FR-120",
+        "FR-154"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-120",
+        "FR-154"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_backup_restore_target_free.py::test_restore_refreshes_remote_before_confirmation_and_cancel_preserves_it",
+      "file": "test_gui_backup_restore_target_free.py",
+      "line": 216,
+      "test": "test_restore_refreshes_remote_before_confirmation_and_cancel_preserves_it",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-BR04",
+      "requirements": [
+        "FR-151",
+        "FR-152",
+        "UIR-088"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-151",
+        "FR-152",
+        "UIR-088"
       ]
     },
     {

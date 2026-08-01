@@ -13,8 +13,14 @@ invocation: `.venv/Scripts/python.exe -m pytest integration/`.
 > target-free tier pass; MT-CF05 also passes on all five physical targets at
 > clean commit `84f0be5`. Phase 1 remains partial, with MT-C02--MT-C04, MT-C10,
 > MT-C12/12a/12b/12c, and MT-C13--MT-C15 now covered in the target-free GUI
-> tier. The planned connection/recovery automation backlog is complete; later
-> Phase 1 scenarios continue incrementally.
+> tier. MT-BR01/BR02 now cover Backup pane refresh, safe-default confirmation,
+> and both rejection paths; MT-BR04 covers Restore destination refresh and safe
+> cancellation; MT-BR06 covers mid-transfer batch cancellation; MT-BR08 covers
+> disconnected-port rejection for both whole-drive actions; and MT-BR07 covers
+> Restore filename validation, all without touching hardware. The planned
+> connection/recovery and backup/restore automation backlogs are complete.
+> Destructive MT-BR09 passes on all five physical targets on the current working
+> tree; a clean-revision evidence repeat remains pending.
 > See `temp/integration_test_harness_plan.md` for the audited evidence matrix.
 
 ## Quick start
@@ -81,9 +87,27 @@ MT-C10 verifies close-failure cancellation and list preservation; and
 MT-C12/12a/12b/12c verify retry, dialog structure, and all three actions.
 MT-C13 verifies ZCPR-style prompt recognition and drive refresh; MT-C14 verifies
 boot-script recovery and a successful post-boot probe; MT-C15 verifies that an
-empty script bypasses recovery and proceeds directly to the dialog. Their
-manual cases remain required for physical peer and genuinely
+empty script bypasses recovery and proceeds directly to the dialog. MT-BR08
+verifies that either disconnected status flag blocks both Backup and Restore
+before a worker, refresh, deletion, or transfer can begin. MT-BR01 verifies that
+the Backup worker refreshes both real panes before its real modal confirmation,
+whose Cancel button is the safe default, without permitting a wipe or transfer.
+MT-BR02 verifies both Cancel and window-close propagate through the production
+worker handshake, preserve every host file byte-for-byte, and leave no worker
+behind. MT-BR04 verifies that Restore refreshes the real Remote pane before its
+real modal confirmation and Cancel prevents the remote wipe and upload.
+MT-BR06 verifies that Restore reuses the real batch progress dialog and that its
+Cancel button stops all remaining uploads after the wipe boundary without an
+error dialog or lingering worker. MT-BR07 drives the real invalid-name dialog
+through Rename, Skip, and Cancel and verifies the production batch/history
+outcomes. These manual cases remain required for physical peer and genuinely
 free/busy/failing-port evidence.
+
+MT-BR09 additionally runs as destructive HIL: Restore with an empty temporary
+host directory still wipes the nominated scratch drive, starts no transfer
+batch, reports "Nothing to transfer", and refreshes to an empty Remote pane. It
+passed on all five configured targets on 2026-08-01; see the result ledger and
+the audited plan for the per-target artifact paths.
 
 ### Watching a run
 
