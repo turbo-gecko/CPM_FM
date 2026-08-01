@@ -2,21 +2,21 @@
   "version": "3.0",
   "generated": "deterministic",
   "semantic_review": "completed-2026-08-01",
-  "total_tests": 70,
+  "total_tests": 78,
   "tiers": {
-    "gui-integration": 3,
+    "gui-integration": 11,
     "hil": 55,
     "visual": 12
   },
   "evidence_classification": {
     "equivalent": 0,
-    "partial": 53,
+    "partial": 61,
     "supplementary": 17,
     "manual-only": 0
   },
   "manual_plan_total": 217,
-  "manual_ids_with_automated_support": 47,
-  "raw_mapped_case_ratio": 21.7,
+  "manual_ids_with_automated_support": 55,
+  "raw_mapped_case_ratio": 25.3,
   "manual_coverage_decisions": {
     "MT-BR01": {
       "status": "manual-only",
@@ -168,11 +168,13 @@
       "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-C10": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_connect_target_free.py::test_terminal_close_failure_cancels_disconnect_and_keeps_remote_list"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-C11": {
       "status": "manual-only",
@@ -182,53 +184,67 @@
       "note": "No semantically matching integration test is currently mapped."
     },
     "MT-C12": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_connect_target_free.py::test_unreachable_remote_retries_then_shows_three_action_dialog"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-C12a": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_connect_target_free.py::test_remote_unavailable_abort_disconnects_and_clears_list"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-C12b": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_connect_target_free.py::test_remote_unavailable_continue_leaves_ports_open_and_takes_no_action"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-C12c": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_connect_target_free.py::test_remote_unavailable_terminal_opens_terminal_and_leaves_ports_open"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-C13": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_connect_target_free.py::test_zcpr_prompt_selects_drive_and_refreshes_without_unavailable_dialog"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-C14": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_connect_target_free.py::test_boot_sequence_recovers_failed_probe_then_selects_drive"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-C15": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_connect_target_free.py::test_empty_boot_sequence_skips_recovery_and_shows_unavailable_dialog"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-C18": {
       "status": "automated-support",
@@ -1639,6 +1655,7 @@
     }
   },
   "requirement_ids": [
+    "DR-033",
     "DR-033a",
     "FR-017a",
     "FR-030",
@@ -1650,8 +1667,14 @@
     "FR-040",
     "FR-041",
     "FR-042",
+    "FR-043",
+    "FR-044",
+    "FR-045",
     "FR-046",
+    "FR-047",
+    "FR-048",
     "FR-050",
+    "FR-051",
     "FR-054",
     "FR-055",
     "FR-058",
@@ -1733,6 +1756,7 @@
     "UIR-074",
     "UIR-076",
     "UIR-091",
+    "UIR-092",
     "UIR-099",
     "UIR-100",
     "UIR-101",
@@ -2326,6 +2350,34 @@
       ]
     },
     {
+      "nodeid": "integration/test_gui_connect_target_free.py::test_boot_sequence_recovers_failed_probe_then_selects_drive",
+      "file": "test_gui_connect_target_free.py",
+      "line": 416,
+      "test": "test_boot_sequence_recovers_failed_probe_then_selects_drive",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-C14",
+      "requirements": [
+        "FR-047",
+        "FR-048"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-047",
+        "FR-048"
+      ]
+    },
+    {
       "nodeid": "integration/test_gui_connect_target_free.py::test_distinct_terminal_and_transport_ports_connect_both",
       "file": "test_gui_connect_target_free.py",
       "line": 50,
@@ -2353,6 +2405,202 @@
         "FR-038",
         "FR-040",
         "UIR-074"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_connect_target_free.py::test_empty_boot_sequence_skips_recovery_and_shows_unavailable_dialog",
+      "file": "test_gui_connect_target_free.py",
+      "line": 455,
+      "test": "test_empty_boot_sequence_skips_recovery_and_shows_unavailable_dialog",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-C15",
+      "requirements": [
+        "FR-044",
+        "FR-048"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-044",
+        "FR-048"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_connect_target_free.py::test_remote_unavailable_abort_disconnects_and_clears_list",
+      "file": "test_gui_connect_target_free.py",
+      "line": 248,
+      "test": "test_remote_unavailable_abort_disconnects_and_clears_list",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-C12a",
+      "requirements": [
+        "FR-045"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-045"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_connect_target_free.py::test_remote_unavailable_continue_leaves_ports_open_and_takes_no_action",
+      "file": "test_gui_connect_target_free.py",
+      "line": 301,
+      "test": "test_remote_unavailable_continue_leaves_ports_open_and_takes_no_action",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-C12b",
+      "requirements": [
+        "FR-045"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-045"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_connect_target_free.py::test_remote_unavailable_terminal_opens_terminal_and_leaves_ports_open",
+      "file": "test_gui_connect_target_free.py",
+      "line": 340,
+      "test": "test_remote_unavailable_terminal_opens_terminal_and_leaves_ports_open",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-C12c",
+      "requirements": [
+        "FR-045",
+        "FR-097"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-045",
+        "FR-097"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_connect_target_free.py::test_terminal_close_failure_cancels_disconnect_and_keeps_remote_list",
+      "file": "test_gui_connect_target_free.py",
+      "line": 139,
+      "test": "test_terminal_close_failure_cancels_disconnect_and_keeps_remote_list",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-C10",
+      "requirements": [
+        "FR-051",
+        "FR-058"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-051",
+        "FR-058"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_connect_target_free.py::test_unreachable_remote_retries_then_shows_three_action_dialog",
+      "file": "test_gui_connect_target_free.py",
+      "line": 188,
+      "test": "test_unreachable_remote_retries_then_shows_three_action_dialog",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-C12",
+      "requirements": [
+        "FR-041",
+        "FR-043",
+        "FR-044",
+        "UIR-092"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-041",
+        "FR-043",
+        "FR-044",
+        "UIR-092"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_connect_target_free.py::test_zcpr_prompt_selects_drive_and_refreshes_without_unavailable_dialog",
+      "file": "test_gui_connect_target_free.py",
+      "line": 379,
+      "test": "test_zcpr_prompt_selects_drive_and_refreshes_without_unavailable_dialog",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-C13",
+      "requirements": [
+        "DR-033",
+        "FR-042"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "DR-033",
+        "FR-042"
       ]
     },
     {

@@ -11,8 +11,10 @@ invocation: `.venv/Scripts/python.exe -m pytest integration/`.
 
 > Status: **Phase 0 complete (2026-08-01).** Static validation and the
 > target-free tier pass; MT-CF05 also passes on all five physical targets at
-> clean commit `84f0be5`. Phase 1 remains partial, with MT-C02--MT-C04 now
-> covered in the target-free GUI tier; later scenarios continue incrementally.
+> clean commit `84f0be5`. Phase 1 remains partial, with MT-C02--MT-C04, MT-C10,
+> MT-C12/12a/12b/12c, and MT-C13--MT-C15 now covered in the target-free GUI
+> tier. The planned connection/recovery automation backlog is complete; later
+> Phase 1 scenarios continue incrementally.
 > See `temp/integration_test_harness_plan.md` for the audited evidence matrix.
 
 ## Quick start
@@ -74,8 +76,14 @@ Target-free and traceability gates:
 
 The `gui_integration` lane drives the real offscreen `MainWindow` but replaces
 the operating-system serial boundary. MT-C02--MT-C04 therefore verify the
-dialogs, workflow, flags, indicators, and probe gating deterministically while
-their manual cases remain required for evidence from genuinely free/busy ports.
+dialogs, workflow, flags, indicators, and probe gating deterministically;
+MT-C10 verifies close-failure cancellation and list preservation; and
+MT-C12/12a/12b/12c verify retry, dialog structure, and all three actions.
+MT-C13 verifies ZCPR-style prompt recognition and drive refresh; MT-C14 verifies
+boot-script recovery and a successful post-boot probe; MT-C15 verifies that an
+empty script bypasses recovery and proceeds directly to the dialog. Their
+manual cases remain required for physical peer and genuinely
+free/busy/failing-port evidence.
 
 ### Watching a run
 
@@ -140,6 +148,10 @@ The harness writes its **own** `report.md`/`run.json` only.
   MT-V10 (link → browser launch), MT-N02 (second OS).
 - True pixel rendering — we assert the widget tree / stylesheet / layout, not
   screenshots.
-- Best-effort / hardware-specific: MT-P05 (flow-control peer), MT-C10 (forced
-  close failure) — opt-in, may end **Blocked**. Real free/busy-port observation
-  for MT-C02--MT-C04 also remains manual despite deterministic GUI coverage.
+- Best-effort / hardware-specific MT-P05 (flow-control peer) may end
+  **Blocked**. Real free/busy-port observation for MT-C02--MT-C04 and a
+  physically induced close failure for MT-C10 remain manual despite
+  deterministic GUI coverage. MT-C12 also retains the real unreachable-peer
+  observation and visible modal interaction; MT-C13 retains live ZCPR/NZCOM
+  peer evidence; MT-C14 retains live keystroke playback into a non-auto-booting
+  remote; MT-C15 retains the corresponding unreachable live-peer observation.

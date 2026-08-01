@@ -1,14 +1,14 @@
 # Integration Test Coverage Report
 
 **Generated from:** `integration/coverage_manifest.json` v3.0
-**Total collected test functions:** 70
+**Total collected test functions:** 78
 **Execution status:** Not run by this generator; physical outcomes remain in `integration/results/runs_ledger.json`.
 
 ## Test Tiers
 
 | Tier | Count |
 |---|---:|
-| gui-integration | 3 |
+| gui-integration | 11 |
 | hil | 55 |
 | visual | 12 |
 
@@ -17,14 +17,14 @@
 | Classification | Count |
 |---|---:|
 | equivalent | 0 |
-| partial | 53 |
+| partial | 61 |
 | supplementary | 17 |
 | manual-only | 0 |
 
 ## Manual Scenario Decisions
 
 - Manual plan cases: **217**
-- Cases with reviewed automated support: **47** (**21.7%** raw mapped-case ratio)
+- Cases with reviewed automated support: **55** (**25.3%** raw mapped-case ratio)
 - Every remaining case has an explicit `manual-only` decision in the manifest.
 
 | MT-ID | Tests | Best evidence | Manual retained |
@@ -37,6 +37,14 @@
 | MT-C03 | 1 | partial | yes |
 | MT-C04 | 1 | partial | yes |
 | MT-C09 | 1 | partial | yes |
+| MT-C10 | 1 | partial | yes |
+| MT-C12 | 1 | partial | yes |
+| MT-C12a | 1 | partial | yes |
+| MT-C12b | 1 | partial | yes |
+| MT-C12c | 1 | partial | yes |
+| MT-C13 | 1 | partial | yes |
+| MT-C14 | 1 | partial | yes |
+| MT-C15 | 1 | partial | yes |
 | MT-C18 | 1 | partial | yes |
 | MT-C19 | 1 | partial | yes |
 | MT-CF04 | 2 | partial | yes |
@@ -101,7 +109,15 @@
 | `test_reconnect_after_disconnect` | hil | — | FR-030, FR-050 | supplementary | — |
 | `test_bad_terminal_port_reports_error_and_stays_disconnected` | gui-integration | MT-C02 | FR-031, FR-033 | partial | — |
 | `test_bad_transport_port_reports_error_and_skips_probe` | gui-integration | MT-C04 | FR-039, FR-046 | partial | — |
+| `test_boot_sequence_recovers_failed_probe_then_selects_drive` | gui-integration | MT-C14 | FR-047, FR-048 | partial | — |
 | `test_distinct_terminal_and_transport_ports_connect_both` | gui-integration | MT-C03 | FR-038, FR-040, UIR-074 | partial | — |
+| `test_empty_boot_sequence_skips_recovery_and_shows_unavailable_dialog` | gui-integration | MT-C15 | FR-044, FR-048 | partial | — |
+| `test_remote_unavailable_abort_disconnects_and_clears_list` | gui-integration | MT-C12a | FR-045 | partial | — |
+| `test_remote_unavailable_continue_leaves_ports_open_and_takes_no_action` | gui-integration | MT-C12b | FR-045 | partial | — |
+| `test_remote_unavailable_terminal_opens_terminal_and_leaves_ports_open` | gui-integration | MT-C12c | FR-045, FR-097 | partial | — |
+| `test_terminal_close_failure_cancels_disconnect_and_keeps_remote_list` | gui-integration | MT-C10 | FR-051, FR-058 | partial | — |
+| `test_unreachable_remote_retries_then_shows_three_action_dialog` | gui-integration | MT-C12 | FR-041, FR-043, FR-044, UIR-092 | partial | — |
+| `test_zcpr_prompt_selects_drive_and_refreshes_without_unavailable_dialog` | gui-integration | MT-C13 | DR-033, FR-042 | partial | — |
 | `test_disk_image_host_mount_copy_to_remote` | hil | MT-DI04 | FR-106, FR-145, FR-171 | partial | — |
 | `test_disk_image_user_area_transfer_preserves_source` | hil | MT-DI21 | FR-188 | partial | — |
 | `test_remote_image_mount_refuses_connect` | hil | MT-DI14 | FR-176 | partial | — |
