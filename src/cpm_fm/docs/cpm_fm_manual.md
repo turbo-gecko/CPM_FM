@@ -144,6 +144,10 @@ Settings are stored in JSON configuration files that you create and save to a fo
 
 Configure how the program talks to the serial hardware:
 
+The dialog separates the fields into **Port Settings** and **Transmit Delay**
+groups. Both groups place the setting name on the left and its control on the
+right.
+
 | Field | Options | Default |
 |-------|---------|---------|
 | **Show All Ports** | On / Off | Off |
@@ -164,6 +168,8 @@ Configure how the program talks to the serial hardware:
 > **Show All Ports:** By default the two port drop-downs list only the *active* ports — USB serial adapters appear first, and the inactive legacy serial nodes that Linux always creates (`/dev/ttyS0`…`/dev/ttyS31`) are hidden so the list stays short and the port you want is easy to find. Tick **Show All Ports** to reveal every port the host reports. The port a configuration already uses is always shown, even when it is hidden or currently unplugged, so loading a config never silently changes your port. This checkbox affects the list only; it is not saved with the configuration and starts unticked each time you open the dialog.
 
 > **Msec per Char / Msec per Line** add small pacing delays when sending data — useful for slower CP/M systems that can drop characters if fed too fast.
+> Both fields accept integers from **0 through 255** only; non-integer and
+> out-of-range input is rejected.
 
 > **Terminal Timeout / Transfer Timeout** set the serial read timeout (in milliseconds) for each port. The default is **100 ms**. When using **XMODEM 1K** transfers, it is recommended to increase these to **1000 ms** to improve reliability, as the larger 1024-byte blocks take longer to arrive than the default timeout allows for in a single read.
 

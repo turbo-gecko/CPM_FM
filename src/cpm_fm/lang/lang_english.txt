@@ -215,6 +215,8 @@ terminal.menu.macros_sub = Macros
 
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = Serial Config
+config.serial.port_settings = Port Settings
+config.serial.transmit_delay = Transmit Delay
 config.serial.terminal_port = Terminal Port
 config.serial.transfer_port = Transfer Port
 config.serial.show_all_ports = Show All Ports

@@ -6,7 +6,7 @@
 Maps each requirement to the test(s) that verify it, derived from `Verifies:` docstring tags in the test suite.
 Use it to see which requirements have automated coverage, which do not, and which `Verifies:` tags cite an unknown requirement ID.
 
-_305/502 requirements have a verifying test; 197 untested; 0 stale tag(s)._
+_310/502 requirements have a verifying test; 192 untested; 0 stale tag(s)._
 
 ## Covered requirements
 
@@ -245,9 +245,14 @@ _305/502 requirements have a verifying test; 197 untested; 0 stale tag(s)._
 | UIR-017 | `tests/test_gui_smoke.py:test_drive_combo_lists_a_to_p` |
 | UIR-018 | `tests/test_gui_smoke.py:test_lists_have_context_menus` |
 | UIR-019 | `tests/test_gui_smoke.py:test_lists_have_context_menus` |
+| UIR-020 | `tests/test_gui_smoke.py:test_serial_dialog_groups_fields_and_rejects_excessive_delays` |
+| UIR-021 | `tests/test_gui_smoke.py:test_serial_dialog_groups_fields_and_rejects_excessive_delays` |
 | UIR-022 | `tests/test_gui_smoke.py:test_serial_dialog_show_all_ports_toggle`, `tests/test_port_filter.py:test_always_include_appends_absent_configured_port`, `tests/test_port_filter.py:test_always_include_keeps_configured_phantom_port`, `tests/test_port_filter.py:test_empty_after_filtering_falls_back_to_all`, `tests/test_port_filter.py:test_is_phantom_distinguishes_usb_from_legacy`, `tests/test_port_filter.py:test_no_ports_returns_empty_list`, `tests/test_port_filter.py:test_phantom_ports_hidden_by_default`, `tests/test_port_filter.py:test_usb_ports_sorted_before_legacy_naturally` |
 | UIR-023 | `tests/test_gui_smoke.py:test_serial_dialog_show_all_ports_toggle`, `tests/test_port_filter.py:test_always_include_appends_absent_configured_port`, `tests/test_port_filter.py:test_always_include_keeps_configured_phantom_port`, `tests/test_port_filter.py:test_empty_after_filtering_falls_back_to_all`, `tests/test_port_filter.py:test_is_phantom_distinguishes_usb_from_legacy`, `tests/test_port_filter.py:test_no_ports_returns_empty_list`, `tests/test_port_filter.py:test_phantom_ports_hidden_by_default`, `tests/test_port_filter.py:test_usb_ports_sorted_before_legacy_naturally` |
 | UIR-028 | `tests/test_config_handler.py:test_default_settings_flow_control_is_rts_cts`, `tests/test_serial_manager.py:test_flow_control_defaults_off_when_absent`, `tests/test_serial_manager.py:test_flow_control_flat_key` |
+| UIR-029 | `tests/test_gui_smoke.py:test_serial_dialog_groups_fields_and_rejects_excessive_delays` |
+| UIR-030 | `tests/test_gui_smoke.py:test_serial_dialog_groups_fields_and_rejects_excessive_delays` |
+| UIR-031 | `tests/test_gui_smoke.py:test_serial_dialog_groups_fields_and_rejects_excessive_delays` |
 | UIR-032 | `tests/test_serial_manager.py:test_read_timeout_defaults_to_100ms_when_absent`, `tests/test_serial_manager.py:test_read_timeout_is_per_port_and_converted_ms_to_seconds` |
 | UIR-033 | `tests/test_serial_manager.py:test_read_timeout_defaults_to_100ms_when_absent`, `tests/test_serial_manager.py:test_read_timeout_is_per_port_and_converted_ms_to_seconds` |
 | UIR-034 | `tests/test_config_handler.py:test_default_settings_terminal_type_is_vt100`, `tests/test_gui_smoke.py:test_apply_terminal_settings_refreshes_status_bar`, `tests/test_gui_smoke.py:test_set_terminal_type_from_menu_applies_and_updates_setting`, `tests/test_macros.py:test_menu_terminal_config_saves_subset_and_applies`, `tests/test_macros.py:test_terminal_config_terminal_tab_round_trips`, `tests/test_term_translate.py:test_make_translator_defaults_to_identity`, `tests/test_term_translate.py:test_make_translator_selects_type`, `tests/test_vt100_engine.py:test_adm3a_engine_clear_screen`, `tests/test_vt100_engine.py:test_set_terminal_type_switches_interpretation`, `tests/test_vt100_engine.py:test_terminal_type_defaults_to_vt100`, `tests/test_vt100_engine.py:test_vt52_engine_direct_address_and_text` |
@@ -470,15 +475,10 @@ These defined requirements have no `Verifies:` test tag:
 - UIR-013
 - UIR-015
 - UIR-016
-- UIR-020
-- UIR-021
 - UIR-024
 - UIR-025
 - UIR-026
 - UIR-027
-- UIR-029
-- UIR-030
-- UIR-031
 - UIR-043
 - UIR-050
 - UIR-051a

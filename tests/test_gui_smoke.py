@@ -3348,6 +3348,34 @@ def test_serial_dialog_show_all_ports_toggle(qapp, monkeypatch):
         dlg.deleteLater()
 
 
+def test_serial_dialog_groups_fields_and_rejects_excessive_delays(qapp, monkeypatch):
+    """Verifies: UIR-020, UIR-021, UIR-029, UIR-030, UIR-031."""
+    from PySide6.QtTest import QTest
+    from PySide6.QtWidgets import QGroupBox
+
+    from cpm_fm.gui.config_dialogs import ConfigDialog, SerialConfigDialog
+
+    monkeypatch.setattr(ConfigDialog, "exec", lambda self: 0)
+    dlg = SerialConfigDialog(None, {}, [], [], lambda settings: None)
+    try:
+        groups = dlg.findChildren(QGroupBox)
+        assert [group.title() for group in groups] == [
+            i18n.tr("config.serial.port_settings"),
+            i18n.tr("config.serial.transmit_delay"),
+        ]
+        for key in ("msec_char", "msec_line"):
+            edit = dlg.entries[key]
+            assert edit.text() == "0"
+            edit.clear()
+            QTest.keyClicks(edit, "255")
+            assert edit.text() == "255"
+            edit.clear()
+            QTest.keyClicks(edit, "256")
+            assert edit.text() != "256"
+    finally:
+        dlg.deleteLater()
+
+
 def test_issue_remote_cmd_uses_1k_command_when_enabled(qapp, state, monkeypatch):
     """Verifies: UIR-089, UIR-090."""
     # UIR-089/UIR-090: with XMODEM-1K on, a non-blank _1k command replaces the

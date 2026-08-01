@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import time
 from functools import partial
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from PySide6.QtCore import QTimer
-from PySide6.QtGui import QIntValidator
+from PySide6.QtGui import QIntValidator, QValidator
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -30,6 +30,34 @@ from cpm_fm.utils.i18n import tr
 
 if TYPE_CHECKING:
     from cpm_fm.gui.window_state import WindowState
+
+
+class _BoundedIntValidator(QIntValidator):
+    """Reject numeric input above the maximum instead of accepting it provisionally."""
+
+    def validate(self, input_text: str, pos: int) -> tuple[QValidator.State, str, int]:
+        """Keep useful intermediate edits but reject an already excessive value.
+
+        Qt's ``QIntValidator`` treats some values above ``top()`` as
+        ``Intermediate``, which lets a line edit display and save values such as
+        256 for a 0..255 field. Values below a positive minimum remain
+        intermediate so, for example, a user can type ``1`` on the way to a
+        valid timeout of ``100``.
+
+        Satisfies: UIR-030, UIR-031.
+        """
+        state, normalized, cursor = cast(
+            tuple[QValidator.State, str, int], super().validate(input_text, pos)
+        )
+        if state == QValidator.State.Intermediate and input_text:
+            try:
+                value = int(input_text)
+            except ValueError:
+                pass
+            else:
+                if value > self.top():
+                    state = QValidator.State.Invalid
+        return state, normalized, cursor
 
 
 class ConfigDialog(QDialog):
@@ -245,7 +273,7 @@ class ConfigDialog(QDialog):
                 widget.setMaxLength(field["maxlength"])
             if "int_range" in field:
                 lo, hi = field["int_range"]
-                widget.setValidator(QIntValidator(lo, hi, widget))
+                widget.setValidator(_BoundedIntValidator(lo, hi, widget))
             self.entries[key] = widget
 
         return tr(field["label_key"]), widget
@@ -308,6 +336,7 @@ class SerialConfigDialog(ConfigDialog):
                 "type": "checkbox",
                 "default": "OFF",
                 "persist": False,
+                "group": "config.serial.port_settings",
             },
             {
                 "key": "terminal_port",
@@ -315,6 +344,7 @@ class SerialConfigDialog(ConfigDialog):
                 "type": "dropdown",
                 "options": active_ports,
                 "default": "COM1",
+                "group": "config.serial.port_settings",
             },
             {
                 "key": "transport_port",
@@ -322,6 +352,7 @@ class SerialConfigDialog(ConfigDialog):
                 "type": "dropdown",
                 "options": active_ports,
                 "default": "COM1",
+                "group": "config.serial.port_settings",
             },
             {
                 "key": "speed",
@@ -343,6 +374,7 @@ class SerialConfigDialog(ConfigDialog):
                     "921600",
                 ],
                 "default": "115200",
+                "group": "config.serial.port_settings",
             },
             {
                 "key": "data",
@@ -350,6 +382,7 @@ class SerialConfigDialog(ConfigDialog):
                 "type": "dropdown",
                 "options": ["7", "8"],
                 "default": "8",
+                "group": "config.serial.port_settings",
             },
             {
                 "key": "parity",
@@ -357,6 +390,7 @@ class SerialConfigDialog(ConfigDialog):
                 "type": "dropdown",
                 "options": ["NONE", "ODD", "EVEN", "MARK", "SPACE"],
                 "default": "NONE",
+                "group": "config.serial.port_settings",
             },
             {
                 "key": "stopbits",
@@ -364,6 +398,7 @@ class SerialConfigDialog(ConfigDialog):
                 "type": "dropdown",
                 "options": ["1", "2"],
                 "default": "1",
+                "group": "config.serial.port_settings",
             },
             {
                 "key": "flow",
@@ -372,6 +407,7 @@ class SerialConfigDialog(ConfigDialog):
                 "options": ["NONE", "XON/XOFF", "RTS/CTS", "DSR/DTR"],
                 # UIR-028: default RTS/CTS since v2.36.1 (was NONE).
                 "default": "RTS/CTS",
+                "group": "config.serial.port_settings",
             },
             # UIR-030/UIR-031: integer 0..255 inclusive.
             {
@@ -380,6 +416,7 @@ class SerialConfigDialog(ConfigDialog):
                 "type": "text",
                 "default": "0",
                 "int_range": (0, 255),
+                "group": "config.serial.transmit_delay",
             },
             {
                 "key": "msec_line",
@@ -387,6 +424,7 @@ class SerialConfigDialog(ConfigDialog):
                 "type": "text",
                 "default": "0",
                 "int_range": (0, 255),
+                "group": "config.serial.transmit_delay",
             },
             # UIR-032/UIR-033: per-port serial read timeouts in milliseconds.
             # The pyserial read timeout for each port; the transport value bounds
@@ -397,6 +435,7 @@ class SerialConfigDialog(ConfigDialog):
                 "type": "text",
                 "default": "100",
                 "int_range": (10, 5000),
+                "group": "config.serial.port_settings",
             },
             {
                 "key": "transport_timeout_ms",
@@ -404,6 +443,7 @@ class SerialConfigDialog(ConfigDialog):
                 "type": "text",
                 "default": "100",
                 "int_range": (10, 5000),
+                "group": "config.serial.port_settings",
             },
         ]
         super().__init__(

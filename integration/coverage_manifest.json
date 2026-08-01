@@ -2,21 +2,21 @@
   "version": "3.0",
   "generated": "deterministic",
   "semantic_review": "completed-2026-08-01",
-  "total_tests": 107,
+  "total_tests": 111,
   "tiers": {
-    "gui-integration": 39,
+    "gui-integration": 43,
     "hil": 56,
     "visual": 12
   },
   "evidence_classification": {
     "equivalent": 0,
-    "partial": 90,
+    "partial": 94,
     "supplementary": 17,
     "manual-only": 0
   },
   "manual_plan_total": 217,
-  "manual_ids_with_automated_support": 79,
-  "raw_mapped_case_ratio": 36.4,
+  "manual_ids_with_automated_support": 83,
+  "raw_mapped_case_ratio": 38.2,
   "manual_coverage_decisions": {
     "MT-BR01": {
       "status": "automated-support",
@@ -1135,25 +1135,31 @@
       "note": "No semantically matching integration test is currently mapped."
     },
     "MT-P02": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_serial_config_target_free.py::test_serial_config_action_opens_modal_grouped_two_column_dialog"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-P03": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_serial_config_target_free.py::test_serial_config_dropdowns_have_exact_options_and_defaults"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-P04": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_serial_config_target_free.py::test_serial_delay_fields_enforce_integer_0_to_255"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-P05": {
       "status": "manual-only",
@@ -1163,11 +1169,13 @@
       "note": "No semantically matching integration test is currently mapped."
     },
     "MT-P06": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_serial_config_target_free.py::test_same_terminal_and_transport_port_saves_and_reopens"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-R01": {
       "status": "automated-support",
@@ -1713,6 +1721,7 @@
     "DR-033a",
     "DR-050",
     "FR-017a",
+    "FR-020",
     "FR-030",
     "FR-031",
     "FR-033",
@@ -1804,6 +1813,7 @@
     "FR-187",
     "FR-188",
     "FR-189",
+    "IFR-002",
     "NFR-001",
     "NFR-003b",
     "NFR-003c",
@@ -1818,6 +1828,16 @@
     "UIR-017",
     "UIR-018",
     "UIR-019",
+    "UIR-020",
+    "UIR-021",
+    "UIR-024",
+    "UIR-025",
+    "UIR-026",
+    "UIR-027",
+    "UIR-028",
+    "UIR-029",
+    "UIR-030",
+    "UIR-031",
     "UIR-034",
     "UIR-064",
     "UIR-069",
@@ -3656,6 +3676,126 @@
       "verifies": [
         "FR-140",
         "FR-142"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_serial_config_target_free.py::test_same_terminal_and_transport_port_saves_and_reopens",
+      "file": "test_gui_serial_config_target_free.py",
+      "line": 175,
+      "test": "test_same_terminal_and_transport_port_saves_and_reopens",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-P06",
+      "requirements": [
+        "IFR-002"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "IFR-002"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_serial_config_target_free.py::test_serial_config_action_opens_modal_grouped_two_column_dialog",
+      "file": "test_gui_serial_config_target_free.py",
+      "line": 20,
+      "test": "test_serial_config_action_opens_modal_grouped_two_column_dialog",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-P02",
+      "requirements": [
+        "FR-020",
+        "UIR-020",
+        "UIR-021",
+        "UIR-029"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-020",
+        "UIR-020",
+        "UIR-021",
+        "UIR-029"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_serial_config_target_free.py::test_serial_config_dropdowns_have_exact_options_and_defaults",
+      "file": "test_gui_serial_config_target_free.py",
+      "line": 73,
+      "test": "test_serial_config_dropdowns_have_exact_options_and_defaults",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-P03",
+      "requirements": [
+        "UIR-024",
+        "UIR-025",
+        "UIR-026",
+        "UIR-027",
+        "UIR-028"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "UIR-024",
+        "UIR-025",
+        "UIR-026",
+        "UIR-027",
+        "UIR-028"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_serial_config_target_free.py::test_serial_delay_fields_enforce_integer_0_to_255",
+      "file": "test_gui_serial_config_target_free.py",
+      "line": 127,
+      "test": "test_serial_delay_fields_enforce_integer_0_to_255",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-P04",
+      "requirements": [
+        "UIR-030",
+        "UIR-031"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "UIR-030",
+        "UIR-031"
       ]
     },
     {

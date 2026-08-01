@@ -183,6 +183,8 @@ terminal.menu.macros_sub = Makra
 
 # --- Serial Configuration dialog -----------------------------------------------
 config.serial.title = Konfiguracja portu szeregowego
+config.serial.port_settings = Ustawienia portów
+config.serial.transmit_delay = Opóźnienie transmisji
 config.serial.terminal_port = Port terminala
 config.serial.transfer_port = Port transportu
 config.serial.show_all_ports = Pokaż wszystkie porty

@@ -1,14 +1,14 @@
 # Integration Test Coverage Report
 
 **Generated from:** `integration/coverage_manifest.json` v3.0
-**Total collected test functions:** 107
+**Total collected test functions:** 111
 **Execution status:** Not run by this generator; physical outcomes remain in `integration/results/runs_ledger.json`.
 
 ## Test Tiers
 
 | Tier | Count |
 |---|---:|
-| gui-integration | 39 |
+| gui-integration | 43 |
 | hil | 56 |
 | visual | 12 |
 
@@ -17,14 +17,14 @@
 | Classification | Count |
 |---|---:|
 | equivalent | 0 |
-| partial | 90 |
+| partial | 94 |
 | supplementary | 17 |
 | manual-only | 0 |
 
 ## Manual Scenario Decisions
 
 - Manual plan cases: **217**
-- Cases with reviewed automated support: **79** (**36.4%** raw mapped-case ratio)
+- Cases with reviewed automated support: **83** (**38.2%** raw mapped-case ratio)
 - Every remaining case has an explicit `manual-only` decision in the manifest.
 
 | MT-ID | Tests | Best evidence | Manual retained |
@@ -83,6 +83,10 @@
 | MT-FV02 | 1 | partial | yes |
 | MT-FV04 | 1 | partial | yes |
 | MT-I02 | 1 | partial | yes |
+| MT-P02 | 1 | partial | yes |
+| MT-P03 | 1 | partial | yes |
+| MT-P04 | 1 | partial | yes |
+| MT-P06 | 1 | partial | yes |
 | MT-R01 | 1 | partial | yes |
 | MT-R04 | 1 | partial | yes |
 | MT-R05 | 1 | partial | yes |
@@ -177,6 +181,10 @@
 | `test_drop_cancelled_does_not_transfer` | hil | MT-D06 | FR-137 | partial | — |
 | `test_internal_drop_host_to_remote_uploads` | hil | MT-D03 | FR-137, FR-138 | partial | — |
 | `test_upload_records_history_entry` | hil | — | FR-140, FR-142 | supplementary | — |
+| `test_same_terminal_and_transport_port_saves_and_reopens` | gui-integration | MT-P06 | IFR-002 | partial | — |
+| `test_serial_config_action_opens_modal_grouped_two_column_dialog` | gui-integration | MT-P02 | FR-020, UIR-020, UIR-021, UIR-029 | partial | — |
+| `test_serial_config_dropdowns_have_exact_options_and_defaults` | gui-integration | MT-P03 | UIR-024, UIR-025, UIR-026, UIR-027, UIR-028 | partial | — |
+| `test_serial_delay_fields_enforce_integer_0_to_255` | gui-integration | MT-P04 | UIR-030, UIR-031 | partial | — |
 | `test_invalid_name_rename_uploads_conforming` | hil | MT-FV02 | FR-148, FR-149 | partial | — |
 | `test_invalid_name_skip_does_not_upload` | hil | MT-FV04 | FR-149 | partial | — |
 | `test_invalid_name_special_chars_sanitized` | hil | — | FR-148, FR-149 | supplementary | — |

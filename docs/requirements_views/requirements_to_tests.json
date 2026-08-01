@@ -1227,6 +1227,12 @@
     "UIR-019": [
       "tests/test_gui_smoke.py:test_lists_have_context_menus"
     ],
+    "UIR-020": [
+      "tests/test_gui_smoke.py:test_serial_dialog_groups_fields_and_rejects_excessive_delays"
+    ],
+    "UIR-021": [
+      "tests/test_gui_smoke.py:test_serial_dialog_groups_fields_and_rejects_excessive_delays"
+    ],
     "UIR-022": [
       "tests/test_gui_smoke.py:test_serial_dialog_show_all_ports_toggle",
       "tests/test_port_filter.py:test_always_include_appends_absent_configured_port",
@@ -1251,6 +1257,15 @@
       "tests/test_config_handler.py:test_default_settings_flow_control_is_rts_cts",
       "tests/test_serial_manager.py:test_flow_control_defaults_off_when_absent",
       "tests/test_serial_manager.py:test_flow_control_flat_key"
+    ],
+    "UIR-029": [
+      "tests/test_gui_smoke.py:test_serial_dialog_groups_fields_and_rejects_excessive_delays"
+    ],
+    "UIR-030": [
+      "tests/test_gui_smoke.py:test_serial_dialog_groups_fields_and_rejects_excessive_delays"
+    ],
+    "UIR-031": [
+      "tests/test_gui_smoke.py:test_serial_dialog_groups_fields_and_rejects_excessive_delays"
     ],
     "UIR-032": [
       "tests/test_serial_manager.py:test_read_timeout_defaults_to_100ms_when_absent",
@@ -1679,15 +1694,10 @@
     "UIR-013",
     "UIR-015",
     "UIR-016",
-    "UIR-020",
-    "UIR-021",
     "UIR-024",
     "UIR-025",
     "UIR-026",
     "UIR-027",
-    "UIR-029",
-    "UIR-030",
-    "UIR-031",
     "UIR-043",
     "UIR-050",
     "UIR-051a",

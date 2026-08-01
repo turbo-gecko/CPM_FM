@@ -122,6 +122,12 @@ containing known files. Native file choices are made
 deterministic for headless CI; the manual cases remain retained for
 operator-observed menu/dialog and filesystem evidence.
 
+The configuration slice adds target-free MT-P02--MT-P04 and MT-P06 evidence
+through the real Config > Serial action and dialog. It verifies the translated
+Port Settings/Transmit Delay grouping and two-column forms, exact serial-option
+lists and defaults, strict 0--255 delay input, and same-port Save/reopen JSON
+persistence. MT-P05 remains a best-effort physical flow-control case.
+
 MT-BR09 additionally runs as destructive HIL: Restore with an empty temporary
 host directory still wipes the nominated scratch drive, starts no transfer
 batch, reports "Nothing to transfer", and refreshes to an empty Remote pane. It

@@ -183,6 +183,8 @@ terminal.menu.macros_sub = Macro
 
 # --- Serial Configuration dialog ----------------------------------------------
 config.serial.title = Configurazione Seriale
+config.serial.port_settings = Impostazioni porte
+config.serial.transmit_delay = Ritardo di trasmissione
 config.serial.terminal_port = Porta terminale
 config.serial.transfer_port = Porta di trasferimento
 config.serial.show_all_ports = Mostra tutte le porte
