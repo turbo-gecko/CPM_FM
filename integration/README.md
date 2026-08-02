@@ -128,6 +128,28 @@ Port Settings/Transmit Delay grouping and two-column forms, exact serial-option
 lists and defaults, strict 0--255 delay input, and same-port Save/reopen JSON
 persistence. MT-P05 remains a best-effort physical flow-control case.
 
+The same lane covers the target-free General, Terminal, and Remote configuration
+workflows MT-G01--G10, MT-G12/12a/13/15, and MT-G20--G23. These tests exercise
+the real Config-menu actions, flat/scrollable forms, terminal and macro tabs,
+defaults and bounds, folder pickers, multiline scripts, group-specific JSON
+saves, reopen persistence, and session-only warnings. MT-G11 and MT-G14 remain
+HIL because their expected evidence requires a live CP/M response.
+
+Configuration-file lifecycle workflows MT-L01--L06 and MT-L09--L15 are also
+target-free. They exercise the real New/Load/Save menu actions and configuration
+dialogs with temporary JSON files: native-dialog parameters, flat/nested input,
+full-store replacement and saving, unknown-key preservation, folder memory,
+Remote-list invalidation, New Config reset/cancel behavior, title changes,
+group-selective saves, and unconfigured session-only warnings. MT-L07/L08 retain
+their manual process-restart evidence.
+
+Host filesystem actions MT-F04, MT-F05, and MT-F05a run target-free against
+temporary files and the real File Action dialog. They cover Rename Apply,
+Cancel, unchanged/empty no-ops, single and multi-file Delete confirmation,
+read-only selected-name presentation, filesystem results, and exact Host-list
+refresh behavior. Native context-menu presentation remains covered separately
+by the visual/manual cases.
+
 MT-BR09 additionally runs as destructive HIL: Restore with an empty temporary
 host directory still wipes the nominated scratch drive, starts no transfer
 batch, reports "Nothing to transfer", and refreshes to an empty Remote pane. It

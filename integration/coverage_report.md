@@ -1,14 +1,14 @@
 # Integration Test Coverage Report
 
 **Generated from:** `integration/coverage_manifest.json` v3.0
-**Total collected test functions:** 111
+**Total collected test functions:** 145
 **Execution status:** Not run by this generator; physical outcomes remain in `integration/results/runs_ledger.json`.
 
 ## Test Tiers
 
 | Tier | Count |
 |---|---:|
-| gui-integration | 43 |
+| gui-integration | 77 |
 | hil | 56 |
 | visual | 12 |
 
@@ -17,14 +17,14 @@
 | Classification | Count |
 |---|---:|
 | equivalent | 0 |
-| partial | 94 |
+| partial | 128 |
 | supplementary | 17 |
 | manual-only | 0 |
 
 ## Manual Scenario Decisions
 
 - Manual plan cases: **217**
-- Cases with reviewed automated support: **83** (**38.2%** raw mapped-case ratio)
+- Cases with reviewed automated support: **117** (**53.9%** raw mapped-case ratio)
 - Every remaining case has an explicit `manual-only` decision in the manifest.
 
 | MT-ID | Tests | Best evidence | Manual retained |
@@ -79,10 +79,44 @@
 | MT-DI21 | 2 | partial | yes |
 | MT-DI22 | 1 | partial | yes |
 | MT-F01 | 1 | partial | yes |
+| MT-F04 | 1 | partial | yes |
+| MT-F05 | 1 | partial | yes |
+| MT-F05a | 1 | partial | yes |
 | MT-F06 | 2 | partial | yes |
 | MT-FV02 | 1 | partial | yes |
 | MT-FV04 | 1 | partial | yes |
+| MT-G01 | 1 | partial | yes |
+| MT-G02 | 1 | partial | yes |
+| MT-G03 | 1 | partial | yes |
+| MT-G04 | 1 | partial | yes |
+| MT-G05 | 1 | partial | yes |
+| MT-G06 | 1 | partial | yes |
+| MT-G07 | 1 | partial | yes |
+| MT-G08 | 1 | partial | yes |
+| MT-G09 | 1 | partial | yes |
+| MT-G10 | 1 | partial | yes |
+| MT-G12 | 1 | partial | yes |
+| MT-G12a | 1 | partial | yes |
+| MT-G13 | 1 | partial | yes |
+| MT-G15 | 1 | partial | yes |
+| MT-G20 | 1 | partial | yes |
+| MT-G21 | 1 | partial | yes |
+| MT-G22 | 1 | partial | yes |
+| MT-G23 | 1 | partial | yes |
 | MT-I02 | 1 | partial | yes |
+| MT-L01 | 1 | partial | yes |
+| MT-L02 | 1 | partial | yes |
+| MT-L03 | 1 | partial | yes |
+| MT-L04 | 1 | partial | yes |
+| MT-L05 | 1 | partial | yes |
+| MT-L06 | 1 | partial | yes |
+| MT-L09 | 1 | partial | yes |
+| MT-L10 | 1 | partial | yes |
+| MT-L11 | 1 | partial | yes |
+| MT-L12 | 1 | partial | yes |
+| MT-L13 | 1 | partial | yes |
+| MT-L14 | 1 | partial | yes |
+| MT-L15 | 1 | partial | yes |
 | MT-P02 | 1 | partial | yes |
 | MT-P03 | 1 | partial | yes |
 | MT-P04 | 1 | partial | yes |
@@ -133,6 +167,37 @@
 | `test_restore_invalid_filename_uses_real_validation_actions` | gui-integration | MT-BR07 | FR-148, FR-149, FR-151 | partial | — |
 | `test_restore_progress_cancel_stops_remaining_batch_without_error` | gui-integration | MT-BR06 | FR-120, FR-154 | partial | — |
 | `test_restore_refreshes_remote_before_confirmation_and_cancel_preserves_it` | gui-integration | MT-BR04 | FR-151, FR-152, UIR-088 | partial | — |
+| `test_flat_and_nested_loads_replace_store_and_normalise_serial_keys` | gui-integration | MT-L02 | FR-011, NFR-002 | partial | — |
+| `test_general_dialog_saves_only_general_group_to_loaded_file` | gui-integration | MT-L14 | FR-021a | partial | — |
+| `test_group_save_without_loaded_file_warns_and_is_session_only` | gui-integration | MT-L15 | FR-020a, FR-021a | partial | — |
+| `test_load_config_action_opens_json_file_dialog` | gui-integration | MT-L01 | FR-010, IFR-004 | partial | — |
+| `test_load_config_clears_existing_remote_listing` | gui-integration | MT-L04 | FR-017 | partial | — |
+| `test_load_dialog_reuses_last_config_folder_not_host_folder` | gui-integration | MT-L06 | FR-006, FR-010, FR-013 | partial | — |
+| `test_loading_named_config_adds_basename_to_plain_window_title` | gui-integration | MT-L11 | FR-125, UIR-005 | partial | — |
+| `test_new_config_drops_loaded_name_from_window_title` | gui-integration | MT-L12 | FR-125 | partial | — |
+| `test_new_config_saves_active_file_disconnects_and_resets_application` | gui-integration | MT-L09 | FR-018, FR-019 | partial | — |
+| `test_new_without_active_file_cancels_or_saves_before_reset` | gui-integration | MT-L10 | FR-018 | partial | — |
+| `test_save_config_writes_entire_current_settings_store` | gui-integration | MT-L05 | FR-013, FR-014 | partial | — |
+| `test_serial_dialog_saves_only_serial_group_to_loaded_file` | gui-integration | MT-L13 | FR-020a | partial | — |
+| `test_unknown_loaded_key_survives_full_save` | gui-integration | MT-L03 | FR-012 | partial | — |
+| `test_general_config_action_opens_flat_scrollable_two_column_dialog` | gui-integration | MT-G01 | FR-021, UIR-040, UIR-041, UIR-044, UIR-117 | partial | — |
+| `test_general_config_has_no_withdrawn_change_disk_field` | gui-integration | MT-G08 | UIR-043 | partial | — |
+| `test_general_debug_logging_has_exact_options_and_default` | gui-integration | MT-G05 | UIR-050 | partial | — |
+| `test_general_host_directory_browse_populates_selected_path` | gui-integration | MT-G06 | UIR-053 | partial | — |
+| `test_general_image_directory_browse_populates_selected_path` | gui-integration | MT-G15 | UIR-115 | partial | — |
+| `test_general_viewer_editor_has_documented_default` | gui-integration | MT-G07 | UIR-054 | partial | — |
+| `test_remote_boot_sequence_multiline_text_saves_and_reopens` | gui-integration | MT-G10 | UIR-059 | partial | — |
+| `test_remote_config_action_opens_complete_flat_scrollable_dialog` | gui-integration | MT-G20 | FR-021d, UIR-003, UIR-116, UIR-117 | partial | — |
+| `test_remote_primary_commands_have_defaults_and_length_limits` | gui-integration | MT-G02 | UIR-042, UIR-045, UIR-046 | partial | — |
+| `test_remote_rename_delete_labels_defaults_and_limits` | gui-integration | MT-G21 | UIR-055, UIR-056 | partial | — |
+| `test_remote_save_writes_subset_and_warns_without_active_file` | gui-integration | MT-G23 | FR-021d | partial | — |
+| `test_remote_transfer_timing_fields_enforce_documented_ranges` | gui-integration | MT-G04 | UIR-049, UIR-052, UIR-093 | partial | — |
+| `test_remote_xmodem_1k_defaults_and_saved_toggle_round_trip` | gui-integration | MT-G22 | UIR-089, UIR-090 | partial | — |
+| `test_terminal_config_menu_and_two_level_tab_structure` | gui-integration | MT-G12 | FR-021c, UIR-003, UIR-103, UIR-103a, UIR-103d | partial | — |
+| `test_terminal_end_of_line_has_exact_options_and_default` | gui-integration | MT-G03 | UIR-047, UIR-048 | partial | — |
+| `test_terminal_macro_labels_and_scripts_save_and_reopen` | gui-integration | MT-G13 | FR-021b, FR-021c, UIR-098, UIR-103d | partial | — |
+| `test_terminal_settings_round_trip_subset_and_no_file_warning` | gui-integration | MT-G12a | FR-021c, UIR-034, UIR-103b, UIR-103c | partial | — |
+| `test_terminal_transfer_echo_has_exact_options_and_default` | gui-integration | MT-G09 | UIR-058 | partial | — |
 | `test_conflict_apply_to_all_persists_across_batch` | hil | MT-CF05 | FR-147 | partial | — |
 | `test_overwrite_existing_remote_file` | hil | MT-CF04 | FR-145, FR-146 | partial | — |
 | `test_skip_existing_remote_file` | hil | MT-CF04 | FR-145, FR-147 | partial | — |
@@ -181,6 +246,9 @@
 | `test_drop_cancelled_does_not_transfer` | hil | MT-D06 | FR-137 | partial | — |
 | `test_internal_drop_host_to_remote_uploads` | hil | MT-D03 | FR-137, FR-138 | partial | — |
 | `test_upload_records_history_entry` | hil | — | FR-140, FR-142 | supplementary | — |
+| `test_host_multi_delete_lists_selection_cancel_then_deletes_once` | gui-integration | MT-F05a | FR-110, FR-115, FR-116, FR-118 | partial | — |
+| `test_host_rename_real_dialog_apply_cancel_and_noop_paths` | gui-integration | MT-F04 | FR-114, FR-116, FR-118, UIR-057 | partial | — |
+| `test_host_single_delete_real_dialog_cancel_then_apply` | gui-integration | MT-F05 | FR-115, FR-116, FR-118, UIR-057 | partial | — |
 | `test_same_terminal_and_transport_port_saves_and_reopens` | gui-integration | MT-P06 | IFR-002 | partial | — |
 | `test_serial_config_action_opens_modal_grouped_two_column_dialog` | gui-integration | MT-P02 | FR-020, UIR-020, UIR-021, UIR-029 | partial | — |
 | `test_serial_config_dropdowns_have_exact_options_and_defaults` | gui-integration | MT-P03 | UIR-024, UIR-025, UIR-026, UIR-027, UIR-028 | partial | — |
