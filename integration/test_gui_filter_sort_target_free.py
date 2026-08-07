@@ -94,3 +94,52 @@ def test_host_wildcards_match_the_complete_filename(gui_no_target, tmp_path, qap
 
     assert win.host_filter.text() == "?.TXT"
     assert _visible_names(win.host_list) == ["A.TXT", "b.txt"]
+
+
+@pytest.mark.gui_integration
+@pytest.mark.mt("MT-FS03", "FR-131")
+def test_host_filter_debounces_rapid_typing_to_one_150ms_update(gui_no_target, tmp_path, qapp):
+    """Rapid typing restarts one 150 ms timer and renders once after the pause.
+
+    Verifies: FR-131.
+    """
+    from PySide6.QtCore import QTimer
+    from PySide6.QtTest import QSignalSpy, QTest
+
+    win = gui_no_target
+    for name in ("A.TXT", "B.COM", "NOTE.TXT", "TXTBOOK.DOC"):
+        (tmp_path / name).write_text(name, encoding="ascii")
+
+    win.host_dir = str(tmp_path)
+    win.refresh_host_files()
+    win.show()
+    qapp.processEvents()
+
+    full_list = ["A.TXT", "B.COM", "NOTE.TXT", "TXTBOOK.DOC"]
+    assert _visible_names(win.host_list) == full_list
+
+    debounce_timers = [
+        timer
+        for timer in win.findChildren(QTimer)
+        if timer.isSingleShot() and timer.interval() == 150
+    ]
+    assert len(debounce_timers) == 2
+    timer_spies = [(timer, QSignalSpy(timer.timeout)) for timer in debounce_timers]
+
+    QTest.keyClicks(win.host_filter, "txt")
+
+    assert win.host_filter.text() == "txt"
+    assert _visible_names(win.host_list) == full_list
+    assert sum(spy.count() for _timer, spy in timer_spies) == 0
+
+    active = [(timer, spy) for timer, spy in timer_spies if timer.isActive()]
+    assert len(active) == 1
+    host_timer, host_spy = active[0]
+    assert host_timer.interval() == 150
+    assert host_timer.isSingleShot()
+    assert host_spy.wait(500)
+    qapp.processEvents()
+
+    assert host_spy.count() == 1
+    assert sum(spy.count() for _timer, spy in timer_spies) == 1
+    assert _visible_names(win.host_list) == ["A.TXT", "NOTE.TXT", "TXTBOOK.DOC"]
