@@ -1,14 +1,14 @@
 # Integration Test Coverage Report
 
 **Generated from:** `integration/coverage_manifest.json` v3.0
-**Total collected test functions:** 145
+**Total collected test functions:** 146
 **Execution status:** Not run by this generator; physical outcomes remain in `integration/results/runs_ledger.json`.
 
 ## Test Tiers
 
 | Tier | Count |
 |---|---:|
-| gui-integration | 77 |
+| gui-integration | 78 |
 | hil | 56 |
 | visual | 12 |
 
@@ -17,14 +17,14 @@
 | Classification | Count |
 |---|---:|
 | equivalent | 0 |
-| partial | 128 |
+| partial | 129 |
 | supplementary | 17 |
 | manual-only | 0 |
 
 ## Manual Scenario Decisions
 
 - Manual plan cases: **217**
-- Cases with reviewed automated support: **117** (**53.9%** raw mapped-case ratio)
+- Cases with reviewed automated support: **118** (**54.4%** raw mapped-case ratio)
 - Every remaining case has an explicit `manual-only` decision in the manifest.
 
 | MT-ID | Tests | Best evidence | Manual retained |
@@ -83,6 +83,7 @@
 | MT-F05 | 1 | partial | yes |
 | MT-F05a | 1 | partial | yes |
 | MT-F06 | 2 | partial | yes |
+| MT-FS01 | 1 | partial | yes |
 | MT-FV02 | 1 | partial | yes |
 | MT-FV04 | 1 | partial | yes |
 | MT-G01 | 1 | partial | yes |
@@ -245,6 +246,7 @@
 | `test_unreadable_image_error_preserves_current_host_pane` | gui-integration | MT-DI05 | FR-172 | partial | — |
 | `test_drop_cancelled_does_not_transfer` | hil | MT-D06 | FR-137 | partial | — |
 | `test_internal_drop_host_to_remote_uploads` | hil | MT-D03 | FR-137, FR-138 | partial | — |
+| `test_host_substring_filter_is_case_insensitive_and_clear_restores_all` | gui-integration | MT-FS01 | FR-130, FR-131, FR-135, UIR-079 | partial | — |
 | `test_upload_records_history_entry` | hil | — | FR-140, FR-142 | supplementary | — |
 | `test_host_multi_delete_lists_selection_cancel_then_deletes_once` | gui-integration | MT-F05a | FR-110, FR-115, FR-116, FR-118 | partial | — |
 | `test_host_rename_real_dialog_apply_cancel_and_noop_paths` | gui-integration | MT-F04 | FR-114, FR-116, FR-118, UIR-057 | partial | — |
