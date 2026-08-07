@@ -48,3 +48,49 @@ def test_host_substring_filter_is_case_insensitive_and_clear_restores_all(
 
     assert win.host_filter.text() == ""
     assert _visible_names(win.host_list) == ["A.TXT", "b.txt", "C.COM", "D.COM", "LICENSE"]
+
+
+@pytest.mark.gui_integration
+@pytest.mark.mt("MT-FS02", "FR-131")
+def test_host_wildcards_match_the_complete_filename(gui_no_target, tmp_path, qapp):
+    """Glob wildcards are case-insensitive, anchored, and honour ``?`` width.
+
+    Verifies: FR-131.
+    """
+    from PySide6.QtCore import Qt
+    from PySide6.QtTest import QTest
+
+    win = gui_no_target
+    for name in (
+        "A.TXT",
+        "b.txt",
+        "AB.TXT",
+        "C.COM",
+        "D.COM",
+        "e.com",
+        "NOTE.COM.BAK",
+        "LICENSE",
+    ):
+        (tmp_path / name).write_text(name, encoding="ascii")
+
+    win.host_dir = str(tmp_path)
+    win.refresh_host_files()
+    win.show()
+    qapp.processEvents()
+
+    QTest.keyClicks(win.host_filter, "*.COM")
+    QTest.qWait(200)
+
+    assert win.host_filter.text() == "*.COM"
+    assert _visible_names(win.host_list) == ["C.COM", "D.COM", "e.com"]
+
+    QTest.keyClick(
+        win.host_filter,
+        Qt.Key.Key_A,
+        Qt.KeyboardModifier.ControlModifier,
+    )
+    QTest.keyClicks(win.host_filter, "?.TXT")
+    QTest.qWait(200)
+
+    assert win.host_filter.text() == "?.TXT"
+    assert _visible_names(win.host_list) == ["A.TXT", "b.txt"]

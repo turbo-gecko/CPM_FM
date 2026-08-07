@@ -2,21 +2,21 @@
   "version": "3.0",
   "generated": "deterministic",
   "semantic_review": "completed-2026-08-01",
-  "total_tests": 146,
+  "total_tests": 147,
   "tiers": {
-    "gui-integration": 78,
+    "gui-integration": 79,
     "hil": 56,
     "visual": 12
   },
   "evidence_classification": {
     "equivalent": 0,
-    "partial": 129,
+    "partial": 130,
     "supplementary": 17,
     "manual-only": 0
   },
   "manual_plan_total": 217,
-  "manual_ids_with_automated_support": 118,
-  "raw_mapped_case_ratio": 54.4,
+  "manual_ids_with_automated_support": 119,
+  "raw_mapped_case_ratio": 54.8,
   "manual_coverage_decisions": {
     "MT-BR01": {
       "status": "automated-support",
@@ -675,11 +675,13 @@
       "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-FS02": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_filter_sort_target_free.py::test_host_wildcards_match_the_complete_filename"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-FS03": {
       "status": "manual-only",
@@ -4679,6 +4681,32 @@
         "FR-131",
         "FR-135",
         "UIR-079"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_filter_sort_target_free.py::test_host_wildcards_match_the_complete_filename",
+      "file": "test_gui_filter_sort_target_free.py",
+      "line": 55,
+      "test": "test_host_wildcards_match_the_complete_filename",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-FS02",
+      "requirements": [
+        "FR-131"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-131"
       ]
     },
     {
