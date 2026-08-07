@@ -150,14 +150,24 @@ read-only selected-name presentation, filesystem results, and exact Host-list
 refresh behavior. Native context-menu presentation remains covered separately
 by the visual/manual cases.
 
-File-list filtering and sorting MT-FS01--MT-FS04 runs target-free against temporary Host
-directories. These tests type into the real filter field and verify
-case-insensitive substring matching, inline-clear restoration, anchored
+File-list filtering and sorting MT-FS01--MT-FS09 runs target-free against
+temporary Host directories. These tests type into the real filter field and
+verify case-insensitive substring matching, inline-clear restoration, anchored
 whole-name glob semantics for `*` and `?`, and exactly one render after rapid
 typing stops for the configured 150 ms debounce. They also drive the real sort
 controls to verify case-insensitive Name ordering, Extension grouping with
 extensionless names first and name tie-breaks, arrow state, and direction
-reversal. MT-FS05--MT-FS09 remain planned.
+reversal. Combined controls also prove the filtered subset retains the selected
+sort key and direction. MT-FS06 additionally verifies that active text applies
+the coloured filter-field border and inline clear removes it. MT-FS07 closes
+one real window and constructs another against the same isolated INI store to
+verify independent Host/Remote filter text, sort key, direction, and arrow
+restoration. A true process restart remains manual evidence. MT-FS08 exercises
+the real Disconnect, Load Config, and New Config actions and proves a later
+Remote-filter change cannot resurrect stale canonical entries. Its live-listing
+origin remains HIL/manual evidence. MT-FS09 drives the real language action and
+verifies translated filter/sort controls retain their semantic keys and sorting
+behavior. This completes the planned filter/sort slice.
 
 MT-BR09 additionally runs as destructive HIL: Restore with an empty temporary
 host directory still wipes the nominated scratch drive, starts no transfer

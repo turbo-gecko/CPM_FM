@@ -2,21 +2,21 @@
   "version": "3.0",
   "generated": "deterministic",
   "semantic_review": "completed-2026-08-01",
-  "total_tests": 149,
+  "total_tests": 154,
   "tiers": {
-    "gui-integration": 81,
+    "gui-integration": 86,
     "hil": 56,
     "visual": 12
   },
   "evidence_classification": {
     "equivalent": 0,
-    "partial": 132,
+    "partial": 137,
     "supplementary": 17,
     "manual-only": 0
   },
   "manual_plan_total": 217,
-  "manual_ids_with_automated_support": 121,
-  "raw_mapped_case_ratio": 55.8,
+  "manual_ids_with_automated_support": 126,
+  "raw_mapped_case_ratio": 58.1,
   "manual_coverage_decisions": {
     "MT-BR01": {
       "status": "automated-support",
@@ -702,39 +702,49 @@
       "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-FS05": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_filter_sort_target_free.py::test_host_filter_and_sort_controls_compose_in_one_view"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-FS06": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_filter_sort_target_free.py::test_host_active_filter_border_appears_and_clear_removes_it"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-FS07": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_filter_sort_target_free.py::test_host_and_remote_filter_sort_state_restore_independently"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-FS08": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_filter_sort_target_free.py::test_remote_filter_cannot_resurrect_listing_after_lifecycle_clear"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-FS09": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_filter_sort_target_free.py::test_language_action_translates_filter_sort_without_changing_keys"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-FV01": {
       "status": "manual-only",
@@ -1869,6 +1879,8 @@
     "FR-130",
     "FR-131",
     "FR-132",
+    "FR-133",
+    "FR-134",
     "FR-135",
     "FR-137",
     "FR-138",
@@ -4658,9 +4670,89 @@
       ]
     },
     {
+      "nodeid": "integration/test_gui_filter_sort_target_free.py::test_host_active_filter_border_appears_and_clear_removes_it",
+      "file": "test_gui_filter_sort_target_free.py",
+      "line": 260,
+      "test": "test_host_active_filter_border_appears_and_clear_removes_it",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-FS06",
+      "requirements": [
+        "FR-135",
+        "UIR-079"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-135",
+        "UIR-079"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_filter_sort_target_free.py::test_host_and_remote_filter_sort_state_restore_independently",
+      "file": "test_gui_filter_sort_target_free.py",
+      "line": 298,
+      "test": "test_host_and_remote_filter_sort_state_restore_independently",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-FS07",
+      "requirements": [
+        "FR-134"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-134"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_filter_sort_target_free.py::test_host_filter_and_sort_controls_compose_in_one_view",
+      "file": "test_gui_filter_sort_target_free.py",
+      "line": 215,
+      "test": "test_host_filter_and_sort_controls_compose_in_one_view",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-FS05",
+      "requirements": [
+        "FR-133"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-133"
+      ]
+    },
+    {
       "nodeid": "integration/test_gui_filter_sort_target_free.py::test_host_filter_debounces_rapid_typing_to_one_150ms_update",
       "file": "test_gui_filter_sort_target_free.py",
-      "line": 101,
+      "line": 111,
       "test": "test_host_filter_debounces_rapid_typing_to_one_150ms_update",
       "tier": "gui-integration",
       "markers": [
@@ -4686,7 +4778,7 @@
     {
       "nodeid": "integration/test_gui_filter_sort_target_free.py::test_host_sort_controls_apply_name_extension_and_direction",
       "file": "test_gui_filter_sort_target_free.py",
-      "line": 150,
+      "line": 160,
       "test": "test_host_sort_controls_apply_name_extension_and_direction",
       "tier": "gui-integration",
       "markers": [
@@ -4714,7 +4806,7 @@
     {
       "nodeid": "integration/test_gui_filter_sort_target_free.py::test_host_substring_filter_is_case_insensitive_and_clear_restores_all",
       "file": "test_gui_filter_sort_target_free.py",
-      "line": 15,
+      "line": 25,
       "test": "test_host_substring_filter_is_case_insensitive_and_clear_restores_all",
       "tier": "gui-integration",
       "markers": [
@@ -4746,7 +4838,7 @@
     {
       "nodeid": "integration/test_gui_filter_sort_target_free.py::test_host_wildcards_match_the_complete_filename",
       "file": "test_gui_filter_sort_target_free.py",
-      "line": 55,
+      "line": 65,
       "test": "test_host_wildcards_match_the_complete_filename",
       "tier": "gui-integration",
       "markers": [
@@ -4767,6 +4859,61 @@
       "semantic_review": "reviewed-2026-08-01",
       "verifies": [
         "FR-131"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_filter_sort_target_free.py::test_language_action_translates_filter_sort_without_changing_keys",
+      "file": "test_gui_filter_sort_target_free.py",
+      "line": 411,
+      "test": "test_language_action_translates_filter_sort_without_changing_keys",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-FS09",
+      "requirements": [
+        "FR-123",
+        "UIR-080"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-123",
+        "UIR-080"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_filter_sort_target_free.py::test_remote_filter_cannot_resurrect_listing_after_lifecycle_clear",
+      "file": "test_gui_filter_sort_target_free.py",
+      "line": 357,
+      "test": "test_remote_filter_cannot_resurrect_listing_after_lifecycle_clear",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt",
+        "parametrize"
+      ],
+      "manual_id": "MT-FS08",
+      "requirements": [
+        "FR-135"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-135"
       ]
     },
     {

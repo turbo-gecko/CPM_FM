@@ -1,14 +1,14 @@
 # Integration Test Coverage Report
 
 **Generated from:** `integration/coverage_manifest.json` v3.0
-**Total collected test functions:** 149
+**Total collected test functions:** 154
 **Execution status:** Not run by this generator; physical outcomes remain in `integration/results/runs_ledger.json`.
 
 ## Test Tiers
 
 | Tier | Count |
 |---|---:|
-| gui-integration | 81 |
+| gui-integration | 86 |
 | hil | 56 |
 | visual | 12 |
 
@@ -17,14 +17,14 @@
 | Classification | Count |
 |---|---:|
 | equivalent | 0 |
-| partial | 132 |
+| partial | 137 |
 | supplementary | 17 |
 | manual-only | 0 |
 
 ## Manual Scenario Decisions
 
 - Manual plan cases: **217**
-- Cases with reviewed automated support: **121** (**55.8%** raw mapped-case ratio)
+- Cases with reviewed automated support: **126** (**58.1%** raw mapped-case ratio)
 - Every remaining case has an explicit `manual-only` decision in the manifest.
 
 | MT-ID | Tests | Best evidence | Manual retained |
@@ -87,6 +87,11 @@
 | MT-FS02 | 1 | partial | yes |
 | MT-FS03 | 1 | partial | yes |
 | MT-FS04 | 1 | partial | yes |
+| MT-FS05 | 1 | partial | yes |
+| MT-FS06 | 1 | partial | yes |
+| MT-FS07 | 1 | partial | yes |
+| MT-FS08 | 1 | partial | yes |
+| MT-FS09 | 1 | partial | yes |
 | MT-FV02 | 1 | partial | yes |
 | MT-FV04 | 1 | partial | yes |
 | MT-G01 | 1 | partial | yes |
@@ -249,10 +254,15 @@
 | `test_unreadable_image_error_preserves_current_host_pane` | gui-integration | MT-DI05 | FR-172 | partial | — |
 | `test_drop_cancelled_does_not_transfer` | hil | MT-D06 | FR-137 | partial | — |
 | `test_internal_drop_host_to_remote_uploads` | hil | MT-D03 | FR-137, FR-138 | partial | — |
+| `test_host_active_filter_border_appears_and_clear_removes_it` | gui-integration | MT-FS06 | FR-135, UIR-079 | partial | — |
+| `test_host_and_remote_filter_sort_state_restore_independently` | gui-integration | MT-FS07 | FR-134 | partial | — |
+| `test_host_filter_and_sort_controls_compose_in_one_view` | gui-integration | MT-FS05 | FR-133 | partial | — |
 | `test_host_filter_debounces_rapid_typing_to_one_150ms_update` | gui-integration | MT-FS03 | FR-131 | partial | — |
 | `test_host_sort_controls_apply_name_extension_and_direction` | gui-integration | MT-FS04 | FR-132, UIR-080 | partial | — |
 | `test_host_substring_filter_is_case_insensitive_and_clear_restores_all` | gui-integration | MT-FS01 | FR-130, FR-131, FR-135, UIR-079 | partial | — |
 | `test_host_wildcards_match_the_complete_filename` | gui-integration | MT-FS02 | FR-131 | partial | — |
+| `test_language_action_translates_filter_sort_without_changing_keys` | gui-integration | MT-FS09 | FR-123, UIR-080 | partial | — |
+| `test_remote_filter_cannot_resurrect_listing_after_lifecycle_clear` | gui-integration | MT-FS08 | FR-135 | partial | — |
 | `test_upload_records_history_entry` | hil | — | FR-140, FR-142 | supplementary | — |
 | `test_host_multi_delete_lists_selection_cancel_then_deletes_once` | gui-integration | MT-F05a | FR-110, FR-115, FR-116, FR-118 | partial | — |
 | `test_host_rename_real_dialog_apply_cancel_and_noop_paths` | gui-integration | MT-F04 | FR-114, FR-116, FR-118, UIR-057 | partial | — |
