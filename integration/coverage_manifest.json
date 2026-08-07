@@ -2,21 +2,21 @@
   "version": "3.0",
   "generated": "deterministic",
   "semantic_review": "completed-2026-08-01",
-  "total_tests": 154,
+  "total_tests": 158,
   "tiers": {
-    "gui-integration": 86,
+    "gui-integration": 90,
     "hil": 56,
     "visual": 12
   },
   "evidence_classification": {
     "equivalent": 0,
-    "partial": 137,
+    "partial": 141,
     "supplementary": 17,
     "manual-only": 0
   },
   "manual_plan_total": 217,
-  "manual_ids_with_automated_support": 126,
-  "raw_mapped_case_ratio": 58.1,
+  "manual_ids_with_automated_support": 130,
+  "raw_mapped_case_ratio": 59.9,
   "manual_coverage_decisions": {
     "MT-BR01": {
       "status": "automated-support",
@@ -1527,32 +1527,40 @@
       "note": "No semantically matching integration test is currently mapped."
     },
     "MT-TH02": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_transfer_history_target_free.py::test_history_direction_and_status_filters_compose_and_all_restores_every_row"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-TH03": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_transfer_history_target_free.py::test_history_export_button_writes_exact_json_entries"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-TH04": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_transfer_history_target_free.py::test_history_clear_cancel_preserves_then_confirm_empties_table_and_file"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-TH05": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_transfer_history_target_free.py::test_history_entry_survives_real_application_process_restart"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-TH06": {
       "status": "manual-only",
@@ -1885,7 +1893,9 @@
     "FR-137",
     "FR-138",
     "FR-140",
+    "FR-141",
     "FR-142",
+    "FR-143",
     "FR-145",
     "FR-146",
     "FR-147",
@@ -1980,6 +1990,7 @@
     "UIR-076",
     "UIR-079",
     "UIR-080",
+    "UIR-083",
     "UIR-088",
     "UIR-089",
     "UIR-090",
@@ -5157,6 +5168,112 @@
       "verifies": [
         "UIR-030",
         "UIR-031"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_transfer_history_target_free.py::test_history_clear_cancel_preserves_then_confirm_empties_table_and_file",
+      "file": "test_gui_transfer_history_target_free.py",
+      "line": 233,
+      "test": "test_history_clear_cancel_preserves_then_confirm_empties_table_and_file",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-TH04",
+      "requirements": [
+        "FR-143"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-143"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_transfer_history_target_free.py::test_history_direction_and_status_filters_compose_and_all_restores_every_row",
+      "file": "test_gui_transfer_history_target_free.py",
+      "line": 100,
+      "test": "test_history_direction_and_status_filters_compose_and_all_restores_every_row",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-TH02",
+      "requirements": [
+        "FR-143",
+        "UIR-083"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-143",
+        "UIR-083"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_transfer_history_target_free.py::test_history_entry_survives_real_application_process_restart",
+      "file": "test_gui_transfer_history_target_free.py",
+      "line": 307,
+      "test": "test_history_entry_survives_real_application_process_restart",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-TH05",
+      "requirements": [
+        "FR-141"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-141"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_transfer_history_target_free.py::test_history_export_button_writes_exact_json_entries",
+      "file": "test_gui_transfer_history_target_free.py",
+      "line": 160,
+      "test": "test_history_export_button_writes_exact_json_entries",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-TH03",
+      "requirements": [
+        "FR-143"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-143"
       ]
     },
     {

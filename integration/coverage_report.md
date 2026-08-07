@@ -1,14 +1,14 @@
 # Integration Test Coverage Report
 
 **Generated from:** `integration/coverage_manifest.json` v3.0
-**Total collected test functions:** 154
+**Total collected test functions:** 158
 **Execution status:** Not run by this generator; physical outcomes remain in `integration/results/runs_ledger.json`.
 
 ## Test Tiers
 
 | Tier | Count |
 |---|---:|
-| gui-integration | 86 |
+| gui-integration | 90 |
 | hil | 56 |
 | visual | 12 |
 
@@ -17,14 +17,14 @@
 | Classification | Count |
 |---|---:|
 | equivalent | 0 |
-| partial | 137 |
+| partial | 141 |
 | supplementary | 17 |
 | manual-only | 0 |
 
 ## Manual Scenario Decisions
 
 - Manual plan cases: **217**
-- Cases with reviewed automated support: **126** (**58.1%** raw mapped-case ratio)
+- Cases with reviewed automated support: **130** (**59.9%** raw mapped-case ratio)
 - Every remaining case has an explicit `manual-only` decision in the manifest.
 
 | MT-ID | Tests | Best evidence | Manual retained |
@@ -145,6 +145,10 @@
 | MT-T10 | 2 | partial | yes |
 | MT-T11 | 1 | partial | yes |
 | MT-T13 | 1 | partial | yes |
+| MT-TH02 | 1 | partial | yes |
+| MT-TH03 | 1 | partial | yes |
+| MT-TH04 | 1 | partial | yes |
+| MT-TH05 | 1 | partial | yes |
 | MT-V01 | 1 | partial | yes |
 | MT-V10 | 1 | partial | yes |
 | MT-W01 | 1 | partial | yes |
@@ -271,6 +275,10 @@
 | `test_serial_config_action_opens_modal_grouped_two_column_dialog` | gui-integration | MT-P02 | FR-020, UIR-020, UIR-021, UIR-029 | partial | — |
 | `test_serial_config_dropdowns_have_exact_options_and_defaults` | gui-integration | MT-P03 | UIR-024, UIR-025, UIR-026, UIR-027, UIR-028 | partial | — |
 | `test_serial_delay_fields_enforce_integer_0_to_255` | gui-integration | MT-P04 | UIR-030, UIR-031 | partial | — |
+| `test_history_clear_cancel_preserves_then_confirm_empties_table_and_file` | gui-integration | MT-TH04 | FR-143 | partial | — |
+| `test_history_direction_and_status_filters_compose_and_all_restores_every_row` | gui-integration | MT-TH02 | FR-143, UIR-083 | partial | — |
+| `test_history_entry_survives_real_application_process_restart` | gui-integration | MT-TH05 | FR-141 | partial | — |
+| `test_history_export_button_writes_exact_json_entries` | gui-integration | MT-TH03 | FR-143 | partial | — |
 | `test_invalid_name_rename_uploads_conforming` | hil | MT-FV02 | FR-148, FR-149 | partial | — |
 | `test_invalid_name_skip_does_not_upload` | hil | MT-FV04 | FR-149 | partial | — |
 | `test_invalid_name_special_chars_sanitized` | hil | — | FR-148, FR-149 | supplementary | — |

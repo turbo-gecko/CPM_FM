@@ -169,6 +169,21 @@ origin remains HIL/manual evidence. MT-FS09 drives the real language action and
 verifies translated filter/sort controls retain their semantic keys and sorting
 behavior. This completes the planned filter/sort slice.
 
+Transfer-history cases MT-TH02--MT-TH05 also run target-free through the real
+History toolbar action and non-modal dialog against an isolated temporary
+history file. MT-TH02 exercises both Direction choices, all four Status choices
+(including Skipped), a combined direction/status selection, and proves that
+returning both controls to All restores every row. MT-TH03 clicks the real
+Export button, supplies an isolated path at the native file-picker boundary,
+and verifies the resulting `.json` contains every stored entry and field in
+order. MT-TH04 clicks the real Clear button and verifies that No preserves the
+table, store, and file while Yes empties all three and disables actions that
+require history. MT-TH05 starts two independent offscreen application
+processes: the first records through the production application path and exits,
+then the second opens the real History toolbar action against the same file and
+renders the persisted row. Native modal presentation, live transfer origins,
+and re-transfer remain separate manual/HIL evidence.
+
 MT-BR09 additionally runs as destructive HIL: Restore with an empty temporary
 host directory still wipes the nominated scratch drive, starts no transfer
 batch, reports "Nothing to transfer", and refreshes to an empty Remote pane. It
