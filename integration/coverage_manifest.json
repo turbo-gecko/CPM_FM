@@ -2,21 +2,21 @@
   "version": "3.0",
   "generated": "deterministic",
   "semantic_review": "completed-2026-08-01",
-  "total_tests": 148,
+  "total_tests": 149,
   "tiers": {
-    "gui-integration": 80,
+    "gui-integration": 81,
     "hil": 56,
     "visual": 12
   },
   "evidence_classification": {
     "equivalent": 0,
-    "partial": 131,
+    "partial": 132,
     "supplementary": 17,
     "manual-only": 0
   },
   "manual_plan_total": 217,
-  "manual_ids_with_automated_support": 120,
-  "raw_mapped_case_ratio": 55.3,
+  "manual_ids_with_automated_support": 121,
+  "raw_mapped_case_ratio": 55.8,
   "manual_coverage_decisions": {
     "MT-BR01": {
       "status": "automated-support",
@@ -693,11 +693,13 @@
       "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-FS04": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_filter_sort_target_free.py::test_host_sort_controls_apply_name_extension_and_direction"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-FS05": {
       "status": "manual-only",
@@ -1866,6 +1868,7 @@
     "FR-125",
     "FR-130",
     "FR-131",
+    "FR-132",
     "FR-135",
     "FR-137",
     "FR-138",
@@ -1964,6 +1967,7 @@
     "UIR-074",
     "UIR-076",
     "UIR-079",
+    "UIR-080",
     "UIR-088",
     "UIR-089",
     "UIR-090",
@@ -4677,6 +4681,34 @@
       "semantic_review": "reviewed-2026-08-01",
       "verifies": [
         "FR-131"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_filter_sort_target_free.py::test_host_sort_controls_apply_name_extension_and_direction",
+      "file": "test_gui_filter_sort_target_free.py",
+      "line": 150,
+      "test": "test_host_sort_controls_apply_name_extension_and_direction",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-FS04",
+      "requirements": [
+        "FR-132",
+        "UIR-080"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-132",
+        "UIR-080"
       ]
     },
     {

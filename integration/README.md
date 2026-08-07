@@ -150,12 +150,14 @@ read-only selected-name presentation, filesystem results, and exact Host-list
 refresh behavior. Native context-menu presentation remains covered separately
 by the visual/manual cases.
 
-File-list filtering MT-FS01--MT-FS03 runs target-free against temporary Host
+File-list filtering and sorting MT-FS01--MT-FS04 runs target-free against temporary Host
 directories. These tests type into the real filter field and verify
 case-insensitive substring matching, inline-clear restoration, anchored
 whole-name glob semantics for `*` and `?`, and exactly one render after rapid
-typing stops for the configured 150 ms debounce. MT-FS04--MT-FS09 remain
-planned.
+typing stops for the configured 150 ms debounce. They also drive the real sort
+controls to verify case-insensitive Name ordering, Extension grouping with
+extensionless names first and name tie-breaks, arrow state, and direction
+reversal. MT-FS05--MT-FS09 remain planned.
 
 MT-BR09 additionally runs as destructive HIL: Restore with an empty temporary
 host directory still wipes the nominated scratch drive, starts no transfer

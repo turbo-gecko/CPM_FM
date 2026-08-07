@@ -143,3 +143,58 @@ def test_host_filter_debounces_rapid_typing_to_one_150ms_update(gui_no_target, t
     assert host_spy.count() == 1
     assert sum(spy.count() for _timer, spy in timer_spies) == 1
     assert _visible_names(win.host_list) == ["A.TXT", "NOTE.TXT", "TXTBOOK.DOC"]
+
+
+@pytest.mark.gui_integration
+@pytest.mark.mt("MT-FS04", "FR-132", "UIR-080")
+def test_host_sort_controls_apply_name_extension_and_direction(gui_no_target, tmp_path, qapp):
+    """The real Host controls apply both sort keys and reverse the order.
+
+    Verifies: FR-132, UIR-080.
+    """
+    from PySide6.QtCore import Qt
+    from PySide6.QtTest import QTest
+
+    from cpm_fm.utils.file_filter import SORT_EXTENSION, SORT_NAME
+
+    win = gui_no_target
+    for name in ("zeta.COM", "Alpha.TXT", "beta.COM", "LICENSE", "gamma"):
+        (tmp_path / name).write_text(name, encoding="ascii")
+
+    win.host_dir = str(tmp_path)
+    win.refresh_host_files()
+    win.show()
+    qapp.processEvents()
+
+    assert win.host_sort_combo.currentData() == SORT_NAME
+    assert win.host_sort_dir_btn.isChecked() is False
+    assert win.host_sort_dir_btn.text() == "↑"
+    assert _visible_names(win.host_list) == [
+        "Alpha.TXT",
+        "beta.COM",
+        "gamma",
+        "LICENSE",
+        "zeta.COM",
+    ]
+
+    win.host_sort_combo.setFocus()
+    QTest.keyClick(win.host_sort_combo, Qt.Key.Key_Down)
+    qapp.processEvents()
+
+    extension_ascending = ["gamma", "LICENSE", "beta.COM", "zeta.COM", "Alpha.TXT"]
+    assert win.host_sort_combo.currentData() == SORT_EXTENSION
+    assert _visible_names(win.host_list) == extension_ascending
+
+    QTest.mouseClick(win.host_sort_dir_btn, Qt.MouseButton.LeftButton)
+    qapp.processEvents()
+
+    assert win.host_sort_dir_btn.isChecked() is True
+    assert win.host_sort_dir_btn.text() == "↓"
+    assert _visible_names(win.host_list) == list(reversed(extension_ascending))
+
+    QTest.mouseClick(win.host_sort_dir_btn, Qt.MouseButton.LeftButton)
+    qapp.processEvents()
+
+    assert win.host_sort_dir_btn.isChecked() is False
+    assert win.host_sort_dir_btn.text() == "↑"
+    assert _visible_names(win.host_list) == extension_ascending

@@ -1,14 +1,14 @@
 # Integration Test Coverage Report
 
 **Generated from:** `integration/coverage_manifest.json` v3.0
-**Total collected test functions:** 148
+**Total collected test functions:** 149
 **Execution status:** Not run by this generator; physical outcomes remain in `integration/results/runs_ledger.json`.
 
 ## Test Tiers
 
 | Tier | Count |
 |---|---:|
-| gui-integration | 80 |
+| gui-integration | 81 |
 | hil | 56 |
 | visual | 12 |
 
@@ -17,14 +17,14 @@
 | Classification | Count |
 |---|---:|
 | equivalent | 0 |
-| partial | 131 |
+| partial | 132 |
 | supplementary | 17 |
 | manual-only | 0 |
 
 ## Manual Scenario Decisions
 
 - Manual plan cases: **217**
-- Cases with reviewed automated support: **120** (**55.3%** raw mapped-case ratio)
+- Cases with reviewed automated support: **121** (**55.8%** raw mapped-case ratio)
 - Every remaining case has an explicit `manual-only` decision in the manifest.
 
 | MT-ID | Tests | Best evidence | Manual retained |
@@ -86,6 +86,7 @@
 | MT-FS01 | 1 | partial | yes |
 | MT-FS02 | 1 | partial | yes |
 | MT-FS03 | 1 | partial | yes |
+| MT-FS04 | 1 | partial | yes |
 | MT-FV02 | 1 | partial | yes |
 | MT-FV04 | 1 | partial | yes |
 | MT-G01 | 1 | partial | yes |
@@ -249,6 +250,7 @@
 | `test_drop_cancelled_does_not_transfer` | hil | MT-D06 | FR-137 | partial | — |
 | `test_internal_drop_host_to_remote_uploads` | hil | MT-D03 | FR-137, FR-138 | partial | — |
 | `test_host_filter_debounces_rapid_typing_to_one_150ms_update` | gui-integration | MT-FS03 | FR-131 | partial | — |
+| `test_host_sort_controls_apply_name_extension_and_direction` | gui-integration | MT-FS04 | FR-132, UIR-080 | partial | — |
 | `test_host_substring_filter_is_case_insensitive_and_clear_restores_all` | gui-integration | MT-FS01 | FR-130, FR-131, FR-135, UIR-079 | partial | — |
 | `test_host_wildcards_match_the_complete_filename` | gui-integration | MT-FS02 | FR-131 | partial | — |
 | `test_upload_records_history_entry` | hil | — | FR-140, FR-142 | supplementary | — |
