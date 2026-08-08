@@ -184,6 +184,43 @@ then the second opens the real History toolbar action against the same file and
 renders the persisted row. Native modal presentation, live transfer origins,
 and re-transfer remain separate manual/HIL evidence.
 
+Terminal Window case MT-W02 runs target-free through the real Terminal toolbar
+action. It verifies that the resulting central layout contains only the
+fixed-pitch character-grid `TerminalView`, which accepts keyboard focus without
+being an editable text field; no transmit editor, Send button, control row, or
+input-hint label is present. It also verifies the visible status bar reports
+the active emulation type exactly. MT-W04 opens the real Terminal Config dialog,
+enables Local Echo, saves, and types through the real Receive view to prove the
+transmitted byte is rendered locally; after reopening the dialog, disabling and
+saving Local Echo, a second transmitted byte does not alter the screen. The
+serial-write boundary is isolated, so remote echo and physical-peer behavior
+remain separate manual/HIL evidence. MT-W05 feeds deterministic output through
+the production receive/signal/emulator path and proves default Autoscroll
+follows the growing view to the bottom; after disabling it through the real
+Terminal Config dialog and moving into scrollback, further output grows the
+scroll range without changing the selected position. Live-output feel remains
+manual/HIL evidence. MT-W07 types through the real focused Receive view with
+the Terminal Port closed and proves the exact main-status message appears while
+the serial-write boundary, transmit buffer, and rendered screen remain
+untouched. A physically disconnected port remains manual/HIL evidence. MT-W08
+sends Ctrl+C, all four arrow keys, Backspace, and Escape through the real
+focused Receive view and proves their exact ordered serial bytes and transmit
+buffer content. The resulting interrupt and peer response remain physical
+manual/HIL evidence. MT-W10 opens the real Receive-view context menu with an
+empty Boot Sequence, saves a non-empty sequence through the real Remote Config
+dialog, and reopens the menu to prove **Boot into CP/M** changes from disabled
+to enabled without recreating the Terminal Window. Running the sequence against
+a CP/M peer remains manual/HIL evidence. MT-W12 resizes the real Terminal
+Window to normal, larger, minimum, and maximised states and proves the emulator
+grid exactly tracks the available viewport, grows and shrinks in both axes, and
+never falls below the usable 20-column by 5-row minimum. Remote terminal-size
+negotiation is not supported and remains outside this evidence. MT-W13 opens
+the real Font action and non-native standard dialog, confirms its family/style/
+size lists remain usable under the material theme, and proves an accepted font
+is immediately applied with grid reflow and persisted into a fresh application
+window while Cancel preserves the accepted font and geometry. Exact on-screen
+dialog seeding and subjective rendering remain visual/manual evidence.
+
 MT-BR09 additionally runs as destructive HIL: Restore with an empty temporary
 host directory still wipes the nominated scratch drive, starts no transfer
 batch, reports "Nothing to transfer", and refreshes to an empty Remote pane. It
