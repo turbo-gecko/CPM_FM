@@ -219,7 +219,39 @@ the real Font action and non-native standard dialog, confirms its family/style/
 size lists remain usable under the material theme, and proves an accepted font
 is immediately applied with grid reflow and persisted into a fresh application
 window while Cancel preserves the accepted font and geometry. Exact on-screen
-dialog seeding and subjective rendering remain visual/manual evidence.
+dialog seeding and subjective rendering remain visual/manual evidence. MT-W16
+saves VT52, ADM-3A, and VT100 in turn through the real Terminal Config dialog
+while the Terminal Window remains open. It proves the engine and status update
+immediately and that the real focused Receive view sends the exact four arrow
+codes for each emulation. Terminal-specific CP/M screen rendering and peer
+response remain physical manual/HIL evidence. MT-W17 uses real mouse events on
+the Receive grid and real context-menu events/actions to prove Copy enablement,
+multi-line selection with per-line trailing-space trimming, exact clipboard
+text, connected Paste newline-to-EOL normalization, and closed-port rejection
+without transmission. Selection appearance, external-editor verification, and
+peer response remain manual/HIL evidence. MT-W18 seeds the real screen,
+scrollback, receive/transmit buffers, and selection before triggering **Clear
+Window** from the real context menu; it proves every one is reset. It then
+triggers **Reset Size (24×80)** from a non-default geometry and proves the live
+grid becomes exactly 80 columns by 24 rows without clearing the newly seeded
+application buffers. MT-W13 retains the Font-dialog evidence referenced by the
+same manual case. MT-W19 opens the real Terminal Type submenu repeatedly and
+proves its exact VT100/VT52/ADM-3A items and single active check mark. Choosing
+ADM-3A updates the running engine, settings, status, and immediate arrow-key
+bytes; choosing VT100 again restores all four contracts without reopening the
+Terminal Window. Terminal-specific CP/M rendering remains physical manual/HIL
+evidence. MT-W20 opens the real Macros submenu against sparse configured slots,
+proves label-only and whitespace-script slots are omitted while valid labels
+retain slot order, and triggers each real action to verify its exact script at
+the application execution boundary. Clearing every slot on the same open
+Terminal Window makes the next submenu empty and disabled. Worker-thread serial
+execution and CP/M response remain HIL/manual evidence.
+MT-W21 uses three independent offscreen application processes and one isolated
+INI store. The first opens Terminal and History through their real toolbar
+actions and exits; the second proves both are automatically recreated and
+visible, closes both, and exits; the third proves neither is recreated. This is
+real cross-process persistence evidence, with desktop window-manager placement
+and appearance retained manually.
 
 MT-BR09 additionally runs as destructive HIL: Restore with an empty temporary
 host directory still wipes the nominated scratch drive, starts no transfer

@@ -2,21 +2,21 @@
   "version": "3.0",
   "generated": "deterministic",
   "semantic_review": "completed-2026-08-01",
-  "total_tests": 166,
+  "total_tests": 172,
   "tiers": {
-    "gui-integration": 98,
+    "gui-integration": 104,
     "hil": 56,
     "visual": 12
   },
   "evidence_classification": {
     "equivalent": 0,
-    "partial": 149,
+    "partial": 155,
     "supplementary": 17,
     "manual-only": 0
   },
   "manual_plan_total": 217,
-  "manual_ids_with_automated_support": 137,
-  "raw_mapped_case_ratio": 63.1,
+  "manual_ids_with_automated_support": 139,
+  "raw_mapped_case_ratio": 64.1,
   "manual_coverage_decisions": {
     "MT-BR01": {
       "status": "automated-support",
@@ -1773,15 +1773,18 @@
       "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-W16": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_terminal_target_free.py::test_terminal_config_switches_live_emulation_and_arrow_key_encoding"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-W17": {
       "status": "automated-support",
       "tests": [
+        "integration/test_gui_terminal_target_free.py::test_terminal_context_menu_selection_copy_paste_and_closed_port",
         "integration/test_terminal_window.py::test_terminal_context_menu_copy_selection",
         "integration/test_terminal_window.py::test_terminal_context_menu_paste_sends_over_serial"
       ],
@@ -1792,6 +1795,7 @@
     "MT-W18": {
       "status": "automated-support",
       "tests": [
+        "integration/test_gui_terminal_target_free.py::test_terminal_context_menu_clear_then_reset_size",
         "integration/test_terminal_window.py::test_terminal_context_menu_reset_size"
       ],
       "best_evidence": "partial",
@@ -1801,6 +1805,7 @@
     "MT-W19": {
       "status": "automated-support",
       "tests": [
+        "integration/test_gui_terminal_target_free.py::test_terminal_type_context_submenu_switches_checks_status_and_keys",
         "integration/test_terminal_window.py::test_terminal_context_menu_terminal_type_submenu"
       ],
       "best_evidence": "partial",
@@ -1810,6 +1815,7 @@
     "MT-W20": {
       "status": "automated-support",
       "tests": [
+        "integration/test_gui_terminal_target_free.py::test_terminal_macros_context_submenu_filters_dispatches_and_disables",
         "integration/test_terminal_window.py::test_terminal_context_menu_macros_submenu_runs_over_serial"
       ],
       "best_evidence": "partial",
@@ -1817,11 +1823,13 @@
       "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-W21": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_terminal_target_free.py::test_auxiliary_window_open_state_survives_then_clears_across_processes"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     }
   },
   "requirement_ids": [
@@ -1925,11 +1933,16 @@
     "FR-153e",
     "FR-154",
     "FR-157",
+    "FR-157i",
+    "FR-157j",
     "FR-158",
+    "FR-158a",
+    "FR-158b",
     "FR-162",
     "FR-165",
     "FR-166",
     "FR-167",
+    "FR-168",
     "FR-169",
     "FR-170",
     "FR-171",
@@ -5194,9 +5207,35 @@
       ]
     },
     {
+      "nodeid": "integration/test_gui_terminal_target_free.py::test_auxiliary_window_open_state_survives_then_clears_across_processes",
+      "file": "test_gui_terminal_target_free.py",
+      "line": 944,
+      "test": "test_auxiliary_window_open_state_survives_then_clears_across_processes",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-W21",
+      "requirements": [
+        "FR-168"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-168"
+      ]
+    },
+    {
       "nodeid": "integration/test_gui_terminal_target_free.py::test_terminal_boot_context_action_tracks_saved_boot_sequence",
       "file": "test_gui_terminal_target_free.py",
-      "line": 401,
+      "line": 1013,
       "test": "test_terminal_boot_context_action_tracks_saved_boot_sequence",
       "tier": "gui-integration",
       "markers": [
@@ -5222,7 +5261,7 @@
     {
       "nodeid": "integration/test_gui_terminal_target_free.py::test_terminal_config_autoscroll_follows_bottom_then_preserves_scrollback_position",
       "file": "test_gui_terminal_target_free.py",
-      "line": 231,
+      "line": 308,
       "test": "test_terminal_config_autoscroll_follows_bottom_then_preserves_scrollback_position",
       "tier": "gui-integration",
       "markers": [
@@ -5252,7 +5291,7 @@
     {
       "nodeid": "integration/test_gui_terminal_target_free.py::test_terminal_config_local_echo_controls_receive_rendering",
       "file": "test_gui_terminal_target_free.py",
-      "line": 157,
+      "line": 234,
       "test": "test_terminal_config_local_echo_controls_receive_rendering",
       "tier": "gui-integration",
       "markers": [
@@ -5278,9 +5317,113 @@
       ]
     },
     {
+      "nodeid": "integration/test_gui_terminal_target_free.py::test_terminal_config_switches_live_emulation_and_arrow_key_encoding",
+      "file": "test_gui_terminal_target_free.py",
+      "line": 486,
+      "test": "test_terminal_config_switches_live_emulation_and_arrow_key_encoding",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-W16",
+      "requirements": [
+        "FR-157i",
+        "FR-157j",
+        "FR-158a",
+        "FR-158b",
+        "UIR-034",
+        "UIR-103a"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-157i",
+        "FR-157j",
+        "FR-158a",
+        "FR-158b",
+        "UIR-034",
+        "UIR-103a"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_terminal_target_free.py::test_terminal_context_menu_clear_then_reset_size",
+      "file": "test_gui_terminal_target_free.py",
+      "line": 681,
+      "test": "test_terminal_context_menu_clear_then_reset_size",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-W18",
+      "requirements": [
+        "FR-091a",
+        "FR-095",
+        "FR-167",
+        "UIR-099"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-091a",
+        "FR-095",
+        "FR-167",
+        "UIR-099"
+      ]
+    },
+    {
+      "nodeid": "integration/test_gui_terminal_target_free.py::test_terminal_context_menu_selection_copy_paste_and_closed_port",
+      "file": "test_gui_terminal_target_free.py",
+      "line": 585,
+      "test": "test_terminal_context_menu_selection_copy_paste_and_closed_port",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-W17",
+      "requirements": [
+        "FR-094",
+        "FR-098",
+        "FR-165",
+        "FR-166",
+        "UIR-099",
+        "UIR-100"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-094",
+        "FR-098",
+        "FR-165",
+        "FR-166",
+        "UIR-099",
+        "UIR-100"
+      ]
+    },
+    {
       "nodeid": "integration/test_gui_terminal_target_free.py::test_terminal_font_action_applies_cancels_and_restores_persisted_font",
       "file": "test_gui_terminal_target_free.py",
-      "line": 512,
+      "line": 1124,
       "test": "test_terminal_font_action_applies_cancels_and_restores_persisted_font",
       "tier": "gui-integration",
       "markers": [
@@ -5308,9 +5451,39 @@
       ]
     },
     {
+      "nodeid": "integration/test_gui_terminal_target_free.py::test_terminal_macros_context_submenu_filters_dispatches_and_disables",
+      "file": "test_gui_terminal_target_free.py",
+      "line": 867,
+      "test": "test_terminal_macros_context_submenu_filters_dispatches_and_disables",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-W20",
+      "requirements": [
+        "FR-162",
+        "UIR-099",
+        "UIR-102"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-162",
+        "UIR-099",
+        "UIR-102"
+      ]
+    },
+    {
       "nodeid": "integration/test_gui_terminal_target_free.py::test_terminal_receive_view_encodes_control_navigation_and_editing_keys",
       "file": "test_gui_terminal_target_free.py",
-      "line": 339,
+      "line": 416,
       "test": "test_terminal_receive_view_encodes_control_navigation_and_editing_keys",
       "tier": "gui-integration",
       "markers": [
@@ -5336,7 +5509,7 @@
     {
       "nodeid": "integration/test_gui_terminal_target_free.py::test_terminal_toolbar_opens_character_grid_without_transmit_controls",
       "file": "test_gui_terminal_target_free.py",
-      "line": 101,
+      "line": 178,
       "test": "test_terminal_toolbar_opens_character_grid_without_transmit_controls",
       "tier": "gui-integration",
       "markers": [
@@ -5368,9 +5541,45 @@
       ]
     },
     {
+      "nodeid": "integration/test_gui_terminal_target_free.py::test_terminal_type_context_submenu_switches_checks_status_and_keys",
+      "file": "test_gui_terminal_target_free.py",
+      "line": 774,
+      "test": "test_terminal_type_context_submenu_switches_checks_status_and_keys",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-W19",
+      "requirements": [
+        "FR-158",
+        "FR-158b",
+        "UIR-034",
+        "UIR-099",
+        "UIR-101",
+        "UIR-106"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-158",
+        "FR-158b",
+        "UIR-034",
+        "UIR-099",
+        "UIR-101",
+        "UIR-106"
+      ]
+    },
+    {
       "nodeid": "integration/test_gui_terminal_target_free.py::test_terminal_typing_with_closed_port_reports_status_and_transmits_nothing",
       "file": "test_gui_terminal_target_free.py",
-      "line": 296,
+      "line": 373,
       "test": "test_terminal_typing_with_closed_port_reports_status_and_transmits_nothing",
       "tier": "gui-integration",
       "markers": [
@@ -5396,7 +5605,7 @@
     {
       "nodeid": "integration/test_gui_terminal_target_free.py::test_terminal_window_resize_reflows_character_grid",
       "file": "test_gui_terminal_target_free.py",
-      "line": 454,
+      "line": 1066,
       "test": "test_terminal_window_resize_reflows_character_grid",
       "tier": "gui-integration",
       "markers": [

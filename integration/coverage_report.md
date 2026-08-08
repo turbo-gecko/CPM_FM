@@ -1,14 +1,14 @@
 # Integration Test Coverage Report
 
 **Generated from:** `integration/coverage_manifest.json` v3.0
-**Total collected test functions:** 166
+**Total collected test functions:** 172
 **Execution status:** Not run by this generator; physical outcomes remain in `integration/results/runs_ledger.json`.
 
 ## Test Tiers
 
 | Tier | Count |
 |---|---:|
-| gui-integration | 98 |
+| gui-integration | 104 |
 | hil | 56 |
 | visual | 12 |
 
@@ -17,14 +17,14 @@
 | Classification | Count |
 |---|---:|
 | equivalent | 0 |
-| partial | 149 |
+| partial | 155 |
 | supplementary | 17 |
 | manual-only | 0 |
 
 ## Manual Scenario Decisions
 
 - Manual plan cases: **217**
-- Cases with reviewed automated support: **137** (**63.1%** raw mapped-case ratio)
+- Cases with reviewed automated support: **139** (**64.1%** raw mapped-case ratio)
 - Every remaining case has an explicit `manual-only` decision in the manifest.
 
 | MT-ID | Tests | Best evidence | Manual retained |
@@ -162,10 +162,12 @@
 | MT-W10 | 1 | partial | yes |
 | MT-W12 | 1 | partial | yes |
 | MT-W13 | 3 | partial | yes |
-| MT-W17 | 2 | partial | yes |
-| MT-W18 | 1 | partial | yes |
-| MT-W19 | 1 | partial | yes |
-| MT-W20 | 1 | partial | yes |
+| MT-W16 | 1 | partial | yes |
+| MT-W17 | 3 | partial | yes |
+| MT-W18 | 2 | partial | yes |
+| MT-W19 | 2 | partial | yes |
+| MT-W20 | 2 | partial | yes |
+| MT-W21 | 1 | partial | yes |
 
 ## Test Inventory
 
@@ -282,12 +284,18 @@
 | `test_serial_config_action_opens_modal_grouped_two_column_dialog` | gui-integration | MT-P02 | FR-020, UIR-020, UIR-021, UIR-029 | partial | — |
 | `test_serial_config_dropdowns_have_exact_options_and_defaults` | gui-integration | MT-P03 | UIR-024, UIR-025, UIR-026, UIR-027, UIR-028 | partial | — |
 | `test_serial_delay_fields_enforce_integer_0_to_255` | gui-integration | MT-P04 | UIR-030, UIR-031 | partial | — |
+| `test_auxiliary_window_open_state_survives_then_clears_across_processes` | gui-integration | MT-W21 | FR-168 | partial | — |
 | `test_terminal_boot_context_action_tracks_saved_boot_sequence` | gui-integration | MT-W10 | UIR-105 | partial | — |
 | `test_terminal_config_autoscroll_follows_bottom_then_preserves_scrollback_position` | gui-integration | MT-W05 | UIR-062, UIR-103c, UIR-104 | partial | — |
 | `test_terminal_config_local_echo_controls_receive_rendering` | gui-integration | MT-W04 | FR-093, UIR-103b | partial | — |
+| `test_terminal_config_switches_live_emulation_and_arrow_key_encoding` | gui-integration | MT-W16 | FR-157i, FR-157j, FR-158a, FR-158b, UIR-034, UIR-103a | partial | — |
+| `test_terminal_context_menu_clear_then_reset_size` | gui-integration | MT-W18 | FR-091a, FR-095, FR-167, UIR-099 | partial | — |
+| `test_terminal_context_menu_selection_copy_paste_and_closed_port` | gui-integration | MT-W17 | FR-094, FR-098, FR-165, FR-166, UIR-099, UIR-100 | partial | — |
 | `test_terminal_font_action_applies_cancels_and_restores_persisted_font` | gui-integration | MT-W13 | FR-091a, UIR-069, UIR-099 | partial | — |
+| `test_terminal_macros_context_submenu_filters_dispatches_and_disables` | gui-integration | MT-W20 | FR-162, UIR-099, UIR-102 | partial | — |
 | `test_terminal_receive_view_encodes_control_navigation_and_editing_keys` | gui-integration | MT-W08 | FR-158 | partial | — |
 | `test_terminal_toolbar_opens_character_grid_without_transmit_controls` | gui-integration | MT-W02 | UIR-061, UIR-063, UIR-064, UIR-067, UIR-106 | partial | — |
+| `test_terminal_type_context_submenu_switches_checks_status_and_keys` | gui-integration | MT-W19 | FR-158, FR-158b, UIR-034, UIR-099, UIR-101, UIR-106 | partial | — |
 | `test_terminal_typing_with_closed_port_reports_status_and_transmits_nothing` | gui-integration | MT-W07 | FR-098 | partial | — |
 | `test_terminal_window_resize_reflows_character_grid` | gui-integration | MT-W12 | FR-091a | partial | — |
 | `test_history_clear_cancel_preserves_then_confirm_empties_table_and_file` | gui-integration | MT-TH04 | FR-143 | partial | — |
