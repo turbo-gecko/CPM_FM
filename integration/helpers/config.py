@@ -38,6 +38,16 @@ class HilConfigError(RuntimeError):
     """Raised when the HIL configuration is missing or unusable."""
 
 
+def cpm_type_matches(required: str, actual: str) -> bool:
+    """Return whether a target exactly supplies a specialized CP/M family.
+
+    ``2.2`` and ``ZSDOS`` are equivalent only for the ordinary/base test
+    selection. They never satisfy a ZCPR/NZCOM or QPM capability gate, and one
+    specialized family cannot stand in for the other.
+    """
+    return required in {"ZCPR", "QPM"} and actual == required
+
+
 @dataclass
 class Target:
     """One hardware target: an app settings file plus bench-only metadata."""

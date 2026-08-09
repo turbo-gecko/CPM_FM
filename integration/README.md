@@ -48,7 +48,7 @@ Bench-only metadata per target:
 | Field | Meaning |
 |---|---|
 | `settings_file` | Path (absolute, or relative to repo root) to the **read-only** app config. |
-| `cpm_type` | CP/M family used to gate specialized Phase 3 tests. Allowed values are `2.2`, `ZSDOS`, `ZCPR`, and `QPM`; omitted defaults to `2.2`. `ZSDOS` uses the same base test selection as `2.2`; `ZCPR` represents ZCPR/NZCOM. |
+| `cpm_type` | CP/M family used to gate specialized Phase 3 tests. Allowed values are `2.2`, `ZSDOS`, `ZCPR`, and `QPM`; omitted defaults to `2.2`. `ZSDOS` uses the same base test selection as `2.2`; `ZCPR` represents ZCPR/NZCOM. Tests marked `zcpr` or `qpm` require an exact matching declaration and capability-skip before serial setup otherwise. |
 | `two_port` | `true` when Terminal/Transport are distinct ports (gates `two_port` cases). |
 | `spare_port` | Reserved bench metadata for future controlled physical port-fault cases; the deterministic MT-C02/MT-C04 CI cases inject failure at the serial boundary. |
 | `scratch_drive` | The **disposable** CP/M drive for all destructive write testing. Must differ from `connect_drive` or destructive tests refuse to run. |
@@ -71,9 +71,16 @@ teardown that the original's SHA-256 is unchanged.
 .venv/Scripts/python.exe -m pytest integration/ --all-targets         # every target
 .venv/Scripts/python.exe -m pytest integration/ --run-destructive     # destructive
 .venv/Scripts/python.exe -m pytest integration/test_flow_control.py --all-targets  # MT-P05 matrix
+.venv/Scripts/python.exe -m pytest integration/ -m zcpr --all-targets # declared ZCPR targets only
+.venv/Scripts/python.exe -m pytest integration/ -m qpm --all-targets  # declared QPM targets only
 ```
 
 Results print labelled by target, e.g. `test_smoke.py::...[rc2014]`.
+Specialized tests must carry `hil` plus exactly one of `zcpr` or `qpm`.
+Missing/default `cpm_type`, `2.2`, and `ZSDOS` never enable either family;
+ZCPR does not enable QPM or vice versa. The capability gate also applies when a
+node is named directly or retained with `-k`, so test selection cannot bypass
+it. Declaring both specialized markers on one test is a collection error.
 
 Target-free and traceability gates:
 

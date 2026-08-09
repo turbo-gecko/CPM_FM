@@ -5,7 +5,7 @@ Provides:
 - target parametrisation of the ``target`` fixture (so the whole suite re-runs
   per selected hardware, labelled ``...[rc2014]``),
 - marker registration + auto-skip gating (``hil``/``two_port``/``flow_control``/
-  ``destructive``/``visual``/``best_effort``),
+  ``zcpr``/``qpm``/``destructive``/``visual``/``best_effort``),
 - the fresh settings working-copy fixture with the original-immutability guard,
 - the results plugin that writes per-run artifacts + the committed ledger.
 
@@ -25,13 +25,16 @@ import logging
 import time
 
 import pytest
-from helpers.config import HilConfigError, load_hil_config, resolve_targets
+from helpers.config import HilConfigError, cpm_type_matches, load_hil_config, resolve_targets
 from helpers.ids import mt_info
 from helpers.results import RecorderLogHandler, ResultsRecorder
 from helpers.settings_copy import file_sha256, make_working_copy
 from helpers.trace import ROOT as TRACE_ROOT
 
 log = logging.getLogger(f"{TRACE_ROOT}.fixture")
+
+_TARGET_MARKERS = ("hil", "two_port", "flow_control", "zcpr", "qpm", "destructive")
+_CPM_TYPE_MARKERS = {"zcpr": "ZCPR", "qpm": "QPM"}
 
 
 def _await_port_free(settings: dict, attempts: int = 24, interval: float = 0.25) -> None:
@@ -98,6 +101,8 @@ def pytest_configure(config):
         ("hil", "requires a live CP/M peer on the bench"),
         ("two_port", "requires a target with distinct Terminal/Transport ports"),
         ("flow_control", "requires a declared flow-control-sensitive CP/M peer"),
+        ("zcpr", "requires a target declaring cpm_type=ZCPR (ZCPR/NZCOM)"),
+        ("qpm", "requires a target declaring cpm_type=QPM"),
         ("destructive", "erases the scratch drive; needs --run-destructive"),
         ("visual", "widget-tree/look-and-feel assertion, no peer required"),
         ("best_effort", "hardware/timing-dependent; may end Blocked"),
@@ -159,6 +164,47 @@ def pytest_generate_tests(metafunc):
     )
 
 
+def _required_cpm_type(item) -> str | None:
+    """Return the one specialized family marker declared by an item."""
+    required = [
+        cpm_type
+        for marker, cpm_type in _CPM_TYPE_MARKERS.items()
+        if item.get_closest_marker(marker)
+    ]
+    if len(required) > 1:
+        raise pytest.UsageError(
+            f"{item.nodeid} declares both zcpr and qpm; a specialized HIL case "
+            "must require exactly one CP/M family"
+        )
+    return required[0] if required else None
+
+
+def _cpm_type_skip_reason(item, target) -> str | None:
+    """Explain why an item's specialized family does not match its target."""
+    required = _required_cpm_type(item)
+    if required is None or target is None or cpm_type_matches(required, target.cpm_type):
+        return None
+    return (
+        f"target {target.name!r} declares cpm_type={target.cpm_type!r}; "
+        f"this test requires cpm_type={required!r}"
+    )
+
+
+def pytest_collection_modifyitems(items):
+    """Capability-skip specialist cases before any serial fixture can run.
+
+    This hook applies to every collected item, including a directly named node
+    or one retained by ``-k``. The setup-time gate below remains a second guard.
+    """
+    for item in items:
+        callspec = getattr(item, "callspec", None)
+        target = callspec.params.get("target") if callspec is not None else None
+        reason = _cpm_type_skip_reason(item, target)
+        if reason:
+            item._hil_cpm_type_mismatch = True
+            item.add_marker(pytest.mark.skip(reason=reason))
+
+
 # --------------------------------------------------------------------------- #
 # Gating
 # --------------------------------------------------------------------------- #
@@ -170,14 +216,15 @@ def _hil_gate(request):
     item = request.node
     if item.get_closest_marker("visual"):
         return  # no peer required, always runnable
-    needs_target = any(
-        item.get_closest_marker(m) for m in ("hil", "two_port", "flow_control", "destructive")
-    )
+    needs_target = any(item.get_closest_marker(m) for m in _TARGET_MARKERS)
     if not needs_target:
         return
     target = request.getfixturevalue("target")
     if target is None:
         pytest.skip(request.config._hil_error or "no HIL target/config available")
+    cpm_type_reason = _cpm_type_skip_reason(item, target)
+    if cpm_type_reason:
+        pytest.skip(cpm_type_reason)
     if item.get_closest_marker("two_port") and not target.two_port:
         pytest.skip(f"target {target.name!r} is single-port (two_port=false)")
     if item.get_closest_marker("flow_control") and not target.flow_control_peer:
@@ -287,14 +334,23 @@ def _user_area_baseline(request):
     """
     # A target-free ``visual`` / ``gui_integration`` selection must never touch
     # serial hardware merely because the developer has a local hil_config.json.
-    needs_hardware = any(
-        any(
-            item.get_closest_marker(name)
-            for name in ("hil", "two_port", "flow_control", "destructive")
-        )
+    hardware_items = [
+        item
         for item in request.session.items
-    )
-    targets = (getattr(request.config, "_hil_targets", None) or []) if needs_hardware else []
+        if not getattr(item, "_hil_cpm_type_mismatch", False)
+        and any(item.get_closest_marker(name) for name in _TARGET_MARKERS)
+    ]
+    eligible_target_names = {
+        item.callspec.params["target"].name
+        for item in hardware_items
+        if getattr(item, "callspec", None) is not None
+        and item.callspec.params.get("target") is not None
+    }
+    targets = [
+        target
+        for target in (getattr(request.config, "_hil_targets", None) or [])
+        if target.name in eligible_target_names
+    ]
     for target in targets:
         try:
             from helpers.peer import CpmPeer, PeerError

@@ -6,7 +6,12 @@ import json
 
 import pytest
 
-from integration.helpers.config import CPM_TYPES, HilConfigError, load_hil_config
+from integration.helpers.config import (
+    CPM_TYPES,
+    HilConfigError,
+    cpm_type_matches,
+    load_hil_config,
+)
 
 
 def _write_config(tmp_path, target_spec: dict) -> str:
@@ -40,3 +45,21 @@ def test_cpm_type_rejects_unknown_or_non_string_values(tmp_path, cpm_type):
         match=r"invalid cpm_type for target 'bench'.*2\.2, ZSDOS, ZCPR, QPM",
     ):
         load_hil_config(path)
+
+
+@pytest.mark.parametrize(
+    ("required", "actual", "expected"),
+    [
+        ("ZCPR", "2.2", False),
+        ("ZCPR", "ZSDOS", False),
+        ("ZCPR", "ZCPR", True),
+        ("ZCPR", "QPM", False),
+        ("QPM", "2.2", False),
+        ("QPM", "ZSDOS", False),
+        ("QPM", "ZCPR", False),
+        ("QPM", "QPM", True),
+    ],
+)
+def test_specialized_cpm_type_requires_exact_family(required, actual, expected):
+    """Base CP/M, ZSDOS, and the other specialist family cannot satisfy a gate."""
+    assert cpm_type_matches(required, actual) is expected
