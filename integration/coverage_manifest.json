@@ -2,21 +2,21 @@
   "version": "3.0",
   "generated": "deterministic",
   "semantic_review": "completed-2026-08-01",
-  "total_tests": 174,
+  "total_tests": 175,
   "tiers": {
     "gui-integration": 106,
-    "hil": 56,
+    "hil": 57,
     "visual": 12
   },
   "evidence_classification": {
     "equivalent": 0,
-    "partial": 157,
+    "partial": 158,
     "supplementary": 17,
     "manual-only": 0
   },
   "manual_plan_total": 217,
-  "manual_ids_with_automated_support": 141,
-  "raw_mapped_case_ratio": 65.0,
+  "manual_ids_with_automated_support": 142,
+  "raw_mapped_case_ratio": 65.4,
   "manual_coverage_decisions": {
     "MT-BR01": {
       "status": "automated-support",
@@ -1252,11 +1252,13 @@
       "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-P05": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_flow_control.py::test_rtscts_peer_completes_byte_exact_round_trip"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-P06": {
       "status": "automated-support",
@@ -2232,6 +2234,36 @@
         "FR-111",
         "FR-114",
         "FR-117"
+      ]
+    },
+    {
+      "nodeid": "integration/test_flow_control.py::test_rtscts_peer_completes_byte_exact_round_trip",
+      "file": "test_flow_control.py",
+      "line": 19,
+      "test": "test_rtscts_peer_completes_byte_exact_round_trip",
+      "tier": "hil",
+      "markers": [
+        "best_effort",
+        "flow_control",
+        "hil",
+        "mt"
+      ],
+      "manual_id": "MT-P05",
+      "requirements": [
+        "UIR-028"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [
+        "flow_control"
+      ],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": "integration/results/runs_ledger.json",
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "UIR-028"
       ]
     },
     {

@@ -54,7 +54,7 @@ Bench-only metadata per target:
 | `scratch_drive` | The **disposable** CP/M drive for all destructive write testing. Must differ from `connect_drive` or destructive tests refuse to run. |
 | `connect_drive` | The **declared protected** home/working drive. The destructive guard compares `scratch_drive` against this (not the live prompt), so a scratch drive can never coincide with the drive you consider precious. |
 | `has_1k_sender` / `has_checksum_sender` | Per-target X-Modem sender capabilities; gate the MT-T10 1K / checksum variants. The 128-byte CRC path runs on every target. |
-| `flow_control_peer` | Gates the flow-control peer case (MT-P05). |
+| `flow_control_peer` | `true` only when bench observation confirms that the peer requires/asserts hardware flow control; gates MT-P05 through the `flow_control` marker. Merely tolerating RTS/CTS is not sufficient. |
 
 ### Settings-file immutability
 
@@ -70,6 +70,7 @@ teardown that the original's SHA-256 is unchanged.
 .venv/Scripts/python.exe -m pytest integration/ --target a --target b # several
 .venv/Scripts/python.exe -m pytest integration/ --all-targets         # every target
 .venv/Scripts/python.exe -m pytest integration/ --run-destructive     # destructive
+.venv/Scripts/python.exe -m pytest integration/test_flow_control.py --all-targets  # MT-P05 matrix
 ```
 
 Results print labelled by target, e.g. `test_smoke.py::...[rc2014]`.
@@ -326,8 +327,13 @@ The harness writes its **own** `report.md`/`run.json` only.
   MT-V10 (link → browser launch), MT-N02 (second OS).
 - True pixel rendering — we assert the widget tree / stylesheet / layout, not
   screenshots.
-- Best-effort / hardware-specific MT-P05 (flow-control peer) may end
-  **Blocked**. Real free/busy-port observation for MT-C02--MT-C04 and a
+- Hardware-specific MT-P05 runs only for a target whose bench metadata declares
+  `flow_control_peer: true`; other targets report a capability skip. It proves
+  the real serial objects use RTS/CTS and a byte-exact transfer completes, but
+  the operator must establish the peer's sensitivity (failed/stalled NONE run
+  or serial-line-monitor evidence) before setting that capability. A declared
+  rig that cannot be reached may end **Blocked**. Real free/busy-port observation
+  for MT-C02--MT-C04 and a
   physically induced close failure for MT-C10 remain manual despite
   deterministic GUI coverage. MT-C12 also retains the real unreachable-peer
   observation and visible modal interaction; MT-C13 retains live ZCPR/NZCOM

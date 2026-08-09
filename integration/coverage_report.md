@@ -1,7 +1,7 @@
 # Integration Test Coverage Report
 
 **Generated from:** `integration/coverage_manifest.json` v3.0
-**Total collected test functions:** 174
+**Total collected test functions:** 175
 **Execution status:** Not run by this generator; physical outcomes remain in `integration/results/runs_ledger.json`.
 
 ## Test Tiers
@@ -9,7 +9,7 @@
 | Tier | Count |
 |---|---:|
 | gui-integration | 106 |
-| hil | 56 |
+| hil | 57 |
 | visual | 12 |
 
 ## Evidence Classification
@@ -17,14 +17,14 @@
 | Classification | Count |
 |---|---:|
 | equivalent | 0 |
-| partial | 157 |
+| partial | 158 |
 | supplementary | 17 |
 | manual-only | 0 |
 
 ## Manual Scenario Decisions
 
 - Manual plan cases: **217**
-- Cases with reviewed automated support: **141** (**65.0%** raw mapped-case ratio)
+- Cases with reviewed automated support: **142** (**65.4%** raw mapped-case ratio)
 - Every remaining case has an explicit `manual-only` decision in the manifest.
 
 | MT-ID | Tests | Best evidence | Manual retained |
@@ -131,6 +131,7 @@
 | MT-P02 | 1 | partial | yes |
 | MT-P03 | 1 | partial | yes |
 | MT-P04 | 1 | partial | yes |
+| MT-P05 | 1 | partial | yes |
 | MT-P06 | 1 | partial | yes |
 | MT-R01 | 1 | partial | yes |
 | MT-R04 | 1 | partial | yes |
@@ -181,6 +182,7 @@
 | `test_cancel_upload_while_transferring` | hil | MT-T13 | FR-120, NFR-003m | partial | — |
 | `test_remote_delete_removes_file` | hil | MT-F06 | FR-111, FR-117, FR-118 | partial | — |
 | `test_remote_rename_changes_name` | hil | MT-F06 | FR-111, FR-114, FR-117 | partial | — |
+| `test_rtscts_peer_completes_byte_exact_round_trip` | hil | MT-P05 | UIR-028 | partial | flow_control |
 | `test_backup_downloads_remote_to_host` | hil | MT-BR03 | FR-150, FR-153, FR-154 | partial | destructive |
 | `test_restore_empty_host_still_wipes_scratch` | hil | MT-BR09 | FR-154 | partial | destructive |
 | `test_restore_erase_all_sequence_wipes_scratch` | hil | MT-BR10 | FR-153e, UIR-107 | partial | destructive |

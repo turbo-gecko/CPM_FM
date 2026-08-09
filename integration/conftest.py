@@ -4,8 +4,8 @@ Provides:
 - the ``--target`` / ``--all-targets`` / ``--run-destructive`` CLI options,
 - target parametrisation of the ``target`` fixture (so the whole suite re-runs
   per selected hardware, labelled ``...[rc2014]``),
-- marker registration + auto-skip gating (``hil``/``two_port``/``destructive``/
-  ``visual``/``best_effort``),
+- marker registration + auto-skip gating (``hil``/``two_port``/``flow_control``/
+  ``destructive``/``visual``/``best_effort``),
 - the fresh settings working-copy fixture with the original-immutability guard,
 - the results plugin that writes per-run artifacts + the committed ledger.
 
@@ -97,6 +97,7 @@ def pytest_configure(config):
     for name, desc in [
         ("hil", "requires a live CP/M peer on the bench"),
         ("two_port", "requires a target with distinct Terminal/Transport ports"),
+        ("flow_control", "requires a declared flow-control-sensitive CP/M peer"),
         ("destructive", "erases the scratch drive; needs --run-destructive"),
         ("visual", "widget-tree/look-and-feel assertion, no peer required"),
         ("best_effort", "hardware/timing-dependent; may end Blocked"),
@@ -165,11 +166,13 @@ def pytest_generate_tests(metafunc):
 
 @pytest.fixture(autouse=True)
 def _hil_gate(request):
-    """Auto-skip hardware/destructive/two-port cases when not applicable."""
+    """Auto-skip hardware and capability-gated cases when not applicable."""
     item = request.node
     if item.get_closest_marker("visual"):
         return  # no peer required, always runnable
-    needs_target = any(item.get_closest_marker(m) for m in ("hil", "two_port", "destructive"))
+    needs_target = any(
+        item.get_closest_marker(m) for m in ("hil", "two_port", "flow_control", "destructive")
+    )
     if not needs_target:
         return
     target = request.getfixturevalue("target")
@@ -177,6 +180,11 @@ def _hil_gate(request):
         pytest.skip(request.config._hil_error or "no HIL target/config available")
     if item.get_closest_marker("two_port") and not target.two_port:
         pytest.skip(f"target {target.name!r} is single-port (two_port=false)")
+    if item.get_closest_marker("flow_control") and not target.flow_control_peer:
+        pytest.skip(
+            f"target {target.name!r} has no declared flow-control-sensitive peer "
+            "(flow_control_peer=false)"
+        )
     if item.get_closest_marker("destructive"):
         if not request.config.getoption("--run-destructive"):
             pytest.skip("destructive tests require --run-destructive")
@@ -280,7 +288,10 @@ def _user_area_baseline(request):
     # A target-free ``visual`` / ``gui_integration`` selection must never touch
     # serial hardware merely because the developer has a local hil_config.json.
     needs_hardware = any(
-        any(item.get_closest_marker(name) for name in ("hil", "two_port", "destructive"))
+        any(
+            item.get_closest_marker(name)
+            for name in ("hil", "two_port", "flow_control", "destructive")
+        )
         for item in request.session.items
     )
     targets = (getattr(request.config, "_hil_targets", None) or []) if needs_hardware else []

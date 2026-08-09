@@ -205,7 +205,7 @@ def build_entries(
         markers = source["markers"]
         manual_id = markers.get("mt")
         evidence, rationale = _evidence(manual_id)
-        gated = [name for name in ("two_port", "destructive") if markers.get(name)]
+        gated = [name for name in ("two_port", "flow_control", "destructive") if markers.get(name)]
         entries.append(
             {
                 "nodeid": nodeid,
