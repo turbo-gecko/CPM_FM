@@ -9,6 +9,104 @@ import pytest
 
 from cpm_fm.utils import i18n
 
+_CONFIG_PROCESS_PROBE_PREFIX = "__CPM_FM_CONFIG_PROCESS_PROBE__="
+
+
+def _run_config_process_probe(
+    mode: str, config_path: str, state_path: str, history_path: str
+) -> None:
+    """Exercise config persistence in a standalone offscreen application process."""
+    import json
+
+    from PySide6.QtCore import QSettings
+    from PySide6.QtGui import QAction
+    from PySide6.QtWidgets import QApplication
+
+    from cpm_fm.app import MainWindow
+    from cpm_fm.gui.window_state import WindowState
+    from cpm_fm.utils import i18n
+    from cpm_fm.utils.transfer_history import TransferHistory
+
+    i18n.set_language(i18n.DEFAULT_LANGUAGE)
+    app = QApplication.instance() or QApplication([])
+    settings_store = QSettings(state_path, QSettings.Format.IniFormat)
+    state = WindowState(settings_store)
+    win = MainWindow(state, TransferHistory(history_path))
+
+    if mode == "load":
+        from cpm_fm.gui import mw_config
+
+        mw_config.QFileDialog.getOpenFileName = lambda *args, **kwargs: (
+            config_path,
+            "JSON files (*.json)",
+        )
+        load_text = i18n.tr("menu.file.load")
+        action = next(action for action in win.findChildren(QAction) if action.text() == load_text)
+        action.trigger()
+        app.processEvents()
+    elif mode != "relaunch":  # pragma: no cover - guarded by the parent tests
+        raise ValueError(f"unknown probe mode: {mode}")
+
+    payload = {
+        "settings": win.settings,
+        "last_config": state.last_config,
+        "config_name": win._config_name,
+        "title": win.windowTitle(),
+        "host_dir": win.host_dir,
+        "image_dir": win.image_dir,
+        "terminal_type": win._term_engine.terminal_type,
+        "local_echo": win._local_echo,
+    }
+    win.close()
+    app.processEvents()
+    settings_store.sync()
+    print(_CONFIG_PROCESS_PROBE_PREFIX + json.dumps(payload, sort_keys=True))
+
+
+def _config_process_runner(tmp_path):
+    """Return paths and a runner for isolated config-lifecycle processes."""
+    import json
+    import os
+    import subprocess
+    import sys
+
+    state_path = tmp_path / "config-state.ini"
+    history_path = tmp_path / "config-history.json"
+    test_file = Path(__file__).resolve()
+    environment = os.environ.copy()
+    environment["QT_QPA_PLATFORM"] = "offscreen"
+
+    def run(mode: str, config_path: Path) -> dict[str, object]:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(test_file),
+                "--config-process-probe",
+                mode,
+                str(config_path),
+                str(state_path),
+                str(history_path),
+            ],
+            cwd=test_file.parents[1],
+            env=environment,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        assert completed.returncode == 0, (
+            f"config {mode} process failed\nstdout:\n{completed.stdout}"
+            f"\nstderr:\n{completed.stderr}"
+        )
+        probe_line = next(
+            line
+            for line in completed.stdout.splitlines()
+            if line.startswith(_CONFIG_PROCESS_PROBE_PREFIX)
+        )
+        return json.loads(probe_line.removeprefix(_CONFIG_PROCESS_PROBE_PREFIX))
+
+    return state_path, run
+
 
 def _action(win, key: str):
     """Return the translated QAction registered for ``key``."""
@@ -257,6 +355,92 @@ def test_load_dialog_reuses_last_config_folder_not_host_folder(
     assert gui_no_target.window_state.last_config_dir == str(config_dir)
     assert opened_from == [str(config_dir)]
     assert opened_from[0] != gui_no_target.host_dir
+
+
+@pytest.mark.gui_integration
+@pytest.mark.mt("MT-L07", "FR-005")
+def test_last_loaded_config_is_applied_after_real_process_restart(tmp_path):
+    """A second application process automatically applies the remembered config.
+
+    Verifies: FR-005.
+    """
+    host_dir = tmp_path / "remembered-host"
+    image_dir = tmp_path / "remembered-images"
+    host_dir.mkdir()
+    image_dir.mkdir()
+    config_path = tmp_path / "remembered-system.json"
+    expected_settings = {
+        "terminal_port": "PERSIST-TERM",
+        "transport_port": "PERSIST-XFER",
+        "speed": "19200",
+        "terminal_type": "ADM-3A",
+        "local_echo": "ON",
+        "autoscroll": "OFF",
+        "host_directory": str(host_dir),
+        "image_directory": str(image_dir),
+        "process_marker": "MT-L07",
+    }
+    config_path.write_text(json.dumps(expected_settings), encoding="utf-8")
+    state_path, run = _config_process_runner(tmp_path)
+
+    loaded = run("load", config_path)
+    assert loaded == {
+        "settings": expected_settings,
+        "last_config": str(config_path),
+        "config_name": "remembered-system",
+        "title": i18n.tr(
+            "app.title_with_config",
+            app=i18n.tr("app.title"),
+            config="remembered-system",
+        ),
+        "host_dir": str(host_dir),
+        "image_dir": str(image_dir),
+        "terminal_type": "ADM-3A",
+        "local_echo": True,
+    }
+    assert state_path.exists()
+
+    assert run("relaunch", config_path) == loaded
+
+
+@pytest.mark.gui_integration
+@pytest.mark.mt("MT-L08", "FR-005", "FR-003")
+def test_missing_remembered_config_starts_unconfigured_in_new_process(tmp_path):
+    """A deleted remembered config yields a safe unconfigured relaunch.
+
+    Verifies: FR-005, FR-003.
+    """
+    config_path = tmp_path / "removed-before-relaunch.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "terminal_port": "SHOULD-NOT-RESTORE",
+                "terminal_type": "ADM-3A",
+                "local_echo": "ON",
+                "process_marker": "MT-L08",
+            }
+        ),
+        encoding="utf-8",
+    )
+    _, run = _config_process_runner(tmp_path)
+    loaded = run("load", config_path)
+    assert loaded["last_config"] == str(config_path)
+    assert loaded["settings"]["process_marker"] == "MT-L08"
+
+    config_path.unlink()
+    assert not config_path.exists()
+
+    relaunched = run("relaunch", config_path)
+    assert relaunched == {
+        "settings": {},
+        "last_config": str(config_path),
+        "config_name": "",
+        "title": i18n.tr("app.title"),
+        "host_dir": str(Path.cwd()),
+        "image_dir": str(Path.cwd()),
+        "terminal_type": "VT100",
+        "local_echo": False,
+    }
 
 
 @pytest.mark.gui_integration
@@ -565,3 +749,10 @@ def test_group_save_without_loaded_file_warns_and_is_session_only(
         sorted(path.relative_to(tmp_path) for path in tmp_path.rglob("*") if path.is_file())
         == files_before
     )
+
+
+if __name__ == "__main__":  # pragma: no cover - exercised by MT-L07/L08 subprocesses
+    import sys
+
+    if len(sys.argv) == 6 and sys.argv[1] == "--config-process-probe":
+        _run_config_process_probe(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])

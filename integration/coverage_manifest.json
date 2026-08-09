@@ -2,21 +2,21 @@
   "version": "3.0",
   "generated": "deterministic",
   "semantic_review": "completed-2026-08-01",
-  "total_tests": 172,
+  "total_tests": 174,
   "tiers": {
-    "gui-integration": 104,
+    "gui-integration": 106,
     "hil": 56,
     "visual": 12
   },
   "evidence_classification": {
     "equivalent": 0,
-    "partial": 155,
+    "partial": 157,
     "supplementary": 17,
     "manual-only": 0
   },
   "manual_plan_total": 217,
-  "manual_ids_with_automated_support": 139,
-  "raw_mapped_case_ratio": 64.1,
+  "manual_ids_with_automated_support": 141,
+  "raw_mapped_case_ratio": 65.0,
   "manual_coverage_decisions": {
     "MT-BR01": {
       "status": "automated-support",
@@ -1102,18 +1102,22 @@
       "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-L07": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_config_lifecycle_target_free.py::test_last_loaded_config_is_applied_after_real_process_restart"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-L08": {
-      "status": "manual-only",
-      "tests": [],
-      "best_evidence": "manual-only",
+      "status": "automated-support",
+      "tests": [
+        "integration/test_gui_config_lifecycle_target_free.py::test_missing_remembered_config_starts_unconfigured_in_new_process"
+      ],
+      "best_evidence": "partial",
       "manual_still_required": true,
-      "note": "No semantically matching integration test is currently mapped."
+      "note": "Reviewed automated support; see per-test rationale."
     },
     "MT-L09": {
       "status": "automated-support",
@@ -1837,6 +1841,8 @@
     "DR-033",
     "DR-033a",
     "DR-050",
+    "FR-003",
+    "FR-005",
     "FR-006",
     "FR-010",
     "FR-011",
@@ -2534,7 +2540,7 @@
     {
       "nodeid": "integration/test_gui_config_lifecycle_target_free.py::test_flat_and_nested_loads_replace_store_and_normalise_serial_keys",
       "file": "test_gui_config_lifecycle_target_free.py",
-      "line": 78,
+      "line": 176,
       "test": "test_flat_and_nested_loads_replace_store_and_normalise_serial_keys",
       "tier": "gui-integration",
       "markers": [
@@ -2562,7 +2568,7 @@
     {
       "nodeid": "integration/test_gui_config_lifecycle_target_free.py::test_general_dialog_saves_only_general_group_to_loaded_file",
       "file": "test_gui_config_lifecycle_target_free.py",
-      "line": 461,
+      "line": 645,
       "test": "test_general_dialog_saves_only_general_group_to_loaded_file",
       "tier": "gui-integration",
       "markers": [
@@ -2588,7 +2594,7 @@
     {
       "nodeid": "integration/test_gui_config_lifecycle_target_free.py::test_group_save_without_loaded_file_warns_and_is_session_only",
       "file": "test_gui_config_lifecycle_target_free.py",
-      "line": 524,
+      "line": 708,
       "test": "test_group_save_without_loaded_file_warns_and_is_session_only",
       "tier": "gui-integration",
       "markers": [
@@ -2615,9 +2621,35 @@
       ]
     },
     {
+      "nodeid": "integration/test_gui_config_lifecycle_target_free.py::test_last_loaded_config_is_applied_after_real_process_restart",
+      "file": "test_gui_config_lifecycle_target_free.py",
+      "line": 362,
+      "test": "test_last_loaded_config_is_applied_after_real_process_restart",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-L07",
+      "requirements": [
+        "FR-005"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-005"
+      ]
+    },
+    {
       "nodeid": "integration/test_gui_config_lifecycle_target_free.py::test_load_config_action_opens_json_file_dialog",
       "file": "test_gui_config_lifecycle_target_free.py",
-      "line": 52,
+      "line": 150,
       "test": "test_load_config_action_opens_json_file_dialog",
       "tier": "gui-integration",
       "markers": [
@@ -2645,7 +2677,7 @@
     {
       "nodeid": "integration/test_gui_config_lifecycle_target_free.py::test_load_config_clears_existing_remote_listing",
       "file": "test_gui_config_lifecycle_target_free.py",
-      "line": 173,
+      "line": 271,
       "test": "test_load_config_clears_existing_remote_listing",
       "tier": "gui-integration",
       "markers": [
@@ -2671,7 +2703,7 @@
     {
       "nodeid": "integration/test_gui_config_lifecycle_target_free.py::test_load_dialog_reuses_last_config_folder_not_host_folder",
       "file": "test_gui_config_lifecycle_target_free.py",
-      "line": 229,
+      "line": 327,
       "test": "test_load_dialog_reuses_last_config_folder_not_host_folder",
       "tier": "gui-integration",
       "markers": [
@@ -2701,7 +2733,7 @@
     {
       "nodeid": "integration/test_gui_config_lifecycle_target_free.py::test_loading_named_config_adds_basename_to_plain_window_title",
       "file": "test_gui_config_lifecycle_target_free.py",
-      "line": 364,
+      "line": 548,
       "test": "test_loading_named_config_adds_basename_to_plain_window_title",
       "tier": "gui-integration",
       "markers": [
@@ -2727,9 +2759,37 @@
       ]
     },
     {
+      "nodeid": "integration/test_gui_config_lifecycle_target_free.py::test_missing_remembered_config_starts_unconfigured_in_new_process",
+      "file": "test_gui_config_lifecycle_target_free.py",
+      "line": 408,
+      "test": "test_missing_remembered_config_starts_unconfigured_in_new_process",
+      "tier": "gui-integration",
+      "markers": [
+        "gui_integration",
+        "mt"
+      ],
+      "manual_id": "MT-L08",
+      "requirements": [
+        "FR-003",
+        "FR-005"
+      ],
+      "evidence": "partial",
+      "evidence_rationale": "Semantically reviewed automated support; retained manual steps remain required.",
+      "manual_still_required": true,
+      "gated": [],
+      "collection_status": "collected",
+      "execution_status": "not-run-by-coverage-generator",
+      "bench_evidence": null,
+      "semantic_review": "reviewed-2026-08-01",
+      "verifies": [
+        "FR-003",
+        "FR-005"
+      ]
+    },
+    {
       "nodeid": "integration/test_gui_config_lifecycle_target_free.py::test_new_config_drops_loaded_name_from_window_title",
       "file": "test_gui_config_lifecycle_target_free.py",
-      "line": 392,
+      "line": 576,
       "test": "test_new_config_drops_loaded_name_from_window_title",
       "tier": "gui-integration",
       "markers": [
@@ -2755,7 +2815,7 @@
     {
       "nodeid": "integration/test_gui_config_lifecycle_target_free.py::test_new_config_saves_active_file_disconnects_and_resets_application",
       "file": "test_gui_config_lifecycle_target_free.py",
-      "line": 264,
+      "line": 448,
       "test": "test_new_config_saves_active_file_disconnects_and_resets_application",
       "tier": "gui-integration",
       "markers": [
@@ -2783,7 +2843,7 @@
     {
       "nodeid": "integration/test_gui_config_lifecycle_target_free.py::test_new_without_active_file_cancels_or_saves_before_reset",
       "file": "test_gui_config_lifecycle_target_free.py",
-      "line": 319,
+      "line": 503,
       "test": "test_new_without_active_file_cancels_or_saves_before_reset",
       "tier": "gui-integration",
       "markers": [
@@ -2809,7 +2869,7 @@
     {
       "nodeid": "integration/test_gui_config_lifecycle_target_free.py::test_save_config_writes_entire_current_settings_store",
       "file": "test_gui_config_lifecycle_target_free.py",
-      "line": 194,
+      "line": 292,
       "test": "test_save_config_writes_entire_current_settings_store",
       "tier": "gui-integration",
       "markers": [
@@ -2837,7 +2897,7 @@
     {
       "nodeid": "integration/test_gui_config_lifecycle_target_free.py::test_serial_dialog_saves_only_serial_group_to_loaded_file",
       "file": "test_gui_config_lifecycle_target_free.py",
-      "line": 411,
+      "line": 595,
       "test": "test_serial_dialog_saves_only_serial_group_to_loaded_file",
       "tier": "gui-integration",
       "markers": [
@@ -2863,7 +2923,7 @@
     {
       "nodeid": "integration/test_gui_config_lifecycle_target_free.py::test_unknown_loaded_key_survives_full_save",
       "file": "test_gui_config_lifecycle_target_free.py",
-      "line": 147,
+      "line": 245,
       "test": "test_unknown_loaded_key_survives_full_save",
       "tier": "gui-integration",
       "markers": [

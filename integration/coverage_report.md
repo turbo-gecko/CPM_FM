@@ -1,14 +1,14 @@
 # Integration Test Coverage Report
 
 **Generated from:** `integration/coverage_manifest.json` v3.0
-**Total collected test functions:** 172
+**Total collected test functions:** 174
 **Execution status:** Not run by this generator; physical outcomes remain in `integration/results/runs_ledger.json`.
 
 ## Test Tiers
 
 | Tier | Count |
 |---|---:|
-| gui-integration | 104 |
+| gui-integration | 106 |
 | hil | 56 |
 | visual | 12 |
 
@@ -17,14 +17,14 @@
 | Classification | Count |
 |---|---:|
 | equivalent | 0 |
-| partial | 155 |
+| partial | 157 |
 | supplementary | 17 |
 | manual-only | 0 |
 
 ## Manual Scenario Decisions
 
 - Manual plan cases: **217**
-- Cases with reviewed automated support: **139** (**64.1%** raw mapped-case ratio)
+- Cases with reviewed automated support: **141** (**65.0%** raw mapped-case ratio)
 - Every remaining case has an explicit `manual-only` decision in the manifest.
 
 | MT-ID | Tests | Best evidence | Manual retained |
@@ -119,6 +119,8 @@
 | MT-L04 | 1 | partial | yes |
 | MT-L05 | 1 | partial | yes |
 | MT-L06 | 1 | partial | yes |
+| MT-L07 | 1 | partial | yes |
+| MT-L08 | 1 | partial | yes |
 | MT-L09 | 1 | partial | yes |
 | MT-L10 | 1 | partial | yes |
 | MT-L11 | 1 | partial | yes |
@@ -192,10 +194,12 @@
 | `test_flat_and_nested_loads_replace_store_and_normalise_serial_keys` | gui-integration | MT-L02 | FR-011, NFR-002 | partial | — |
 | `test_general_dialog_saves_only_general_group_to_loaded_file` | gui-integration | MT-L14 | FR-021a | partial | — |
 | `test_group_save_without_loaded_file_warns_and_is_session_only` | gui-integration | MT-L15 | FR-020a, FR-021a | partial | — |
+| `test_last_loaded_config_is_applied_after_real_process_restart` | gui-integration | MT-L07 | FR-005 | partial | — |
 | `test_load_config_action_opens_json_file_dialog` | gui-integration | MT-L01 | FR-010, IFR-004 | partial | — |
 | `test_load_config_clears_existing_remote_listing` | gui-integration | MT-L04 | FR-017 | partial | — |
 | `test_load_dialog_reuses_last_config_folder_not_host_folder` | gui-integration | MT-L06 | FR-006, FR-010, FR-013 | partial | — |
 | `test_loading_named_config_adds_basename_to_plain_window_title` | gui-integration | MT-L11 | FR-125, UIR-005 | partial | — |
+| `test_missing_remembered_config_starts_unconfigured_in_new_process` | gui-integration | MT-L08 | FR-003, FR-005 | partial | — |
 | `test_new_config_drops_loaded_name_from_window_title` | gui-integration | MT-L12 | FR-125 | partial | — |
 | `test_new_config_saves_active_file_disconnects_and_resets_application` | gui-integration | MT-L09 | FR-018, FR-019 | partial | — |
 | `test_new_without_active_file_cancels_or_saves_before_reset` | gui-integration | MT-L10 | FR-018 | partial | — |

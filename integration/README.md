@@ -135,13 +135,17 @@ defaults and bounds, folder pickers, multiline scripts, group-specific JSON
 saves, reopen persistence, and session-only warnings. MT-G11 and MT-G14 remain
 HIL because their expected evidence requires a live CP/M response.
 
-Configuration-file lifecycle workflows MT-L01--L06 and MT-L09--L15 are also
-target-free. They exercise the real New/Load/Save menu actions and configuration
-dialogs with temporary JSON files: native-dialog parameters, flat/nested input,
-full-store replacement and saving, unknown-key preservation, folder memory,
-Remote-list invalidation, New Config reset/cancel behavior, title changes,
-group-selective saves, and unconfigured session-only warnings. MT-L07/L08 retain
-their manual process-restart evidence.
+Configuration-file lifecycle workflows MT-L01--L15 are also target-free. They
+exercise the real New/Load/Save menu actions and configuration dialogs with
+temporary JSON files: native-dialog parameters, flat/nested input, full-store
+replacement and saving, unknown-key preservation, folder memory, Remote-list
+invalidation, New Config reset/cancel behavior, title changes, group-selective
+saves, and unconfigured session-only warnings. MT-L07 uses two independent
+application processes and an isolated settings store to prove the last-loaded
+configuration is automatically reapplied at relaunch. MT-L08 deletes that
+remembered file between processes and proves the next launch remains safely
+unconfigured. Native launcher and desktop-shell presentation remain manual
+evidence.
 
 Host filesystem actions MT-F04, MT-F05, and MT-F05a run target-free against
 temporary files and the real File Action dialog. They cover Rename Apply,
